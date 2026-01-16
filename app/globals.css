@@ -1,26 +1,84 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-stadium-dark: #0a0c10;
+  --color-stadium-elevated: #14161b;
+  --color-stadium-hover: #1a1d24;
+
+  --color-accent-green: #00d95f;
+  --color-accent-red: #ff1744;
+  --color-accent-gold: #ffb800;
+
+  --color-border-subtle: #1f2329;
+  --color-border-strong: #2a2e36;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0a4ab;
+  --color-text-muted: #6b7280;
+
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 6px;
+
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  * {
+    @apply border-border-subtle;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    @apply bg-stadium-dark text-text-primary;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+
+  /* Live badge pulse animation */
+  .badge-live {
+    animation: pulse-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-red {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  /* Card hover lift */
+  .card-hover {
+    @apply transition-all duration-150 ease-out;
+  }
+
+  .card-hover:hover {
+    @apply -translate-y-1 shadow-hover;
+  }
+
+  /* Player stage aspect ratio */
+  .player-stage {
+    @apply relative w-full;
+    aspect-ratio: 16 / 9;
+  }
+
+  @media (min-width: 1024px) {
+    .player-stage {
+      max-height: 600px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+  }
+
+  /* Iframe responsive */
+  .embed-iframe {
+    @apply absolute inset-0 w-full h-full rounded-2xl;
+  }
 }

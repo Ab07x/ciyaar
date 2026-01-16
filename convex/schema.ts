@@ -1,0 +1,273 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+    // ============================================
+    // MATCHES
+    // ============================================
+    matches: defineTable({
+        slug: v.string(),
+        title: v.string(),
+        teamA: v.string(),
+        teamB: v.string(),
+        leagueId: v.optional(v.string()),
+        leagueName: v.optional(v.string()),
+        league: v.optional(v.string()), // Legacy field
+        kickoffAt: v.number(),
+        status: v.union(
+            v.literal("upcoming"),
+            v.literal("live"),
+            v.literal("finished")
+        ),
+        isPremium: v.boolean(),
+        premiumPassword: v.optional(v.union(v.string(), v.null())), // Legacy field
+        requiredPlan: v.optional(
+            v.union(
+                v.literal("match"),
+                v.literal("weekly"),
+                v.literal("monthly"),
+                v.literal("yearly")
+            )
+        ),
+        embeds: v.array(
+            v.object({
+                label: v.string(),
+                url: v.string(),
+            })
+        ),
+        thumbnailUrl: v.optional(v.union(v.string(), v.null())),
+        summary: v.optional(v.union(v.string(), v.null())),
+        views: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_slug", ["slug"])
+        .index("by_status", ["status"])
+        .index("by_kickoff", ["kickoffAt"])
+        .index("by_league", ["leagueId"]),
+
+    // ============================================
+    // FIXTURES (API-Football synced)
+    // ============================================
+    fixtures: defineTable({
+        apiFixtureId: v.number(),
+        slug: v.string(),
+        kickoffAt: v.number(),
+        kickoffISO: v.string(),
+        timezone: v.string(),
+        statusNormalized: v.union(
+            v.literal("upcoming"),
+            v.literal("live"),
+            v.literal("finished")
+        ),
+        rawStatusShort: v.string(),
+        rawStatusLong: v.string(),
+        homeName: v.string(),
+        homeLogo: v.string(),
+        awayName: v.string(),
+        awayLogo: v.string(),
+        leagueName: v.string(),
+        leagueLogo: v.string(),
+        description: v.string(),
+        fetchedForDate: v.string(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_api_id", ["apiFixtureId"])
+        .index("by_slug", ["slug"])
+        .index("by_status", ["statusNormalized"])
+        .index("by_date", ["fetchedForDate"])
+        .index("by_kickoff", ["kickoffAt"]),
+
+    // ============================================
+    // SYNC_LOGS (API sync history)
+    // ============================================
+    sync_logs: defineTable({
+        date: v.string(),
+        mode: v.union(
+            v.literal("yesterday"),
+            v.literal("today"),
+            v.literal("tomorrow")
+        ),
+        ok: v.boolean(),
+        importedCount: v.number(),
+        updatedCount: v.number(),
+        error: v.optional(v.union(v.string(), v.null())),
+        ranAt: v.number(),
+    })
+        .index("by_date", ["date"])
+        .index("by_mode", ["mode"]),
+
+    // ============================================
+    // LEAGUES (Preloaded favorites)
+    // ============================================
+    leagues: defineTable({
+        name: v.string(),
+        type: v.union(
+            v.literal("competition"),
+            v.literal("league"),
+            v.literal("club"),
+            v.literal("player")
+        ),
+        country: v.optional(v.string()),
+        logoUrl: v.optional(v.string()),
+        apiId: v.optional(v.string()),
+        createdAt: v.number(),
+    })
+        .index("by_type", ["type"])
+        .index("by_name", ["name"]),
+
+    // ============================================
+    // POSTS (Blog/News)
+    // ============================================
+    posts: defineTable({
+        slug: v.string(),
+        title: v.string(),
+        excerpt: v.string(),
+        content: v.string(),
+        featuredImageUrl: v.optional(v.string()),
+        category: v.union(
+            v.literal("News"),
+            v.literal("Market"),
+            v.literal("Match Preview"),
+            v.literal("Analysis")
+        ),
+        tags: v.array(v.string()),
+        publishedAt: v.optional(v.number()),
+        isPublished: v.boolean(),
+        seoTitle: v.optional(v.string()),
+        seoDescription: v.optional(v.string()),
+        views: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_slug", ["slug"])
+        .index("by_category", ["category"])
+        .index("by_published", ["isPublished"]),
+
+    // ============================================
+    // ADS (Ad slot configuration)
+    // ============================================
+    ads: defineTable({
+        slotKey: v.string(),
+        network: v.union(
+            v.literal("adsense"),
+            v.literal("adsterra"),
+            v.literal("monetag"),
+            v.literal("custom")
+        ),
+        format: v.union(
+            v.literal("responsive"),
+            v.literal("banner"),
+            v.literal("native")
+        ),
+        codeHtml: v.optional(v.string()),
+        adsenseClient: v.optional(v.string()),
+        adsenseSlot: v.optional(v.string()),
+        showOn: v.array(v.string()),
+        enabled: v.boolean(),
+    }).index("by_slot", ["slotKey"]),
+
+    // ============================================
+    // USERS
+    // ============================================
+    users: defineTable({
+        phoneOrId: v.optional(v.string()),
+        createdAt: v.number(),
+    }),
+
+    // ============================================
+    // DEVICES
+    // ============================================
+    devices: defineTable({
+        userId: v.id("users"),
+        deviceId: v.string(),
+        userAgent: v.optional(v.string()),
+        lastSeenAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_device", ["deviceId"]),
+
+    // ============================================
+    // SUBSCRIPTIONS
+    // ============================================
+    subscriptions: defineTable({
+        userId: v.id("users"),
+        plan: v.union(
+            v.literal("match"),
+            v.literal("weekly"),
+            v.literal("monthly"),
+            v.literal("yearly")
+        ),
+        matchId: v.optional(v.id("matches")),
+        expiresAt: v.number(),
+        maxDevices: v.number(),
+        status: v.union(
+            v.literal("active"),
+            v.literal("expired"),
+            v.literal("revoked")
+        ),
+        codeId: v.optional(v.id("redemptions")),
+        createdAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_status", ["status"]),
+
+    // ============================================
+    // REDEMPTIONS (Codes)
+    // ============================================
+    redemptions: defineTable({
+        code: v.string(),
+        plan: v.union(
+            v.literal("match"),
+            v.literal("weekly"),
+            v.literal("monthly"),
+            v.literal("yearly")
+        ),
+        durationDays: v.number(),
+        maxDevices: v.number(),
+        usedByUserId: v.optional(v.id("users")),
+        usedAt: v.optional(v.number()),
+        revokedAt: v.optional(v.number()),
+        createdAt: v.number(),
+    })
+        .index("by_code", ["code"])
+        .index("by_used", ["usedByUserId"]),
+
+    // ============================================
+    // SETTINGS (Global configuration)
+    // ============================================
+    settings: defineTable({
+        // General
+        whatsappNumber: v.string(),
+        siteName: v.string(),
+        adsEnabled: v.boolean(),
+        // Legacy fields
+        cookieDays: v.optional(v.number()),
+        premiumPriceText: v.optional(v.string()),
+        // Pricing (in USD) - Optional for migration
+        priceMatch: v.optional(v.number()),
+        priceWeekly: v.optional(v.number()),
+        priceMonthly: v.optional(v.number()),
+        priceYearly: v.optional(v.number()),
+        // Device limits per plan - Optional for migration
+        maxDevicesMatch: v.optional(v.number()),
+        maxDevicesWeekly: v.optional(v.number()),
+        maxDevicesMonthly: v.optional(v.number()),
+        maxDevicesYearly: v.optional(v.number()),
+    }),
+
+    // ============================================
+    // MESSAGES (Live Chat)
+    // ============================================
+    messages: defineTable({
+        matchId: v.id("matches"),
+        userId: v.id("users"),
+        nickname: v.string(),
+        content: v.string(),
+        isPremium: v.boolean(),
+        createdAt: v.number(),
+    })
+        .index("by_match", ["matchId", "createdAt"])
+        .index("by_user", ["userId", "createdAt"]),
+});
