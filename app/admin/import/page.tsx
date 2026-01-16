@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Download, Check, Calendar, RefreshCw, ArrowRight, Loader2 } from "lucide-react";
+import { Download, Check, RefreshCw, Loader2, Filter } from "lucide-react";
 
 export default function AdminImportPage() {
 
@@ -45,21 +45,53 @@ export default function AdminImportPage() {
         return s;
     }
 
+    const MODE_LABELS = {
+        yesterday: "Yesterday",
+        today: "Today",
+        tomorrow: "Tomorrow",
+    };
+
     const syncFixtures = useAction(api.fixtures.syncFixtures);
+    const seedLeagues = useMutation(api.allowedLeagues.seedAllowedLeagues);
     const importMatch = useMutation(api.matches.createMatch);
 
     const [mode, setMode] = useState<"yesterday" | "today" | "tomorrow">("today");
     const [syncing, setSyncing] = useState(false);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [importing, setImporting] = useState(false);
+    const [lastSyncResult, setLastSyncResult] = useState<{ fetched: number; skipped: number; imported: number; updated: number } | null>(null);
+    const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
 
     const fixtures = useQuery(api.fixtures.getFixturesByDay, { mode });
     const syncLogs = useQuery(api.fixtures.getSyncLogs, { limit: 1 });
+    const allowedLeagues = useQuery(api.allowedLeagues.getAllowedLeagues);
+
+    // Filter fixtures to only show allowed leagues
+    const allowedLeagueNames = useMemo(() => {
+        return new Set(allowedLeagues?.map(l => l.leagueName) || []);
+    }, [allowedLeagues]);
+
+    const filteredFixtures = useMemo(() => {
+        if (!fixtures || allowedLeagueNames.size === 0) return [];
+        return fixtures.filter(f => allowedLeagueNames.has(f.leagueName));
+    }, [fixtures, allowedLeagueNames]);
+
+    const handleSeed = async () => {
+        await seedLeagues();
+        alert("Leagues seeded!");
+    };
 
     const handleSync = async () => {
         setSyncing(true);
+        setLastSyncResult(null);
         try {
-            await syncFixtures({ mode });
+            const result = await syncFixtures({ mode });
+            setLastSyncResult({
+                fetched: result.fetched,
+                skipped: result.skipped,
+                imported: result.imported,
+                updated: result.updated,
+            });
         } catch (error) {
             console.error(error);
             alert("Sync failed. Check console for details.");
@@ -76,15 +108,15 @@ export default function AdminImportPage() {
     };
 
     const selectAll = () => {
-        if (!fixtures) return;
-        if (selected.size === fixtures.length) setSelected(new Set());
-        else setSelected(new Set(fixtures.map(f => f._id)));
+        if (!filteredFixtures) return;
+        if (selected.size === filteredFixtures.length) setSelected(new Set());
+        else setSelected(new Set(filteredFixtures.map(f => f._id)));
     };
 
     const handleImport = async () => {
-        if (!fixtures) return;
+        if (!filteredFixtures) return;
         setImporting(true);
-        const toImport = fixtures.filter(f => selected.has(f._id));
+        const toImport = filteredFixtures.filter(f => selected.has(f._id));
 
         for (const f of toImport) {
             await importMatch({
@@ -93,14 +125,12 @@ export default function AdminImportPage() {
                 teamA: f.homeName,
                 teamB: f.awayName,
                 leagueName: f.leagueName,
-                leagueId: "api-import", // Placeholder for schema compatibility
+                leagueId: "api-import",
                 kickoffAt: f.kickoffAt,
                 status: f.statusNormalized,
                 isPremium: false,
                 embeds: [],
-                // Use home/away logos combined or league logo if available?
-                // For now leaving null as we don't have a single banner URL
-                thumbnailUrl: undefined,
+                thumbnailUrl: thumbnails[f._id] || undefined,
                 summary: f.description
             });
         }
@@ -123,10 +153,32 @@ export default function AdminImportPage() {
                     <div className="text-xs text-right">
                         <p className="text-text-muted">Last Sync: {new Date(lastSync.ranAt).toLocaleString()}</p>
                         {lastSync.ok
-                            ? `Success (${lastSync.importedCount} new)`
+                            ? `Success (${lastSync.importedCount} new, ${lastSync.skippedCount || 0} skipped)`
                             : `Failed: ${formatSyncError(lastSync.error)}`}
                     </div>
                 )}
+            </div>
+
+            {/* Allowed Leagues Pills */}
+            <div className="bg-stadium-elevated border border-border-strong rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <Filter size={16} className="text-accent-green" />
+                        <span className="text-sm font-bold">Enabled Leagues: {allowedLeagues?.length || 0}</span>
+                    </div>
+                    {(!allowedLeagues || allowedLeagues.length === 0) && (
+                        <button onClick={handleSeed} className="text-xs text-accent-green font-bold hover:underline">
+                            Seed Default Leagues
+                        </button>
+                    )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {allowedLeagues?.map(league => (
+                        <span key={league._id} className="px-3 py-1 bg-accent-green/10 text-accent-green text-xs font-bold rounded-full border border-accent-green/30">
+                            {league.leagueName}
+                        </span>
+                    ))}
+                </div>
             </div>
 
             {/* Mode Selection */}
@@ -140,7 +192,7 @@ export default function AdminImportPage() {
                             : "border-transparent text-text-muted hover:text-white"
                             }`}
                     >
-                        {m}
+                        {MODE_LABELS[m]}
                     </button>
                 ))}
             </div>
@@ -148,8 +200,8 @@ export default function AdminImportPage() {
             {/* Sync Action */}
             <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 flex items-center justify-between">
                 <div>
-                    <h3 className="font-bold mb-1">Sync {mode}'s Fixtures</h3>
-                    <p className="text-sm text-text-muted">Fetch latest data from API-Football to database.</p>
+                    <h3 className="font-bold mb-1">Sync {MODE_LABELS[mode]}'s Fixtures</h3>
+                    <p className="text-sm text-text-muted">Fetch latest data from API-Football (filtered by allowed leagues).</p>
                 </div>
                 <button
                     onClick={handleSync}
@@ -161,13 +213,23 @@ export default function AdminImportPage() {
                 </button>
             </div>
 
+            {/* Sync Result Summary */}
+            {lastSyncResult && (
+                <div className="bg-stadium-dark border border-border-subtle rounded-xl p-4 flex gap-6 text-sm">
+                    <div><span className="text-text-muted">Fetched:</span> <span className="font-bold">{lastSyncResult.fetched}</span></div>
+                    <div><span className="text-text-muted">Skipped:</span> <span className="font-bold text-yellow-500">{lastSyncResult.skipped}</span></div>
+                    <div><span className="text-text-muted">Imported:</span> <span className="font-bold text-accent-green">{lastSyncResult.imported}</span></div>
+                    <div><span className="text-text-muted">Updated:</span> <span className="font-bold text-accent-blue">{lastSyncResult.updated}</span></div>
+                </div>
+            )}
+
             {/* Fixtures List */}
-            {fixtures && fixtures.length > 0 ? (
+            {filteredFixtures && filteredFixtures.length > 0 ? (
                 <div className="bg-stadium-elevated border border-border-strong rounded-xl overflow-hidden">
                     <div className="p-4 border-b border-border-strong flex justify-between items-center bg-stadium-dark">
                         <div className="flex items-center gap-4">
                             <button onClick={selectAll} className="text-sm text-accent-green font-bold">
-                                {selected.size === fixtures.length ? "Deselect All" : "Select All"}
+                                {selected.size === filteredFixtures.length ? "Deselect All" : "Select All"}
                             </button>
                             <span className="text-sm text-text-muted">{selected.size} selected</span>
                         </div>
@@ -187,12 +249,13 @@ export default function AdminImportPage() {
                                     <th className="px-4 py-3 w-10"></th>
                                     <th className="px-4 py-3">Time</th>
                                     <th className="px-4 py-3">Match</th>
+                                    <th className="px-4 py-3">Thumbnail URL</th>
                                     <th className="px-4 py-3">League</th>
                                     <th className="px-4 py-3">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {fixtures.map((f) => (
+                                {filteredFixtures.map((f) => (
                                     <tr
                                         key={f._id}
                                         className={`border-b border-border-subtle hover:bg-stadium-hover cursor-pointer transition-colors ${selected.has(f._id) ? "bg-accent-green/10" : ""}`}
@@ -213,6 +276,15 @@ export default function AdminImportPage() {
                                                 <span>{f.awayName}</span>
                                             </div>
                                         </td>
+                                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                            <input
+                                                type="text"
+                                                value={thumbnails[f._id] || ""}
+                                                onChange={(e) => setThumbnails(prev => ({ ...prev, [f._id]: e.target.value }))}
+                                                placeholder="https://..."
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded px-2 py-1 text-xs focus:border-accent-green focus:outline-none"
+                                            />
+                                        </td>
                                         <td className="px-4 py-3 text-text-secondary">{f.leagueName}</td>
                                         <td className="px-4 py-3">
                                             <span className={`px-2 py-1 rounded text-xs uppercase font-bold ${f.statusNormalized === "live" ? "bg-accent-red text-white" :
@@ -230,9 +302,10 @@ export default function AdminImportPage() {
                 </div>
             ) : (
                 <div className="text-center py-12 text-text-muted bg-stadium-elevated rounded-xl border border-border-strong border-dashed">
-                    <p>No fixtures found for {mode}. Click "Sync Now" to fetch from API.</p>
+                    <p>No fixtures found for {MODE_LABELS[mode]}. Click "Sync Now" to fetch from API.</p>
                 </div>
             )}
         </div>
     );
 }
+

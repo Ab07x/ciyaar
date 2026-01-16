@@ -10,6 +10,8 @@ export default defineSchema({
         title: v.string(),
         teamA: v.string(),
         teamB: v.string(),
+        articleTitle: v.optional(v.string()),
+        articleContent: v.optional(v.string()),
         leagueId: v.optional(v.string()),
         leagueName: v.optional(v.string()),
         league: v.optional(v.string()), // Legacy field
@@ -90,6 +92,8 @@ export default defineSchema({
             v.literal("tomorrow")
         ),
         ok: v.boolean(),
+        fetchedCount: v.optional(v.number()),
+        skippedCount: v.optional(v.number()),
         importedCount: v.number(),
         updatedCount: v.number(),
         error: v.optional(v.union(v.string(), v.null())),
@@ -97,6 +101,17 @@ export default defineSchema({
     })
         .index("by_date", ["date"])
         .index("by_mode", ["mode"]),
+
+    // ============================================
+    // ALLOWED_LEAGUES (Sync filter configuration)
+    // ============================================
+    allowed_leagues: defineTable({
+        apiLeagueId: v.optional(v.number()),
+        leagueName: v.string(),
+        enabled: v.boolean(),
+        createdAt: v.number(),
+    })
+        .index("by_name", ["leagueName"]),
 
     // ============================================
     // LEAGUES (Preloaded favorites)

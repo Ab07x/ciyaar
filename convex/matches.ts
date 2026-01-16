@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+// Trigger update
 import { mutation, query } from "./_generated/server";
 
 // ============================================
@@ -93,6 +94,8 @@ export const createMatch = mutation({
         title: v.string(),
         teamA: v.string(),
         teamB: v.string(),
+        articleTitle: v.optional(v.string()),
+        articleContent: v.optional(v.string()),
         leagueId: v.string(),
         leagueName: v.string(),
         kickoffAt: v.number(),
@@ -137,6 +140,8 @@ export const updateMatch = mutation({
         title: v.optional(v.string()),
         teamA: v.optional(v.string()),
         teamB: v.optional(v.string()),
+        articleTitle: v.optional(v.string()),
+        articleContent: v.optional(v.string()),
         leagueId: v.optional(v.string()),
         leagueName: v.optional(v.string()),
         kickoffAt: v.optional(v.number()),

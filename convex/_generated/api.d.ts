@@ -9,6 +9,7 @@
  */
 
 import type * as ads from "../ads.js";
+import type * as allowedLeagues from "../allowedLeagues.js";
 import type * as analytics from "../analytics.js";
 import type * as enableAds from "../enableAds.js";
 import type * as fixtures from "../fixtures.js";
@@ -29,6 +30,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ads: typeof ads;
+  allowedLeagues: typeof allowedLeagues;
   analytics: typeof analytics;
   enableAds: typeof enableAds;
   fixtures: typeof fixtures;

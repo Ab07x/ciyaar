@@ -6,7 +6,7 @@
  */
 
 import { v } from "convex/values";
-import { action, mutation, query, internalMutation, internalAction } from "./_generated/server";
+import { action, mutation, query, internalMutation, internalAction, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 // ============================================
@@ -328,6 +328,8 @@ export const writeSyncLog = internalMutation({
         date: v.string(),
         mode: v.union(v.literal("yesterday"), v.literal("today"), v.literal("tomorrow")),
         ok: v.boolean(),
+        fetchedCount: v.number(),
+        skippedCount: v.number(),
         importedCount: v.number(),
         updatedCount: v.number(),
         error: v.optional(v.union(v.string(), v.null())),
@@ -340,18 +342,32 @@ export const writeSyncLog = internalMutation({
     },
 });
 
+/**
+ * Internal query to get allowed league names for sync filtering
+ */
+export const internalGetAllowedLeagueNames = internalQuery({
+    args: {},
+    handler: async (ctx) => {
+        const leagues = await ctx.db
+            .query("allowed_leagues")
+            .collect();
+        return leagues.filter(l => l.enabled).map(l => l.leagueName);
+    },
+});
+
 // ============================================
 // PUBLIC ACTIONS (Admin-triggered sync)
 // ============================================
 
 /**
- * Sync fixtures for a specific mode (yesterday/today/tomorrow)
+ * Internal sync fixtures for a specific mode (used by syncAll3Days)
+ * Filters fixtures to only include allowed leagues
  */
-export const syncFixtures = action({
+export const internalSyncFixtures = internalAction({
     args: {
         mode: v.union(v.literal("yesterday"), v.literal("today"), v.literal("tomorrow")),
     },
-    handler: async (ctx, args): Promise<{ ok: boolean; imported: number; updated: number; error?: string }> => {
+    handler: async (ctx, args): Promise<{ ok: boolean; fetched: number; skipped: number; imported: number; updated: number; error?: string }> => {
         const dateString = getDateForMode(args.mode);
 
         // Fetch from API
@@ -364,25 +380,41 @@ export const syncFixtures = action({
                 date: dateString,
                 mode: args.mode,
                 ok: false,
+                fetchedCount: 0,
+                skippedCount: 0,
                 importedCount: 0,
                 updatedCount: 0,
                 error: fetchResult.error,
             });
-            return { ok: false, imported: 0, updated: 0, error: fetchResult.error };
+            return { ok: false, fetched: 0, skipped: 0, imported: 0, updated: 0, error: fetchResult.error };
         }
 
+        // Get allowed league names from database
+        const allowedLeagues = await ctx.runQuery(internal.fixtures.internalGetAllowedLeagueNames);
+        const allowedSet = new Set(allowedLeagues);
+
+        let fetched = fetchResult.data.length;
+        let skipped = 0;
         let imported = 0;
         let updated = 0;
 
-        // Process each fixture
+        // Process each fixture with league filtering
         for (const raw of fetchResult.data) {
+            const leagueName = raw.league.name;
+
+            // Skip if league is not in allowed list
+            if (!allowedSet.has(leagueName)) {
+                skipped++;
+                continue;
+            }
+
             const statusNormalized = normalizeStatus(raw.fixture.status.short);
 
             // Generate description
             const description = await ctx.runAction(internal.fixtures.internalGenerateDescription, {
                 homeName: raw.teams.home.name,
                 awayName: raw.teams.away.name,
-                leagueName: raw.league.name,
+                leagueName: leagueName,
                 status: statusNormalized,
             });
 
@@ -399,7 +431,7 @@ export const syncFixtures = action({
                 homeLogo: raw.teams.home.logo,
                 awayName: raw.teams.away.name,
                 awayLogo: raw.teams.away.logo,
-                leagueName: raw.league.name,
+                leagueName: leagueName,
                 leagueLogo: raw.league.logo,
                 description,
                 fetchedForDate: dateString,
@@ -414,17 +446,33 @@ export const syncFixtures = action({
             }
         }
 
-        // Write success log
+        // Write success log with all counts
         await ctx.runMutation(internal.fixtures.writeSyncLog, {
             date: dateString,
             mode: args.mode,
             ok: true,
+            fetchedCount: fetched,
+            skippedCount: skipped,
             importedCount: imported,
             updatedCount: updated,
             error: null,
         });
 
-        return { ok: true, imported, updated };
+        console.log(`[Sync ${args.mode}] Fetched: ${fetched}, Skipped: ${skipped}, Imported: ${imported}, Updated: ${updated}`);
+
+        return { ok: true, fetched, skipped, imported, updated };
+    },
+});
+
+/**
+ * Public sync fixtures for a specific mode (yesterday/today/tomorrow)
+ */
+export const syncFixtures = action({
+    args: {
+        mode: v.union(v.literal("yesterday"), v.literal("today"), v.literal("tomorrow")),
+    },
+    handler: async (ctx, args): Promise<{ ok: boolean; fetched: number; skipped: number; imported: number; updated: number; error?: string }> => {
+        return await ctx.runAction(internal.fixtures.internalSyncFixtures, { mode: args.mode });
     },
 });
 
@@ -438,9 +486,9 @@ export const syncAll3Days = action({
         today: { ok: boolean; imported: number; updated: number };
         tomorrow: { ok: boolean; imported: number; updated: number };
     }> => {
-        const yesterday = await ctx.runAction(internal.fixtures.syncFixtures, { mode: "yesterday" });
-        const today = await ctx.runAction(internal.fixtures.syncFixtures, { mode: "today" });
-        const tomorrow = await ctx.runAction(internal.fixtures.syncFixtures, { mode: "tomorrow" });
+        const yesterday = await ctx.runAction(internal.fixtures.internalSyncFixtures, { mode: "yesterday" });
+        const today = await ctx.runAction(internal.fixtures.internalSyncFixtures, { mode: "today" });
+        const tomorrow = await ctx.runAction(internal.fixtures.internalSyncFixtures, { mode: "tomorrow" });
 
         return {
             yesterday: { ok: yesterday.ok, imported: yesterday.imported, updated: yesterday.updated },

@@ -58,6 +58,15 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
                 <div className="lg:col-span-8">
                     <PlayerStage match={match as any} settings={settings} />
+
+                    {match.articleTitle && match.articleContent && (
+                        <article className="mt-8 prose prose-invert max-w-none">
+                            <AdSlot slotKey="match_article_top" className="mb-6" />
+                            <h1 className="text-3xl font-black mb-4">{match.articleTitle}</h1>
+                            <div dangerouslySetInnerHTML={{ __html: match.articleContent }} className="text-text-secondary whitespace-pre-wrap leading-relaxed" />
+                            <AdSlot slotKey="match_article_bottom" className="mt-6" />
+                        </article>
+                    )}
                 </div>
                 <div className="lg:col-span-4 space-y-6">
                     <AdSlot slotKey="match_sidebar" />

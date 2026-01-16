@@ -23,7 +23,8 @@ export default function EditMatchPage({ params }: Props) {
         title: "", slug: "", teamA: "", teamB: "", leagueId: "", leagueName: "",
         kickoffAt: 0, status: "upcoming" as "upcoming" | "live" | "finished",
         isPremium: false, requiredPlan: undefined as string | undefined,
-        thumbnailUrl: "", summary: "", embeds: [{ label: "Server 1", url: "" }]
+        thumbnailUrl: "", summary: "", embeds: [{ label: "Server 1", url: "" }],
+        articleTitle: "", articleContent: ""
     });
     const [kickoffDate, setKickoffDate] = useState("");
     const [kickoffTime, setKickoffTime] = useState("");
@@ -35,7 +36,8 @@ export default function EditMatchPage({ params }: Props) {
                 leagueId: match.leagueId, leagueName: match.leagueName, kickoffAt: match.kickoffAt,
                 status: match.status, isPremium: match.isPremium, requiredPlan: match.requiredPlan,
                 thumbnailUrl: match.thumbnailUrl || "", summary: match.summary || "",
-                embeds: match.embeds.length > 0 ? match.embeds : [{ label: "Server 1", url: "" }]
+                embeds: match.embeds.length > 0 ? match.embeds : [{ label: "Server 1", url: "" }],
+                articleTitle: match.articleTitle || "", articleContent: match.articleContent || ""
             });
             const d = new Date(match.kickoffAt);
             setKickoffDate(d.toISOString().split("T")[0]);
@@ -48,7 +50,16 @@ export default function EditMatchPage({ params }: Props) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const kickoff = new Date(`${kickoffDate}T${kickoffTime}`).getTime();
-        await updateMatch({ id: id as Id<"matches">, ...formData, kickoffAt: kickoff, thumbnailUrl: formData.thumbnailUrl || undefined, summary: formData.summary || undefined, requiredPlan: formData.requiredPlan as any });
+        await updateMatch({
+            id: id as Id<"matches">,
+            ...formData,
+            kickoffAt: kickoff,
+            thumbnailUrl: formData.thumbnailUrl || undefined,
+            summary: formData.summary || undefined,
+            requiredPlan: formData.requiredPlan as any,
+            articleTitle: formData.articleTitle || undefined,
+            articleContent: formData.articleContent || undefined
+        });
         router.push("/admin/matches");
     };
 
@@ -57,7 +68,9 @@ export default function EditMatchPage({ params }: Props) {
         setFormData({ ...formData, leagueId, leagueName: league?.name || "" });
     };
 
-    const addEmbed = () => formData.embeds.length < 3 && setFormData({ ...formData, embeds: [...formData.embeds, { label: `Server ${formData.embeds.length + 1}`, url: "" }] });
+    const PRIORITY_LEAGUES = ["UEFA Champions League", "Premier League", "La Liga", "FIFA World Cup", "UEFA Euro"];
+
+    const addEmbed = () => formData.embeds.length < 10 && setFormData({ ...formData, embeds: [...formData.embeds, { label: `Server ${formData.embeds.length + 1}`, url: "" }] });
     const removeEmbed = (i: number) => setFormData({ ...formData, embeds: formData.embeds.filter((_, idx) => idx !== i) });
     const updateEmbed = (i: number, field: "label" | "url", value: string) => { const embeds = [...formData.embeds]; embeds[i][field] = value; setFormData({ ...formData, embeds }); };
 
@@ -77,7 +90,26 @@ export default function EditMatchPage({ params }: Props) {
                         <div><label className="block text-xs text-text-secondary mb-1">Team B</label><input value={formData.teamB} onChange={e => setFormData({ ...formData, teamB: e.target.value })} required className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
                     </div>
                     <div><label className="block text-xs text-text-secondary mb-1">Slug</label><input value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} required className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
-                    <div><label className="block text-xs text-text-secondary mb-1">League</label><select value={formData.leagueId} onChange={e => selectLeague(e.target.value)} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"><option value="">Select...</option>{leagues?.filter(l => l.type === "league" || l.type === "competition").map(l => <option key={l._id} value={l._id}>{l.name}</option>)}</select></div>
+                    <div>
+                        <label className="block text-xs text-text-secondary mb-1">League</label>
+                        <select
+                            value={formData.leagueId}
+                            onChange={e => selectLeague(e.target.value)}
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                        >
+                            <option value="">Select...</option>
+                            {/* Priority Leagues */}
+                            {leagues?.filter(l => PRIORITY_LEAGUES.includes(l.name)).map(l => (
+                                <option key={l._id} value={l._id}>{l.name}</option>
+                            ))}
+                            {/* Separator if needed */}
+                            {leagues && leagues.length > 0 && <option disabled>──────────</option>}
+                            {/* Other Leagues */}
+                            {leagues?.filter(l => (l.type === "league" || l.type === "competition") && !PRIORITY_LEAGUES.includes(l.name)).map(l => (
+                                <option key={l._id} value={l._id}>{l.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="space-y-4 bg-stadium-elevated border border-border-strong rounded-xl p-6">
@@ -95,7 +127,7 @@ export default function EditMatchPage({ params }: Props) {
                 </div>
 
                 <div className="md:col-span-2 space-y-4 bg-stadium-elevated border border-border-strong rounded-xl p-6">
-                    <div className="flex justify-between items-center border-b border-border-strong pb-3"><h3 className="text-sm font-bold text-text-muted uppercase">Embed Links</h3>{formData.embeds.length < 3 && <button type="button" onClick={addEmbed} className="text-xs text-accent-green flex items-center gap-1"><Plus size={14} />Add</button>}</div>
+                    <div className="flex justify-between items-center border-b border-border-strong pb-3"><h3 className="text-sm font-bold text-text-muted uppercase">Embed Links (1-10)</h3>{formData.embeds.length < 10 && <button type="button" onClick={addEmbed} className="text-xs text-accent-green flex items-center gap-1"><Plus size={14} />Add</button>}</div>
                     <div className="space-y-3">{formData.embeds.map((embed, i) => (
                         <div key={i} className="flex gap-2 items-center">
                             <input value={embed.label} onChange={e => updateEmbed(i, "label", e.target.value)} placeholder="Label" className="w-1/4 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm" />
@@ -103,6 +135,17 @@ export default function EditMatchPage({ params }: Props) {
                             {formData.embeds.length > 1 && <button type="button" onClick={() => removeEmbed(i)} className="text-text-muted hover:text-accent-red"><X size={18} /></button>}
                         </div>
                     ))}</div>
+                </div>
+                <div className="md:col-span-2 space-y-4 bg-stadium-elevated border border-border-strong rounded-xl p-6">
+                    <h3 className="text-sm font-bold text-text-muted uppercase border-b border-border-strong pb-3">Article Info (Below Player)</h3>
+                    <div>
+                        <label className="block text-xs text-text-secondary mb-1">Article Title (H1)</label>
+                        <input value={formData.articleTitle} onChange={e => setFormData({ ...formData, articleTitle: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" placeholder="Enter a catchy title..." />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-text-secondary mb-1">Article Content (HTML supported)</label>
+                        <textarea value={formData.articleContent} onChange={e => setFormData({ ...formData, articleContent: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 min-h-[300px]" placeholder="<p>Write your article here...</p>" />
+                    </div>
                 </div>
             </form>
         </div>
