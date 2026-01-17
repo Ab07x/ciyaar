@@ -34,14 +34,7 @@ export default function HomePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-stadium-elevated to-[#1a2758] rounded-3xl p-8 md:p-12 mb-12 border border-border-strong">
-        <h1 className="text-3xl md:text-5xl font-black mb-4">DAAWO <span className="text-accent-green">CIYAAR</span> LIVE</h1>
-        <p className="text-text-secondary text-lg mb-6 max-w-xl">Ciyaaraha ugu xiisaha badan dunida, HD quality, ad-free</p>
-        <div className="flex gap-4">
-          <Link href="/pricing" className="bg-accent-gold text-black px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform">PREMIUM</Link>
-          <Link href="#live" className="bg-stadium-hover px-6 py-3 rounded-xl font-bold border border-border-subtle hover:border-accent-green transition-colors">Daawo Hadda</Link>
-        </div>
-      </div>
+
 
       <AdSlot slotKey="home_top" className="mb-12" />
 
