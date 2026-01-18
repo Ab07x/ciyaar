@@ -95,9 +95,10 @@ export default function EditMatchPage({ params }: Props) {
                         <select
                             value={formData.leagueId}
                             onChange={e => selectLeague(e.target.value)}
+                            required
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         >
-                            <option value="">Select...</option>
+                            <option value="" disabled>Select League...</option>
                             {/* Priority Leagues */}
                             {leagues?.filter(l => PRIORITY_LEAGUES.includes(l.name)).map(l => (
                                 <option key={l._id} value={l._id}>{l.name}</option>

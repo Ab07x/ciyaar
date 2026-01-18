@@ -5,21 +5,29 @@ import { api } from "@/convex/_generated/api";
 import { MatchCard } from "@/components/MatchCard";
 import { EmptyState } from "@/components/EmptyState";
 import { AdSlot } from "@/components/AdSlot";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 
 type FilterStatus = "all" | "live" | "upcoming" | "finished";
 
-export default function CiyaarArchivePage() {
+function ArchiveContent() {
+    const searchParams = useSearchParams();
+    const leagueIdParam = searchParams.get("league");
     const [filter, setFilter] = useState<FilterStatus>("all");
-    const matches = useQuery(api.matches.listMatches, filter === "all" ? {} : { status: filter as any });
+    const matches = useQuery(api.matches.listMatches, {
+        status: filter === "all" ? undefined : filter as any,
+        leagueId: leagueIdParam || undefined
+    });
 
     return (
-        <div className="space-y-8">
+        <>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-black mb-2 uppercase">KUUYUUBKA CIYAARAHA</h1>
-                    <p className="text-text-secondary">Dhammaan ciyaaraha ku jira Fanbroj</p>
+                    <h1 className="text-3xl md:text-5xl font-black mb-2 uppercase italic tracking-tighter">
+                        Daawo Ciyaar Live iyo Jadwalka Maanta
+                    </h1>
+                    <p className="text-text-secondary text-lg">Halkan kala soco dhammaan ciyaaraha live-ka ah iyo natiijooyinka kubadda cagta.</p>
                 </div>
 
                 {/* Filters */}
@@ -61,6 +69,14 @@ export default function CiyaarArchivePage() {
                     hint="Fadlan isku day filter kale."
                 />
             )}
-        </div>
+        </>
+    );
+}
+
+export default function CiyaarArchivePage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div></div>}>
+            <ArchiveContent />
+        </Suspense>
     );
 }

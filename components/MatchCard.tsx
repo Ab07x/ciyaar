@@ -51,7 +51,7 @@ export function MatchCard({
                     {thumbnailUrl ? (
                         <Image
                             src={thumbnailUrl}
-                            alt={title}
+                            alt={`${teamA} vs ${teamB} ciyaar live maanta`}
                             fill
                             className="object-cover"
                         />

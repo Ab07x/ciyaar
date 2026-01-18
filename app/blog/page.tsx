@@ -25,11 +25,11 @@ export default function BlogPage() {
         <div className="container mx-auto px-4 py-8">
             {/* Header */}
             <div className="mb-12">
-                <h1 className="text-4xl md:text-5xl font-black mb-4">
-                    WAR<span className="text-accent-green">ARKA</span>
+                <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter">
+                    Wararka Kubadda Cagta iyo Alan-ka Suuqa
                 </h1>
                 <p className="text-text-secondary text-lg">
-                    Wararka ugu dambeeyay ee ciyaaraha
+                    Halkan kala soco wararkii ugu dambeeyay, falanqaynta ciyaaraha, iyo xogta suuqa kala iibsiga.
                 </p>
             </div>
 

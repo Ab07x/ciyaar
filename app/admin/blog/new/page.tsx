@@ -7,7 +7,15 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Save } from "lucide-react";
 import Link from "next/link";
 
-const categories = ["News", "Market", "Match Preview", "Analysis"] as const;
+const categories = [
+    "Wararka Kubadda Cagta",
+    "Warbixino Ciyaareed",
+    "Wararka Suuqa Kala Iibsiga",
+    "Wararka Premier League",
+    "Wararka Champions League",
+    "Wararka Horyaalka Talyaaniga",
+    "Wararka Horyaalka Spain"
+] as const;
 
 export default function NewBlogPostPage() {
     const router = useRouter();

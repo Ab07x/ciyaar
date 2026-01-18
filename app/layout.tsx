@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fanbroj - DAAWO CIYAAR LIVE",
-  description: "Somali Live Sports Streaming Platform - Daawo ciyaaraha ugu xiisaha badan",
+  title: "Daawo Ciyaar Live Maanta | Fanbroj.net – Kubadda Cagta",
+  description: "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta. Daawo Premier League, Champions League iyo ciyaaro kale.",
 };
 
 export default function RootLayout({

@@ -36,6 +36,16 @@ export default function HomePage() {
       {/* Hero */}
 
 
+      <div className="mb-12">
+        <h1 className="text-3xl md:text-5xl font-black tracking-tighter mb-4">
+          Daawo Ciyaar Live Maanta – Fanbroj
+        </h1>
+        <p className="text-text-secondary text-lg max-w-2xl leading-relaxed">
+          Ku soo dhawaada Fanbroj, bogga aad ka heli karto ciyaaraha tooska ah ee live-ka ah, ciyaaraha maanta socda iyo kuwa soo socda.
+          Halkani waa hoyga taageerayaasha kubadda cagta Soomaaliyeed ee jecel daawashada Premier League, Champions League iyo wararka ciyaaraha.
+        </p>
+      </div>
+
       <AdSlot slotKey="home_top" className="mb-12" />
 
       {/* Live Now */}

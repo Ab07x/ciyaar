@@ -9,7 +9,15 @@ import { ChevronLeft, Save } from "lucide-react";
 import Link from "next/link";
 import type { Id } from "@/convex/_generated/dataModel";
 
-const categories = ["News", "Market", "Match Preview", "Analysis"] as const;
+const categories = [
+    "Wararka Kubadda Cagta",
+    "Warbixino Ciyaareed",
+    "Wararka Suuqa Kala Iibsiga",
+    "Wararka Premier League",
+    "Wararka Champions League",
+    "Wararka Horyaalka Talyaaniga",
+    "Wararka Horyaalka Spain"
+] as const;
 
 interface EditBlogPostPageProps {
     params: Promise<{ id: string }>;

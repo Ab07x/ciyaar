@@ -8,6 +8,7 @@ import { Calendar, Tag, ChevronLeft } from "lucide-react";
 import { AdSlot } from "@/components/AdSlot";
 import { ViewCounter } from "@/components/ViewCounter";
 import { SocialShare } from "@/components/SocialShare";
+import { MatchLinks } from "@/components/MatchLinks";
 
 interface BlogClientPageProps {
     slug: string;
@@ -164,8 +165,14 @@ export default function BlogClientPage({ slug }: BlogClientPageProps) {
                 </div>
             )}
 
+            {/* Internal Linking: Related Matches */}
+            <div className="mt-12 pt-8 border-t border-border-strong">
+                <h3 className="text-xl font-black mb-6 uppercase">Ciyaaraha Maanta ee Live ka ah</h3>
+                <MatchLinks limit={3} />
+            </div>
+
             {/* Back to Blog */}
-            <div className="mt-12 text-center">
+            <div className="mt-12 text-center text-sm">
                 <Link
                     href="/blog"
                     className="inline-flex items-center gap-2 text-accent-green hover:underline"

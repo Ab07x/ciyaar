@@ -9,10 +9,13 @@ export const listPosts = query({
     args: {
         category: v.optional(
             v.union(
-                v.literal("News"),
-                v.literal("Market"),
-                v.literal("Match Preview"),
-                v.literal("Analysis")
+                v.literal("Wararka Kubadda Cagta"),
+                v.literal("Warbixino Ciyaareed"),
+                v.literal("Wararka Suuqa Kala Iibsiga"),
+                v.literal("Wararka Premier League"),
+                v.literal("Wararka Champions League"),
+                v.literal("Wararka Horyaalka Talyaaniga"),
+                v.literal("Wararka Horyaalka Spain")
             )
         ),
         isPublished: v.optional(v.boolean()),
@@ -76,10 +79,13 @@ export const createPost = mutation({
         content: v.string(),
         featuredImageUrl: v.optional(v.string()),
         category: v.union(
-            v.literal("News"),
-            v.literal("Market"),
-            v.literal("Match Preview"),
-            v.literal("Analysis")
+            v.literal("Wararka Kubadda Cagta"),
+            v.literal("Warbixino Ciyaareed"),
+            v.literal("Wararka Suuqa Kala Iibsiga"),
+            v.literal("Wararka Premier League"),
+            v.literal("Wararka Champions League"),
+            v.literal("Wararka Horyaalka Talyaaniga"),
+            v.literal("Wararka Horyaalka Spain")
         ),
         tags: v.array(v.string()),
         isPublished: v.boolean(),
@@ -108,10 +114,13 @@ export const updatePost = mutation({
         featuredImageUrl: v.optional(v.string()),
         category: v.optional(
             v.union(
-                v.literal("News"),
-                v.literal("Market"),
-                v.literal("Match Preview"),
-                v.literal("Analysis")
+                v.literal("Wararka Kubadda Cagta"),
+                v.literal("Warbixino Ciyaareed"),
+                v.literal("Wararka Suuqa Kala Iibsiga"),
+                v.literal("Wararka Premier League"),
+                v.literal("Wararka Champions League"),
+                v.literal("Wararka Horyaalka Talyaaniga"),
+                v.literal("Wararka Horyaalka Spain")
             )
         ),
         tags: v.optional(v.array(v.string())),

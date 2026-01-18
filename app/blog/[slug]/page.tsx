@@ -18,10 +18,10 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     const imageUrl = post.featuredImageUrl || "https://fanbroj.net/og-image-blog.jpg";
 
     return {
-        title: `${title} - Fanbroj News`,
+        title: `${title} – Wararka Kubadda Cagta | Fanbroj`,
         description,
         openGraph: {
-            title: `${title} - Fanbroj News`,
+            title: `${title} – Wararka Kubadda Cagta | Fanbroj`,
             description,
             type: "article",
             images: [
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         },
         twitter: {
             card: "summary_large_image",
-            title: `${title} - Fanbroj News`,
+            title: `${title} – Wararka Kubadda Cagta | Fanbroj`,
             description,
             images: [imageUrl],
         },
@@ -44,5 +44,31 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const { slug } = await params;
-    return <BlogClientPage slug={slug} />;
+    const post = await fetchQuery(api.posts.getPostBySlug, { slug });
+
+    const jsonLd = post ? {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": post.title,
+        "image": post.featuredImageUrl ? [post.featuredImageUrl] : ["https://fanbroj.net/og-image-blog.jpg"],
+        "datePublished": new Date(post.publishedAt || Date.now()).toISOString(),
+        "dateModified": new Date(post.updatedAt || post._creationTime).toISOString(),
+        "author": [{
+            "@type": "Organization",
+            "name": "Fanbroj News",
+            "url": "https://fanbroj.net"
+        }]
+    } : null;
+
+    return (
+        <>
+            {jsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+            )}
+            <BlogClientPage slug={slug} />
+        </>
+    );
 }

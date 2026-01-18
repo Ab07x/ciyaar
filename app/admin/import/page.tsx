@@ -146,8 +146,8 @@ export default function AdminImportPage() {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black">IMPORT FIXTURES</h1>
-                    <p className="text-text-muted">Sync from API-Football & Import to Matches</p>
+                    <h1 className="text-3xl font-black">SYNC & IMPORT</h1>
+                    <p className="text-text-muted">Manage fixtures and live match imports</p>
                 </div>
                 {lastSync && (
                     <div className="text-xs text-right">
@@ -209,7 +209,7 @@ export default function AdminImportPage() {
                     className="px-6 py-3 bg-accent-green text-black font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
                 >
                     {syncing ? <Loader2 className="animate-spin" size={20} /> : <RefreshCw size={20} />}
-                    {syncing ? "Syncing..." : "Sync Now"}
+                    {syncing ? "Syncing..." : `Sync ${MODE_LABELS[mode]}'s Fixtures`}
                 </button>
             </div>
 

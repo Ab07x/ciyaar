@@ -10,6 +10,7 @@ import { ChevronLeft } from "lucide-react";
 import { ViewCounter } from "@/components/ViewCounter";
 import { SocialShare } from "@/components/SocialShare";
 import { LiveChat } from "@/components/LiveChat";
+import { RelatedNews } from "@/components/RelatedNews";
 
 interface MatchClientPageProps {
     slug: string;
@@ -45,8 +46,10 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
             </div>
 
             <div className="mb-4">
-                <span className="text-xs text-text-muted uppercase tracking-wider">{match.leagueName}</span>
-                <h1 className="text-2xl md:text-4xl font-black">{match.teamA} <span className="text-accent-green">vs</span> {match.teamB}</h1>
+                <Link href={`/ciyaar?league=${match.leagueId}`} className="text-xs text-accent-green font-bold uppercase tracking-wider hover:underline">
+                    {match.leagueName}
+                </Link>
+                <h1 className="text-2xl md:text-4xl font-black">{match.teamA} <span className="text-accent-green">vs</span> {match.teamB} – Ciyaar Live</h1>
                 <div className="flex items-center gap-4 mt-2">
                     {match.isPremium && <span className="px-3 py-1 bg-accent-gold/20 text-accent-gold text-xs font-bold rounded-full">PREMIUM</span>}
                     <div className="flex items-center gap-1.5 text-text-muted text-xs">
@@ -62,8 +65,8 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
                     {match.articleTitle && match.articleContent && (
                         <article className="mt-8 prose prose-invert max-w-none">
                             <AdSlot slotKey="match_article_top" className="mb-6" />
-                            <h1 className="text-3xl font-black mb-4">{match.articleTitle}</h1>
-                            <div dangerouslySetInnerHTML={{ __html: match.articleContent }} className="text-text-secondary whitespace-pre-wrap leading-relaxed" />
+                            <h2 className="text-3xl font-black mb-4">{match.articleTitle}</h2>
+                            <div dangerouslySetInnerHTML={{ __html: match.articleContent }} className="text-text-secondary leading-relaxed" />
                             <AdSlot slotKey="match_article_bottom" className="mt-6" />
                         </article>
                     )}
@@ -89,13 +92,22 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
             )}
 
             {relatedMatches && relatedMatches.length > 0 && (
-                <section>
-                    <h2 className="text-xl font-black mb-4">CIYAARO KALE</h2>
+                <section className="mb-12">
+                    <h2 className="text-xl font-black mb-4 uppercase">Ciyaaro kale oo xiiso leh</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {relatedMatches.slice(0, 6).map((m: any) => <MatchCard key={m._id} {...m} />)}
                     </div>
                 </section>
             )}
+
+            {/* Related News Section for SEO */}
+            <section>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-black uppercase">Wararka Kubadda Cagta</h2>
+                    <Link href="/blog" className="text-sm text-accent-green hover:underline">Dhamaan Wararka</Link>
+                </div>
+                <RelatedNews limit={3} />
+            </section>
         </div>
     );
 }

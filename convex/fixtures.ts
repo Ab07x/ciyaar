@@ -105,11 +105,11 @@ function generateFallbackDescription(
     status: "upcoming" | "live" | "finished"
 ): string {
     if (status === "upcoming") {
-        return `${homeName} vs ${awayName} waa ciyaar ka tirsan ${leagueName}. Ciyaartu waxay bilaaban doontaa dhowaan Fanbroj.`;
+        return `${homeName} vs ${awayName} waa ciyaar ka tirsan ${leagueName}. Daawo ciyaarta maanta Fanbroj si toos ah.`;
     } else if (status === "live") {
-        return `${homeName} vs ${awayName} hadda waa socota oo waa ciyaar ka tirsan ${leagueName}. Daawo si toos ah Fanbroj.`;
+        return `${homeName} vs ${awayName} hadda waa socota oo waa ciyaar ka tirsan ${leagueName}. Daawo ciyaarta live Fanbroj.`;
     } else {
-        return `${homeName} vs ${awayName} waa ciyaar ka tirsan ${leagueName}. Ciyaartu way dhamaatay. Natiijooyinka iyo dib-u-eegista ciyaarta ayaa lasoo gelin doonaa dhowaan.`;
+        return `${homeName} vs ${awayName} waa ciyaar ka tirsan ${leagueName}. Ciyaartu way dhamaatay. Natiijooyinka iyo dib-u-eegista ciyaarta ayaa lasoo gelin doonaa dhowaan Fanbroj.`;
     }
 }
 
@@ -238,9 +238,11 @@ export const internalGenerateDescription = internalAction({
 
         const statusText = args.status === "upcoming" ? "soo socota / bilaaban doonta" : args.status === "live" ? "hadda socota / live ah" : "dhammaatay / soo idlaatay";
 
-        const prompt = `Qor sharaxaad gaaban (2 jumlad) oo Af-Soomaali ah ciyaarta "${args.homeName} vs ${args.awayName}" ee horyaalka "${args.leagueName}". Xaaladda ciyaartu waa: ${statusText}. 
-        Haddii ay dhamaatay, Dheh "Ciyaartu way dhamaatay" hana odhan "waxay bilaaban doontaa".
-        Ku dhamaystir "Fanbroj". Ha isticmaalin emoji.`;
+        const prompt = `Qor sharaxaad gaaban (2 jumlad) oo Af-Soomaali ah ciyaarta "${args.homeName} vs ${args.awayName}" ee horyaalka "${args.leagueName}". 
+        Xaaladda ciyaartu waa: ${statusText}.
+        Tone: Neutral, SEO-friendly, Somali sports journalism.
+        Include "Fanbroj". 
+        Pattern example: "${args.homeName} vs ${args.awayName} waa ciyaar ka tirsan ${args.leagueName}. Daawo ciyaarta maanta Fanbroj si toos ah."`;
 
         try {
             const response = await fetch(DEEPSEEK_API_URL, {

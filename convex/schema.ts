@@ -142,10 +142,13 @@ export default defineSchema({
         content: v.string(),
         featuredImageUrl: v.optional(v.string()),
         category: v.union(
-            v.literal("News"),
-            v.literal("Market"),
-            v.literal("Match Preview"),
-            v.literal("Analysis")
+            v.literal("Wararka Kubadda Cagta"),
+            v.literal("Warbixino Ciyaareed"),
+            v.literal("Wararka Suuqa Kala Iibsiga"),
+            v.literal("Wararka Premier League"),
+            v.literal("Wararka Champions League"),
+            v.literal("Wararka Horyaalka Talyaaniga"),
+            v.literal("Wararka Horyaalka Spain")
         ),
         tags: v.array(v.string()),
         publishedAt: v.optional(v.number()),
@@ -260,16 +263,16 @@ export default defineSchema({
         // Legacy fields
         cookieDays: v.optional(v.number()),
         premiumPriceText: v.optional(v.string()),
-        // Pricing (in USD) - Optional for migration
-        priceMatch: v.optional(v.number()),
-        priceWeekly: v.optional(v.number()),
-        priceMonthly: v.optional(v.number()),
-        priceYearly: v.optional(v.number()),
-        // Device limits per plan - Optional for migration
-        maxDevicesMatch: v.optional(v.number()),
-        maxDevicesWeekly: v.optional(v.number()),
-        maxDevicesMonthly: v.optional(v.number()),
-        maxDevicesYearly: v.optional(v.number()),
+        // Pricing (in USD)
+        priceMatch: v.number(),
+        priceWeekly: v.number(),
+        priceMonthly: v.number(),
+        priceYearly: v.number(),
+        // Device limits per plan
+        maxDevicesMatch: v.number(),
+        maxDevicesWeekly: v.number(),
+        maxDevicesMonthly: v.number(),
+        maxDevicesYearly: v.number(),
     }),
 
     // ============================================

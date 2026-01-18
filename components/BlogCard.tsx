@@ -40,7 +40,7 @@ export function BlogCard({ post }: BlogCardProps) {
                 {post.featuredImageUrl ? (
                     <Image
                         src={post.featuredImageUrl}
-                        alt={post.title}
+                        alt={`${post.title} – wararka kubadda cagta`}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />

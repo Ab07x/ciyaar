@@ -12,28 +12,28 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
     if (!match) return { title: "Match Not Found - Fanbroj" };
 
     const title = `${match.teamA} vs ${match.teamB}`;
-    const description = `Daawo ciyaarta ${title} LIVE HD quality on Fanbroj.net. ${match.leagueName}`;
-    const imageUrl = match.thumbnailUrl || "https://fanbroj.net/og-image.jpg"; // Fallback OG image
+    const description = `${title} waa ciyaar ka tirsan ${match.leagueName || "Horyaallada adduunka"}. Daawo ciyaarta maanta Fanbroj si toos ah.`;
+    const imageUrl = match.thumbnailUrl || "https://fanbroj.net/og-image.jpg";
 
     return {
-        title: `${title} - Fanbroj Live`,
+        title: `${title} – Daawo Ciyaar Live | Fanbroj`,
         description,
         openGraph: {
-            title: `${title} - Fanbroj Live`,
+            title: `${title} – Daawo Ciyaar Live | Fanbroj`,
             description,
             images: [
                 {
                     url: imageUrl,
                     width: 1200,
                     height: 630,
-                    alt: title,
+                    alt: `${title} live maanta`,
                 },
             ],
             type: "website",
         },
         twitter: {
             card: "summary_large_image",
-            title: `${title} - Fanbroj Live`,
+            title: `${title} – Daawo Ciyaar Live | Fanbroj`,
             description,
             images: [imageUrl],
         },
@@ -42,5 +42,40 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
 
 export default async function MatchPage({ params }: MatchPageProps) {
     const { slug } = await params;
-    return <MatchClientPage slug={slug} />;
+    const match = await fetchQuery(api.matches.getMatchBySlug, { slug });
+
+    const jsonLd = match ? {
+        "@context": "https://schema.org",
+        "@type": "SportsEvent",
+        "name": `${match.teamA} vs ${match.teamB}`,
+        "description": `${match.teamA} vs ${match.teamB} live streaming on Fanbroj.net`,
+        "startDate": new Date(match.kickoffAt).toISOString(),
+        "homeTeam": {
+            "@type": "SportsTeam",
+            "name": match.teamA,
+        },
+        "awayTeam": {
+            "@type": "SportsTeam",
+            "name": match.teamB,
+        },
+        "location": {
+            "@type": "Place",
+            "name": match.leagueName || "Stadium",
+        },
+        "eventStatus": match.status === "live" ? "https://schema.org/EventLive" :
+            match.status === "finished" ? "https://schema.org/EventPostponed" : // Approximate for finished
+                "https://schema.org/EventScheduled",
+    } : null;
+
+    return (
+        <>
+            {jsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+            )}
+            <MatchClientPage slug={slug} />
+        </>
+    );
 }
