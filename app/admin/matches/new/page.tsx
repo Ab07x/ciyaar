@@ -35,7 +35,7 @@ export default function MatchFormPage({ params }: Props) {
         if (match && "title" in match) {
             setFormData({
                 title: match.title, slug: match.slug, teamA: match.teamA, teamB: match.teamB,
-                leagueId: match.leagueId, leagueName: match.leagueName, kickoffAt: match.kickoffAt,
+                leagueId: match.leagueId || "", leagueName: match.leagueName || "", kickoffAt: match.kickoffAt,
                 status: match.status, isPremium: match.isPremium, requiredPlan: match.requiredPlan,
                 thumbnailUrl: match.thumbnailUrl || "", summary: match.summary || "",
                 embeds: match.embeds.length > 0 ? match.embeds : [{ label: "Server 1", url: "" }],
