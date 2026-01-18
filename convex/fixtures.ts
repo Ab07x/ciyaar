@@ -109,7 +109,7 @@ function generateFallbackDescription(
     } else if (status === "live") {
         return `${homeName} vs ${awayName} hadda waa socota oo waa ciyaar ka tirsan ${leagueName}. Daawo si toos ah Fanbroj.`;
     } else {
-        return `${homeName} vs ${awayName} waxay ahayd ciyaar ka tirsan ${leagueName}. Natiijada ciyaarta waxaa lagu daawan karaa Fanbroj.`;
+        return `${homeName} vs ${awayName} waa ciyaar ka tirsan ${leagueName}. Ciyaartu way dhamaatay. Natiijooyinka iyo dib-u-eegista ciyaarta ayaa lasoo gelin doonaa dhowaan.`;
     }
 }
 
@@ -236,9 +236,11 @@ export const internalGenerateDescription = internalAction({
             return generateFallbackDescription(args.homeName, args.awayName, args.leagueName, args.status);
         }
 
-        const statusText = args.status === "upcoming" ? "soo socota" : args.status === "live" ? "hadda socota" : "dhammaatay";
+        const statusText = args.status === "upcoming" ? "soo socota / bilaaban doonta" : args.status === "live" ? "hadda socota / live ah" : "dhammaatay / soo idlaatay";
 
-        const prompt = `Qor sharaxaad gaaban (2 jumlad keliya) oo Af-Soomaali ah ciyaarta "${args.homeName} vs ${args.awayName}" oo ka tirsan ${args.leagueName}. Ciyaartu waa ${statusText}. Ha isticmaalin emoji. Dhig mid neutral oo SEO-friendly. Ku dhamaystir "Fanbroj".`;
+        const prompt = `Qor sharaxaad gaaban (2 jumlad) oo Af-Soomaali ah ciyaarta "${args.homeName} vs ${args.awayName}" ee horyaalka "${args.leagueName}". Xaaladda ciyaartu waa: ${statusText}. 
+        Haddii ay dhamaatay, Dheh "Ciyaartu way dhamaatay" hana odhan "waxay bilaaban doontaa".
+        Ku dhamaystir "Fanbroj". Ha isticmaalin emoji.`;
 
         try {
             const response = await fetch(DEEPSEEK_API_URL, {
