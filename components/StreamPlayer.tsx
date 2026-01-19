@@ -266,7 +266,7 @@ export function StreamPlayer({ source, poster, className, onError, onReady }: St
             video.removeEventListener("waiting", handleWaiting);
             video.removeEventListener("playing", handlePlaying);
         };
-    }, []);
+    }, [streamType]);
 
     // Controls
     const togglePlay = () => {
@@ -371,12 +371,12 @@ export function StreamPlayer({ source, poster, className, onError, onReady }: St
             {/* Controls Overlay */}
             <div
                 className={cn(
-                    "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 transition-opacity duration-300 z-10",
-                    showControls ? "opacity-100" : "opacity-0 pointer-events-none"
+                    "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 transition-opacity duration-300 z-10 pointer-events-none",
+                    showControls ? "opacity-100" : "opacity-0"
                 )}
             >
                 {/* Top bar */}
-                <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
+                <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between pointer-events-auto">
                     <div className="flex items-center gap-2">
                         <span className="flex items-center gap-1.5 bg-accent-red px-2 py-1 rounded-full">
                             <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
@@ -426,17 +426,19 @@ export function StreamPlayer({ source, poster, className, onError, onReady }: St
                 </div>
 
                 {/* Center play button */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <button
-                        onClick={togglePlay}
-                        className="w-16 h-16 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110"
-                    >
-                        {isPlaying ? <Pause size={28} className="text-white" /> : <Play size={28} className="text-white ml-1" />}
-                    </button>
-                </div>
+                {!isPlaying && !isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <button
+                            onClick={togglePlay}
+                            className="w-16 h-16 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 pointer-events-auto"
+                        >
+                            {isPlaying ? <Pause size={28} className="text-white" /> : <Play size={28} className="text-white ml-1" />}
+                        </button>
+                    </div>
+                )}
 
                 {/* Bottom controls */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-4">
+                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-4 pointer-events-auto">
                     <button onClick={togglePlay} className="text-white hover:text-accent-green transition-colors">
                         {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                     </button>
