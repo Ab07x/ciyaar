@@ -35,6 +35,8 @@ export default defineSchema({
             v.object({
                 label: v.string(),
                 url: v.string(),
+                type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                isProtected: v.optional(v.boolean()),
             })
         ),
         thumbnailUrl: v.optional(v.union(v.string(), v.null())),
@@ -141,15 +143,7 @@ export default defineSchema({
         excerpt: v.string(),
         content: v.string(),
         featuredImageUrl: v.optional(v.string()),
-        category: v.union(
-            v.literal("Wararka Kubadda Cagta"),
-            v.literal("Warbixino Ciyaareed"),
-            v.literal("Wararka Suuqa Kala Iibsiga"),
-            v.literal("Wararka Premier League"),
-            v.literal("Wararka Champions League"),
-            v.literal("Wararka Horyaalka Talyaaniga"),
-            v.literal("Wararka Horyaalka Spain")
-        ),
+        category: v.string(),
         tags: v.array(v.string()),
         publishedAt: v.optional(v.number()),
         isPublished: v.boolean(),
@@ -288,4 +282,197 @@ export default defineSchema({
     })
         .index("by_match", ["matchId", "createdAt"])
         .index("by_user", ["userId", "createdAt"]),
+
+    // ============================================
+    // CHANNELS (Live TV iframe links)
+    // ============================================
+    channels: defineTable({
+        slug: v.string(),
+        name: v.string(),
+        description: v.optional(v.string()),
+        thumbnailUrl: v.optional(v.string()),
+        category: v.union(
+            v.literal("sports"),
+            v.literal("entertainment"),
+            v.literal("news"),
+            v.literal("movies")
+        ),
+        embeds: v.array(
+            v.object({
+                label: v.string(),
+                url: v.string(),
+                type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                isProtected: v.optional(v.boolean()),
+            })
+        ),
+        isPremium: v.boolean(),
+        isLive: v.boolean(),
+        priority: v.number(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_slug", ["slug"])
+        .index("by_category", ["category"])
+        .index("by_premium", ["isPremium"])
+        .index("by_live", ["isLive"]),
+
+    // ============================================
+    // MOVIES (TMDB auto-fetched)
+    // ============================================
+    movies: defineTable({
+        // Identifiers
+        slug: v.string(),
+        tmdbId: v.number(),
+        imdbId: v.optional(v.string()),
+
+        // Auto-fetched from TMDB
+        title: v.string(),
+        titleSomali: v.optional(v.string()),
+        overview: v.string(),
+        overviewSomali: v.optional(v.string()),
+        posterUrl: v.string(),
+        backdropUrl: v.optional(v.string()),
+        releaseDate: v.string(),
+        runtime: v.optional(v.number()),
+        rating: v.optional(v.number()),
+        voteCount: v.optional(v.number()),
+        genres: v.array(v.string()),
+        cast: v.array(
+            v.object({
+                name: v.string(),
+                character: v.string(),
+                profileUrl: v.optional(v.string()),
+            })
+        ),
+        director: v.optional(v.string()),
+
+        // Admin input
+        embeds: v.array(
+            v.object({
+                label: v.string(),
+                url: v.string(),
+                quality: v.optional(v.string()),
+                type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                isProtected: v.optional(v.boolean()),
+            })
+        ),
+        isDubbed: v.boolean(),
+        isPremium: v.boolean(),
+        isPublished: v.boolean(),
+
+        // SEO
+        seoTitle: v.optional(v.string()),
+        seoDescription: v.optional(v.string()),
+
+        // Stats
+        views: v.optional(v.number()),
+
+        // Timestamps
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_slug", ["slug"])
+        .index("by_tmdb", ["tmdbId"])
+        .index("by_published", ["isPublished"])
+        .index("by_premium", ["isPremium"])
+        .index("by_dubbed", ["isDubbed"]),
+
+    // ============================================
+    // SERIES (TMDB auto-fetched)
+    // ============================================
+    series: defineTable({
+        slug: v.string(),
+        tmdbId: v.number(),
+        imdbId: v.optional(v.string()),
+
+        title: v.string(),
+        titleSomali: v.optional(v.string()),
+        overview: v.string(),
+        overviewSomali: v.optional(v.string()),
+        posterUrl: v.string(),
+        backdropUrl: v.optional(v.string()),
+        firstAirDate: v.string(),
+        lastAirDate: v.optional(v.string()),
+        status: v.string(),
+        rating: v.optional(v.number()),
+        genres: v.array(v.string()),
+        cast: v.array(
+            v.object({
+                name: v.string(),
+                character: v.string(),
+                profileUrl: v.optional(v.string()),
+            })
+        ),
+
+        numberOfSeasons: v.number(),
+        numberOfEpisodes: v.number(),
+
+        isDubbed: v.boolean(),
+        isPremium: v.boolean(),
+        isPublished: v.boolean(),
+
+        seoTitle: v.optional(v.string()),
+        seoDescription: v.optional(v.string()),
+        views: v.optional(v.number()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_slug", ["slug"])
+        .index("by_tmdb", ["tmdbId"])
+        .index("by_published", ["isPublished"]),
+
+    // ============================================
+    // EPISODES
+    // ============================================
+    episodes: defineTable({
+        seriesId: v.id("series"),
+        seasonNumber: v.number(),
+        episodeNumber: v.number(),
+
+        title: v.string(),
+        titleSomali: v.optional(v.string()),
+        overview: v.optional(v.string()),
+        stillUrl: v.optional(v.string()),
+        airDate: v.optional(v.string()),
+        runtime: v.optional(v.number()),
+
+        embeds: v.array(
+            v.object({
+                label: v.string(),
+                url: v.string(),
+                type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                isProtected: v.optional(v.boolean()),
+            })
+        ),
+
+        isPublished: v.boolean(),
+        createdAt: v.number(),
+    })
+        .index("by_series", ["seriesId"])
+        .index("by_season", ["seriesId", "seasonNumber"]),
+
+    // ============================================
+    // TRANSLATION QUEUE (Somali AI)
+    // ============================================
+    translation_queue: defineTable({
+        entityType: v.union(
+            v.literal("movie"),
+            v.literal("series"),
+            v.literal("episode")
+        ),
+        entityId: v.string(),
+        field: v.string(),
+        sourceText: v.string(),
+        translatedText: v.optional(v.string()),
+        status: v.union(
+            v.literal("pending"),
+            v.literal("processing"),
+            v.literal("done"),
+            v.literal("failed")
+        ),
+        createdAt: v.number(),
+        processedAt: v.optional(v.number()),
+    })
+        .index("by_status", ["status"])
+        .index("by_entity", ["entityType", "entityId"]),
 });

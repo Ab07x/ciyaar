@@ -60,6 +60,9 @@ export default function AdminDashboard() {
                         <Link href="/admin/matches/new" className="p-4 bg-stadium-hover rounded-xl text-center hover:bg-accent-green/20">
                             <PlayCircle size={24} className="mx-auto mb-2 text-accent-green" /><span className="text-sm">Add Match</span>
                         </Link>
+                        <Link href="/admin/channels/new" className="p-4 bg-stadium-hover rounded-xl text-center hover:bg-accent-red/20">
+                            <PlayCircle size={24} className="mx-auto mb-2 text-accent-red" /><span className="text-sm">Add Channel</span>
+                        </Link>
                         <Link href="/admin/import" className="p-4 bg-stadium-hover rounded-xl text-center hover:bg-blue-500/20">
                             <TrendingUp size={24} className="mx-auto mb-2 text-blue-400" /><span className="text-sm">Import</span>
                         </Link>

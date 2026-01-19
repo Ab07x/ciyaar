@@ -5,6 +5,7 @@ import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { UserProvider } from "@/providers/UserProvider";
 import Link from "next/link";
 import { SearchBox } from "@/components/SearchBox";
+import { Navbar } from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,32 +36,7 @@ export default function RootLayout({
         <ConvexClientProvider>
           <UserProvider>
             {/* Header */}
-            <header className="bg-[#121c4a] border-b border-border-strong sticky top-0 z-50">
-              <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/" className="text-2xl font-black tracking-tighter text-white">
-                  FAN<span className="text-accent-green">BROJ</span>
-                </Link>
-
-                <nav className="hidden md:flex items-center gap-6">
-                  <Link href="/" className="text-sm font-bold hover:text-accent-green transition-colors">HOME</Link>
-                  <Link href="/ciyaar" className="text-sm font-bold hover:text-accent-green transition-colors">CIYAARAHA</Link>
-                  <Link href="/blog" className="text-sm font-bold hover:text-accent-green transition-colors">WARARKA</Link>
-                  <Link href="/pricing" className="text-sm font-bold text-accent-gold hover:text-accent-gold/80 transition-colors">PREMIUM</Link>
-                </nav>
-
-                <div className="flex items-center gap-4">
-                  <div className="hidden sm:block w-48 lg:w-64">
-                    <SearchBox />
-                  </div>
-                  <Link
-                    href="/pricing"
-                    className="bg-accent-gold text-black px-4 py-2 rounded-md font-bold text-sm hover:scale-105 transition-transform"
-                  >
-                    PREMIUM
-                  </Link>
-                </div>
-              </div>
-            </header>
+            <Navbar />
 
             <main className="min-h-[calc(100vh-4rem)]">
               {children}
@@ -75,12 +51,18 @@ export default function RootLayout({
                 <p className="text-text-muted text-sm max-w-md mx-auto mb-8">
                   Halkani waa hoyga taageerayaasha ciyaaraha ee Soomaaliyeed. Waxaan idiin soo gudbinnaa ciyaaraha ugu xiisaha badan dunida.
                 </p>
-                <div className="flex flex-wrap justify-center gap-6 mb-8">
-                  <Link href="/" className="text-sm text-text-secondary hover:text-white">Home</Link>
-                  <Link href="/ciyaar" className="text-sm text-text-secondary hover:text-white">Ciyaaraha</Link>
-                  <Link href="/blog" className="text-sm text-text-secondary hover:text-white">Wararka</Link>
-                  <Link href="/pricing" className="text-sm text-text-secondary hover:text-white">Premium</Link>
-                </div>
+                <nav className="flex flex-wrap justify-center items-center gap-6 mb-8">
+                  <Link href="/" className="text-sm font-bold hover:text-accent-green transition-colors">HOME</Link>
+                  <Link href="/ciyaar" className="text-sm font-bold hover:text-accent-green transition-colors">CIYAARAHA</Link>
+
+                  {/* Footer specific links matching dropdown */}
+                  <Link href="/movies" className="text-sm font-bold hover:text-accent-green transition-colors">HINDI AF SOMALI</Link>
+                  <Link href="/series" className="text-sm font-bold hover:text-accent-green transition-colors">MUSALSAL</Link>
+                  <Link href="/live" className="text-sm font-bold hover:text-accent-green transition-colors">FANPROJ TV</Link>
+
+                  <Link href="/blog" className="text-sm font-bold hover:text-accent-green transition-colors">WARARKA</Link>
+                  <Link href="/pricing" className="text-sm font-bold text-accent-gold hover:text-accent-gold/80 transition-colors">PREMIUM</Link>
+                </nav>
                 <p className="text-text-muted text-xs">
                   © {new Date().getFullYear()} Fanbroj.net. Dhamaan xuquuqda waa dhowran tahay.
                 </p>

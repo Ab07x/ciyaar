@@ -23,7 +23,7 @@ export default function EditMatchPage({ params }: Props) {
         title: "", slug: "", teamA: "", teamB: "", leagueId: "", leagueName: "",
         kickoffAt: 0, status: "upcoming" as "upcoming" | "live" | "finished",
         isPremium: false, requiredPlan: undefined as string | undefined,
-        thumbnailUrl: "", summary: "", embeds: [{ label: "Server 1", url: "" }],
+        thumbnailUrl: "", summary: "", embeds: [{ label: "Server 1", url: "", type: "iframe" as "m3u8" | "iframe" | "video" }],
         articleTitle: "", articleContent: ""
     });
     const [kickoffDate, setKickoffDate] = useState("");
@@ -36,7 +36,7 @@ export default function EditMatchPage({ params }: Props) {
                 leagueId: match.leagueId || "", leagueName: match.leagueName || "", kickoffAt: match.kickoffAt,
                 status: match.status, isPremium: match.isPremium, requiredPlan: match.requiredPlan,
                 thumbnailUrl: match.thumbnailUrl || "", summary: match.summary || "",
-                embeds: match.embeds.length > 0 ? match.embeds : [{ label: "Server 1", url: "" }],
+                embeds: match.embeds.length > 0 ? match.embeds.map(e => ({ ...e, type: (e as any).type || "iframe" })) : [{ label: "Server 1", url: "", type: "iframe" as const }],
                 articleTitle: match.articleTitle || "", articleContent: match.articleContent || ""
             });
             const d = new Date(match.kickoffAt);
@@ -70,9 +70,9 @@ export default function EditMatchPage({ params }: Props) {
 
     const PRIORITY_LEAGUES = ["UEFA Champions League", "Premier League", "La Liga", "FIFA World Cup", "UEFA Euro"];
 
-    const addEmbed = () => formData.embeds.length < 10 && setFormData({ ...formData, embeds: [...formData.embeds, { label: `Server ${formData.embeds.length + 1}`, url: "" }] });
+    const addEmbed = () => formData.embeds.length < 10 && setFormData({ ...formData, embeds: [...formData.embeds, { label: `Server ${formData.embeds.length + 1}`, url: "", type: "iframe" as const }] });
     const removeEmbed = (i: number) => setFormData({ ...formData, embeds: formData.embeds.filter((_, idx) => idx !== i) });
-    const updateEmbed = (i: number, field: "label" | "url", value: string) => { const embeds = [...formData.embeds]; embeds[i][field] = value; setFormData({ ...formData, embeds }); };
+    const updateEmbed = (i: number, field: "label" | "url" | "type", value: string) => { const embeds = [...formData.embeds]; (embeds[i] as any)[field] = value; setFormData({ ...formData, embeds }); };
 
     return (
         <div className="max-w-4xl space-y-8">
@@ -131,8 +131,13 @@ export default function EditMatchPage({ params }: Props) {
                     <div className="flex justify-between items-center border-b border-border-strong pb-3"><h3 className="text-sm font-bold text-text-muted uppercase">Embed Links (1-10)</h3>{formData.embeds.length < 10 && <button type="button" onClick={addEmbed} className="text-xs text-accent-green flex items-center gap-1"><Plus size={14} />Add</button>}</div>
                     <div className="space-y-3">{formData.embeds.map((embed, i) => (
                         <div key={i} className="flex gap-2 items-center">
-                            <input value={embed.label} onChange={e => updateEmbed(i, "label", e.target.value)} placeholder="Label" className="w-1/4 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm" />
-                            <input value={embed.url} onChange={e => updateEmbed(i, "url", e.target.value)} placeholder="Iframe URL" className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm" />
+                            <input value={embed.label} onChange={e => updateEmbed(i, "label", e.target.value)} placeholder="Label" className="w-1/5 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm" />
+                            <select value={(embed as any).type || "iframe"} onChange={e => updateEmbed(i, "type", e.target.value)} className="w-24 bg-stadium-dark border border-border-subtle rounded-lg px-2 py-2 text-sm">
+                                <option value="iframe">Iframe</option>
+                                <option value="m3u8">M3U8</option>
+                                <option value="video">Video</option>
+                            </select>
+                            <input value={embed.url} onChange={e => updateEmbed(i, "url", e.target.value)} placeholder={(embed as any).type === "m3u8" ? "https://example.com/stream.m3u8" : "Iframe URL"} className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm" />
                             {formData.embeds.length > 1 && <button type="button" onClick={() => removeEmbed(i)} className="text-text-muted hover:text-accent-red"><X size={18} /></button>}
                         </div>
                     ))}</div>

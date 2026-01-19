@@ -1,20 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-stadium-dark: #0a0c10;
-  --color-stadium-elevated: #14161b;
-  --color-stadium-hover: #1a1d24;
+  --color-stadium-dark: #0B0F14;
+  --color-stadium-elevated: #111827;
+  --color-stadium-hover: #1F2933;
 
-  --color-accent-green: #00d95f;
-  --color-accent-red: #ff1744;
-  --color-accent-gold: #ffb800;
+  --color-accent-green: #22C55E;
+  --color-accent-red: #EF4444;
+  --color-accent-gold: #F59E0B;
+  --color-accent-blue: #3B82F6;
 
-  --color-border-subtle: #1f2329;
-  --color-border-strong: #2a2e36;
+  --color-border-subtle: #2D3748;
+  --color-border-strong: #374151;
 
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a0a4ab;
-  --color-text-muted: #6b7280;
+  --color-text-primary: #E5E7EB;
+  --color-text-secondary: #9CA3AF;
+  --color-text-muted: #6B7280;
 
   --radius-lg: 12px;
   --radius-md: 8px;
@@ -80,5 +81,38 @@
   /* Iframe responsive */
   .embed-iframe {
     @apply absolute inset-0 w-full h-full rounded-2xl;
+  }
+
+  /* Premium gradient animation */
+  @keyframes gradient-shift {
+
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 4s ease infinite;
+  }
+
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  /* Channel card */
+  .channel-card {
+    @apply transition-all duration-300;
+  }
+
+  .channel-card:hover {
+    @apply -translate-y-1;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   }
 }

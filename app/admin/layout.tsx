@@ -13,11 +13,17 @@ import {
     Trophy,
     LogOut,
     DollarSign,
+    Radio,
+    Film,
+    Tv,
 } from "lucide-react";
 
 const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/matches", label: "Matches", icon: PlayCircle },
+    { href: "/admin/channels", label: "Channels", icon: Radio },
+    { href: "/admin/movies", label: "Movies", icon: Film },
+    { href: "/admin/series", label: "Series", icon: Tv },
     { href: "/admin/import", label: "Import", icon: Download },
     { href: "/admin/leagues", label: "Leagues", icon: Trophy },
     { href: "/admin/blog", label: "Blog", icon: FileText },
@@ -68,8 +74,8 @@ export default function AdminLayout({
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
-                                        ? "bg-accent-green text-black"
-                                        : "text-text-secondary hover:bg-stadium-hover hover:text-white"
+                                    ? "bg-accent-green text-black"
+                                    : "text-text-secondary hover:bg-stadium-hover hover:text-white"
                                     }`}
                             >
                                 <Icon size={18} />

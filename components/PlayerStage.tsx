@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { Badge } from "./Badge";
 import { CountdownTimer } from "./CountdownTimer";
+import { StreamPlayer } from "./StreamPlayer";
 import { useUser } from "@/providers/UserProvider";
 import { cn } from "@/lib/utils";
-import { Lock, MessageSquare, Crown } from "lucide-react";
+import { MessageSquare, Crown } from "lucide-react";
 import Link from "next/link";
 import type { Id } from "@/convex/_generated/dataModel";
 
-interface Embed { label: string; url: string; }
+interface Embed { label: string; url: string; type?: "m3u8" | "iframe" | "video" | "auto"; isProtected?: boolean; }
 
 interface PlayerStageProps {
     match: {
@@ -96,7 +97,15 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
         <div className={cn("flex flex-col gap-4", className)}>
             <div className="player-stage bg-black rounded-2xl overflow-hidden border border-border-subtle shadow-2xl">
                 {activeEmbed?.url ? (
-                    <iframe src={activeEmbed.url} className="embed-iframe" allowFullScreen scrolling="no" allow="autoplay; encrypted-media" />
+                    <StreamPlayer
+                        source={{
+                            url: activeEmbed.url,
+                            label: activeEmbed.label,
+                            type: activeEmbed.type || "auto",
+                            isProtected: activeEmbed.isProtected
+                        }}
+                        className="absolute inset-0"
+                    />
                 ) : (
                     <div className="flex items-center justify-center h-full text-text-muted">Lama hayo linkiyadii ciyaarta.</div>
                 )}
