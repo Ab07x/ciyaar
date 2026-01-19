@@ -117,6 +117,8 @@ export const createMatch = mutation({
             v.object({
                 label: v.string(),
                 url: v.string(),
+                type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                isProtected: v.optional(v.boolean()),
             })
         ),
         thumbnailUrl: v.optional(v.string()),
@@ -162,6 +164,8 @@ export const updateMatch = mutation({
                 v.object({
                     label: v.string(),
                     url: v.string(),
+                    type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                    isProtected: v.optional(v.boolean()),
                 })
             )
         ),

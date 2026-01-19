@@ -79,6 +79,8 @@ export const createChannel = mutation({
             v.object({
                 label: v.string(),
                 url: v.string(),
+                type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                isProtected: v.optional(v.boolean()),
             })
         ),
         isPremium: v.boolean(),
@@ -114,6 +116,8 @@ export const updateChannel = mutation({
                 v.object({
                     label: v.string(),
                     url: v.string(),
+                    type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+                    isProtected: v.optional(v.boolean()),
                 })
             )
         ),
