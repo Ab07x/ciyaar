@@ -140,6 +140,19 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
                                     placeholder="https://..."
                                     className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm"
                                 />
+                                <select
+                                    value={embed.type || "iframe"}
+                                    onChange={(e) => {
+                                        const newEmbeds = [...formData.embeds];
+                                        newEmbeds[i] = { ...newEmbeds[i], type: e.target.value };
+                                        setFormData({ ...formData, embeds: newEmbeds });
+                                    }}
+                                    className="w-24 bg-stadium-dark border border-border-subtle rounded-lg px-2 py-2 text-sm"
+                                >
+                                    <option value="iframe">Iframe</option>
+                                    <option value="m3u8">M3U8</option>
+                                    <option value="video">Video</option>
+                                </select>
                                 <button
                                     onClick={() => {
                                         const newEmbeds = formData.embeds.filter((_: any, idx: number) => idx !== i);

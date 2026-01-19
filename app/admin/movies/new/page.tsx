@@ -61,7 +61,7 @@ export default function MovieFormPage({ params }: Props) {
         genres: [] as string[],
         cast: [] as { name: string; character: string; profileUrl?: string }[],
         director: "",
-        embeds: [{ label: "Server 1", url: "", quality: "720p" }] as { label: string; url: string; quality?: string }[],
+        embeds: [{ label: "Server 1", url: "", quality: "720p", type: "iframe" }] as { label: string; url: string; quality?: string; type?: string }[],
         isDubbed: false,
         isPremium: false,
         isPublished: false,
@@ -86,7 +86,7 @@ export default function MovieFormPage({ params }: Props) {
                 genres: existingMovie.genres,
                 cast: existingMovie.cast,
                 director: existingMovie.director || "",
-                embeds: existingMovie.embeds.length > 0 ? existingMovie.embeds : [{ label: "Server 1", url: "", quality: "720p" }],
+                embeds: existingMovie.embeds.length > 0 ? existingMovie.embeds : [{ label: "Server 1", url: "", quality: "720p", type: "iframe" }],
                 isDubbed: existingMovie.isDubbed,
                 isPremium: existingMovie.isPremium,
                 isPublished: existingMovie.isPublished,
@@ -186,7 +186,7 @@ export default function MovieFormPage({ params }: Props) {
         if (formData.embeds.length < 10) {
             setFormData({
                 ...formData,
-                embeds: [...formData.embeds, { label: `Server ${formData.embeds.length + 1}`, url: "", quality: "720p" }],
+                embeds: [...formData.embeds, { label: `Server ${formData.embeds.length + 1}`, url: "", quality: "720p", type: "iframe" }],
             });
         }
     };
@@ -410,6 +410,15 @@ export default function MovieFormPage({ params }: Props) {
                                             placeholder="Iframe URL"
                                             className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm"
                                         />
+                                        <select
+                                            value={(embed as any).type || "iframe"}
+                                            onChange={(e) => updateEmbed(i, "type", e.target.value)}
+                                            className="w-24 bg-stadium-dark border border-border-subtle rounded-lg px-2 py-2 text-sm"
+                                        >
+                                            <option value="iframe">Iframe</option>
+                                            <option value="m3u8">M3U8</option>
+                                            <option value="video">Video</option>
+                                        </select>
                                         <select
                                             value={embed.quality || "720p"}
                                             onChange={(e) => updateEmbed(i, "quality", e.target.value)}
