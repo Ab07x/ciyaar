@@ -119,19 +119,7 @@ export const createMovie = mutation({
             updatedAt: now,
         });
 
-        // Queue translation for overview
-        if (args.overview) {
-            const queueId = await ctx.db.insert("translation_queue", {
-                entityId: movieId,
-                entityType: "movie",
-                field: "overview",
-                sourceText: args.overview,
-                status: "pending",
-                createdAt: now,
-            });
-            // Schedule processing immediately
-            await ctx.scheduler.runAfter(0, api.translate.processOneTranslation, { queueId });
-        }
+
 
         return movieId;
     },

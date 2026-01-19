@@ -46,9 +46,7 @@ export default function SeriesFormPage({ params }: Props) {
     const fetchSeasonFromTMDB = useAction(api.tmdb.fetchSeasonFromTMDB);
     const bulkCreateEpisodes = useMutation(api.series.bulkCreateEpisodes);
     const searchTMDB = useAction(api.tmdb.searchTMDB);
-    // Translation feature - requires Convex Node runtime setup
-    // const queueTranslation = useMutation(api.translate.queueTranslation);
-    // const processTranslation = useAction(api.translate.processOneTranslation);
+
 
     const [activeTab, setActiveTab] = useState<"details" | "episodes">("details");
     const [tmdbInput, setTmdbInput] = useState("");
@@ -345,19 +343,6 @@ export default function SeriesFormPage({ params }: Props) {
                                     <div className="bg-stadium-dark p-4 rounded-xl border border-border-subtle mb-4">
                                         <div className="flex justify-between items-center mb-2">
                                             <h4 className="font-bold text-sm">Somali Translation</h4>
-                                            {/* Auto-translate feature - requires Convex Node runtime
-                                            {id && (
-                                                <button
-                                                    onClick={async () => {
-                                                        if (!confirm("Regenerate translation via AI?")) return;
-                                                        // Translation logic
-                                                    }}
-                                                    className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded hover:bg-purple-500/30"
-                                                >
-                                                    Auto-Translate
-                                                </button>
-                                            )}
-                                            */}
                                         </div>
                                         <div className="space-y-3">
                                             <input

@@ -97,18 +97,7 @@ export const createSeries = mutation({
             updatedAt: now,
         });
 
-        // Queue translation
-        if (args.overview) {
-            const queueId = await ctx.db.insert("translation_queue", {
-                entityId: seriesId,
-                entityType: "series",
-                field: "overview",
-                sourceText: args.overview,
-                status: "pending",
-                createdAt: now,
-            });
-            await ctx.scheduler.runAfter(0, api.translate.processOneTranslation, { queueId });
-        }
+
 
         return seriesId;
     },
@@ -227,17 +216,7 @@ export const createEpisode = mutation({
             createdAt: Date.now(),
         });
 
-        if (args.overview) {
-            const queueId = await ctx.db.insert("translation_queue", {
-                entityId: episodeId,
-                entityType: "episode",
-                field: "overview",
-                sourceText: args.overview,
-                status: "pending",
-                createdAt: Date.now(),
-            });
-            await ctx.scheduler.runAfter(0, api.translate.processOneTranslation, { queueId });
-        }
+
 
         return episodeId;
     },
@@ -302,18 +281,7 @@ export const bulkCreateEpisodes = mutation({
             });
             ids.push(id);
 
-            // Queue translation (don't await scheduling per item to be faster, but insert queue item)
-            if (ep.overview) {
-                const queueId = await ctx.db.insert("translation_queue", {
-                    entityId: id,
-                    entityType: "episode",
-                    field: "overview",
-                    sourceText: ep.overview,
-                    status: "pending",
-                    createdAt: now,
-                });
-                await ctx.scheduler.runAfter(0, api.translate.processOneTranslation, { queueId });
-            }
+
         }
 
         return ids;

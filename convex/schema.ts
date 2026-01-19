@@ -451,28 +451,5 @@ export default defineSchema({
         .index("by_series", ["seriesId"])
         .index("by_season", ["seriesId", "seasonNumber"]),
 
-    // ============================================
-    // TRANSLATION QUEUE (Somali AI)
-    // ============================================
-    translation_queue: defineTable({
-        entityType: v.union(
-            v.literal("movie"),
-            v.literal("series"),
-            v.literal("episode")
-        ),
-        entityId: v.string(),
-        field: v.string(),
-        sourceText: v.string(),
-        translatedText: v.optional(v.string()),
-        status: v.union(
-            v.literal("pending"),
-            v.literal("processing"),
-            v.literal("done"),
-            v.literal("failed")
-        ),
-        createdAt: v.number(),
-        processedAt: v.optional(v.number()),
-    })
-        .index("by_status", ["status"])
-        .index("by_entity", ["entityType", "entityId"]),
+
 });

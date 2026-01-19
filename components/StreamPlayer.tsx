@@ -77,7 +77,7 @@ export function StreamPlayer({ source, poster, className, onError, onReady }: St
     const [resolvedUrl, setResolvedUrl] = useState("");
 
     // Hide controls after inactivity
-    const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+    const controlsTimeoutRef = useRef<any>(null);
 
     const resetControlsTimeout = useCallback(() => {
         setShowControls(true);

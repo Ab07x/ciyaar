@@ -3,7 +3,7 @@
 import { useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
-import { X, Save, Plus, Trash2, Wand2 } from "lucide-react";
+import { X, Save, Plus, Trash2 } from "lucide-react";
 
 interface Props {
     episode: any;
@@ -13,9 +13,7 @@ interface Props {
 
 export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
     const updateEpisode = useMutation(api.series.updateEpisode);
-    // Translation feature - requires Convex Node runtime setup
-    // const queueTranslation = useMutation(api.translate.queueTranslation);
-    // const processTranslation = useAction(api.translate.processOneTranslation);
+
 
     const [formData, setFormData] = useState({
         title: episode.title,
@@ -46,27 +44,7 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
         setSaving(false);
     };
 
-    const handleAutoTranslate = async () => {
-        if (!confirm("Regenerate translation via AI?")) return;
-        /*
-        try {
-            const queueId = await queueTranslation({
-                entityId: episode._id,
-                entityType: "episode",
-                field: "overview",
-                sourceText: formData.overview,
-            });
-            if (queueId) {
-                await processTranslation({ queueId });
-                alert("Translation queued. Please close and reopen to see changes.");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Translation request failed");
-        }
-        */
-        alert("Translation feature is currently disabled.");
-    };
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -107,13 +85,6 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
                     <div className="bg-stadium-dark p-4 rounded-xl border border-border-subtle">
                         <div className="flex justify-between items-center mb-2">
                             <h4 className="font-bold text-sm">Somali Translation</h4>
-                            <button
-                                onClick={handleAutoTranslate}
-                                className="flex items-center gap-1 text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded hover:bg-purple-500/30"
-                            >
-                                <Wand2 size={12} />
-                                AI Translate
-                            </button>
                         </div>
                         <div className="space-y-3">
                             <input
