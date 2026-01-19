@@ -13,8 +13,9 @@ interface Props {
 
 export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
     const updateEpisode = useMutation(api.series.updateEpisode);
-    const queueTranslation = useMutation(api.translate.queueTranslation);
-    const processTranslation = useAction(api.translate.processOneTranslation);
+    // Translation feature - requires Convex Node runtime setup
+    // const queueTranslation = useMutation(api.translate.queueTranslation);
+    // const processTranslation = useAction(api.translate.processOneTranslation);
 
     const [formData, setFormData] = useState({
         title: episode.title,
@@ -47,6 +48,7 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
 
     const handleAutoTranslate = async () => {
         if (!confirm("Regenerate translation via AI?")) return;
+        /*
         try {
             const queueId = await queueTranslation({
                 entityId: episode._id,
@@ -62,6 +64,8 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
             console.error(err);
             alert("Translation request failed");
         }
+        */
+        alert("Translation feature is currently disabled.");
     };
 
     return (

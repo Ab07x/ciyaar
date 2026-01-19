@@ -51,7 +51,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
                 excerpt: post.excerpt,
                 content: post.content,
                 featuredImageUrl: post.featuredImageUrl || "",
-                category: post.category,
+                category: post.category as typeof categories[number],
                 tags: post.tags.join(", "),
                 isPublished: post.isPublished,
                 seoTitle: post.seoTitle || "",

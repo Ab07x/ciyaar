@@ -1,7 +1,7 @@
 "use node";
 
 import { v } from "convex/values";
-import { action, internalAction, internalMutation, mutation, query } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 
 // ============================================
@@ -162,7 +162,7 @@ export const processOneTranslation = action({
 // INTERNAL HELPERS
 // ============================================
 
-export const getQueueItem = query({
+export const getQueueItem = internalQuery({
     args: { queueId: v.id("translation_queue") },
     handler: async (ctx, args) => {
         return await ctx.db.get(args.queueId);
