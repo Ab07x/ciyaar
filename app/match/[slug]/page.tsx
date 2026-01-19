@@ -48,8 +48,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
         "@context": "https://schema.org",
         "@type": "SportsEvent",
         "name": `${match.teamA} vs ${match.teamB}`,
-        "description": `${match.teamA} vs ${match.teamB} live streaming on Fanbroj.net`,
+        "description": `${match.teamA} vs ${match.teamB} live streaming - ${match.leagueName}`,
         "startDate": new Date(match.kickoffAt).toISOString(),
+        "sport": "Soccer",
         "homeTeam": {
             "@type": "SportsTeam",
             "name": match.teamA,
@@ -60,11 +61,24 @@ export default async function MatchPage({ params }: MatchPageProps) {
         },
         "location": {
             "@type": "Place",
-            "name": match.leagueName || "Stadium",
+            "name": "Stadium", // Generic if unknown, or match.stadium if available
+        },
+        "organizer": {
+            "@type": "Organization",
+            "name": match.leagueName,
+            "url": "https://fanbroj.net"
         },
         "eventStatus": match.status === "live" ? "https://schema.org/EventLive" :
-            match.status === "finished" ? "https://schema.org/EventPostponed" : // Approximate for finished
+            match.status === "finished" ? "https://schema.org/EventMovedOnline" :
                 "https://schema.org/EventScheduled",
+        "image": match.thumbnailUrl || "https://fanbroj.net/og-image.jpg",
+        "offers": {
+            "@type": "Offer",
+            "url": `https://fanbroj.net/match/${slug}`,
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/OnlineOnly"
+        }
     } : null;
 
     return (

@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
-import { Plus, Download, Trash2, Copy, Check, Filter } from "lucide-react";
+import { Plus, Download, Trash2, Copy, Check, Filter, Ban } from "lucide-react";
 
 const planOptions = [
     { value: "match", label: "Ciyaar Keliya", days: 1 },
@@ -19,6 +19,7 @@ export default function AdminCodesPage() {
 
     const generateCodes = useMutation(api.redemptions.generateCodes);
     const revokeCode = useMutation(api.redemptions.revokeCode);
+    const deleteCode = useMutation(api.redemptions.deleteCode);
 
     const [showModal, setShowModal] = useState(false);
     const [plan, setPlan] = useState<"match" | "weekly" | "monthly" | "yearly">("weekly");
@@ -146,8 +147,8 @@ export default function AdminCodesPage() {
                         key={f}
                         onClick={() => setFilter(f as any)}
                         className={`px-3 py-1 rounded-full text-sm ${filter === f
-                                ? "bg-accent-green text-black font-bold"
-                                : "bg-stadium-hover text-text-secondary"
+                            ? "bg-accent-green text-black font-bold"
+                            : "bg-stadium-hover text-text-secondary"
                             }`}
                     >
                         {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -185,14 +186,32 @@ export default function AdminCodesPage() {
                                     )}
                                 </td>
                                 <td className="px-4 py-3 text-right">
-                                    {!code.revokedAt && !code.usedByUserId && (
+                                    <div className="flex justify-end gap-2">
+                                        {!code.revokedAt && (
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm("Ma hubtaa inaad joojiso code-kan?")) {
+                                                        revokeCode({ id: code._id });
+                                                    }
+                                                }}
+                                                title="Revoke (Jooji)"
+                                                className="text-text-muted hover:text-accent-gold"
+                                            >
+                                                <Ban size={16} />
+                                            </button>
+                                        )}
                                         <button
-                                            onClick={() => revokeCode({ id: code._id })}
+                                            onClick={() => {
+                                                if (confirm("Ma hubtaa inaad tirtirto code-kan?")) {
+                                                    deleteCode({ id: code._id });
+                                                }
+                                            }}
+                                            title="Delete (Tirtir)"
                                             className="text-text-muted hover:text-accent-red"
                                         >
                                             <Trash2 size={16} />
                                         </button>
-                                    )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}

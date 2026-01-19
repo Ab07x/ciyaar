@@ -18,8 +18,66 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Daawo Ciyaar Live Maanta | Fanbroj.net – Kubadda Cagta",
-  description: "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta. Daawo Premier League, Champions League iyo ciyaaro kale.",
+  metadataBase: new URL("https://fanbroj.net"),
+  title: {
+    default: "Daawo Ciyaar Live Maanta | Fanbroj.net - Kubadda Cagta & Filimaan",
+    template: "%s | Fanbroj.net",
+  },
+  description:
+    "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta. Daawo Premier League, Champions League, iyo filimaan af Soomaali ah.",
+  keywords: [
+    "ciyaar live",
+    "kubadda cagta",
+    "daawo ciyaar",
+    "fanbroj",
+    "filim af soomaali",
+    "musalsal af soomaali",
+    "somali streaming",
+    "premier league live",
+  ],
+  authors: [{ name: "Fanbroj Team" }],
+  creator: "Fanbroj",
+  publisher: "Fanbroj",
+  openGraph: {
+    type: "website",
+    locale: "so_SO",
+    url: "https://fanbroj.net",
+    title: "Daawo Ciyaar Live Maanta | Fanbroj.net",
+    description:
+      "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta.",
+    siteName: "Fanbroj",
+    images: [
+      {
+        url: "/og-image.jpg", // We need to ensure this image exists or create a dynamic one
+        width: 1200,
+        height: 630,
+        alt: "Fanbroj - Ciyaaraha & Madadaalada",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fanbroj.net - Kubadda Cagta & Filimaan",
+    description: "Daawo ciyaaraha tooska ah iyo filimaanta af Soomaaliga.",
+    creator: "@fanbroj",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "./",
+  },
+  verification: {
+    google: "google-site-verification-placeholder", // User needs to provide this or we generate it later
+  },
 };
 
 export default function RootLayout({

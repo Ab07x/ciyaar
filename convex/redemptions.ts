@@ -237,6 +237,28 @@ export const revokeCode = mutation({
 
         return { success: true };
     },
+
+});
+
+export const deleteCode = mutation({
+    args: { id: v.id("redemptions") },
+    handler: async (ctx, args) => {
+        const code = await ctx.db.get(args.id);
+        if (!code) return { success: false };
+
+        await ctx.db.delete(args.id);
+
+        // Also revoke any subscription created from this code (optional cleanup)
+        // Since code is gone, sub might remain active unless we kill it.
+        // Let's kill it just to be safe.
+        const subs = await ctx.db.query("subscriptions").collect();
+        const relatedSub = subs.find((s) => s.codeId === args.id);
+        if (relatedSub) {
+            await ctx.db.delete(relatedSub._id);
+        }
+
+        return { success: true };
+    },
 });
 
 export const exportCodesCSV = query({

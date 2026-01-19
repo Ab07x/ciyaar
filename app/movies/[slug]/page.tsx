@@ -8,16 +8,14 @@ import { useState, useEffect } from "react";
 import { AdSlot } from "@/components/AdSlot";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import {
     ArrowLeft,
     Crown,
     Star,
     Clock,
     Calendar,
-    Play,
-    Lock,
     MessageSquare,
-    Film,
 } from "lucide-react";
 
 export default function MovieWatchPage() {
@@ -40,7 +38,7 @@ export default function MovieWatchPage() {
         if (movie && "_id" in movie) {
             incrementViews({ id: movie._id });
         }
-    }, [movie?._id]);
+    }, [movie?._id, incrementViews]);
 
     if (!movie || !settings) {
         return (
@@ -70,10 +68,12 @@ export default function MovieWatchPage() {
             {/* Backdrop */}
             {movie.backdropUrl && (
                 <div className="absolute top-0 left-0 right-0 h-[50vh] overflow-hidden pointer-events-none">
-                    <img
+                    <Image
                         src={movie.backdropUrl}
                         alt=""
-                        className="w-full h-full object-cover opacity-20"
+                        fill
+                        className="object-cover opacity-20"
+                        priority
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-stadium-dark/80 to-stadium-dark" />
                 </div>
@@ -93,10 +93,10 @@ export default function MovieWatchPage() {
                     {/* Main Content */}
                     <div className="lg:col-span-2">
                         {/* Player */}
-                        <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-6">
+                        <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-6 relative aspect-video">
                             {movie.isPremium && !isUnlocked ? (
                                 /* Premium Lock */
-                                <div className="absolute inset-0 flex items-center justify-center p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated">
+                                <div className="absolute inset-0 flex items-center justify-center p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated z-10">
                                     <div className="bg-stadium-dark border-2 border-accent-gold rounded-2xl p-8 max-w-md text-center">
                                         <div className="w-16 h-16 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <Crown size={32} className="text-accent-gold" />
@@ -141,7 +141,7 @@ export default function MovieWatchPage() {
                             ) : activeEmbed?.url ? (
                                 <iframe
                                     src={activeEmbed.url}
-                                    className="embed-iframe"
+                                    className="w-full h-full"
                                     allowFullScreen
                                     scrolling="no"
                                     allow="autoplay; encrypted-media"
@@ -177,11 +177,14 @@ export default function MovieWatchPage() {
                         <div className="bg-stadium-elevated border border-border-strong rounded-2xl p-6">
                             <div className="flex items-start gap-4 mb-6">
                                 {movie.posterUrl && (
-                                    <img
-                                        src={movie.posterUrl}
-                                        alt={movie.title}
-                                        className="w-24 rounded-lg hidden sm:block"
-                                    />
+                                    <div className="relative w-24 h-36 flex-shrink-0 hidden sm:block">
+                                        <Image
+                                            src={movie.posterUrl}
+                                            alt={movie.title}
+                                            fill
+                                            className="rounded-lg object-cover"
+                                        />
+                                    </div>
                                 )}
                                 <div>
                                     <h1 className="text-2xl md:text-3xl font-black mb-2">
@@ -228,9 +231,15 @@ export default function MovieWatchPage() {
                                     <h3 className="font-bold mb-3">Cast</h3>
                                     <div className="flex flex-wrap gap-3">
                                         {movie.cast.map((c, i) => (
-                                            <div key={i} className="flex items-center gap-2 bg-stadium-hover rounded-full pr-3">
+                                            <div key={i} className="flex items-center gap-2 bg-stadium-hover rounded-full pr-3 relative">
                                                 {c.profileUrl ? (
-                                                    <img src={c.profileUrl} alt={c.name} className="w-8 h-8 rounded-full object-cover" />
+                                                    <Image
+                                                        src={c.profileUrl}
+                                                        alt={c.name}
+                                                        width={32}
+                                                        height={32}
+                                                        className="w-8 h-8 rounded-full object-cover"
+                                                    />
                                                 ) : (
                                                     <div className="w-8 h-8 rounded-full bg-stadium-dark flex items-center justify-center text-xs">
                                                         {c.name[0]}
@@ -253,6 +262,39 @@ export default function MovieWatchPage() {
                     </div>
                 </div>
             </div>
+            {/* JSON-LD Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Movie",
+                        name: movie.title,
+                        alternateName: movie.titleSomali,
+                        description: movie.overviewSomali || movie.overview,
+                        image: movie.posterUrl,
+                        datePublished: movie.releaseDate,
+                        duration: movie.runtime ? `PT${movie.runtime}M` : undefined,
+                        aggregateRating: movie.rating ? {
+                            "@type": "AggregateRating",
+                            ratingValue: movie.rating,
+                            bestRating: "10",
+                            ratingCount: "100" // Placeholder or from DB
+                        } : undefined,
+                        actor: movie.cast?.map(c => ({
+                            "@type": "Person",
+                            name: c.name
+                        })),
+                        genre: movie.genres,
+                        offers: {
+                            "@type": "Offer",
+                            price: movie.isPremium ? "5.00" : "0",
+                            priceCurrency: "USD",
+                            availability: "https://schema.org/OnlineOnly"
+                        }
+                    })
+                }}
+            />
         </div>
     );
 }

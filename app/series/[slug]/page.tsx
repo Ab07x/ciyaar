@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { AdSlot } from "@/components/AdSlot";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import {
     ArrowLeft,
     Crown,
@@ -32,11 +33,6 @@ export default function SeriesWatchPage() {
     const seasonParam = searchParams.get("s");
     const episodeParam = searchParams.get("e");
 
-    // Default to Season 1, Episode 1 if not specified, 
-    // BUT we only auto-select if we want to default to watch mode.
-    // Actually, let's keep "Detail View" as default if no params, 
-    // but maybe auto-select first episode for the list.
-
     const [activeSeason, setActiveSeason] = useState(1);
 
     const series = useQuery(api.series.getSeriesBySlug, { slug });
@@ -45,7 +41,6 @@ export default function SeriesWatchPage() {
         series ? { seriesId: series._id } : "skip"
     );
     const settings = useQuery(api.settings.getSettings);
-    // const incrementViews = useMutation(api.series.incrementViews); // Assuming this is needed later if not present
 
     const { isPremium, redeemCode } = useUser();
 
@@ -95,15 +90,8 @@ export default function SeriesWatchPage() {
     const whatsappLink = `https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo musalsalka ${series.title}`;
 
     const handleEpisodeClick = (s: number, e: number) => {
-        // Reset unlock state if switching episodes? Maybe not for series if unlock is global or per series?
-        // Usually series unlock is per series or subscription.
-        // If "Unlock" unlocks the whole series, we keep localUnlocked.
-
-        // Push to new URL
         router.push(`/series/${slug}?s=${s}&e=${e}`);
         setActiveEmbedIndex(0);
-
-        // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -112,10 +100,12 @@ export default function SeriesWatchPage() {
             {/* Backdrop */}
             {series.backdropUrl && (
                 <div className="absolute top-0 left-0 right-0 h-[50vh] overflow-hidden pointer-events-none">
-                    <img
+                    <Image
                         src={series.backdropUrl}
                         alt=""
-                        className="w-full h-full object-cover opacity-20"
+                        fill
+                        className="object-cover opacity-20"
+                        priority
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-stadium-dark/80 to-stadium-dark" />
                 </div>
@@ -202,20 +192,20 @@ export default function SeriesWatchPage() {
                             <div className="mb-8 flex flex-col md:flex-row gap-6 items-start">
                                 <div className="w-full md:w-1/3 max-w-[240px] aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl relative flex-shrink-0 mx-auto md:mx-0">
                                     {series.posterUrl ? (
-                                        <img src={series.posterUrl} alt={series.title} className="w-full h-full object-cover" />
+                                        <Image src={series.posterUrl} alt={series.title} fill className="object-cover" />
                                     ) : (
                                         <div className="w-full h-full bg-stadium-dark flex items-center justify-center">
                                             <Tv size={48} className="text-text-muted/30" />
                                         </div>
                                     )}
                                     {series.isPremium && (
-                                        <div className="absolute top-2 left-2 flex items-center gap-1 bg-accent-gold px-2 py-0.5 rounded text-xs font-bold text-black">
+                                        <div className="absolute top-2 left-2 flex items-center gap-1 bg-accent-gold px-2 py-0.5 rounded text-xs font-bold text-black z-10">
                                             <Crown size={10} />
                                             PREMIUM
                                         </div>
                                     )}
                                     {isLocked && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                                             <Lock size={48} className="text-white/80" />
                                         </div>
                                     )}
@@ -332,7 +322,7 @@ export default function SeriesWatchPage() {
                                     >
                                         <div className="relative w-32 aspect-video rounded-lg overflow-hidden bg-stadium-dark flex-shrink-0">
                                             {ep.stillUrl ? (
-                                                <img src={ep.stillUrl} alt={ep.title} className="w-full h-full object-cover" />
+                                                <Image src={ep.stillUrl} alt={ep.title} fill className="object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
                                                     <Play size={24} className="text-text-muted/50" />
@@ -389,7 +379,9 @@ export default function SeriesWatchPage() {
                             <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6">
                                 <div className="flex gap-4 mb-4">
                                     {series.posterUrl && (
-                                        <img src={series.posterUrl} alt={series.title} className="w-20 rounded-lg object-cover" />
+                                        <div className="relative w-20 h-30 flex-shrink-0">
+                                            <Image src={series.posterUrl} alt={series.title} width={80} height={120} className="rounded-lg object-cover" />
+                                        </div>
                                     )}
                                     <div>
                                         <h3 className="font-bold mb-1 line-clamp-2">{series.titleSomali || series.title}</h3>
@@ -419,7 +411,7 @@ export default function SeriesWatchPage() {
                                     {series.cast.slice(0, 5).map((c, i) => (
                                         <div key={i} className="flex items-center gap-3">
                                             {c.profileUrl ? (
-                                                <img src={c.profileUrl} alt={c.name} className="w-10 h-10 rounded-full object-cover" />
+                                                <Image src={c.profileUrl} alt={c.name} width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
                                             ) : (
                                                 <div className="w-10 h-10 rounded-full bg-stadium-dark flex items-center justify-center text-xs font-bold">
                                                     {c.name[0]}
@@ -437,6 +429,40 @@ export default function SeriesWatchPage() {
                     </div>
                 </div>
             </div>
+            {/* JSON-LD Schema for TVSeries */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "TVSeries",
+                        name: series.title,
+                        alternateName: series.titleSomali,
+                        description: series.overviewSomali || series.overview,
+                        image: series.posterUrl,
+                        datePublished: series.firstAirDate,
+                        numberOfSeasons: series.numberOfSeasons,
+                        numberOfEpisodes: series.numberOfEpisodes,
+                        aggregateRating: series.rating ? {
+                            "@type": "AggregateRating",
+                            ratingValue: series.rating,
+                            bestRating: "10",
+                            ratingCount: "100" // Placeholder
+                        } : undefined,
+                        actor: series.cast?.map(c => ({
+                            "@type": "Person",
+                            name: c.name
+                        })),
+                        genre: series.genres,
+                        offers: {
+                            "@type": "Offer",
+                            price: series.isPremium ? "5.00" : "0",
+                            priceCurrency: "USD",
+                            availability: "https://schema.org/OnlineOnly"
+                        }
+                    })
+                }}
+            />
         </div>
     );
 }
