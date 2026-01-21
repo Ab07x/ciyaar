@@ -104,41 +104,41 @@ export function ShortsRow() {
 
             {/* Full Screen Player Modal */}
             {selectedShort && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-xl p-0 md:p-4 animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black pt-safe md:bg-black/95 md:backdrop-blur-xl p-0 md:p-4 animate-in fade-in duration-300">
                     {/* Close Button */}
                     <button
                         onClick={() => setSelectedShort(null)}
-                        className="absolute top-8 right-6 z-[10000] p-2 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:rotate-90 border border-white/10"
+                        className="absolute top-4 right-4 md:top-8 md:right-6 z-[10001] p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:rotate-90 border border-white/10"
                     >
                         <X size={24} />
                     </button>
 
                     {/* Player Container */}
-                    <div className="w-full max-w-md h-[80vh] md:h-[600px] bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative flex flex-col animate-in zoom-in-95 duration-300">
+                    <div className="w-full h-[100dvh] md:max-w-md md:h-[600px] bg-black md:rounded-3xl overflow-hidden shadow-2xl border-none md:border border-white/10 relative flex flex-col animate-in zoom-in-95 duration-300">
                         <iframe
                             src={selectedShort.embedUrl}
-                            className="flex-1 w-full h-full bg-black"
+                            className="flex-1 w-full h-full bg-black object-cover"
                             allow="autoplay; encrypted-media; picture-in-picture"
                             allowFullScreen
                         />
 
                         {/* Info Overlay (Bottom) */}
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none">
+                        <div className="absolute bottom-0 left-0 right-0 p-6 pb-20 md:pb-6 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none">
                             <div className="flex items-center gap-2 mb-2">
                                 {selectedShort.isLive && (
-                                    <span className="bg-accent-red px-2 py-0.5 rounded textxs font-bold text-white animate-pulse">
+                                    <span className="bg-accent-red px-2 py-0.5 rounded text-xs font-bold text-white animate-pulse">
                                         LIVE
                                     </span>
                                 )}
-                                <span className="text-accent-green text-sm font-bold">
+                                <span className="text-accent-green text-sm font-bold shadow-black drop-shadow-md">
                                     {selectedShort.channelName || "CiyaarSnaps"}
                                 </span>
                             </div>
                             <h3 className="text-xl md:text-2xl font-black text-white leading-tight mb-2 drop-shadow-lg">
                                 {selectedShort.title}
                             </h3>
-                            <div className="flex items-center gap-4 text-text-muted text-sm">
-                                <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-4 text-gray-200 text-sm font-medium">
+                                <div className="flex items-center gap-1 drop-shadow-md">
                                     <Eye size={16} />
                                     {(selectedShort.views || 0).toLocaleString()} Views
                                 </div>
