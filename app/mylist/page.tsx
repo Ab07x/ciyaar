@@ -7,15 +7,27 @@ import { MovieCard } from "@/components/MovieCard";
 import { SeriesCard } from "@/components/SeriesCard";
 import { List } from "lucide-react";
 import { useUser } from "@/providers/UserProvider";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function MyListPage() {
     const { userId } = useUser();
     const myList = useQuery(api.mylist.getMyList, userId ? { userId } : "skip");
 
+
+
     if (myList === undefined) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div>
+            <div className="container mx-auto px-4 py-8 min-h-screen">
+                <div className="flex items-center gap-3 mb-8">
+                    <Skeleton className="w-12 h-12 rounded-xl" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-4 w-64" />
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
+                </div>
             </div>
         );
     }
