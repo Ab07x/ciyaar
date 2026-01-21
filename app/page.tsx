@@ -11,6 +11,10 @@ import { PlayCircle, Calendar, Clock, Crown, ChevronRight, Newspaper, Film, Tv }
 import { BlogCard } from "@/components/BlogCard";
 import { ContinueWatchingRow } from "@/components/ContinueWatchingRow";
 
+import { HeroSlider } from "@/components/HeroSlider";
+
+// ... imports remain the same ...
+
 export default function HomePage() {
   const matchData = useQuery(api.matches.getMatchesByStatus);
   const posts = useQuery(api.posts.listPosts, { isPublished: true, limit: 3 });
@@ -38,9 +42,10 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Hero */}
+      {/* Hero Slider */}
+      <HeroSlider movies={movies} />
 
-
+      {/* SEO Text (Preserved) */}
       <div className="mb-12">
         <h1 className="text-3xl md:text-5xl font-black tracking-tighter mb-4">
           Daawo Ciyaar Live Maanta – Fanbroj
