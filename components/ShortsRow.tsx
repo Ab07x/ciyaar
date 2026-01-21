@@ -55,8 +55,8 @@ export function ShortsRow() {
                             key={item._id}
                             onClick={() => setSelectedShort(item)}
                             className={cn(
-                                "snap-start flex-shrink-0 w-[100px] h-[160px] md:w-[120px] md:h-[200px] rounded-xl relative overflow-hidden cursor-pointer group hover:scale-[1.02] transition-transform duration-200 border-2",
-                                item.isLive ? "border-accent-red" : "border-transparent hover:border-white/50"
+                                "snap-start flex-shrink-0 w-[105px] h-[170px] md:w-[130px] md:h-[210px] rounded-xl relative overflow-hidden cursor-pointer group hover:scale-[1.02] transition-transform duration-200",
+                                item.isLive ? "ring-2 ring-accent-red" : "border border-white/5"
                             )}
                         >
                             {/* Background Image */}
@@ -72,7 +72,7 @@ export function ShortsRow() {
 
                             {/* Live Badge */}
                             {item.isLive && (
-                                <div className="absolute top-2 left-2 bg-accent-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse">
+                                <div className="absolute top-2 left-2 bg-accent-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse shadow-lg">
                                     LIVE
                                 </div>
                             )}
@@ -80,7 +80,7 @@ export function ShortsRow() {
                             {/* Content */}
                             <div className="absolute inset-0 flex flex-col justify-end p-2 md:p-3">
                                 <div className={cn(
-                                    "backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center mb-auto border transition-colors",
+                                    "backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center mb-auto border transition-colors shadow-lg",
                                     item.isLive ? "bg-accent-red text-white border-accent-red" : "bg-white/20 text-white border-white/20 group-hover:bg-accent-green group-hover:border-accent-green"
                                 )}>
                                     <Play size={12} fill="currentColor" className="ml-0.5" />
@@ -89,6 +89,8 @@ export function ShortsRow() {
                                 <h3 className="text-xs md:text-sm font-bold text-white leading-tight mb-1 line-clamp-2 drop-shadow-md">
                                     {item.title}
                                 </h3>
+                                {/* Removed view count from card to keep it cleaner, only show on modal or minimal */}
+                                {/* Actually user might want stats. I'll keep it minimal */}
                                 <p className="text-[10px] text-white/70 font-medium flex items-center gap-1">
                                     <Eye size={10} />
                                     {(item.views || 0).toLocaleString()}
@@ -102,13 +104,13 @@ export function ShortsRow() {
 
             {/* Full Screen Player Modal */}
             {selectedShort && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-xl p-0 md:p-4 animate-in fade-in duration-300">
                     {/* Close Button */}
                     <button
                         onClick={() => setSelectedShort(null)}
-                        className="absolute top-4 right-4 z-50 p-2 bg-white/10 rounded-full text-white hover:bg-white/30 transition-all hover:rotate-90"
+                        className="absolute top-8 right-6 z-[10000] p-2 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:rotate-90 border border-white/10"
                     >
-                        <X size={28} />
+                        <X size={24} />
                     </button>
 
                     {/* Player Container */}

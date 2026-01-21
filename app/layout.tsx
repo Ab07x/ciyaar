@@ -94,12 +94,12 @@ export default function RootLayout({
               {/* Header */}
               <Navbar />
 
-              <main className="min-h-[calc(100vh-4rem)] pb-20 md:pb-0">
+              <main className="min-h-[calc(100vh-4rem)] pb-32 md:pb-0">
                 {children}
               </main>
 
               {/* Footer */}
-              <footer className="border-t border-border-strong py-12 mt-12 bg-stadium-elevated mb-20 md:mb-0">
+              <footer className="border-t border-border-strong py-12 mt-12 bg-stadium-elevated mb-32 md:mb-0">
                 <div className="container mx-auto px-4 text-center">
                   <p className="text-2xl font-black tracking-tighter mb-4">
                     FAN<span className="text-accent-green">BROJ</span>
