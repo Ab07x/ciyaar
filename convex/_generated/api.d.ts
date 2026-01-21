@@ -24,6 +24,7 @@ import type * as redemptions from "../redemptions.js";
 import type * as search from "../search.js";
 import type * as series from "../series.js";
 import type * as settings from "../settings.js";
+import type * as shorts from "../shorts.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tmdb from "../tmdb.js";
 import type * as users from "../users.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   search: typeof search;
   series: typeof series;
   settings: typeof settings;
+  shorts: typeof shorts;
   subscriptions: typeof subscriptions;
   tmdb: typeof tmdb;
   users: typeof users;

@@ -491,4 +491,21 @@ export default defineSchema({
         .index("by_user_updated", ["userId", "updatedAt"])
         .index("by_user_content", ["userId", "contentType", "contentId"]),
 
+    // ============================================
+    // SHORTS (CiyaarSnaps)
+    // ============================================
+    shorts: defineTable({
+        title: v.string(),
+        embedUrl: v.string(), // Iframe source or video URL
+        thumbnailUrl: v.string(), // Poster
+        views: v.number(),
+        isLive: v.boolean(),
+        channelName: v.optional(v.string()), // e.g. "Gool FM"
+        createdAt: v.number(),
+        isPublished: v.boolean(),
+    })
+        .index("by_views", ["views"])
+        .index("by_live", ["isLive"])
+        .index("by_published", ["isPublished"]),
+
 });
