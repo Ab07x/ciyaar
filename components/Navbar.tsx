@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState } from "react";
-import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown, LogOut, CreditCard } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/providers/UserProvider";
 
 export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const pathname = usePathname();
+    const { isPremium } = useUser();
 
     const navItems = [
         { href: "/ciyaar", label: "Ciyaaro", icon: Trophy, color: "text-accent-green" },
@@ -63,13 +65,15 @@ export function Navbar() {
                             </Link>
                         );
                     })}
-                    <Link
-                        href="/pricing"
-                        className="bg-accent-gold text-black px-4 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2"
-                    >
-                        <Crown size={16} />
-                        <span className="hidden lg:inline">PREMIUM</span>
-                    </Link>
+                    {!isPremium && (
+                        <Link
+                            href="/pricing"
+                            className="bg-accent-gold text-black px-4 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2"
+                        >
+                            <Crown size={16} />
+                            <span className="hidden lg:inline">PREMIUM</span>
+                        </Link>
+                    )}
                 </nav>
 
                 {/* Right Actions */}
@@ -89,13 +93,23 @@ export function Navbar() {
                     </button>
 
                     {/* Account Icon */}
-                    <Link
-                        href="/login"
-                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors hidden md:flex"
-                        aria-label="Account"
-                    >
-                        <User size={22} />
-                    </Link>
+                    {isPremium ? (
+                        <Link
+                            href="/subscription"
+                            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-accent-gold hover:bg-stadium-hover rounded-lg transition-colors hidden md:flex border border-accent-gold/20"
+                            aria-label="My Subscription"
+                        >
+                            <Crown size={22} />
+                        </Link>
+                    ) : (
+                        <Link
+                            href="/login"
+                            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors hidden md:flex"
+                            aria-label="Account"
+                        >
+                            <User size={22} />
+                        </Link>
+                    )}
                 </div>
             </div>
 
@@ -134,24 +148,38 @@ export function Navbar() {
                                 </Link>
                             );
                         })}
-                        <Link
-                            href="/pricing"
-                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold bg-accent-gold text-black flex items-center gap-4 hover:brightness-110 mt-4 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <Crown size={24} />
-                            PREMIUM
-                        </Link>
+
+                        {!isPremium && (
+                            <Link
+                                href="/pricing"
+                                className="p-4 min-h-[48px] rounded-xl text-lg font-bold bg-accent-gold text-black flex items-center gap-4 hover:brightness-110 mt-4 transition-all"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <Crown size={24} />
+                                PREMIUM
+                            </Link>
+                        )}
 
                         {/* Mobile Account Link */}
-                        <Link
-                            href="/login"
-                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-text-secondary hover:bg-stadium-elevated transition-colors"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <User size={24} />
-                            Akoon
-                        </Link>
+                        {isPremium ? (
+                            <Link
+                                href="/subscription"
+                                className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-accent-gold hover:bg-stadium-elevated transition-colors border border-accent-gold/20"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <CreditCard size={24} />
+                                My Plan
+                            </Link>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-text-secondary hover:bg-stadium-elevated transition-colors"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <User size={24} />
+                                Akoon
+                            </Link>
+                        )}
                     </nav>
                 </div>
             )}

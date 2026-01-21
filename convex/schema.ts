@@ -238,6 +238,7 @@ export default defineSchema({
         ),
         durationDays: v.number(),
         maxDevices: v.number(),
+        expiresAt: v.optional(v.number()), // Unix timestamp when the code expires
         usedByUserId: v.optional(v.id("users")),
         usedAt: v.optional(v.number()),
         revokedAt: v.optional(v.number()),

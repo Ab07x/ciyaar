@@ -23,6 +23,73 @@ export const getUserSubscription = query({
     },
 });
 
+export const getUserSubscriptionDetails = query({
+    args: { deviceId: v.string() },
+    handler: async (ctx, args) => {
+        // Find device and user
+        const device = await ctx.db
+            .query("devices")
+            .withIndex("by_device", (q) => q.eq("deviceId", args.deviceId))
+            .first();
+
+        if (!device) {
+            return null;
+        }
+
+        const userId = device.userId;
+
+        // Get all user's subscriptions
+        const subs = await ctx.db
+            .query("subscriptions")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .collect();
+
+        // Find active, non-expired subscription
+        const now = Date.now();
+        const activeSub = subs.find(
+            (s) => s.status === "active" && s.expiresAt > now
+        );
+
+        if (!activeSub) {
+            return null;
+        }
+
+        // Get all user's devices
+        const devices = await ctx.db
+            .query("devices")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .collect();
+
+        // Get the redemption code if available
+        let codeInfo = null;
+        if (activeSub.codeId) {
+            const redemption = await ctx.db.get(activeSub.codeId);
+            if (redemption) {
+                codeInfo = {
+                    code: redemption.code,
+                    codeExpiresAt: redemption.expiresAt,
+                };
+            }
+        }
+
+        return {
+            subscription: {
+                plan: activeSub.plan,
+                status: activeSub.status,
+                expiresAt: activeSub.expiresAt,
+                createdAt: activeSub.createdAt,
+                maxDevices: activeSub.maxDevices,
+            },
+            devices: devices.map((d) => ({
+                deviceId: d.deviceId,
+                userAgent: d.userAgent,
+                lastSeenAt: d.lastSeenAt,
+            })),
+            code: codeInfo,
+        };
+    },
+});
+
 export const checkPremiumAccess = query({
     args: {
         userId: v.optional(v.id("users")),

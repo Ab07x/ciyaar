@@ -14,6 +14,7 @@ interface UserContextType {
     subscription: any;
     checkMatchAccess: (matchId: Id<"matches">) => boolean;
     redeemCode: (code: string, matchId?: Id<"matches">) => Promise<any>;
+    logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -71,6 +72,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
         });
     };
 
+    const logout = () => {
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("fanbroj_device_id");
+            localStorage.removeItem("fanbroj_subscription");
+            setDeviceId("");
+            setUserId(null);
+            // Reload to clear all state/cache
+            window.location.href = "/";
+        }
+    };
+
     return (
         <UserContext.Provider
             value={{
@@ -81,6 +93,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 subscription,
                 checkMatchAccess,
                 redeemCode,
+                logout,
             }}
         >
             {children}

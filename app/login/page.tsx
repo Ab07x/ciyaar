@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { Ticket, Loader2, CheckCircle2, XCircle, Lock } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@/providers/UserProvider";
 
 // Generate a simple device ID
 function getDeviceId(): string {
@@ -27,10 +28,14 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ success: boolean; message?: string; error?: string; plan?: string } | null>(null);
     const [deviceId, setDeviceId] = useState("");
+    const { isPremium } = useUser();
 
     useEffect(() => {
         setDeviceId(getDeviceId());
-    }, []);
+        if (isPremium) {
+            router.push("/subscription");
+        }
+    }, [isPremium, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -125,8 +130,8 @@ export default function LoginPage() {
                     {/* Result Message */}
                     {result && (
                         <div className={`mt-6 p-4 rounded-xl flex items-start gap-3 ${result.success
-                                ? "bg-accent-green/10 border border-accent-green/30"
-                                : "bg-accent-red/10 border border-accent-red/30"
+                            ? "bg-accent-green/10 border border-accent-green/30"
+                            : "bg-accent-red/10 border border-accent-red/30"
                             }`}>
                             {result.success ? (
                                 <CheckCircle2 className="text-accent-green flex-shrink-0 mt-0.5" size={20} />

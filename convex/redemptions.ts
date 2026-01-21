@@ -84,6 +84,20 @@ function generateCode(length: number = 8): string {
     return code;
 }
 
+// Calculate code expiration time based on plan type
+function getCodeExpirationMs(plan: string): number {
+    const MS_PER_HOUR = 60 * 60 * 1000;
+    const MS_PER_DAY = 24 * MS_PER_HOUR;
+
+    switch (plan) {
+        case "match": return MS_PER_HOUR * 24; // 24 hours
+        case "weekly": return MS_PER_DAY * 7;   // 7 days
+        case "monthly": return MS_PER_DAY * 30; // 30 days
+        case "yearly": return MS_PER_DAY * 365; // 365 days
+        default: return MS_PER_DAY * 30;
+    }
+}
+
 export const generateCodes = mutation({
     args: {
         plan: v.union(
@@ -115,11 +129,14 @@ export const generateCodes = mutation({
                 attempts++;
             } while (attempts < 10);
 
+            const expiresAt = now + getCodeExpirationMs(args.plan);
+
             await ctx.db.insert("redemptions", {
                 code,
                 plan: args.plan,
                 durationDays: args.durationDays,
                 maxDevices: args.maxDevices,
+                expiresAt,
                 createdAt: now,
             });
 
@@ -154,6 +171,11 @@ export const redeemCode = mutation({
 
         if (redemption.usedByUserId) {
             return { success: false, error: "Code-kan hore ayaa loo isticmaalay" };
+        }
+
+        // Check if code is expired
+        if (redemption.expiresAt && Date.now() > redemption.expiresAt) {
+            return { success: false, error: "Code-kan wuxuu dhacay (expired)" };
         }
 
         // Get or create user
