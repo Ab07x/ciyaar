@@ -93,7 +93,7 @@ export default function HomePage() {
         {live.length > 0 && (
           <Section title="LIVE HADA" icon={PlayCircle} color="red" count={live.length}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {live.map((match) => (
+              {live.slice(0, 3).map((match) => (
                 <MatchCard key={match._id} {...match} />
               ))}
             </div>
