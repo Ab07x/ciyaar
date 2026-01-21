@@ -217,4 +217,18 @@
     content: '';
     @apply absolute bottom-0 left-0 right-0 h-0.5 bg-current rounded-full;
   }
+
+  /* =====================================================
+     SCROLLBAR UTILITIES
+     ===================================================== */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
 }
