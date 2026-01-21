@@ -102,6 +102,22 @@ export const create = mutation({
     },
 });
 
+export const update = mutation({
+    args: {
+        id: v.id("shorts"),
+        title: v.optional(v.string()),
+        embedUrl: v.optional(v.string()),
+        thumbnailUrl: v.optional(v.string()),
+        views: v.optional(v.number()),
+        isLive: v.optional(v.boolean()),
+        channelName: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const { id, ...updates } = args;
+        await ctx.db.patch(id, updates);
+    },
+});
+
 export const remove = mutation({
     args: { id: v.id("shorts") },
     handler: async (ctx, args) => {
