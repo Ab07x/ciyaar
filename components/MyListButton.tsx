@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Check, Heart, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/providers/ToastProvider";
 import { useState } from "react";
 import { useUser } from "@/providers/UserProvider";
 
@@ -19,6 +20,9 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
     const isListed = useQuery(api.mylist.checkStatus, userId ? { userId, contentType, contentId } : "skip");
     const toggle = useMutation(api.mylist.toggle);
 
+    // Custom toast
+    const toast = useToast();
+
     const [isHovered, setIsHovered] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -26,13 +30,22 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
         e.preventDefault();
         e.stopPropagation();
 
-        if (!userId) return; // Should prompt login?
+        if (!userId) {
+            toast("Please login to use My List", "error");
+            return;
+        }
 
         setIsLoading(true);
         try {
-            await toggle({ userId, contentType, contentId });
+            const result = await toggle({ userId, contentType, contentId });
+            if (result.action === "added") {
+                toast("Added to My List", "success");
+            } else {
+                toast("Removed from My List", "info");
+            }
         } catch (error) {
             console.error("Failed to toggle list", error);
+            toast("Failed to update list", "error");
         } finally {
             setIsLoading(false);
         }
