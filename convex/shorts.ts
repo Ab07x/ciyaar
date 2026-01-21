@@ -83,3 +83,28 @@ export const seedDefaults = mutation({
         return "Seeded shorts";
     }
 });
+
+export const create = mutation({
+    args: {
+        title: v.string(),
+        embedUrl: v.string(),
+        thumbnailUrl: v.string(),
+        views: v.number(),
+        isLive: v.boolean(),
+        channelName: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        return await ctx.db.insert("shorts", {
+            ...args,
+            createdAt: Date.now(),
+            isPublished: true,
+        });
+    },
+});
+
+export const remove = mutation({
+    args: { id: v.id("shorts") },
+    handler: async (ctx, args) => {
+        await ctx.db.delete(args.id);
+    }
+});
