@@ -21,6 +21,7 @@ import type * as movies from "../movies.js";
 import type * as mylist from "../mylist.js";
 import type * as posts from "../posts.js";
 import type * as redemptions from "../redemptions.js";
+import type * as search from "../search.js";
 import type * as series from "../series.js";
 import type * as settings from "../settings.js";
 import type * as subscriptions from "../subscriptions.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   mylist: typeof mylist;
   posts: typeof posts;
   redemptions: typeof redemptions;
+  search: typeof search;
   series: typeof series;
   settings: typeof settings;
   subscriptions: typeof subscriptions;
