@@ -24,13 +24,15 @@ export default function AdminCodesPage() {
     const [showModal, setShowModal] = useState(false);
     const [plan, setPlan] = useState<"match" | "weekly" | "monthly" | "yearly">("weekly");
     const [count, setCount] = useState(10);
+    const [customMaxDevices, setCustomMaxDevices] = useState(1);
     const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
     const [filter, setFilter] = useState<"all" | "unused" | "used" | "revoked">("all");
 
     const handleGenerate = async () => {
         const planOption = planOptions.find(p => p.value === plan);
-        const maxDevices = settings ? (settings as any)[`maxDevices${plan.charAt(0).toUpperCase() + plan.slice(1)}`] : 2;
+        // Use customMaxDevices instead of global setting
+        const maxDevices = customMaxDevices;
 
         const newCodes = await generateCodes({
             plan,
@@ -248,6 +250,18 @@ export default function AdminCodesPage() {
                                         onChange={(e) => setCount(Number(e.target.value))}
                                         min={1}
                                         max={500}
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm text-text-secondary mb-2">Max Devices (Devices-ka la ogolyahay)</label>
+                                    <input
+                                        type="number"
+                                        value={customMaxDevices}
+                                        onChange={(e) => setCustomMaxDevices(Number(e.target.value))}
+                                        min={1}
+                                        max={10}
                                         className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                     />
                                 </div>

@@ -12,7 +12,7 @@ export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const pathname = usePathname();
-    const { isPremium } = useUser();
+    const { isPremium, isLoading } = useUser();
 
     const navItems = [
         { href: "/ciyaar", label: "Ciyaaro", icon: Trophy, color: "text-accent-green" },
@@ -75,7 +75,6 @@ export function Navbar() {
                         </Link>
                     )}
                 </nav>
-
                 {/* Right Actions */}
                 <div className="flex items-center gap-2">
                     {/* Desktop Search */}
@@ -93,7 +92,11 @@ export function Navbar() {
                     </button>
 
                     {/* Account Icon */}
-                    {isPremium ? (
+                    {isLoading ? (
+                        <div className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hidden md:flex">
+                            <div className="h-5 w-5 border-2 border-text-muted border-t-accent-green rounded-full animate-spin" />
+                        </div>
+                    ) : isPremium ? (
                         <Link
                             href="/subscription"
                             className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-accent-gold hover:bg-stadium-hover rounded-lg transition-colors hidden md:flex border border-accent-gold/20"
@@ -114,75 +117,79 @@ export function Navbar() {
             </div>
 
             {/* Mobile Search Bar */}
-            {mobileSearchOpen && (
-                <div className="md:hidden p-4 bg-stadium-elevated border-b border-border-subtle animate-in slide-in-from-top-2">
-                    <SearchBox />
-                </div>
-            )}
+            {
+                mobileSearchOpen && (
+                    <div className="md:hidden p-4 bg-stadium-elevated border-b border-border-subtle animate-in slide-in-from-top-2">
+                        <SearchBox />
+                    </div>
+                )
+            }
 
             {/* Mobile Menu Drawer */}
-            {mobileMenuOpen && (
-                <div className="md:hidden fixed inset-0 top-16 bg-stadium-dark z-40 p-4 border-t border-border-subtle animate-in slide-in-from-left-10 overflow-y-auto">
-                    <nav className="flex flex-col space-y-2">
-                        {navItems.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = pathname.startsWith(item.href);
-                            return (
+            {
+                mobileMenuOpen && (
+                    <div className="md:hidden fixed inset-0 top-16 bg-stadium-dark z-40 p-4 border-t border-border-subtle animate-in slide-in-from-left-10 overflow-y-auto">
+                        <nav className="flex flex-col space-y-2">
+                            {navItems.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = pathname.startsWith(item.href);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={cn(
+                                            "p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 transition-colors",
+                                            item.color,
+                                            isActive ? "bg-white/10" : "hover:bg-stadium-elevated"
+                                        )}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        <span className="relative">
+                                            <Icon size={24} />
+                                            {item.hasLiveDot && (
+                                                <span className="absolute -top-0.5 -right-0.5 live-dot" />
+                                            )}
+                                        </span>
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
+
+                            {!isPremium && (
                                 <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        "p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 transition-colors",
-                                        item.color,
-                                        isActive ? "bg-white/10" : "hover:bg-stadium-elevated"
-                                    )}
+                                    href="/pricing"
+                                    className="p-4 min-h-[48px] rounded-xl text-lg font-bold bg-accent-gold text-black flex items-center gap-4 hover:brightness-110 mt-4 transition-all"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
-                                    <span className="relative">
-                                        <Icon size={24} />
-                                        {item.hasLiveDot && (
-                                            <span className="absolute -top-0.5 -right-0.5 live-dot" />
-                                        )}
-                                    </span>
-                                    {item.label}
+                                    <Crown size={24} />
+                                    PREMIUM
                                 </Link>
-                            );
-                        })}
+                            )}
 
-                        {!isPremium && (
-                            <Link
-                                href="/pricing"
-                                className="p-4 min-h-[48px] rounded-xl text-lg font-bold bg-accent-gold text-black flex items-center gap-4 hover:brightness-110 mt-4 transition-all"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <Crown size={24} />
-                                PREMIUM
-                            </Link>
-                        )}
-
-                        {/* Mobile Account Link */}
-                        {isPremium ? (
-                            <Link
-                                href="/subscription"
-                                className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-accent-gold hover:bg-stadium-elevated transition-colors border border-accent-gold/20"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <CreditCard size={24} />
-                                My Plan
-                            </Link>
-                        ) : (
-                            <Link
-                                href="/login"
-                                className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-text-secondary hover:bg-stadium-elevated transition-colors"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <User size={24} />
-                                Akoon
-                            </Link>
-                        )}
-                    </nav>
-                </div>
-            )}
-        </header>
+                            {/* Mobile Account Link */}
+                            {isPremium ? (
+                                <Link
+                                    href="/subscription"
+                                    className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-accent-gold hover:bg-stadium-elevated transition-colors border border-accent-gold/20"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <CreditCard size={24} />
+                                    My Plan
+                                </Link>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-text-secondary hover:bg-stadium-elevated transition-colors"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <User size={24} />
+                                    Akoon
+                                </Link>
+                            )}
+                        </nav>
+                    </div>
+                )
+            }
+        </header >
     );
 }

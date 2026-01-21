@@ -64,16 +64,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const redeemCode = async (code: string, matchId?: Id<"matches">) => {
         if (!deviceId) return { success: false, error: "Device not initialized" };
 
-        return await redeemCodeMutation({
+        const result = await redeemCodeMutation({
             code,
             deviceId,
             userAgent: getUserAgent(),
             matchId,
         });
+
+        if (result.success) {
+            // Force refresh of user identity
+            const newUserId = await getOrCreateUser({
+                deviceId,
+                userAgent: getUserAgent(),
+            });
+            setUserId(newUserId);
+        }
+
+        return result;
     };
 
-    const logout = () => {
+    const logoutMutation = useMutation(api.users.logout);
+
+    const logout = async () => {
         if (typeof window !== "undefined") {
+            try {
+                if (deviceId) {
+                    await logoutMutation({ deviceId });
+                }
+            } catch (error) {
+                console.error("Logout failed on server:", error);
+            }
             localStorage.removeItem("fanbroj_device_id");
             localStorage.removeItem("fanbroj_subscription");
             setDeviceId("");
@@ -89,7 +109,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 deviceId,
                 userId,
                 isLoading: deviceId === "" || (userId !== null && subscription === undefined),
-                isPremium: premiumAccess?.hasAccess ?? false,
+                isPremium: (!!subscription) || (premiumAccess?.hasAccess ?? false),
                 subscription,
                 checkMatchAccess,
                 redeemCode,

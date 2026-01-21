@@ -170,7 +170,63 @@ export const redeemCode = mutation({
         }
 
         if (redemption.usedByUserId) {
-            return { success: false, error: "Code-kan hore ayaa loo isticmaalay" };
+            // Logic change: Allow re-use if the same user (or slots available)
+            // But we don't know the user from the code alone easily without querying.
+            // Let's check if the code was used by a user, and if that user has space.
+
+            // Get the user who used the code
+            const user = await ctx.db.get(redemption.usedByUserId);
+            if (!user) {
+                // Anomaly: User deleted?
+                return { success: false, error: "Cillad farsamo: User-ka lama helin" };
+            }
+
+            // Check device limit for this user
+            const currentDevices = await ctx.db
+                .query("devices")
+                .withIndex("by_user", (q) => q.eq("userId", redemption.usedByUserId!))
+                .collect();
+
+            if (currentDevices.length >= redemption.maxDevices) {
+                return { success: false, error: "Code-kan hore ayaa loo isticmaalay waxaana buuxa devices-ka" };
+            }
+
+            // Slots available!
+            // IMPORTANT: If this device was already associated with another user (e.g. anonymous),
+            // we must remove that link so `getOrCreateUser` finds the NEW correct link.
+            const existingDevice = await ctx.db
+                .query("devices")
+                .withIndex("by_device", (q) => q.eq("deviceId", args.deviceId))
+                .first();
+
+            if (existingDevice) {
+                await ctx.db.delete(existingDevice._id);
+            }
+
+            // Add this new device to the EXISTING user.
+            await ctx.db.insert("devices", {
+                userId: redemption.usedByUserId!,
+                deviceId: args.deviceId,
+                userAgent: args.userAgent,
+                lastSeenAt: Date.now(),
+            });
+
+            // We don't need to create a new subscription, just link to existing.
+            // But wait, the client expects "success: true" to redirect.
+
+            // Fetch active subscription for this user to return details
+            const activeSub = await ctx.db
+                .query("subscriptions")
+                .withIndex("by_user", (q) => q.eq("userId", redemption.usedByUserId!))
+                .filter((q) => q.eq(q.field("status"), "active"))
+                .first();
+
+            return {
+                success: true,
+                plan: redemption.plan,
+                expiresAt: activeSub?.expiresAt || 0,
+                message: "Kusoo dhawaada mar kale! Device-ka waa lagu daray.",
+            };
         }
 
         // Check if code is expired

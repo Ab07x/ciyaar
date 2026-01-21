@@ -137,3 +137,17 @@ export const removeDevice = mutation({
         }
     },
 });
+
+export const logout = mutation({
+    args: { deviceId: v.string() },
+    handler: async (ctx, args) => {
+        const device = await ctx.db
+            .query("devices")
+            .withIndex("by_device", (q) => q.eq("deviceId", args.deviceId))
+            .first();
+
+        if (device) {
+            await ctx.db.delete(device._id);
+        }
+    },
+});
