@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState } from "react";
-import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown, LogOut, CreditCard } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown, LogOut, CreditCard, List } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
@@ -20,6 +20,7 @@ export function Navbar() {
         { href: "/movies", label: "Filimo", icon: Film, color: "text-accent-blue" },
         { href: "/series", label: "Musalsal", icon: Tv, color: "text-white" },
         { href: "/blog", label: "Warar", icon: Newspaper, color: "text-text-secondary" },
+        { href: "/mylist", label: "Liiskeyga", icon: List, color: "text-accent-gold" },
     ];
 
     return (

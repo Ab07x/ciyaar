@@ -17,6 +17,7 @@ import {
     Calendar,
     MessageSquare,
 } from "lucide-react";
+import { MyListButton } from "@/components/MyListButton";
 
 export default function MovieWatchPage() {
     const params = useParams();
@@ -186,10 +187,13 @@ export default function MovieWatchPage() {
                                         />
                                     </div>
                                 )}
-                                <div>
-                                    <h1 className="text-2xl md:text-3xl font-black mb-2">
-                                        {movie.titleSomali || movie.title}
-                                    </h1>
+                                <div className="flex-1">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <h1 className="text-2xl md:text-3xl font-black mb-2">
+                                            {movie.titleSomali || movie.title}
+                                        </h1>
+                                        <MyListButton contentType="movie" contentId={slug} variant="icon" />
+                                    </div>
                                     {movie.titleSomali && (
                                         <p className="text-text-muted text-sm mb-2">{movie.title}</p>
                                     )}

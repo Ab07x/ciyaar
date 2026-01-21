@@ -11,6 +11,7 @@ import { ViewCounter } from "@/components/ViewCounter";
 import { SocialShare } from "@/components/SocialShare";
 import { LiveChat } from "@/components/LiveChat";
 import { RelatedNews } from "@/components/RelatedNews";
+import { MyListButton } from "@/components/MyListButton";
 
 interface MatchClientPageProps {
     slug: string;
@@ -49,7 +50,10 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
                 <Link href={`/ciyaar?league=${match.leagueId}`} className="text-xs text-accent-green font-bold uppercase tracking-wider hover:underline">
                     {match.leagueName}
                 </Link>
-                <h1 className="text-2xl md:text-4xl font-black">{match.teamA} <span className="text-accent-green">vs</span> {match.teamB} – Ciyaar Live</h1>
+                <div className="flex items-start justify-between gap-4">
+                    <h1 className="text-2xl md:text-4xl font-black">{match.teamA} <span className="text-accent-green">vs</span> {match.teamB} – Ciyaar Live</h1>
+                    <MyListButton contentType="match" contentId={match._id} variant="icon" />
+                </div>
                 <div className="flex items-center gap-4 mt-2">
                     {match.isPremium && <span className="px-3 py-1 bg-accent-gold/20 text-accent-gold text-xs font-bold rounded-full">PREMIUM</span>}
                     <div className="flex items-center gap-1.5 text-text-muted text-xs">

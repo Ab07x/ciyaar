@@ -18,6 +18,7 @@ import type * as leagues from "../leagues.js";
 import type * as matches from "../matches.js";
 import type * as messages from "../messages.js";
 import type * as movies from "../movies.js";
+import type * as mylist from "../mylist.js";
 import type * as posts from "../posts.js";
 import type * as redemptions from "../redemptions.js";
 import type * as series from "../series.js";
@@ -25,6 +26,7 @@ import type * as settings from "../settings.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tmdb from "../tmdb.js";
 import type * as users from "../users.js";
+import type * as watch from "../watch.js";
 
 import type {
   ApiFromModules,
@@ -43,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   matches: typeof matches;
   messages: typeof messages;
   movies: typeof movies;
+  mylist: typeof mylist;
   posts: typeof posts;
   redemptions: typeof redemptions;
   series: typeof series;
@@ -50,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   subscriptions: typeof subscriptions;
   tmdb: typeof tmdb;
   users: typeof users;
+  watch: typeof watch;
 }>;
 
 /**

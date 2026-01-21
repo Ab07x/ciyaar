@@ -21,6 +21,7 @@ import {
     Tv,
     ChevronDown,
 } from "lucide-react";
+import { MyListButton } from "@/components/MyListButton";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function SeriesWatchPage() {
@@ -249,6 +250,7 @@ export default function SeriesWatchPage() {
                                                 Bilow Daawashada
                                             </button>
                                         )}
+                                        <MyListButton contentType="series" contentId={slug} variant="full" />
                                     </div>
                                 </div>
                             </div>
@@ -384,7 +386,10 @@ export default function SeriesWatchPage() {
                                         </div>
                                     )}
                                     <div>
-                                        <h3 className="font-bold mb-1 line-clamp-2">{series.titleSomali || series.title}</h3>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <h3 className="font-bold mb-1 line-clamp-2">{series.titleSomali || series.title}</h3>
+                                            <MyListButton contentType="series" contentId={slug} variant="icon" />
+                                        </div>
                                         <div className="flex items-center gap-2 text-xs text-text-secondary">
                                             <Star size={12} className="text-accent-gold" /> {series.rating?.toFixed(1) || "N/A"}
                                             <span>• {series.firstAirDate?.slice(0, 4)}</span>

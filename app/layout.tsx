@@ -115,7 +115,34 @@ export default function RootLayout({
 
                   <Link href="/blog" className="text-sm font-bold hover:text-accent-green transition-colors">WARARKA</Link>
                   <Link href="/pricing" className="text-sm font-bold text-accent-gold hover:text-accent-gold/80 transition-colors">PREMIUM</Link>
+                  <Link href="/pricing" className="text-sm font-bold text-accent-gold hover:text-accent-gold/80 transition-colors">PREMIUM</Link>
                 </nav>
+
+                {/* Apps Section */}
+                <div className="flex flex-col items-center gap-4 mb-8 p-6 bg-stadium-dark rounded-2xl border border-white/5 max-w-lg mx-auto">
+                  <span className="text-xs font-black text-text-secondary uppercase tracking-widest">Download Apps</span>
+                  <div className="flex gap-6">
+                    <Link href="/apps/android" aria-label="Download Android App" className="group flex flex-col items-center gap-2">
+                      <div className="p-3 bg-white/5 rounded-xl group-hover:bg-accent-green/20 group-hover:text-accent-green transition-all border border-transparent group-hover:border-accent-green/20">
+                        {/* Icon placeholder - using generic SVG since lucide imports might not be at top level context correctly if strictly replacing block */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></svg>
+                      </div>
+                      <span className="text-[10px] font-bold text-text-muted group-hover:text-white transition-colors">Android</span>
+                    </Link>
+                    <Link href="/apps/ios" aria-label="Download iOS App" className="group flex flex-col items-center gap-2">
+                      <div className="p-3 bg-white/5 rounded-xl group-hover:bg-white/20 group-hover:text-white transition-all border border-transparent group-hover:border-white/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="12" x="3" y="2" rx="2" /><path d="M10 20.4C8 22 4 21.8 2 20c.5-1.4 3-2 3-2a4 4 0 0 0 6 0s2.5.6 3 2c-2 1.8-6 2-8 .4" /></svg>
+                      </div>
+                      <span className="text-[10px] font-bold text-text-muted group-hover:text-white transition-colors">iOS</span>
+                    </Link>
+                    <Link href="/apps/tv" aria-label="Get Smart TV App" className="group flex flex-col items-center gap-2">
+                      <div className="p-3 bg-white/5 rounded-xl group-hover:bg-accent-blue/20 group-hover:text-accent-blue transition-all border border-transparent group-hover:border-accent-blue/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" /></svg>
+                      </div>
+                      <span className="text-[10px] font-bold text-text-muted group-hover:text-white transition-colors">Smart TV</span>
+                    </Link>
+                  </div>
+                </div>
                 <p className="text-text-muted text-xs">
                   © {new Date().getFullYear()} Fanbroj.net. Dhamaan xuquuqda waa dhowran tahay.
                 </p>

@@ -7,6 +7,7 @@ import { AdSlot } from "@/components/AdSlot";
 import Link from "next/link";
 import { PlayCircle, Calendar, Clock, Crown, ChevronRight, Newspaper } from "lucide-react";
 import { BlogCard } from "@/components/BlogCard";
+import { ContinueWatchingRow } from "@/components/ContinueWatchingRow";
 
 export default function HomePage() {
   const matchData = useQuery(api.matches.getMatchesByStatus);
@@ -47,6 +48,9 @@ export default function HomePage() {
       </div>
 
       <AdSlot slotKey="home_top" className="mb-12" />
+
+      {/* Continue Watching */}
+      <ContinueWatchingRow />
 
       {/* Live Now */}
       <Section title="LIVE HADA" icon={PlayCircle} color="bg-accent-red/20 text-accent-red" count={live.length}>

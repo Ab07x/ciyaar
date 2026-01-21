@@ -7,6 +7,9 @@ import {
     Settings, RefreshCw, AlertCircle, Loader2,
     ChevronUp
 } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useUser } from "@/providers/UserProvider";
 
 // Types
 export interface StreamSource {
@@ -22,6 +25,13 @@ interface StreamPlayerProps {
     className?: string;
     onError?: (error: string) => void;
     onReady?: () => void;
+    // Progress Tracking
+    trackParams?: {
+        contentType: "movie" | "episode" | "match";
+        contentId: string;
+        seriesId?: string;
+        duration?: number;
+    };
 }
 
 interface QualityLevel {
@@ -59,10 +69,11 @@ export function encodeStreamUrl(url: string): string {
     return btoa(url);
 }
 
-export function StreamPlayer({ source, poster, className, onError, onReady }: StreamPlayerProps) {
+export function StreamPlayer({ source, poster, className, onError, onReady, trackParams }: StreamPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const { userId } = useUser();
 
     // State
     const [isPlaying, setIsPlaying] = useState(false);
@@ -75,6 +86,88 @@ export function StreamPlayer({ source, poster, className, onError, onReady }: St
     const [showQualityMenu, setShowQualityMenu] = useState(false);
     const [streamType, setStreamType] = useState<"m3u8" | "mpd" | "iframe" | "video">("iframe");
     const [resolvedUrl, setResolvedUrl] = useState("");
+
+    // Convex Mutations
+    const saveProgress = useMutation(api.watch.saveProgress);
+    // Explicitly skipping useQuery here for resume point to avoid hook rules in conditional logic if needed, 
+    // but better to use it directly and skip if params missing.
+    // However, since trackParams is optional, we handle playing start time manually via effect or separate hook call logic?
+    // Let's use skip logic if available or just handle 0 default.
+    const resumePoint = useQuery(api.watch.getResumePoint,
+        (trackParams && userId) ? { userId, contentType: trackParams.contentType, contentId: trackParams.contentId } : "skip"
+    );
+
+    // Initial Resume Logic
+    useEffect(() => {
+        const video = videoRef.current;
+        if (video && resumePoint && resumePoint > 0 && !isPlaying && video.currentTime === 0) {
+            // Found a resume point
+            video.currentTime = resumePoint;
+        }
+    }, [resumePoint, resolvedUrl]);
+
+
+    // Progress Saving Interval
+    useEffect(() => {
+        if (!isPlaying || !trackParams || !userId) return;
+
+        const interval = setInterval(() => {
+            const video = videoRef.current;
+            if (!video) return;
+
+            const current = video.currentTime;
+            const duration = video.duration || trackParams.duration || 0;
+
+            if (current > 5 && duration > 0) {
+                saveProgress({
+                    userId,
+                    contentType: trackParams.contentType,
+                    contentId: trackParams.contentId,
+                    seriesId: trackParams.seriesId,
+                    progressSeconds: Math.floor(current),
+                    durationSeconds: Math.floor(duration),
+                }).catch(err => console.error("Failed to save progress", err));
+            }
+
+        }, 15000); // Save every 15s
+
+        return () => clearInterval(interval);
+    }, [isPlaying, trackParams, userId]);
+
+    // Save on Unmount / Pause
+    const handleManualSave = useCallback(() => {
+        if (!trackParams || !userId) return;
+        const video = videoRef.current;
+        if (!video) return;
+
+        const current = video.currentTime;
+        const duration = video.duration || trackParams.duration || 0;
+
+        if (current > 5 && duration > 0) {
+            saveProgress({
+                userId,
+                contentType: trackParams.contentType,
+                contentId: trackParams.contentId,
+                seriesId: trackParams.seriesId,
+                progressSeconds: Math.floor(current),
+                durationSeconds: Math.floor(duration),
+            }).catch(err => console.error("Failed to save progress", err));
+        }
+    }, [trackParams, userId, saveProgress]);
+
+    // Pause listener for saving
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        video.addEventListener("pause", handleManualSave);
+        return () => {
+            video.removeEventListener("pause", handleManualSave);
+            // Also try to save on unmount (best effort)
+            handleManualSave();
+        };
+    }, [handleManualSave]);
+
 
     // Hide controls after inactivity
     const controlsTimeoutRef = useRef<any>(null);

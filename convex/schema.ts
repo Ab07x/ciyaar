@@ -453,4 +453,42 @@ export default defineSchema({
         .index("by_season", ["seriesId", "seasonNumber"]),
 
 
+    // ============================================
+    // MY LIST
+    // ============================================
+    user_mylist: defineTable({
+        userId: v.id("users"),
+        contentType: v.union(
+            v.literal("movie"),
+            v.literal("series"),
+            v.literal("match")
+        ),
+        contentId: v.string(), // Slug for movies/series, ID for matches
+        addedAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_content", ["contentType", "contentId"])
+        .index("by_user_content", ["userId", "contentType", "contentId"]),
+
+    // ============================================
+    // WATCH PROGRESS
+    // ============================================
+    user_watch_progress: defineTable({
+        userId: v.id("users"),
+        contentType: v.union(
+            v.literal("movie"),
+            v.literal("episode"),
+            v.literal("match")
+        ),
+        contentId: v.string(), // slug (movie), episodeId (series), matchId
+        seriesId: v.optional(v.string()), // For knowing which series an episode belongs to
+        progressSeconds: v.number(),
+        durationSeconds: v.number(),
+        isFinished: v.boolean(),
+        updatedAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_user_updated", ["userId", "updatedAt"])
+        .index("by_user_content", ["userId", "contentType", "contentId"]),
+
 });
