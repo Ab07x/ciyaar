@@ -27,11 +27,7 @@ export function BottomNav() {
         },
         {
             label: "Search",
-            href: "/search", // Or maybe toggle search overlay? For now link to /search page if I create one, or just /
-            // Given I haven't created /search page, and SearchBox is in Navbar.
-            // A dedicated search page is good for mobile. 
-            // I'll point to /search and I should probably create that page or make this button focus the navbar search.
-            // Let's make it a link to /search for now and I'll create a simple search page.
+            href: "/search",
             icon: Search,
         },
         {
@@ -41,10 +37,7 @@ export function BottomNav() {
         },
         {
             label: "Menu",
-            href: "#menu", // This usually opens a drawer. For now, let's just link to /settings or trigger sidebar
-            // Since I don't have a sidebar component ready to toggle globally, I'll link to /more or just display a placeholder.
-            // Or I can make it toggle the existing mobile menu in Navbar? No, that's internal to Navbar.
-            // I will leave it as a link to /more or similar for now.
+            href: "/menu",
             icon: Menu,
         }
     ];
