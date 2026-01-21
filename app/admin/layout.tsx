@@ -16,6 +16,7 @@ import {
     Radio,
     Film,
     Tv,
+    Smartphone,
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
     { href: "/admin/series", label: "Series", icon: Tv },
     { href: "/admin/import", label: "Import", icon: Download },
     { href: "/admin/leagues", label: "Leagues", icon: Trophy },
+    { href: "/admin/shorts", label: "Shorts", icon: Smartphone },
     { href: "/admin/blog", label: "Blog", icon: FileText },
     { href: "/admin/ads", label: "Ads", icon: Megaphone },
     { href: "/admin/codes", label: "Codes", icon: Ticket },
