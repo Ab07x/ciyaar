@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState } from "react";
-import { Menu, X, Search, User } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -13,10 +13,11 @@ export function Navbar() {
     const pathname = usePathname();
 
     const navItems = [
-        { href: "/ciyaar", label: "Ciyaaro", color: "text-accent-green" },
-        { href: "/movies", label: "Filimo", color: "text-accent-blue" },
-        { href: "/series", label: "Musalsal", color: "text-white" },
-        { href: "/live", label: "Live", color: "text-accent-red" },
+        { href: "/ciyaar", label: "Ciyaaro", icon: Trophy, color: "text-accent-green" },
+        { href: "/live", label: "Live", icon: Radio, color: "text-accent-red", hasLiveDot: true },
+        { href: "/movies", label: "Filimo", icon: Film, color: "text-accent-blue" },
+        { href: "/series", label: "Musalsal", icon: Tv, color: "text-white" },
+        { href: "/blog", label: "Warar", icon: Newspaper, color: "text-text-secondary" },
     ];
 
     return (
@@ -25,8 +26,9 @@ export function Navbar() {
 
                 {/* Mobile Menu Button */}
                 <button
-                    className="md:hidden p-2 text-text-primary hover:bg-stadium-hover rounded-lg"
+                    className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Toggle menu"
                 >
                     {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
@@ -37,45 +39,61 @@ export function Navbar() {
                 </Link>
 
                 {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center gap-8">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "text-sm font-bold uppercase tracking-wide transition-colors hover:opacity-80",
-                                item.color,
-                                pathname.startsWith(item.href) && "opacity-100 border-b-2 border-current pb-1"
-                            )}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
+                <nav className="hidden md:flex items-center gap-6">
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = pathname.startsWith(item.href);
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    "flex items-center gap-2 px-3 py-2 text-sm font-bold uppercase tracking-wide transition-all hover:opacity-80 rounded-lg",
+                                    item.color,
+                                    isActive && "bg-white/5"
+                                )}
+                            >
+                                <span className="relative">
+                                    <Icon size={18} />
+                                    {item.hasLiveDot && (
+                                        <span className="absolute -top-0.5 -right-0.5 live-dot" />
+                                    )}
+                                </span>
+                                <span className="hidden lg:inline">{item.label}</span>
+                            </Link>
+                        );
+                    })}
                     <Link
                         href="/pricing"
-                        className="bg-accent-gold text-black px-4 py-1.5 rounded-lg font-bold text-sm hover:scale-105 transition-transform flex items-center gap-1"
+                        className="bg-accent-gold text-black px-4 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2"
                     >
-                        <span className="text-xs">⭐</span> PREMIUM
+                        <Crown size={16} />
+                        <span className="hidden lg:inline">PREMIUM</span>
                     </Link>
                 </nav>
 
                 {/* Right Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {/* Desktop Search */}
-                    <div className="hidden md:block w-64">
+                    <div className="hidden md:block w-56 lg:w-64">
                         <SearchBox />
                     </div>
 
                     {/* Mobile Search Toggle */}
                     <button
-                        className="md:hidden p-2 text-text-primary hover:bg-stadium-hover rounded-lg"
+                        className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors"
                         onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+                        aria-label="Toggle search"
                     >
                         <Search size={22} />
                     </button>
 
-                    {/* Account Icon (Placeholder for now) */}
-                    <Link href="/login" className="p-2 text-text-primary hover:bg-stadium-hover rounded-lg hidden md:block">
+                    {/* Account Icon */}
+                    <Link
+                        href="/login"
+                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors hidden md:flex"
+                        aria-label="Account"
+                    >
                         <User size={22} />
                     </Link>
                 </div>
@@ -90,27 +108,49 @@ export function Navbar() {
 
             {/* Mobile Menu Drawer */}
             {mobileMenuOpen && (
-                <div className="md:hidden fixed inset-0 top-16 bg-stadium-dark z-40 p-4 border-t border-border-subtle animate-in slide-in-from-left-10">
+                <div className="md:hidden fixed inset-0 top-16 bg-stadium-dark z-40 p-4 border-t border-border-subtle animate-in slide-in-from-left-10 overflow-y-auto">
                     <nav className="flex flex-col space-y-2">
-                        {navItems.map((item) => (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    "p-4 rounded-xl text-lg font-bold flex items-center justify-between hover:bg-stadium-elevated transition-colors",
-                                    item.color
-                                )}
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
+                        {navItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        "p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 transition-colors",
+                                        item.color,
+                                        isActive ? "bg-white/10" : "hover:bg-stadium-elevated"
+                                    )}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <span className="relative">
+                                        <Icon size={24} />
+                                        {item.hasLiveDot && (
+                                            <span className="absolute -top-0.5 -right-0.5 live-dot" />
+                                        )}
+                                    </span>
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
                         <Link
                             href="/pricing"
-                            className="p-4 rounded-xl text-lg font-bold bg-accent-gold text-black flex items-center justify-between hover:opacity-90 mt-4"
+                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold bg-accent-gold text-black flex items-center gap-4 hover:brightness-110 mt-4 transition-all"
                             onClick={() => setMobileMenuOpen(false)}
                         >
-                            PREMIUM ⭐
+                            <Crown size={24} />
+                            PREMIUM
+                        </Link>
+
+                        {/* Mobile Account Link */}
+                        <Link
+                            href="/login"
+                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-text-secondary hover:bg-stadium-elevated transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            <User size={24} />
+                            Akoon
                         </Link>
                     </nav>
                 </div>

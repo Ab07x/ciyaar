@@ -23,6 +23,10 @@
 
   --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* Typography */
+  --font-heading: 'Russo One', system-ui, sans-serif;
+  --font-body: 'Chakra Petch', system-ui, sans-serif;
 }
 
 @layer base {
@@ -32,18 +36,51 @@
 
   body {
     @apply bg-stadium-dark text-text-primary;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
 
-  /* Live badge pulse animation */
+  /* =====================================================
+     LIVE BADGE - Enhanced pulse animation with red glow
+     ===================================================== */
   .badge-live {
-    animation: pulse-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse-live 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
   }
 
-  @keyframes pulse-red {
+  @keyframes pulse-live {
+
+    0%,
+    100% {
+      opacity: 1;
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    50% {
+      opacity: 0.85;
+      box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+  }
+
+  /* Live dot indicator */
+  .live-dot {
+    @apply w-2 h-2 bg-accent-red rounded-full;
+    animation: blink-live 1s ease-in-out infinite;
+  }
+
+  @keyframes blink-live {
 
     0%,
     100% {
@@ -51,20 +88,50 @@
     }
 
     50% {
-      opacity: 0.7;
+      opacity: 0.3;
     }
   }
 
-  /* Card hover lift */
+  /* =====================================================
+     CTA BUTTONS - 44px+ touch targets for mobile
+     ===================================================== */
+  .cta-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-accent-green text-black font-bold rounded-xl transition-all duration-200 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] cursor-pointer;
+  }
+
+  .cta-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-stadium-elevated text-text-primary border border-border-strong font-semibold rounded-xl transition-all duration-200 hover:bg-stadium-hover hover:border-text-muted active:scale-[0.98] cursor-pointer;
+  }
+
+  .cta-gold {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-accent-gold text-black font-bold rounded-xl transition-all duration-200 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] cursor-pointer;
+  }
+
+  /* =====================================================
+     BADGES - Language, Premium, Status
+     ===================================================== */
+  .badge-af-somali {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 bg-accent-blue text-white text-[10px] font-bold uppercase tracking-wide rounded-md;
+  }
+
+  .badge-premium {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 bg-accent-gold text-black text-[10px] font-bold uppercase tracking-wide rounded-md;
+  }
+
+  /* =====================================================
+     CARD INTERACTIONS
+     ===================================================== */
   .card-hover {
-    @apply transition-all duration-150 ease-out;
+    @apply transition-all duration-200 ease-out cursor-pointer;
   }
 
   .card-hover:hover {
     @apply -translate-y-1 shadow-hover;
   }
 
-  /* Player stage aspect ratio */
+  /* =====================================================
+     PLAYER STAGE
+     ===================================================== */
   .player-stage {
     @apply relative w-full;
     aspect-ratio: 16 / 9;
@@ -78,12 +145,13 @@
     }
   }
 
-  /* Iframe responsive */
   .embed-iframe {
     @apply absolute inset-0 w-full h-full rounded-2xl;
   }
 
-  /* Premium gradient animation */
+  /* =====================================================
+     PREMIUM EFFECTS
+     ===================================================== */
   @keyframes gradient-shift {
 
     0%,
@@ -101,18 +169,52 @@
     animation: gradient-shift 4s ease infinite;
   }
 
-  /* Glass card effect */
+  @keyframes gold-shimmer {
+    0% {
+      background-position: -200% center;
+    }
+
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .gold-shimmer {
+    background: linear-gradient(90deg,
+        var(--color-accent-gold) 0%,
+        #fcd34d 25%,
+        var(--color-accent-gold) 50%,
+        #fcd34d 75%,
+        var(--color-accent-gold) 100%);
+    background-size: 200% 100%;
+    animation: gold-shimmer 3s linear infinite;
+  }
+
+  /* =====================================================
+     GLASS & CARD EFFECTS
+     ===================================================== */
   .glass-card {
     @apply bg-white/5 backdrop-blur-md border border-white/10;
   }
 
-  /* Channel card */
   .channel-card {
-    @apply transition-all duration-300;
+    @apply transition-all duration-300 cursor-pointer;
   }
 
   .channel-card:hover {
     @apply -translate-y-1;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  /* =====================================================
+     NAV ACTIVE STATES
+     ===================================================== */
+  .nav-active {
+    @apply relative;
+  }
+
+  .nav-active::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-current rounded-full;
   }
 }

@@ -1,21 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { UserProvider } from "@/providers/UserProvider";
 import Link from "next/link";
 import { SearchBox } from "@/components/SearchBox";
 import { Navbar } from "@/components/Navbar";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://fanbroj.net"),
@@ -87,9 +76,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="so" suppressHydrationWarning>
+      <head>
+        {/* Sports/Gaming Typography - Russo One (headings) + Chakra Petch (body) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Russo+One&display=swap" rel="stylesheet" />
+      </head>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-stadium-dark text-text-primary min-h-screen`}
+        className="antialiased bg-stadium-dark text-text-primary min-h-screen"
       >
         <ConvexClientProvider>
           <UserProvider>

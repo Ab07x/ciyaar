@@ -316,6 +316,8 @@ export function StreamPlayer({ source, poster, className, onError, onReady }: St
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
+        if (!resolvedUrl) return <div className={cn("stream-player relative bg-black aspect-video rounded-xl overflow-hidden animate-pulse", className)} />;
+
         return (
             <div className={cn("stream-player relative bg-black aspect-video rounded-xl overflow-hidden", className)}>
                 <iframe

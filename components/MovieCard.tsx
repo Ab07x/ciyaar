@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Play, Star, Lock } from "lucide-react";
+import { Play, Star, Lock, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MovieCardProps {
@@ -28,7 +28,7 @@ export function MovieCard({
     return (
         <Link
             href={`/movies/${slug}`}
-            className={cn("group block relative rounded-xl overflow-hidden bg-stadium-elevated", className)}
+            className={cn("group block relative rounded-xl overflow-hidden bg-stadium-elevated card-hover", className)}
         >
             {/* Poster Container */}
             <div className="aspect-[2/3] relative overflow-hidden">
@@ -39,20 +39,32 @@ export function MovieCard({
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
 
-                {/* Premium Badge */}
-                {isPremium && (
-                    <div className="absolute top-2 left-2 bg-accent-gold text-black text-xs font-bold px-2 py-1 rounded bg-opacity-90 flex items-center gap-1 z-10">
-                        <Lock size={12} />
-                        PREMIUM
+                {/* Top Badges */}
+                <div className="absolute top-2 left-2 right-2 flex justify-between items-start z-10">
+                    {/* AF-SOMALI Badge */}
+                    <div className="badge-af-somali">
+                        <Languages size={10} />
+                        AF-SOMALI
                     </div>
-                )}
+
+                    {/* Premium Badge */}
+                    {isPremium && (
+                        <div className="badge-premium">
+                            <Lock size={10} />
+                            PREMIUM
+                        </div>
+                    )}
+                </div>
 
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="bg-accent-blue text-white rounded-full p-4 transform scale-50 group-hover:scale-100 transition-transform duration-300">
                         <Play fill="currentColor" size={24} />
                     </div>
                 </div>
+
+                {/* Bottom gradient for better text readability */}
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
             </div>
 
             {/* Info */}

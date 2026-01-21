@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Crown, Lock, Unlock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface PremiumLockCardProps {
     matchId: string;
@@ -41,59 +42,59 @@ export function PremiumLockCard({
     return (
         <div
             className={cn(
-                "bg-stadium-elevated border-2 border-accent-gold rounded-lg p-6 max-w-md mx-auto",
+                "bg-stadium-dark/95 backdrop-blur-sm border-2 border-accent-gold rounded-2xl p-6 max-w-sm w-full text-center",
                 className
             )}
         >
-            {/* Header */}
-            <div className="text-center mb-6">
-                <div className="text-4xl mb-3">🔒</div>
-                <h3 className="text-2xl font-bold text-accent-gold mb-2">
-                    PREMIUM
-                </h3>
-                <p className="text-lg text-text-secondary">Ciyaaraha Waaweyn</p>
+            {/* Icon */}
+            <div className="w-14 h-14 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Crown size={28} className="text-accent-gold" />
             </div>
 
-            {/* Price */}
-            <div className="bg-stadium-dark rounded-lg p-4 mb-6 text-center">
-                <p className="text-xl font-bold text-accent-gold">{priceText}</p>
+            {/* Title */}
+            <h3 className="text-xl font-bold text-accent-gold mb-1">PREMIUM</h3>
+            <p className="text-text-secondary text-sm mb-4">Ciyaaraha Waaweyn</p>
+
+            {/* Price Badge */}
+            <div className="inline-block bg-accent-gold/10 border border-accent-gold/30 rounded-lg px-4 py-2 mb-5">
+                <p className="text-lg font-bold text-accent-gold">{priceText}</p>
             </div>
 
-            {/* Unlock Form */}
-            <form onSubmit={handleSubmit} className="mb-4">
-                <label className="block text-sm text-text-secondary mb-2">
-                    Gali password-ka:
-                </label>
-                <input
-                    type="text"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    className="w-full px-4 py-3 bg-stadium-dark border border-border-subtle rounded-lg text-text-primary focus:outline-none focus:border-accent-green"
-                />
+            {/* Unlock Form - Compact */}
+            <form onSubmit={handleSubmit} className="space-y-3 mb-4">
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value.toUpperCase())}
+                        placeholder="CODE"
+                        className="flex-1 px-4 py-3 min-h-[44px] bg-stadium-elevated border border-border-subtle rounded-lg text-text-primary text-center uppercase tracking-widest focus:outline-none focus:border-accent-green transition-colors"
+                    />
+                    <button
+                        type="submit"
+                        className="cta-primary px-4"
+                        aria-label="Unlock"
+                    >
+                        <Unlock size={18} />
+                    </button>
+                </div>
                 {error && (
-                    <p className="text-accent-red text-sm mt-2">{error}</p>
+                    <p className="text-accent-red text-xs">{error}</p>
                 )}
-                <button
-                    type="submit"
-                    className="w-full mt-3 px-4 py-3 bg-accent-green text-black font-bold rounded-lg hover:bg-accent-green/90 transition-colors"
-                >
-                    Fur Ciyaarta
-                </button>
             </form>
 
-            {/* WhatsApp CTA */}
-            <div className="pt-4 border-t border-border-subtle">
-                <p className="text-sm text-text-muted text-center mb-3">
-                    Ma haysatid password? Naga soo iibso:
-                </p>
+            {/* CTAs */}
+            <div className="flex gap-2">
+                <Link href="/pricing" className="cta-gold flex-1 text-sm">
+                    Iibso
+                </Link>
                 <a
                     href={whatsappLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors text-sm"
                 >
-                    <MessageSquare size={20} />
+                    <MessageSquare size={16} />
                     WhatsApp
                 </a>
             </div>
