@@ -66,8 +66,8 @@ export default function HomePage() {
         {live.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">{live.slice(0, 3).map((m: any) => <MatchCard key={m._id} {...m} />)}</div>
-            <div className="flex justify-center w-full">
-              <Link href="/live" className="w-full md:w-auto px-8 py-3 bg-stadium-elevated rounded-xl flex items-center justify-center gap-2 font-bold text-sm text-accent-green hover:bg-stadium-hover transition-colors border border-border-subtle group">
+            <div className="flex justify-end w-full">
+              <Link href="/ciyaar" className="w-full md:w-auto px-8 py-3 bg-stadium-elevated rounded-xl flex items-center justify-center gap-2 font-bold text-sm text-accent-green hover:bg-stadium-hover transition-colors border border-border-subtle group">
                 Dhamaan Ciyaaraha Live-ka ah
                 <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </Link>
