@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-    Play, Pause, Maximize, Volume2, VolumeX,
-    Settings, RefreshCw, AlertCircle, Loader2,
-    ChevronUp
+    Play, Pause, Maximize, Minimize, Volume2, VolumeX, Volume1,
+    Settings, RefreshCw, AlertCircle, Loader2, SkipForward, SkipBack,
+    ChevronUp, PictureInPicture2, X
 } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
+import { BufferIndicator } from "./player/BufferIndicator";
 
 // Types
 export interface StreamSource {
@@ -25,7 +27,11 @@ interface StreamPlayerProps {
     className?: string;
     onError?: (error: string) => void;
     onReady?: () => void;
-    // Progress Tracking
+    showSkipIntro?: boolean;
+    skipIntroTime?: number;
+    showNextEpisode?: boolean;
+    nextEpisodeTitle?: string;
+    onNextEpisode?: () => void;
     trackParams?: {
         contentType: "movie" | "episode" | "match";
         contentId: string;
@@ -41,26 +47,24 @@ interface QualityLevel {
     index: number;
 }
 
+const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
 // Helper: Detect stream type from URL
 function detectStreamType(url: string): "m3u8" | "mpd" | "iframe" | "video" {
     const urlLower = url.toLowerCase();
     if (urlLower.includes(".m3u8") || urlLower.includes("m3u8")) return "m3u8";
     if (urlLower.includes(".mpd")) return "mpd";
     if (urlLower.includes(".mp4") || urlLower.includes(".webm") || urlLower.includes(".ogg")) return "video";
-    // Default to iframe for external embeds
     return "iframe";
 }
 
 // Helper: Decode protected URL (Base64)
 function decodeProtectedUrl(url: string): string {
     try {
-        // Check if it looks like Base64
         if (/^[A-Za-z0-9+/=]+$/.test(url) && url.length > 20) {
             return atob(url);
         }
-    } catch {
-        // Not valid Base64, return as-is
-    }
+    } catch { }
     return url;
 }
 
@@ -69,7 +73,30 @@ export function encodeStreamUrl(url: string): string {
     return btoa(url);
 }
 
-export function StreamPlayer({ source, poster, className, onError, onReady, trackParams }: StreamPlayerProps) {
+// Format time helper
+function formatTime(time: number): string {
+    const hours = Math.floor(time / 3600);
+    const minutes = Math.floor((time % 3600) / 60);
+    const seconds = Math.floor(time % 60);
+    if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+export function StreamPlayer({
+    source,
+    poster,
+    className,
+    onError,
+    onReady,
+    showSkipIntro = false,
+    skipIntroTime = 90,
+    showNextEpisode = false,
+    nextEpisodeTitle,
+    onNextEpisode,
+    trackParams
+}: StreamPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -78,98 +105,39 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
     // State
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
+    const [volume, setVolume] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
+    const [isBuffering, setIsBuffering] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showControls, setShowControls] = useState(true);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isPiPActive, setIsPiPActive] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [buffered, setBuffered] = useState(0);
+    const [playbackRate, setPlaybackRate] = useState(1);
     const [qualities, setQualities] = useState<QualityLevel[]>([]);
-    const [currentQuality, setCurrentQuality] = useState(-1); // -1 = auto
+    const [currentQuality, setCurrentQuality] = useState(-1);
     const [showQualityMenu, setShowQualityMenu] = useState(false);
+    const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+    const [showVolumeSlider, setShowVolumeSlider] = useState(false);
     const [streamType, setStreamType] = useState<"m3u8" | "mpd" | "iframe" | "video">("iframe");
     const [resolvedUrl, setResolvedUrl] = useState("");
+    const [canShowSkipIntro, setCanShowSkipIntro] = useState(false);
+    const [canShowNextEpisode, setCanShowNextEpisode] = useState(false);
+
+    // Double-tap state
+    const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(null);
+    const tapTimeoutRef = useRef<any>(null);
+    const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
 
     // Convex Mutations
     const saveProgress = useMutation(api.watch.saveProgress);
-    // Explicitly skipping useQuery here for resume point to avoid hook rules in conditional logic if needed, 
-    // but better to use it directly and skip if params missing.
-    // However, since trackParams is optional, we handle playing start time manually via effect or separate hook call logic?
-    // Let's use skip logic if available or just handle 0 default.
     const resumePoint = useQuery(api.watch.getResumePoint,
         (trackParams && userId) ? { userId, contentType: trackParams.contentType, contentId: trackParams.contentId } : "skip"
     );
 
-    // Initial Resume Logic
-    useEffect(() => {
-        const video = videoRef.current;
-        if (video && resumePoint && resumePoint > 0 && !isPlaying && video.currentTime === 0) {
-            // Found a resume point
-            video.currentTime = resumePoint;
-        }
-    }, [resumePoint, resolvedUrl]);
-
-
-    // Progress Saving Interval
-    useEffect(() => {
-        if (!isPlaying || !trackParams || !userId) return;
-
-        const interval = setInterval(() => {
-            const video = videoRef.current;
-            if (!video) return;
-
-            const current = video.currentTime;
-            const duration = video.duration || trackParams.duration || 0;
-
-            if (current > 5 && duration > 0) {
-                saveProgress({
-                    userId,
-                    contentType: trackParams.contentType,
-                    contentId: trackParams.contentId,
-                    seriesId: trackParams.seriesId,
-                    progressSeconds: Math.floor(current),
-                    durationSeconds: Math.floor(duration),
-                }).catch(err => console.error("Failed to save progress", err));
-            }
-
-        }, 15000); // Save every 15s
-
-        return () => clearInterval(interval);
-    }, [isPlaying, trackParams, userId]);
-
-    // Save on Unmount / Pause
-    const handleManualSave = useCallback(() => {
-        if (!trackParams || !userId) return;
-        const video = videoRef.current;
-        if (!video) return;
-
-        const current = video.currentTime;
-        const duration = video.duration || trackParams.duration || 0;
-
-        if (current > 5 && duration > 0) {
-            saveProgress({
-                userId,
-                contentType: trackParams.contentType,
-                contentId: trackParams.contentId,
-                seriesId: trackParams.seriesId,
-                progressSeconds: Math.floor(current),
-                durationSeconds: Math.floor(duration),
-            }).catch(err => console.error("Failed to save progress", err));
-        }
-    }, [trackParams, userId, saveProgress]);
-
-    // Pause listener for saving
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        video.addEventListener("pause", handleManualSave);
-        return () => {
-            video.removeEventListener("pause", handleManualSave);
-            // Also try to save on unmount (best effort)
-            handleManualSave();
-        };
-    }, [handleManualSave]);
-
-
-    // Hide controls after inactivity
+    // Controls timeout
     const controlsTimeoutRef = useRef<any>(null);
 
     const resetControlsTimeout = useCallback(() => {
@@ -181,6 +149,144 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
             if (isPlaying) setShowControls(false);
         }, 3000);
     }, [isPlaying]);
+
+    // Skip intro/next episode logic
+    useEffect(() => {
+        if (showSkipIntro && currentTime > 5 && currentTime < skipIntroTime) {
+            setCanShowSkipIntro(true);
+        } else {
+            setCanShowSkipIntro(false);
+        }
+
+        if (showNextEpisode && duration > 0 && currentTime > duration - 30) {
+            setCanShowNextEpisode(true);
+        } else {
+            setCanShowNextEpisode(false);
+        }
+    }, [currentTime, duration, showSkipIntro, skipIntroTime, showNextEpisode]);
+
+    // Resume point
+    useEffect(() => {
+        const video = videoRef.current;
+        if (video && resumePoint && resumePoint > 0 && !isPlaying && video.currentTime === 0) {
+            video.currentTime = resumePoint;
+        }
+    }, [resumePoint, resolvedUrl]);
+
+    // Progress saving
+    useEffect(() => {
+        if (!isPlaying || !trackParams || !userId) return;
+
+        const interval = setInterval(() => {
+            const video = videoRef.current;
+            if (!video) return;
+
+            const current = video.currentTime;
+            const dur = video.duration || trackParams.duration || 0;
+
+            if (current > 5 && dur > 0) {
+                saveProgress({
+                    userId,
+                    contentType: trackParams.contentType,
+                    contentId: trackParams.contentId,
+                    seriesId: trackParams.seriesId,
+                    progressSeconds: Math.floor(current),
+                    durationSeconds: Math.floor(dur),
+                }).catch(err => console.error("Failed to save progress", err));
+            }
+        }, 15000);
+
+        return () => clearInterval(interval);
+    }, [isPlaying, trackParams, userId, saveProgress]);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (streamType === "iframe") return;
+
+            const video = videoRef.current;
+            if (!video) return;
+
+            switch (e.key.toLowerCase()) {
+                case " ":
+                case "k":
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case "f":
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case "m":
+                    e.preventDefault();
+                    toggleMute();
+                    break;
+                case "arrowleft":
+                    e.preventDefault();
+                    seekBackward();
+                    break;
+                case "arrowright":
+                    e.preventDefault();
+                    seekForward();
+                    break;
+                case "arrowup":
+                    e.preventDefault();
+                    handleVolumeChange(Math.min(1, volume + 0.1));
+                    break;
+                case "arrowdown":
+                    e.preventDefault();
+                    handleVolumeChange(Math.max(0, volume - 0.1));
+                    break;
+                case "0":
+                case "1":
+                case "2":
+                case "3":
+                case "4":
+                case "5":
+                case "6":
+                case "7":
+                case "8":
+                case "9":
+                    e.preventDefault();
+                    const percent = parseInt(e.key) / 10;
+                    video.currentTime = duration * percent;
+                    break;
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [streamType, volume, duration]);
+
+    // Fullscreen change listener
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, []);
+
+    // PiP change listener
+    useEffect(() => {
+        const handlePiPChange = () => {
+            setIsPiPActive(document.pictureInPictureElement === videoRef.current);
+        };
+
+        const video = videoRef.current;
+        if (video) {
+            video.addEventListener("enterpictureinpicture", handlePiPChange);
+            video.addEventListener("leavepictureinpicture", handlePiPChange);
+        }
+
+        return () => {
+            if (video) {
+                video.removeEventListener("enterpictureinpicture", handlePiPChange);
+                video.removeEventListener("leavepictureinpicture", handlePiPChange);
+            }
+        };
+    }, []);
 
     // Resolve source
     useEffect(() => {
@@ -210,7 +316,6 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
             setError(null);
 
             try {
-                // Load HLS.js from CDN if not already loaded
                 if (!(window as any).Hls) {
                     await new Promise<void>((resolve, reject) => {
                         const script = document.createElement("script");
@@ -239,7 +344,6 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
                         setIsLoading(false);
                         onReady?.();
 
-                        // Extract quality levels
                         const levels: QualityLevel[] = hls.levels.map((level: any, index: number) => ({
                             height: level.height,
                             width: level.width,
@@ -248,10 +352,7 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
                         }));
                         setQualities(levels);
 
-                        // Auto-play
-                        video.play().catch(() => {
-                            // Autoplay blocked, user needs to interact
-                        });
+                        video.play().catch(() => { });
                     });
 
                     hls.on(Hls.Events.ERROR, (_: any, data: any) => {
@@ -280,7 +381,6 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
                     });
 
                 } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-                    // Safari native HLS
                     video.src = resolvedUrl;
                     video.addEventListener("loadedmetadata", () => {
                         setIsLoading(false);
@@ -341,23 +441,44 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
     // Video event handlers
     useEffect(() => {
         const video = videoRef.current;
-        if (!video) return;
+        if (!video || streamType === "iframe") return;
 
         const handlePlay = () => setIsPlaying(true);
         const handlePause = () => setIsPlaying(false);
-        const handleWaiting = () => setIsLoading(true);
-        const handlePlaying = () => setIsLoading(false);
+        const handleWaiting = () => setIsBuffering(true);
+        const handlePlaying = () => {
+            setIsBuffering(false);
+            setIsLoading(false);
+        };
+        const handleTimeUpdate = () => {
+            setCurrentTime(video.currentTime);
+            // Update buffered
+            if (video.buffered.length > 0) {
+                setBuffered(video.buffered.end(video.buffered.length - 1));
+            }
+        };
+        const handleDurationChange = () => setDuration(video.duration);
+        const handleVolumeChange = () => {
+            setVolume(video.volume);
+            setIsMuted(video.muted);
+        };
 
         video.addEventListener("play", handlePlay);
         video.addEventListener("pause", handlePause);
         video.addEventListener("waiting", handleWaiting);
         video.addEventListener("playing", handlePlaying);
+        video.addEventListener("timeupdate", handleTimeUpdate);
+        video.addEventListener("durationchange", handleDurationChange);
+        video.addEventListener("volumechange", handleVolumeChange);
 
         return () => {
             video.removeEventListener("play", handlePlay);
             video.removeEventListener("pause", handlePause);
             video.removeEventListener("waiting", handleWaiting);
             video.removeEventListener("playing", handlePlaying);
+            video.removeEventListener("timeupdate", handleTimeUpdate);
+            video.removeEventListener("durationchange", handleDurationChange);
+            video.removeEventListener("volumechange", handleVolumeChange);
         };
     }, [streamType]);
 
@@ -373,18 +494,78 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
         const video = videoRef.current;
         if (!video) return;
         video.muted = !video.muted;
-        setIsMuted(video.muted);
     };
 
-    const toggleFullscreen = () => {
+    const handleVolumeChange = (newVolume: number) => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.volume = newVolume;
+        if (newVolume > 0 && video.muted) {
+            video.muted = false;
+        }
+    };
+
+    const toggleFullscreen = async () => {
         const container = containerRef.current;
         if (!container) return;
 
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            container.requestFullscreen();
+        try {
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            } else {
+                await container.requestFullscreen();
+            }
+        } catch (err) {
+            console.error("Fullscreen error:", err);
         }
+    };
+
+    const togglePiP = async () => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else if (document.pictureInPictureEnabled) {
+                await video.requestPictureInPicture();
+            }
+        } catch (err) {
+            console.error("PiP error:", err);
+        }
+    };
+
+    const seekForward = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime = Math.min(duration, video.currentTime + 10);
+        showSeekIndicator("right");
+    };
+
+    const seekBackward = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime = Math.max(0, video.currentTime - 10);
+        showSeekIndicator("left");
+    };
+
+    const showSeekIndicator = (side: "left" | "right") => {
+        setDoubleTapSide(side);
+        if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = setTimeout(() => setDoubleTapSide(null), 500);
+    };
+
+    const handleSeek = (time: number) => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime = time;
+    };
+
+    const handlePlaybackRateChange = (rate: number) => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.playbackRate = rate;
+        setPlaybackRate(rate);
     };
 
     const changeQuality = (levelIndex: number) => {
@@ -406,6 +587,39 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
             videoRef.current.load();
         }
     };
+
+    const handleSkipIntro = () => {
+        const video = videoRef.current;
+        if (video) {
+            video.currentTime = skipIntroTime;
+        }
+    };
+
+    // Double-tap handler for mobile seek
+    const handleVideoAreaClick = (e: React.MouseEvent) => {
+        if (streamType === "iframe") return;
+
+        const now = Date.now();
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const isLeftSide = x < rect.width / 2;
+
+        if (now - lastTapRef.current.time < 300) {
+            // Double tap
+            if (isLeftSide) {
+                seekBackward();
+            } else {
+                seekForward();
+            }
+        } else {
+            // Single tap - toggle controls
+            resetControlsTimeout();
+        }
+
+        lastTapRef.current = { time: now, x };
+    };
+
+    const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
@@ -431,6 +645,7 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
             className={cn("stream-player relative bg-black aspect-video rounded-xl overflow-hidden group", className)}
             onMouseMove={resetControlsTimeout}
             onMouseEnter={() => setShowControls(true)}
+            onClick={handleVideoAreaClick}
         >
             {/* Video Element */}
             <video
@@ -438,8 +653,28 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
                 poster={poster}
                 playsInline
                 className="absolute inset-0 w-full h-full object-contain"
-                onClick={togglePlay}
             />
+
+            {/* Buffer Indicator */}
+            <BufferIndicator isBuffering={isBuffering && !isLoading} />
+
+            {/* Double-tap seek indicators */}
+            <AnimatePresence>
+                {doubleTapSide && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className={cn(
+                            "absolute top-1/2 -translate-y-1/2 flex flex-col items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm z-30",
+                            doubleTapSide === "left" ? "left-8" : "right-8"
+                        )}
+                    >
+                        {doubleTapSide === "left" ? <SkipBack size={28} /> : <SkipForward size={28} />}
+                        <span className="text-xs font-bold mt-1">{doubleTapSide === "left" ? "-10s" : "+10s"}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Loading State */}
             {isLoading && (
@@ -464,91 +699,255 @@ export function StreamPlayer({ source, poster, className, onError, onReady, trac
             )}
 
             {/* Controls Overlay */}
-            <div
-                className={cn(
-                    "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 transition-opacity duration-300 z-10 pointer-events-none",
-                    showControls ? "opacity-100" : "opacity-0"
-                )}
-            >
-                {/* Top bar */}
-                <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between pointer-events-auto">
-                    <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1.5 bg-accent-red px-2 py-1 rounded-full">
-                            <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                            <span className="text-xs font-bold text-white">LIVE</span>
-                        </span>
-                    </div>
+            <AnimatePresence>
+                {showControls && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 z-10 pointer-events-none"
+                    >
+                        {/* Skip Intro Button */}
+                        <AnimatePresence>
+                            {canShowSkipIntro && (
+                                <motion.button
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    onClick={handleSkipIntro}
+                                    className="absolute right-4 bottom-28 px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-white/90 transition-colors shadow-xl pointer-events-auto"
+                                >
+                                    Skip Intro
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
 
-                    {/* Quality Selector */}
-                    {qualities.length > 0 && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowQualityMenu(!showQualityMenu)}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
-                            >
-                                <Settings size={14} />
-                                <span>{currentQuality === -1 ? "Auto" : `${qualities[currentQuality]?.height}p`}</span>
-                                <ChevronUp size={14} className={cn("transition-transform", showQualityMenu && "rotate-180")} />
-                            </button>
-
-                            {showQualityMenu && (
-                                <div className="absolute right-0 top-full mt-2 bg-stadium-dark border border-border-strong rounded-lg overflow-hidden shadow-xl min-w-[120px]">
-                                    <button
-                                        onClick={() => changeQuality(-1)}
-                                        className={cn(
-                                            "w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors",
-                                            currentQuality === -1 ? "text-accent-green" : "text-white"
-                                        )}
-                                    >
-                                        Auto
-                                    </button>
-                                    {qualities.map((q) => (
+                        {/* Next Episode Overlay */}
+                        <AnimatePresence>
+                            {canShowNextEpisode && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="absolute right-4 bottom-28 p-4 bg-stadium-elevated/95 backdrop-blur-md rounded-xl border border-border-subtle shadow-xl max-w-xs pointer-events-auto"
+                                >
+                                    <p className="text-text-secondary text-xs mb-1">Up Next</p>
+                                    <p className="text-white font-semibold mb-3 line-clamp-2">
+                                        {nextEpisodeTitle || "Next Episode"}
+                                    </p>
+                                    <div className="flex gap-2">
                                         <button
-                                            key={q.index}
-                                            onClick={() => changeQuality(q.index)}
-                                            className={cn(
-                                                "w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors",
-                                                currentQuality === q.index ? "text-accent-green" : "text-white"
-                                            )}
+                                            onClick={onNextEpisode}
+                                            className="flex-1 px-4 py-2 bg-white text-black font-bold rounded-lg hover:bg-white/90 transition-colors text-sm"
                                         >
-                                            {q.height}p
+                                            Play Now
                                         </button>
-                                    ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Top bar */}
+                        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between pointer-events-auto">
+                            <div className="flex items-center gap-2">
+                                <span className="flex items-center gap-1.5 bg-accent-red px-2 py-1 rounded-full">
+                                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                    <span className="text-xs font-bold text-white">LIVE</span>
+                                </span>
+                            </div>
+
+                            {/* Quality Selector */}
+                            {qualities.length > 0 && (
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowQualityMenu(!showQualityMenu)}
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
+                                    >
+                                        <Settings size={14} />
+                                        <span>{currentQuality === -1 ? "Auto" : `${qualities[currentQuality]?.height}p`}</span>
+                                        <ChevronUp size={14} className={cn("transition-transform", showQualityMenu && "rotate-180")} />
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {showQualityMenu && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                className="absolute right-0 top-full mt-2 bg-stadium-dark border border-border-strong rounded-lg overflow-hidden shadow-xl min-w-[120px]"
+                                            >
+                                                <button
+                                                    onClick={() => changeQuality(-1)}
+                                                    className={cn(
+                                                        "w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors",
+                                                        currentQuality === -1 ? "text-accent-green" : "text-white"
+                                                    )}
+                                                >
+                                                    Auto
+                                                </button>
+                                                {qualities.map((q) => (
+                                                    <button
+                                                        key={q.index}
+                                                        onClick={() => changeQuality(q.index)}
+                                                        className={cn(
+                                                            "w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors",
+                                                            currentQuality === q.index ? "text-accent-green" : "text-white"
+                                                        )}
+                                                    >
+                                                        {q.height}p
+                                                    </button>
+                                                ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             )}
                         </div>
-                    )}
-                </div>
 
-                {/* Center play button */}
-                {!isPlaying && !isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <button
-                            onClick={togglePlay}
-                            className="w-16 h-16 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 pointer-events-auto"
-                        >
-                            {isPlaying ? <Pause size={28} className="text-white" /> : <Play size={28} className="text-white ml-1" />}
-                        </button>
-                    </div>
+                        {/* Center play button */}
+                        {!isPlaying && !isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+                                <button
+                                    onClick={togglePlay}
+                                    className="w-20 h-20 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110"
+                                >
+                                    <Play size={36} className="text-white ml-1" />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Bottom controls */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3 pointer-events-auto">
+                            {/* Progress bar */}
+                            <div className="group/progress relative w-full cursor-pointer" onClick={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const pos = (e.clientX - rect.left) / rect.width;
+                                handleSeek(pos * duration);
+                            }}>
+                                <div className="relative h-1 group-hover/progress:h-2 transition-all bg-white/20 rounded-full overflow-hidden">
+                                    <div
+                                        className="absolute inset-y-0 left-0 bg-white/30 rounded-full"
+                                        style={{ width: `${(buffered / duration) * 100}%` }}
+                                    />
+                                    <motion.div
+                                        className="absolute inset-y-0 left-0 bg-accent-green rounded-full"
+                                        style={{ width: `${(currentTime / duration) * 100}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Control buttons */}
+                            <div className="flex items-center gap-2 md:gap-4">
+                                <button onClick={togglePlay} className="p-2 text-white hover:text-accent-green transition-colors">
+                                    {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                                </button>
+
+                                <button onClick={seekBackward} className="p-2 text-white hover:text-accent-green transition-colors hidden md:block">
+                                    <SkipBack size={20} />
+                                </button>
+
+                                <button onClick={seekForward} className="p-2 text-white hover:text-accent-green transition-colors hidden md:block">
+                                    <SkipForward size={20} />
+                                </button>
+
+                                {/* Volume */}
+                                <div
+                                    className="relative flex items-center"
+                                    onMouseEnter={() => setShowVolumeSlider(true)}
+                                    onMouseLeave={() => setShowVolumeSlider(false)}
+                                >
+                                    <button onClick={toggleMute} className="p-2 text-white hover:text-accent-green transition-colors">
+                                        <VolumeIcon size={24} />
+                                    </button>
+                                    <AnimatePresence>
+                                        {showVolumeSlider && (
+                                            <motion.div
+                                                initial={{ opacity: 0, width: 0 }}
+                                                animate={{ opacity: 1, width: "auto" }}
+                                                exit={{ opacity: 0, width: 0 }}
+                                                className="hidden md:flex items-center overflow-hidden"
+                                            >
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="1"
+                                                    step="0.05"
+                                                    value={isMuted ? 0 : volume}
+                                                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                                                    className="w-20 h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-accent-green"
+                                                />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Time display */}
+                                <div className="text-white text-sm font-medium tabular-nums">
+                                    <span>{formatTime(currentTime)}</span>
+                                    <span className="text-white/50 mx-1">/</span>
+                                    <span className="text-white/70">{formatTime(duration)}</span>
+                                </div>
+
+                                <div className="flex-1" />
+
+                                {/* Playback speed */}
+                                <div className="relative hidden md:block">
+                                    <button
+                                        onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                                        className="px-3 py-1 text-white text-sm font-semibold hover:bg-white/10 rounded-lg transition-colors flex items-center gap-1"
+                                    >
+                                        {playbackRate}x
+                                        <ChevronUp size={14} className={cn("transition-transform", showSpeedMenu && "rotate-180")} />
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {showSpeedMenu && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 10 }}
+                                                className="absolute bottom-full mb-2 right-0 bg-stadium-dark border border-border-subtle rounded-lg overflow-hidden shadow-xl"
+                                            >
+                                                {playbackRates.map((rate) => (
+                                                    <button
+                                                        key={rate}
+                                                        onClick={() => {
+                                                            handlePlaybackRateChange(rate);
+                                                            setShowSpeedMenu(false);
+                                                        }}
+                                                        className={cn(
+                                                            "w-full px-4 py-2 text-sm text-left hover:bg-white/10 transition-colors",
+                                                            playbackRate === rate ? "text-accent-green" : "text-white"
+                                                        )}
+                                                    >
+                                                        {rate === 1 ? "Normal" : `${rate}x`}
+                                                    </button>
+                                                ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* PiP */}
+                                <button
+                                    onClick={togglePiP}
+                                    className={cn(
+                                        "p-2 transition-colors hidden md:block",
+                                        isPiPActive ? "text-accent-green" : "text-white hover:text-accent-green"
+                                    )}
+                                >
+                                    <PictureInPicture2 size={20} />
+                                </button>
+
+                                {/* Fullscreen */}
+                                <button onClick={toggleFullscreen} className="p-2 text-white hover:text-accent-green transition-colors">
+                                    {isFullscreen ? <Minimize size={24} /> : <Maximize size={24} />}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
                 )}
-
-                {/* Bottom controls */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-4 pointer-events-auto">
-                    <button onClick={togglePlay} className="text-white hover:text-accent-green transition-colors">
-                        {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-                    </button>
-
-                    <button onClick={toggleMute} className="text-white hover:text-accent-green transition-colors">
-                        {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
-                    </button>
-
-                    <div className="flex-1" />
-
-                    <button onClick={toggleFullscreen} className="text-white hover:text-accent-green transition-colors">
-                        <Maximize size={24} />
-                    </button>
-                </div>
-            </div>
+            </AnimatePresence>
         </div>
     );
 }

@@ -263,6 +263,11 @@ export default defineSchema({
         priceWeekly: v.number(),
         priceMonthly: v.number(),
         priceYearly: v.number(),
+        // New Plan Pricing
+        priceStarter: v.optional(v.number()),
+        pricePlus: v.optional(v.number()),
+        pricePro: v.optional(v.number()),
+        priceElite: v.optional(v.number()),
         // Device limits per plan
         maxDevicesMatch: v.number(),
         maxDevicesWeekly: v.number(),

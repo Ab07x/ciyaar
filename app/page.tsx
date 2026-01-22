@@ -15,6 +15,7 @@ import { ContinueWatchingRow } from "@/components/ContinueWatchingRow";
 import { HeroSlider } from "@/components/HeroSlider";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AdSlot } from "@/components/AdSlot";
+import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 
 // Reusable Section Component for Grids (Live/Upcoming) to keep code clean
 const Section = ({ title, icon: Icon, color, children, count, link }: any) => (
@@ -124,7 +125,12 @@ export default function HomePage() {
           type="series"
         />
 
-        {/* 7. Upcoming Matches */}
+        {/* 7. Premium Promo Banner */}
+        <div className="px-4">
+          <PremiumPromoBanner />
+        </div>
+
+        {/* 9. Upcoming Matches */}
         {upcoming.length > 0 && (
           <Section title="KUWA SOO SOCDA" icon={Calendar} color="green" count={upcoming.length} link="/ciyaar">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

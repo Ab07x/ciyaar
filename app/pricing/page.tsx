@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
 import { Check, X, MessageSquare, Sparkles, Shield, Zap, Crown } from "lucide-react";
 import Link from "next/link";
+import { PricingCards } from "@/components/PricingCards";
 
 const plans = [
     {
@@ -115,51 +116,7 @@ export default function PricingPage() {
             </section>
 
             {/* Plans Grid */}
-            <section className="pb-16">
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-                        {plans.map((plan) => {
-                            const Icon = plan.icon;
-                            const isSelected = selectedPlan === plan.id;
-
-                            return (
-                                <button
-                                    key={plan.id}
-                                    onClick={() => setSelectedPlan(plan.id)}
-                                    className={`relative p-6 rounded-2xl border-2 text-left transition-all ${isSelected
-                                            ? "border-accent-green bg-accent-green/10 scale-105"
-                                            : "border-border-strong bg-stadium-elevated hover:border-border-strong/80"
-                                        }`}
-                                >
-                                    {plan.popular && (
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent-gold text-black text-xs font-black px-3 py-1 rounded-full">
-                                            POPULAR
-                                        </div>
-                                    )}
-
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${plan.color} bg-current/10`}>
-                                        <Icon size={24} className={plan.color} />
-                                    </div>
-
-                                    <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-                                    <p className="text-text-muted text-sm mb-4">{plan.description}</p>
-
-                                    <div className="text-3xl font-black mb-4">{getPriceDisplay(plan.id)}</div>
-
-                                    <ul className="space-y-2">
-                                        {plan.features.map((feature, i) => (
-                                            <li key={i} className="flex items-center gap-2 text-sm text-text-secondary">
-                                                <Check size={16} className="text-accent-green flex-shrink-0" />
-                                                {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
+            <PricingCards />
 
             {/* CTA Section */}
             <section className="py-16 bg-stadium-elevated border-y border-border-strong">
@@ -228,8 +185,8 @@ export default function PricingPage() {
 
                             {redemptionResult && (
                                 <div className={`mt-4 p-4 rounded-xl ${redemptionResult.success
-                                        ? "bg-accent-green/20 text-accent-green"
-                                        : "bg-accent-red/20 text-accent-red"
+                                    ? "bg-accent-green/20 text-accent-green"
+                                    : "bg-accent-red/20 text-accent-red"
                                     }`}>
                                     {redemptionResult.success ? redemptionResult.message : redemptionResult.error}
                                 </div>

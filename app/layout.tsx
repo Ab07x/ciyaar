@@ -7,6 +7,7 @@ import { SearchBox } from "@/components/SearchBox";
 import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
 import { ToastProvider } from "@/providers/ToastProvider";
+import { PremiumFooterPromo } from "@/components/PremiumFooterPromo";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://fanbroj.net"),
@@ -79,14 +80,14 @@ export default function RootLayout({
   return (
     <html lang="so" suppressHydrationWarning>
       <head>
-        {/* Sports/Gaming Typography - Russo One (headings) + Chakra Petch (body) */}
+        {/* Stadium Noir Typography - Outfit (Display) + Inter (Body) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Russo+One&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet" />
       </head>
       <body
         suppressHydrationWarning
-        className="antialiased bg-stadium-dark text-text-primary min-h-screen"
+        className="antialiased bg-[var(--bg-primary)] text-[var(--color-text-primary)] min-h-screen"
       >
         <ConvexClientProvider>
           <UserProvider>
@@ -99,7 +100,7 @@ export default function RootLayout({
               </main>
 
               {/* Footer */}
-              <footer className="border-t border-border-strong py-12 mt-12 bg-stadium-elevated mb-32 md:mb-0">
+              <footer className="border-t border-[var(--glass-border)] py-12 mt-12 bg-[var(--bg-elevated)] mb-32 md:mb-0">
                 <div className="container mx-auto px-4 text-center">
                   <p className="text-2xl font-black tracking-tighter mb-4">
                     FAN<span className="text-accent-green">BROJ</span>
@@ -153,6 +154,7 @@ export default function RootLayout({
               </footer>
 
               <BottomNav />
+              <PremiumFooterPromo />
             </ToastProvider>
           </UserProvider>
         </ConvexClientProvider>
