@@ -100,8 +100,8 @@ export default function SeriesWatchPage() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Show interstitial ad for non-premium users before video (when an episode is selected and unlocked)
-    if (!isPremium && showInterstitial && !adCompleted && activeEpisode && !isLocked) {
+    // Show interstitial ad for ALL non-premium users (free/guest) before viewing content
+    if (!isPremium && showInterstitial && !adCompleted) {
         return (
             <PremiumAdInterstitial
                 movieTitle={series.title}

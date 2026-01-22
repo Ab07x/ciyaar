@@ -68,8 +68,8 @@ export default function MovieWatchPage() {
 
     const whatsappLink = `https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo film ${movie.title}`;
 
-    // Show interstitial ad for non-premium users before video
-    if (!isPremium && showInterstitial && !adCompleted && isUnlocked) {
+    // Show interstitial ad for ALL non-premium users (free/guest) before viewing content
+    if (!isPremium && showInterstitial && !adCompleted) {
         return (
             <PremiumAdInterstitial
                 movieTitle={movie.title}

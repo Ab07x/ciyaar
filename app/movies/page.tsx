@@ -8,6 +8,7 @@ import { useUser } from "@/providers/UserProvider";
 import { useState } from "react";
 import { Film, Crown, Star, Calendar, Play, Lock, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 
 export default function MoviesPage() {
     const movies = useQuery(api.movies.listMovies, { isPublished: true });
@@ -58,6 +59,9 @@ export default function MoviesPage() {
                     </p>
                 </div>
             </section>
+
+            {/* Premium Promo Banner */}
+            {!isPremium && <PremiumPromoBanner className="mb-6" />}
 
             <div className="container mx-auto px-4 pb-16">
                 <AdSlot slotKey="movies_top" className="mb-8" />

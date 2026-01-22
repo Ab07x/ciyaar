@@ -244,6 +244,23 @@ export default function PricingPage() {
                 </div>
             </section>
 
+            {/* Motivational Section */}
+            <section className="py-16 text-center">
+                <div className="container mx-auto px-4 max-w-4xl">
+                    <h2 className="text-2xl md:text-4xl font-bold text-white mb-6">
+                        Prepare yourself for the ultimate entertainment experience.
+                    </h2>
+                    <p className="text-lg md:text-xl text-gray-300 mb-4">
+                        With <span className="text-accent-green font-bold italic">500+ movies</span> and{" "}
+                        <span className="text-accent-green font-bold italic">1,000+ episodes</span>, you&apos;re not just getting content, you&apos;re
+                        unlocking the realm of <span className="italic">endless adventure, passion, and imagination.</span>
+                    </p>
+                    <p className="text-xl md:text-2xl text-white font-medium mt-8">
+                        Thank you for powering our journey.
+                    </p>
+                </div>
+            </section>
+
             {/* Back to Home */}
             <section className="py-8 text-center">
                 <Link
