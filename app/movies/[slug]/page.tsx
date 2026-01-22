@@ -18,6 +18,8 @@ import {
     MessageSquare,
 } from "lucide-react";
 import { MyListButton } from "@/components/MyListButton";
+import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
+import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 
 export default function MovieWatchPage() {
     const params = useParams();
@@ -33,6 +35,8 @@ export default function MovieWatchPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [localUnlocked, setLocalUnlocked] = useState(false);
+    const [showInterstitial, setShowInterstitial] = useState(true);
+    const [adCompleted, setAdCompleted] = useState(false);
 
     // Increment views on first load
     useEffect(() => {
@@ -64,6 +68,20 @@ export default function MovieWatchPage() {
 
     const whatsappLink = `https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo film ${movie.title}`;
 
+    // Show interstitial ad for non-premium users before video
+    if (!isPremium && showInterstitial && !adCompleted && isUnlocked) {
+        return (
+            <PremiumAdInterstitial
+                movieTitle={movie.title}
+                duration={10}
+                onComplete={() => {
+                    setAdCompleted(true);
+                    setShowInterstitial(false);
+                }}
+            />
+        );
+    }
+
     return (
         <div className="min-h-screen">
             {/* Backdrop */}
@@ -90,90 +108,98 @@ export default function MovieWatchPage() {
                     Ku laabo Filimada
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2">
-                        {/* Player */}
-                        <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-6 relative aspect-video">
-                            {movie.isPremium && !isUnlocked ? (
-                                /* Premium Lock */
-                                <div className="absolute inset-0 flex items-center justify-center p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated z-10">
-                                    <div className="bg-stadium-dark border-2 border-accent-gold rounded-2xl p-8 max-w-md text-center">
-                                        <div className="w-16 h-16 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <Crown size={32} className="text-accent-gold" />
-                                        </div>
-                                        <h3 className="text-2xl font-bold text-accent-gold mb-2">PREMIUM FILM</h3>
-                                        <p className="text-text-secondary mb-6">Film-kan waxaa u baahan subscription</p>
-                                        <div className="space-y-4">
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={code}
-                                                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                                    placeholder="CODE"
-                                                    className="flex-1 bg-stadium-elevated border border-border-subtle rounded-lg px-4 py-3 uppercase text-center tracking-wider"
-                                                />
-                                                <button
-                                                    onClick={handleRedeem}
-                                                    disabled={loading}
-                                                    className="px-6 py-3 bg-accent-green text-black font-bold rounded-lg"
-                                                >
-                                                    {loading ? "..." : "Fur"}
-                                                </button>
-                                            </div>
-                                            {error && <p className="text-accent-red text-sm">{error}</p>}
-                                            <div className="flex gap-3">
-                                                <Link href="/pricing" className="flex-1 px-4 py-3 bg-accent-gold text-black font-bold rounded-lg text-center">
-                                                    Iibso
-                                                </Link>
-                                                <a
-                                                    href={whatsappLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-2"
-                                                >
-                                                    <MessageSquare size={18} />
-                                                    WhatsApp
-                                                </a>
-                                            </div>
-                                        </div>
+                {/* Player - Full Width of Container (Centered & Bigger) */}
+                <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-8 relative aspect-video shadow-2xl">
+                    {movie.isPremium && !isUnlocked ? (
+                        /* Premium Lock */
+                        <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated z-10 overflow-y-auto">
+                            <div className="bg-stadium-dark border-2 border-accent-gold rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md text-center my-auto">
+                                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                                    <Crown size={20} className="sm:hidden text-accent-gold" />
+                                    <Crown size={28} className="hidden sm:block text-accent-gold" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-accent-gold mb-1 sm:mb-2">PREMIUM FILM</h3>
+                                <p className="text-text-secondary text-sm sm:text-base mb-3 sm:mb-4">Film-kan waxaa u baahan subscription</p>
+                                <div className="space-y-2 sm:space-y-3">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value.toUpperCase())}
+                                            placeholder="CODE"
+                                            className="flex-1 bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 sm:px-4 sm:py-3 uppercase text-center tracking-wider text-sm"
+                                        />
+                                        <button
+                                            onClick={handleRedeem}
+                                            disabled={loading}
+                                            className="px-4 py-2 sm:px-6 sm:py-3 bg-accent-green text-black font-bold rounded-lg text-sm"
+                                        >
+                                            {loading ? "..." : "Fur"}
+                                        </button>
+                                    </div>
+                                    {error && <p className="text-accent-red text-xs sm:text-sm">{error}</p>}
+                                    <div className="flex gap-2 sm:gap-3">
+                                        <Link href="/pricing" className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-accent-gold text-black font-bold rounded-lg text-center text-sm">
+                                            Iibso
+                                        </Link>
+                                        <a
+                                            href={whatsappLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-1 sm:gap-2 text-sm"
+                                        >
+                                            <MessageSquare size={16} />
+                                            WhatsApp
+                                        </a>
                                     </div>
                                 </div>
-                            ) : activeEmbed?.url ? (
-                                <iframe
-                                    src={activeEmbed.url}
-                                    className="w-full h-full"
-                                    allowFullScreen
-                                    scrolling="no"
-                                    allow="autoplay; encrypted-media"
-                                />
-                            ) : (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <p className="text-text-muted">Lama hayo embed links</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Embed switcher */}
-                        {isUnlocked && movie.embeds.length > 1 && (
-                            <div className="flex flex-wrap gap-2 mb-6">
-                                {movie.embeds.map((embed, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setActiveEmbedIndex(i)}
-                                        className={cn(
-                                            "px-4 py-2 text-sm font-semibold rounded-md border transition-all",
-                                            activeEmbedIndex === i
-                                                ? "bg-accent-green text-black border-accent-green"
-                                                : "bg-stadium-elevated text-text-secondary border-border-subtle hover:border-text-muted"
-                                        )}
-                                    >
-                                        {embed.label} {embed.quality && `(${embed.quality})`}
-                                    </button>
-                                ))}
                             </div>
-                        )}
+                        </div>
+                    ) : activeEmbed?.url ? (
+                        <iframe
+                            src={activeEmbed.url}
+                            className="w-full h-full"
+                            allowFullScreen
+                            scrolling="no"
+                            allow="autoplay; encrypted-media"
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <p className="text-text-muted">Lama hayo embed links</p>
+                        </div>
+                    )}
+                </div>
 
+                {/* Premium Promo Banner - Hidden for premium users */}
+                {!isPremium && (
+                    <div className="mb-8">
+                        <PremiumPromoBanner />
+                    </div>
+                )}
+
+                {/* Embed switcher */}
+                {isUnlocked && movie.embeds.length > 1 && (
+                    <div className="flex flex-wrap gap-2 mb-8 justify-center">
+                        {movie.embeds.map((embed, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setActiveEmbedIndex(i)}
+                                className={cn(
+                                    "px-4 py-2 text-sm font-semibold rounded-md border transition-all",
+                                    activeEmbedIndex === i
+                                        ? "bg-accent-green text-black border-accent-green"
+                                        : "bg-stadium-elevated text-text-secondary border-border-subtle hover:border-text-muted"
+                                )}
+                            >
+                                {embed.label} {embed.quality && `(${embed.quality})`}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Content Info */}
+                    <div className="lg:col-span-2">
                         {/* Movie Info */}
                         <div className="bg-stadium-elevated border border-border-strong rounded-2xl p-6">
                             <div className="flex items-start gap-4 mb-6">

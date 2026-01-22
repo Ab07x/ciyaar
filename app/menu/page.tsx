@@ -1,6 +1,6 @@
 "use client";
 
-import { UserCircle, Settings, Download, Globe, Shield, LogOut, ChevronRight, Trophy, Film, Tv, Heart, Home } from "lucide-react";
+import { UserCircle, Settings, Download, Globe, LogOut, ChevronRight, Trophy, Film, Tv, Heart, Home } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -16,9 +16,8 @@ export default function MenuPage() {
     ];
 
     const settingsItems = [
-        { label: "Admin Dashboard", icon: Shield, href: "/admin" }, // Protected by PIN/Auth later
-        { label: "App Settings", icon: Settings, href: "/settings" },
         { label: "Download Apps", icon: Download, href: "/apps" },
+        { label: "Pricing / Premium", icon: Settings, href: "/pricing" },
         { label: "Visit Website", icon: Globe, href: "https://fanbroj.net" },
     ];
 

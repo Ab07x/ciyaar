@@ -12,12 +12,19 @@ import { SocialShare } from "@/components/SocialShare";
 import { LiveChat } from "@/components/LiveChat";
 import { RelatedNews } from "@/components/RelatedNews";
 import { MyListButton } from "@/components/MyListButton";
+import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
+import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
+import { useUser } from "@/providers/UserProvider";
+import { useState } from "react";
 
 interface MatchClientPageProps {
     slug: string;
 }
 
 export default function MatchClientPage({ slug }: MatchClientPageProps) {
+    const { isPremium } = useUser();
+    const [showInterstitial, setShowInterstitial] = useState(true);
+    const [adCompleted, setAdCompleted] = useState(false);
     const match = useQuery(api.matches.getMatchBySlug, { slug });
     const settings = useQuery(api.settings.getSettings);
     const relatedMatches = useQuery(api.matches.getRelatedMatches, (match && match.leagueId) ? { matchId: match._id, leagueId: match.leagueId } : "skip");
@@ -38,6 +45,20 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
     }
 
     const otherLiveMatches = matchesStatus.live.filter((m: any) => m._id !== match._id);
+
+    // Show interstitial ad for non-premium users before video
+    if (!isPremium && showInterstitial && !adCompleted) {
+        return (
+            <PremiumAdInterstitial
+                movieTitle={`${match.teamA} vs ${match.teamB}`}
+                duration={10}
+                onComplete={() => {
+                    setAdCompleted(true);
+                    setShowInterstitial(false);
+                }}
+            />
+        );
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -65,6 +86,13 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
                 <div className="lg:col-span-8">
                     <PlayerStage match={match as any} settings={settings} />
+
+                    {/* Premium Promo Banner - Hidden for premium users */}
+                    {!isPremium && (
+                        <div className="mt-6">
+                            <PremiumPromoBanner />
+                        </div>
+                    )}
 
                     {match.articleTitle && match.articleContent && (
                         <article className="mt-8 prose prose-invert max-w-none">

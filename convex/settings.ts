@@ -45,6 +45,19 @@ export const updateSettings = mutation({
         maxDevicesWeekly: v.optional(v.number()),
         maxDevicesMonthly: v.optional(v.number()),
         maxDevicesYearly: v.optional(v.number()),
+        // New Plan Pricing
+        priceStarter: v.optional(v.number()),
+        pricePlus: v.optional(v.number()),
+        pricePro: v.optional(v.number()),
+        priceElite: v.optional(v.number()),
+        // SEO Settings
+        seoTagline: v.optional(v.string()),
+        seoDescription: v.optional(v.string()),
+        seoKeywords: v.optional(v.string()),
+        ogImage: v.optional(v.string()),
+        twitterHandle: v.optional(v.string()),
+        googleAnalyticsId: v.optional(v.string()),
+        googleVerification: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const existing = await ctx.db.query("settings").first();

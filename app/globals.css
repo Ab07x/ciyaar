@@ -11,9 +11,9 @@
   --bg-card: #111111;
   --bg-elevated: #1A1A1A;
 
-  /* Context-Aware Primary Colors */
-  --color-sports: #22C55E;
-  /* Green for live sports */
+  /* Context-Aware Primary Colors - Unified Red Theme */
+  --color-sports: #DC2626;
+  /* Red for live sports (Unified) */
   --color-cinema: #DC2626;
   /* Red for movies/series */
   --color-premium: #EAB308;
@@ -188,8 +188,8 @@
 
   @media (min-width: 1024px) {
     .player-stage {
-      max-height: 600px;
-      max-width: 1200px;
+      max-height: 800px;
+      max-width: 100%;
       margin: 0 auto;
     }
   }

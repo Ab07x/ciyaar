@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
 import { Check, X, MessageSquare, Sparkles, Shield, Zap, Crown } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { PricingCards } from "@/components/PricingCards";
 
 const plans = [
@@ -98,9 +99,21 @@ export default function PricingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-stadium-dark">
+        <div className="min-h-screen relative">
+            {/* Full Page Background */}
+            <div className="fixed inset-0 -z-10">
+                <Image
+                    src="/img/lm-bg.jpg"
+                    alt="Background"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/80 to-black" />
+            </div>
+
             {/* Hero */}
-            <section className="py-16 md:py-24 text-center">
+            <section className="py-16 md:py-24 text-center relative">
                 <div className="container mx-auto px-4">
                     <div className="inline-flex items-center gap-2 bg-accent-gold/20 text-accent-gold px-4 py-2 rounded-full text-sm font-bold mb-6">
                         <Crown size={16} />
@@ -119,11 +132,11 @@ export default function PricingPage() {
             <PricingCards />
 
             {/* CTA Section */}
-            <section className="py-16 bg-stadium-elevated border-y border-border-strong">
+            <section className="py-16 bg-black/60 backdrop-blur-sm border-y border-white/10">
                 <div className="container mx-auto px-4">
                     <div className="max-w-2xl mx-auto">
                         {/* WhatsApp CTA */}
-                        <div className="bg-green-600/20 border border-green-600/30 rounded-2xl p-8 text-center mb-8">
+                        <div className="bg-green-600/20 border border-green-600/30 rounded-2xl p-8 text-center mb-8 backdrop-blur-sm">
                             <MessageSquare size={48} className="text-green-500 mx-auto mb-4" />
                             <h3 className="text-2xl font-bold mb-2">Iibso WhatsApp-ka</h3>
                             <p className="text-text-secondary mb-6">
@@ -141,7 +154,7 @@ export default function PricingPage() {
                         </div>
 
                         {/* EVC Instructions */}
-                        <div className="bg-stadium-dark border border-border-subtle rounded-2xl p-8 mb-8">
+                        <div className="bg-black/60 border border-white/10 rounded-2xl p-8 mb-8 backdrop-blur-sm">
                             <h3 className="text-xl font-bold mb-4">Sida loo bixiyo EVC</h3>
                             <ol className="space-y-3 text-text-secondary">
                                 <li className="flex gap-3">
@@ -164,7 +177,7 @@ export default function PricingPage() {
                         </div>
 
                         {/* Redeem Code */}
-                        <div className="bg-stadium-dark border border-border-subtle rounded-2xl p-8">
+                        <div className="bg-black/60 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
                             <h3 className="text-xl font-bold mb-4">Haysataa Code?</h3>
                             <div className="flex gap-3">
                                 <input
@@ -172,7 +185,7 @@ export default function PricingPage() {
                                     value={code}
                                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                                     placeholder="ABCD1234"
-                                    className="flex-1 bg-stadium-elevated border border-border-subtle rounded-xl px-4 py-3 text-white uppercase tracking-wider focus:outline-none focus:border-accent-green"
+                                    className="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white uppercase tracking-wider focus:outline-none focus:border-accent-green"
                                 />
                                 <button
                                     onClick={handleRedeem}
@@ -201,17 +214,17 @@ export default function PricingPage() {
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl font-black text-center mb-12">FREE vs PREMIUM</h2>
 
-                    <div className="max-w-2xl mx-auto overflow-hidden rounded-2xl border border-border-strong">
-                        <div className="grid grid-cols-3 bg-stadium-elevated border-b border-border-strong">
+                    <div className="max-w-2xl mx-auto overflow-hidden rounded-2xl border border-white/10 bg-black/60 backdrop-blur-sm">
+                        <div className="grid grid-cols-3 bg-black/80 border-b border-white/10">
                             <div className="p-4 font-bold">Feature</div>
-                            <div className="p-4 font-bold text-center border-x border-border-strong">Free</div>
+                            <div className="p-4 font-bold text-center border-x border-white/10">Free</div>
                             <div className="p-4 font-bold text-center text-accent-gold">Premium</div>
                         </div>
 
                         {freeVsPremium.map((row, i) => (
-                            <div key={i} className="grid grid-cols-3 border-b border-border-subtle last:border-0">
+                            <div key={i} className="grid grid-cols-3 border-b border-white/5 last:border-0">
                                 <div className="p-4 text-text-secondary">{row.feature}</div>
-                                <div className="p-4 text-center border-x border-border-subtle">
+                                <div className="p-4 text-center border-x border-white/5">
                                     {row.free === "Maya" ? (
                                         <X size={18} className="text-accent-red mx-auto" />
                                     ) : (

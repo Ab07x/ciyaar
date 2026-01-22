@@ -87,7 +87,10 @@ export default function HomePage() {
         {/* 1. Shorts / Stories */}
         <ShortsRow />
 
-        {/* 2. Continue Watching */}
+        {/* 2. Premium Promo Banner */}
+        <PremiumPromoBanner />
+
+        {/* 3. Continue Watching */}
         <ContinueWatchingRow />
 
         {/* 3. Live Matches (Vital - Keep as Grid) */}
@@ -125,10 +128,6 @@ export default function HomePage() {
           type="series"
         />
 
-        {/* 7. Premium Promo Banner */}
-        <div className="px-4">
-          <PremiumPromoBanner />
-        </div>
 
         {/* 9. Upcoming Matches */}
         {upcoming.length > 0 && (

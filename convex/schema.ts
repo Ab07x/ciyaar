@@ -273,6 +273,14 @@ export default defineSchema({
         maxDevicesWeekly: v.number(),
         maxDevicesMonthly: v.number(),
         maxDevicesYearly: v.number(),
+        // SEO Settings
+        seoTagline: v.optional(v.string()),
+        seoDescription: v.optional(v.string()),
+        seoKeywords: v.optional(v.string()),
+        ogImage: v.optional(v.string()),
+        twitterHandle: v.optional(v.string()),
+        googleAnalyticsId: v.optional(v.string()),
+        googleVerification: v.optional(v.string()),
     }),
 
     // ============================================

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Check, Play, Download } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -17,8 +18,8 @@ interface PricingPlan {
   episodes: number;
   buttonText: string;
   buttonStyle: string;
-  cardGradient: string;
   borderColor: string;
+  bgImage: string;
 }
 
 const plans: PricingPlan[] = [
@@ -35,8 +36,8 @@ const plans: PricingPlan[] = [
     episodes: 5,
     buttonText: "Get Starter",
     buttonStyle: "bg-[var(--bg-elevated)] hover:bg-[var(--bg-secondary)] text-white border border-[var(--color-premium)]/50",
-    cardGradient: "from-[#000] via-[#111] to-[#000]",
     borderColor: "border-[var(--color-premium)]/30",
+    bgImage: "/planimg/starter.png",
   },
   {
     id: "plus",
@@ -51,8 +52,8 @@ const plans: PricingPlan[] = [
     episodes: 10,
     buttonText: "Get Plus",
     buttonStyle: "bg-[var(--color-sports)] hover:brightness-110 text-black font-bold",
-    cardGradient: "from-[#000] via-[#051105] to-[#000]",
     borderColor: "border-[var(--color-sports)]/30",
+    bgImage: "/planimg/plus.jpg",
   },
   {
     id: "pro",
@@ -67,8 +68,8 @@ const plans: PricingPlan[] = [
     episodes: 15,
     buttonText: "Get Pro",
     buttonStyle: "bg-[var(--color-cinema)] hover:brightness-110 text-white font-bold",
-    cardGradient: "from-[#000] via-[#1A0505] to-[#000]",
     borderColor: "border-[var(--color-cinema)]/30",
+    bgImage: "/planimg/pro.png",
   },
   {
     id: "elite",
@@ -84,8 +85,8 @@ const plans: PricingPlan[] = [
     episodes: 30,
     buttonText: "Get Elite",
     buttonStyle: "bg-gradient-to-r from-[var(--color-premium)] to-yellow-600 hover:brightness-110 text-black font-bold",
-    cardGradient: "from-[#000] via-[#1A1100] to-[#000]",
     borderColor: "border-[var(--color-premium)]/50",
+    bgImage: "/planimg/elite.jpg",
   },
 ];
 
@@ -122,21 +123,28 @@ export function PricingCards({ className }: { className?: string }) {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative flex flex-col rounded-xl overflow-hidden border ${plan.borderColor} bg-gradient-to-b ${plan.cardGradient} transition-all hover:scale-[1.02] hover:shadow-2xl`}
+              className={`relative flex flex-col rounded-xl overflow-hidden border ${plan.borderColor} transition-all hover:scale-[1.02] hover:shadow-2xl`}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/60 backdrop-blur-sm relative z-10">
                 <span className={`font-bold text-lg ${plan.nameColor}`}>{plan.name}</span>
                 <span className={`font-bold text-lg ${plan.priceColor}`}>{getPrice(plan)}</span>
               </div>
 
-              {/* Plan Duration */}
+              {/* Plan Duration with Background Image */}
               <div className="relative px-4 py-6 min-h-[140px] flex flex-col justify-center">
-                {/* Background overlay effect */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60" />
+                {/* Background Image */}
+                <Image
+                  src={plan.bgImage}
+                  alt={plan.name}
+                  fill
+                  className="object-cover"
+                />
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
 
                 <div className="relative z-10 text-center">
-                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-1">
+                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-1 drop-shadow-lg">
                     {plan.duration}
                   </h3>
                   {plan.bonus && (
@@ -144,12 +152,12 @@ export function PricingCards({ className }: { className?: string }) {
                       {plan.bonus}
                     </span>
                   )}
-                  <p className="text-gray-400 text-sm">{plan.subtitle}</p>
+                  <p className="text-gray-300 text-sm">{plan.subtitle}</p>
                 </div>
               </div>
 
               {/* Features List */}
-              <div className="flex-1 px-4 py-4 space-y-3">
+              <div className="flex-1 px-4 py-4 space-y-3 bg-black/80">
                 {/* Unlimited Watching */}
                 <div className="flex items-center gap-2 text-white text-sm">
                   <Play size={14} className="text-blue-400 flex-shrink-0" />
@@ -181,13 +189,15 @@ export function PricingCards({ className }: { className?: string }) {
               </div>
 
               {/* CTA Button */}
-              <div className="px-4 pb-4">
-                <Link
-                  href="/pricing"
+              <div className="px-4 pb-4 bg-black/80">
+                <a
+                  href={`https://wa.me/${settings?.whatsappNumber?.replace(/\D/g, "") || "252615000000"}?text=Waxaan rabaa inaan ku biiro ${plan.name} Plan ($${getPrice(plan).replace("U$ ", "")})`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`block w-full text-center py-3 rounded-lg font-bold transition-all ${plan.buttonStyle}`}
                 >
                   {plan.buttonText}
-                </Link>
+                </a>
               </div>
             </div>
           ))}
