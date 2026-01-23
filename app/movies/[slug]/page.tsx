@@ -18,6 +18,8 @@ import {
     MessageSquare,
     ChevronLeft,
     ChevronRight,
+    Youtube,
+    Download,
 } from "lucide-react";
 import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
@@ -250,6 +252,32 @@ export default function MovieWatchPage() {
                                             <span className="flex items-center gap-1">
                                                 <Star size={14} className="text-accent-gold" /> {movie.rating.toFixed(1)}
                                             </span>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex flex-wrap gap-3 mt-4">
+                                        {movie.trailerUrl && (
+                                            <a
+                                                href={movie.trailerUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                                            >
+                                                <Youtube size={16} />
+                                                Trailer
+                                            </a>
+                                        )}
+                                        {movie.downloadUrl && (
+                                            <a
+                                                href={movie.downloadUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 bg-stadium-elevated hover:bg-stadium-hover border border-border-subtle text-text-primary rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                                            >
+                                                <Download size={16} />
+                                                Download
+                                            </a>
                                         )}
                                     </div>
                                 </div>

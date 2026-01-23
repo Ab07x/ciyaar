@@ -216,6 +216,8 @@ export const createMovie = mutation({
         seoKeywords: v.optional(v.array(v.string())),
         isTop10: v.optional(v.boolean()),
         top10Order: v.optional(v.number()),
+        trailerUrl: v.optional(v.string()),
+        downloadUrl: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const now = Date.now();
@@ -266,6 +268,8 @@ export const updateMovie = mutation({
         featuredOrder: v.optional(v.number()),
         isTop10: v.optional(v.boolean()),
         top10Order: v.optional(v.number()),
+        trailerUrl: v.optional(v.string()),
+        downloadUrl: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;

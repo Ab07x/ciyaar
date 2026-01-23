@@ -16,7 +16,7 @@ export const fetchMovieFromTMDB = action({
         if (!apiKey) throw new Error("TMDB_API_KEY not configured");
 
         const response = await fetch(
-            `${TMDB_BASE_URL}/movie/${args.tmdbId}?api_key=${apiKey}&append_to_response=credits`
+            `${TMDB_BASE_URL}/movie/${args.tmdbId}?api_key=${apiKey}&append_to_response=credits,videos`
         );
 
         if (!response.ok) {
@@ -45,6 +45,12 @@ export const fetchMovieFromTMDB = action({
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "");
 
+        // Extract YouTube trailer
+        const trailer = (data.videos?.results || []).find(
+            (v: any) => v.type === "Trailer" && v.site === "YouTube"
+        );
+        const trailerUrl = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined;
+
         return {
             tmdbId: data.id,
             imdbId: data.imdb_id || undefined,
@@ -64,6 +70,7 @@ export const fetchMovieFromTMDB = action({
             cast,
             director,
             slug,
+            trailerUrl,
         };
     },
 });

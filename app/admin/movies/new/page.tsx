@@ -67,6 +67,8 @@ export default function MovieFormPage({ params }: Props) {
         isPublished: false,
         isTop10: false,
         top10Order: 0,
+        trailerUrl: "",
+        downloadUrl: "",
     });
 
     useEffect(() => {
@@ -94,6 +96,8 @@ export default function MovieFormPage({ params }: Props) {
                 isPublished: existingMovie.isPublished,
                 isTop10: existingMovie.isTop10 || false,
                 top10Order: existingMovie.top10Order || 0,
+                trailerUrl: existingMovie.trailerUrl || "",
+                downloadUrl: existingMovie.downloadUrl || "",
             });
         }
     }, [existingMovie]);
@@ -134,6 +138,7 @@ export default function MovieFormPage({ params }: Props) {
                 genres: data.genres,
                 cast: data.cast,
                 director: data.director || "",
+                trailerUrl: data.trailerUrl || "",
             });
             setTmdbInput("");
         } catch (err) {
@@ -171,6 +176,8 @@ export default function MovieFormPage({ params }: Props) {
                     overviewSomali: formData.overviewSomali || undefined,
                     isTop10: formData.isTop10,
                     top10Order: formData.top10Order || undefined,
+                    trailerUrl: formData.trailerUrl || undefined,
+                    downloadUrl: formData.downloadUrl || undefined,
                 });
             } else {
                 // Prepare embeds with proper typing
@@ -204,6 +211,8 @@ export default function MovieFormPage({ params }: Props) {
                     isPublished: formData.isPublished,
                     isTop10: formData.isTop10 || undefined,
                     top10Order: formData.top10Order || undefined,
+                    trailerUrl: formData.trailerUrl || undefined,
+                    downloadUrl: formData.downloadUrl || undefined,
                 });
             }
             router.push("/admin/movies");
@@ -452,6 +461,31 @@ export default function MovieFormPage({ params }: Props) {
                                         <span className="text-xs text-text-muted">Lower number = higher rank</span>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Extra Links (Trailer & Download) */}
+                        <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-4">
+                            <h3 className="font-bold border-b border-border-strong pb-3">Extra Links</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Trailer URL (YouTube)</label>
+                                    <input
+                                        value={formData.trailerUrl}
+                                        onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
+                                        placeholder="https://www.youtube.com/watch?v=..."
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Download URL</label>
+                                    <input
+                                        value={formData.downloadUrl}
+                                        onChange={(e) => setFormData({ ...formData, downloadUrl: e.target.value })}
+                                        placeholder="https://mega.nz/..."
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm"
+                                    />
+                                </div>
                             </div>
                         </div>
 

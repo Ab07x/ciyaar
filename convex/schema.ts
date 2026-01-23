@@ -393,6 +393,10 @@ export default defineSchema({
         isTop10: v.optional(v.boolean()),
         top10Order: v.optional(v.number()),
 
+        // Trailer & Download
+        trailerUrl: v.optional(v.string()),
+        downloadUrl: v.optional(v.string()),
+
         // Timestamps
         createdAt: v.number(),
         updatedAt: v.number(),
