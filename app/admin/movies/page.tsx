@@ -47,8 +47,8 @@ export default function AdminMoviesPage() {
                             key={f}
                             onClick={() => setFilter(f as any)}
                             className={`px-3 py-1 rounded-full text-sm capitalize ${filter === f
-                                    ? "bg-accent-green text-black font-bold"
-                                    : "bg-stadium-hover text-text-secondary"
+                                ? "bg-accent-green text-black font-bold"
+                                : "bg-stadium-hover text-text-secondary"
                                 }`}
                         >
                             {f === "dubbed" ? "Af-Somali" : f}
@@ -111,8 +111,13 @@ export default function AdminMoviesPage() {
                                     </div>
                                 )}
                                 {movie.isDubbed && (
-                                    <div className="bg-accent-green px-2 py-0.5 rounded text-xs font-bold text-black">
+                                    <div className="bg-accent-green px-2 py-0.5 rounded text-xs font-bold text-black border border-black/10">
                                         AF-SOMALI
+                                    </div>
+                                )}
+                                {movie.isTop10 && (
+                                    <div className="bg-red-600 px-2 py-0.5 rounded text-xs font-bold text-white border border-white/20">
+                                        TOP {movie.top10Order || "?"}
                                     </div>
                                 )}
                             </div>

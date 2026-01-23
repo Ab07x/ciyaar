@@ -60,28 +60,30 @@ export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
                         <Link
                             href={`/movies/${item.slug}`}
                             key={item._id}
-                            className="snap-start flex-shrink-0 relative flex items-end group/item"
+                            className="snap-start flex-shrink-0 relative flex items-end group/item pb-2"
                         >
                             {/* Netflix-style Number - SVG for perfect stroke */}
-                            <div className="relative z-0 flex-shrink-0 -mr-4 md:-mr-6">
+                            <div className="relative z-0 flex-shrink-0 -mr-6 md:-mr-10 -mb-2">
                                 <svg
                                     viewBox="0 0 100 140"
-                                    className="w-[70px] h-[100px] md:w-[100px] md:h-[140px]"
-                                    style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.5))" }}
+                                    className="w-[80px] h-[110px] md:w-[120px] md:h-[160px]"
+                                    style={{ filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.8))" }}
                                 >
                                     <text
                                         x="50%"
-                                        y="75%"
+                                        y="70%"
                                         textAnchor="middle"
                                         dominantBaseline="middle"
                                         className="font-black"
                                         style={{
-                                            fontSize: index + 1 === 10 ? "80px" : "100px",
+                                            fontSize: index + 1 === 10 ? "100px" : "130px",
                                             fontWeight: 900,
-                                            fill: "#0a0a0a",
-                                            stroke: "#404040",
-                                            strokeWidth: index + 1 === 10 ? "2px" : "3px",
-                                            fontFamily: "system-ui, -apple-system, sans-serif",
+                                            fill: "#000",
+                                            stroke: "#FFFFFF",
+                                            strokeWidth: "2.5px",
+                                            paintOrder: "stroke fill",
+                                            fontFamily: "var(--font-display), sans-serif",
+                                            letterSpacing: "-0.05em"
                                         }}
                                     >
                                         {index + 1}
@@ -90,43 +92,39 @@ export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
                             </div>
 
                             {/* Movie Poster Card */}
-                            <div className="relative z-10 w-[100px] md:w-[130px] aspect-[2/3] rounded-lg overflow-hidden bg-stadium-elevated border border-white/10 group-hover/item:border-white/30 transition-all duration-300 shadow-2xl group-hover/item:scale-105 group-hover/item:shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                            <div className="relative z-10 w-[110px] md:w-[160px] aspect-[2/3] rounded-md overflow-hidden bg-stadium-elevated border border-white/10 group-hover/item:border-white/40 transition-all duration-300 shadow-2xl group-hover/item:scale-105 group-hover/item:shadow-[0_0_40px_rgba(255,255,255,0.15)]">
                                 <Image
                                     src={item.posterUrl}
                                     alt={item.title}
                                     fill
                                     className="object-cover"
+                                    sizes="(max-width: 768px) 110px, 160px"
                                 />
 
                                 {/* Hover overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
 
                                 {/* Premium badge */}
                                 {item.isPremium && (
-                                    <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded">
-                                        <Crown size={8} />
+                                    <div className="absolute top-2 left-2 flex items-center gap-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-sm shadow-lg">
+                                        <Crown size={10} />
                                         <span className="hidden md:inline">PREMIUM</span>
                                     </div>
                                 )}
 
                                 {/* Rating */}
                                 {item.rating && (
-                                    <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-black/80 text-white text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded">
-                                        <Star size={8} className="text-yellow-400" fill="currentColor" />
+                                    <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-sm border border-white/5">
+                                        <Star size={10} className="text-yellow-400" fill="currentColor" />
                                         {item.rating.toFixed(1)}
                                     </div>
                                 )}
 
                                 {/* Play button on hover */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-all duration-300">
-                                    <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-xl transform scale-50 group-hover/item:scale-100 transition-transform duration-300">
-                                        <Play size={18} className="text-black ml-0.5" fill="currentColor" />
+                                    <div className="w-12 h-12 bg-white/95 rounded-full flex items-center justify-center shadow-2xl transform scale-50 group-hover/item:scale-100 transition-transform duration-300">
+                                        <Play size={20} className="text-black ml-1" fill="currentColor" />
                                     </div>
-                                </div>
-
-                                {/* Rank badge on mobile */}
-                                <div className="absolute bottom-1.5 left-1.5 md:hidden bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded">
-                                    #{index + 1}
                                 </div>
                             </div>
                         </Link>
