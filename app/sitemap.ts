@@ -3,12 +3,18 @@ import { fetchQuery } from "convex/nextjs";
 import { MetadataRoute } from "next";
 import { api } from "@/convex/_generated/api";
 
-const BASE_URL = "https://fanbroj.net"; // In production, this should be env var
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    // 1. Fetch Dynamic Content
-    const movies = await fetchQuery(api.movies.getAllMovies, {});
-    // const series = await fetchQuery(api.series.getAllSeries, {}); // Assuming this exists or similar
+    let movies: any[] = [];
+
+    try {
+        // 1. Fetch Dynamic Content (Lightweight Query)
+        movies = await fetchQuery(api.movies.getSitemapData, {});
+    } catch (error) {
+        console.error("Sitemap failed to fetch movies:", error);
+        // Continue with static routes if DB fails
+    }
 
     // 2. Static Routes
     const routes = [

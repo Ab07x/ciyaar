@@ -8,12 +8,17 @@ import { api } from "./_generated/api";
 
 // ... existing imports
 
-export const getAllMovies = query({
+export const getSitemapData = query({
     handler: async (ctx) => {
-        return await ctx.db
+        const movies = await ctx.db
             .query("movies")
             .filter((q) => q.eq(q.field("isPublished"), true))
             .collect();
+
+        return movies.map(m => ({
+            slug: m.slug,
+            updatedAt: m.updatedAt
+        }));
     },
 });
 

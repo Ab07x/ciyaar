@@ -450,6 +450,10 @@ export default function MovieWatchPage() {
                             "@type": "Person",
                             name: c.name
                         })),
+                        director: movie.director ? {
+                            "@type": "Person",
+                            name: movie.director
+                        } : undefined,
                         genre: movie.genres,
                         offers: {
                             "@type": "Offer",
