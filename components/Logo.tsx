@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import Image from "next/image";
 
 interface LogoProps {
     variant?: "full" | "icon" | "wordmark";
@@ -13,10 +16,10 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-    sm: { full: "h-6", icon: "w-6 h-6", wordmark: "text-lg" },
-    md: { full: "h-8", icon: "w-8 h-8", wordmark: "text-xl" },
-    lg: { full: "h-10", icon: "w-10 h-10", wordmark: "text-2xl" },
-    xl: { full: "h-12", icon: "w-12 h-12", wordmark: "text-3xl" },
+    sm: { full: "h-6", icon: "w-6 h-6", wordmark: "text-lg", img: 24 },
+    md: { full: "h-8", icon: "w-8 h-8", wordmark: "text-xl", img: 32 },
+    lg: { full: "h-10", icon: "w-10 h-10", wordmark: "text-2xl", img: 40 },
+    xl: { full: "h-12", icon: "w-12 h-12", wordmark: "text-3xl", img: 48 },
 };
 
 export function Logo({
@@ -26,17 +29,38 @@ export function Logo({
     className,
     href = "/",
 }: LogoProps) {
-    const content = (
+    const settingsData = useQuery(api.settings.getSettings);
+    // Safe cast to access new fields
+    const settings = settingsData as any;
+
+    const logoContent = (
         <motion.div
             whileHover={animated ? { scale: 1.02 } : undefined}
             whileTap={animated ? { scale: 0.98 } : undefined}
             className={cn("flex items-center gap-2", className)}
         >
             {(variant === "full" || variant === "icon") && (
-                <LogoIcon className={sizeClasses[size].icon} animated={animated} />
+                <>
+                    {settings?.logoUrl ? (
+                        <div className={cn("relative rounded overflow-hidden aspect-square", sizeClasses[size].icon)}>
+                            <Image
+                                src={settings.logoUrl}
+                                alt={settings.siteName || "Fanbroj"}
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
+                    ) : (
+                        <LogoIcon className={sizeClasses[size].icon} animated={animated} />
+                    )}
+                </>
             )}
+
             {(variant === "full" || variant === "wordmark") && (
-                <LogoWordmark className={sizeClasses[size].wordmark} />
+                <LogoWordmark
+                    className={sizeClasses[size].wordmark}
+                    siteName={settings?.siteName}
+                />
             )}
         </motion.div>
     );
@@ -44,15 +68,34 @@ export function Logo({
     if (href) {
         return (
             <Link href={href} className="focus:outline-none">
-                {content}
+                {logoContent}
             </Link>
         );
     }
 
-    return content;
+    return logoContent;
 }
 
-// Logo Icon - Stadium/Sports themed
+// Logo Wordmark
+function LogoWordmark({ className, siteName }: { className?: string, siteName?: string }) {
+    if (siteName && siteName !== "Fanbroj") {
+        return (
+            <span className={cn("font-black tracking-tighter text-white", className)}>
+                {siteName}
+            </span>
+        );
+    }
+
+    // Default Fanbroj
+    return (
+        <span className={cn("font-black tracking-tighter", className)}>
+            <span className="text-white">FAN</span>
+            <span className="text-accent-green">BROJ</span>
+        </span>
+    );
+}
+
+// Logo Icon - Stadium/Sports themed (Fallback)
 function LogoIcon({ className, animated }: { className?: string; animated?: boolean }) {
     return (
         <motion.svg
@@ -133,86 +176,3 @@ function LogoIcon({ className, animated }: { className?: string; animated?: bool
     );
 }
 
-// Logo Wordmark
-function LogoWordmark({ className }: { className?: string }) {
-    return (
-        <span className={cn("font-black tracking-tighter", className)}>
-            <span className="text-white">FAN</span>
-            <span className="text-accent-green">BROJ</span>
-        </span>
-    );
-}
-
-// Alternate Logo for Ciyaar branding
-export function CiyaarLogo({
-    size = "md",
-    animated = true,
-    className,
-    href = "/",
-}: Omit<LogoProps, "variant">) {
-    const content = (
-        <motion.div
-            whileHover={animated ? { scale: 1.02 } : undefined}
-            whileTap={animated ? { scale: 0.98 } : undefined}
-            className={cn("flex items-center gap-2", className)}
-        >
-            <CiyaarIcon className={sizeClasses[size].icon} animated={animated} />
-            <span className={cn("font-black tracking-tighter", sizeClasses[size].wordmark)}>
-                <span className="text-white">CIYAAR</span>
-            </span>
-        </motion.div>
-    );
-
-    if (href) {
-        return (
-            <Link href={href} className="focus:outline-none">
-                {content}
-            </Link>
-        );
-    }
-
-    return content;
-}
-
-// Ciyaar Icon - Soccer ball themed
-function CiyaarIcon({ className, animated }: { className?: string; animated?: boolean }) {
-    return (
-        <motion.svg
-            viewBox="0 0 40 40"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={className}
-            animate={animated ? { rotate: [0, 360] } : undefined}
-            transition={animated ? { duration: 20, repeat: Infinity, ease: "linear" } : undefined}
-        >
-            {/* Ball circle */}
-            <circle
-                cx="20"
-                cy="20"
-                r="18"
-                className="fill-white stroke-text-muted"
-                strokeWidth="1"
-            />
-
-            {/* Pentagon pattern */}
-            <path
-                d="M20 8L26 14L24 22L16 22L14 14L20 8Z"
-                className="fill-stadium-dark"
-            />
-
-            {/* Side pentagons */}
-            <path
-                d="M8 18L14 14L16 22L12 28L6 24L8 18Z"
-                className="fill-stadium-dark"
-            />
-            <path
-                d="M32 18L34 24L28 28L24 22L26 14L32 18Z"
-                className="fill-stadium-dark"
-            />
-            <path
-                d="M16 22L24 22L26 30L20 34L14 30L16 22Z"
-                className="fill-stadium-dark"
-            />
-        </motion.svg>
-    );
-}

@@ -1,21 +1,33 @@
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
     try {
         const { token } = await request.json();
 
-        const adminToken = process.env.ADMIN_TOKEN;
+        // 1. Check DB for custom Admin Password
+        const settings = await fetchQuery(api.settings.getSettings);
+        const dbAdminPassword = (settings as any)?.adminPassword;
 
-        if (!adminToken) {
-            return NextResponse.json(
-                { error: "Admin token not configured" },
-                { status: 500 }
-            );
+        let isAuthenticated = false;
+
+        if (dbAdminPassword) {
+            // Priority: DB Password
+            if (token === dbAdminPassword) {
+                isAuthenticated = true;
+            }
+        } else {
+            // Fallback: Environment Variable
+            const envAdminToken = process.env.ADMIN_TOKEN;
+            if (envAdminToken && token === envAdminToken) {
+                isAuthenticated = true;
+            }
         }
 
-        if (token !== adminToken) {
+        if (!isAuthenticated) {
             return NextResponse.json(
-                { error: "Token qaldan" },
+                { error: "Token qaldan (Invalid Password)" },
                 { status: 401 }
             );
         }
@@ -32,7 +44,8 @@ export async function POST(request: Request) {
         });
 
         return response;
-    } catch {
+    } catch (error) {
+        console.error("Admin login error:", error);
         return NextResponse.json(
             { error: "Invalid request" },
             { status: 400 }

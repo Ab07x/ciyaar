@@ -8,69 +8,65 @@ import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
 import { ToastProvider } from "@/providers/ToastProvider";
 import { PremiumFooterPromo } from "@/components/PremiumFooterPromo";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://fanbroj.net"),
-  title: {
-    default: "Daawo Ciyaar Live Maanta | Fanbroj.net - Kubadda Cagta & Filimaan",
-    template: "%s | Fanbroj.net",
-  },
-  description:
-    "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta. Daawo Premier League, Champions League, iyo filimaan af Soomaali ah.",
-  keywords: [
-    "ciyaar live",
-    "kubadda cagta",
-    "daawo ciyaar",
-    "fanbroj",
-    "filim af soomaali",
-    "musalsal af soomaali",
-    "somali streaming",
-    "premier league live",
-  ],
-  authors: [{ name: "Fanbroj Team" }],
-  creator: "Fanbroj",
-  publisher: "Fanbroj",
-  openGraph: {
-    type: "website",
-    locale: "so_SO",
-    url: "https://fanbroj.net",
-    title: "Daawo Ciyaar Live Maanta | Fanbroj.net",
-    description:
-      "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta.",
-    siteName: "Fanbroj",
-    images: [
-      {
-        url: "/og-image.jpg", // We need to ensure this image exists or create a dynamic one
-        width: 1200,
-        height: 630,
-        alt: "Fanbroj - Ciyaaraha & Madadaalada",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Fanbroj.net - Kubadda Cagta & Filimaan",
-    description: "Daawo ciyaaraha tooska ah iyo filimaanta af Soomaaliga.",
-    creator: "@fanbroj",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const settingsData = await fetchQuery(api.settings.getSettings);
+  const settings = settingsData as any;
+
+  const siteName = settings?.siteName || "Fanbroj";
+  const title = settings?.seoTagline ? `${siteName} | ${settings.seoTagline}` : `${siteName} - Daawo Ciyaar Live & Filimaan`;
+  const description = settings?.seoDescription || "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta.";
+  const keywords = settings?.seoKeywords?.split(",").map((k: string) => k.trim()) || ["ciyaar live", "somali", "kubadda cagta"];
+
+  return {
+    metadataBase: new URL("https://fanbroj.net"),
+    title: {
+      default: title,
+      template: `%s | ${siteName}`,
+    },
+    description: description,
+    keywords: keywords,
+    authors: [{ name: "Fanbroj Team" }],
+    creator: siteName,
+    openGraph: {
+      type: "website",
+      locale: "so_SO",
+      url: "https://fanbroj.net",
+      title: title,
+      description: description,
+      siteName: siteName,
+      images: [
+        {
+          url: settings?.ogImage || settings?.logoUrl || "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: `${siteName} - Ciyaaraha & Madadaalada`,
+        },
+      ],
+    },
+    icons: {
+      icon: settings?.faviconUrl || "/favicon.ico",
+      shortcut: settings?.faviconUrl || "/favicon.ico",
+      apple: settings?.logoUrl || "/apple-touch-icon.png",
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
-  alternates: {
-    canonical: "./",
-  },
-  verification: {
-    google: "google-site-verification-placeholder", // User needs to provide this or we generate it later
-  },
-};
+    verification: {
+      google: settings?.googleVerification || undefined,
+    },
+  };
+}
 
 export default function RootLayout({
   children,

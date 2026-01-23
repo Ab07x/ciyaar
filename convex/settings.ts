@@ -58,6 +58,12 @@ export const updateSettings = mutation({
         twitterHandle: v.optional(v.string()),
         googleAnalyticsId: v.optional(v.string()),
         googleVerification: v.optional(v.string()),
+
+        // Admin Security & Branding
+        adminPassword: v.optional(v.string()), // Hashed? Or plain for now (Admin only)
+        logoUrl: v.optional(v.string()),
+        faviconUrl: v.optional(v.string()),
+        sitemapEnabled: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         const existing = await ctx.db.query("settings").first();

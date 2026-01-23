@@ -273,14 +273,24 @@ export default defineSchema({
         maxDevicesWeekly: v.number(),
         maxDevicesMonthly: v.number(),
         maxDevicesYearly: v.number(),
+        // Admin Security
+        adminPassword: v.optional(v.string()),
+
+        // Branding
+        logoUrl: v.optional(v.string()),
+        faviconUrl: v.optional(v.string()),
+
         // SEO Settings
         seoTagline: v.optional(v.string()),
         seoDescription: v.optional(v.string()),
         seoKeywords: v.optional(v.string()),
         ogImage: v.optional(v.string()),
         twitterHandle: v.optional(v.string()),
+
+        // Integrations
         googleAnalyticsId: v.optional(v.string()),
-        googleVerification: v.optional(v.string()),
+        googleVerification: v.optional(v.string()), // GCS Verification ID
+        sitemapEnabled: v.optional(v.boolean()),
     }),
 
     // ============================================

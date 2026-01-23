@@ -6,7 +6,19 @@ import { api } from "./_generated/api";
 // QUERIES
 // ============================================
 
+// ... existing imports
+
+export const getAllMovies = query({
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("movies")
+            .filter((q) => q.eq(q.field("isPublished"), true))
+            .collect();
+    },
+});
+
 export const listMovies = query({
+    // ... existing listMovies code
     args: {
         isPublished: v.optional(v.boolean()),
         isPremium: v.optional(v.boolean()),
