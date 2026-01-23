@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
     try {
         const { token } = await request.json();
+        const inputToken = token?.trim();
 
         // 1. Check DB for custom Admin Password
         const settings = await fetchQuery(api.settings.getSettings);
@@ -14,13 +15,13 @@ export async function POST(request: Request) {
 
         if (dbAdminPassword) {
             // Priority: DB Password
-            if (token === dbAdminPassword) {
+            if (inputToken === dbAdminPassword) {
                 isAuthenticated = true;
             }
         } else {
             // Fallback: Environment Variable
             const envAdminToken = process.env.ADMIN_TOKEN;
-            if (envAdminToken && token === envAdminToken) {
+            if (envAdminToken && inputToken === envAdminToken) {
                 isAuthenticated = true;
             }
         }
