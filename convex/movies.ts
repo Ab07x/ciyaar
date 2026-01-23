@@ -210,6 +210,8 @@ export const createMovie = mutation({
         isDubbed: v.boolean(),
         isPremium: v.boolean(),
         isPublished: v.boolean(),
+        isTop10: v.optional(v.boolean()),
+        top10Order: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const now = Date.now();
