@@ -78,6 +78,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-stadium-dark">
+      {/* Hidden SEO H1 */}
+      <h1 className="sr-only">Daawo Ciyaar Live & Filimo Af-Soomaali – Fanbroj</h1>
+
       {/* Netflix-style Full-bleed Hero */}
       <div className="relative w-full h-[85vh] md:h-[90vh] overflow-hidden">
         {/* Background Image with lm-bg.jpg base */}
@@ -133,10 +136,10 @@ export default function HomePage() {
                   </span>
                 </div>
 
-                {/* Title */}
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-none tracking-tight">
+                {/* Title (Now H2 for semantics) */}
+                <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-none tracking-tight">
                   {currentMovie.title}
-                </h1>
+                </h2>
 
                 {/* Genres */}
                 {currentMovie.genres && currentMovie.genres.length > 0 && (
@@ -211,7 +214,7 @@ export default function HomePage() {
               <div className="w-1 h-8 bg-accent-green rounded-full" />
               <div className="flex items-center gap-2">
                 <Film className="text-accent-green" size={24} />
-                <h2 className="text-xl md:text-2xl font-black">FANPROJ PLAY</h2>
+                <h2 className="text-xl md:text-2xl font-black uppercase">Filimo Af-Soomaali Dubbed</h2>
               </div>
             </div>
             <Link href="/movies" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
@@ -286,7 +289,7 @@ export default function HomePage() {
               <div className="flex items-center gap-3">
                 <div className="w-1 h-8 bg-red-500 rounded-full" />
                 <div>
-                  <h2 className="text-xl md:text-2xl font-black">LIVE HADA</h2>
+                  <h2 className="text-xl md:text-2xl font-black uppercase">Ciyaaro Live Maalin Kasta</h2>
                   <span className="text-sm text-red-400 animate-pulse flex items-center gap-1">
                     <span className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
                     {live.length} ciyaarood socda
@@ -318,7 +321,7 @@ export default function HomePage() {
 
         {/* Series Carousel */}
         <ContentCarousel
-          title="Musalsal Cusub"
+          title="Musalsalo Caan Ah"
           link="/series"
           data={series}
           type="series"
@@ -353,7 +356,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-1 h-8 bg-blue-500 rounded-full" />
-                <h2 className="text-xl md:text-2xl font-black">WARARKA</h2>
+                <h2 className="text-xl md:text-2xl font-black uppercase">Wararka Ciyaaraha & Falanqayn</h2>
               </div>
               <Link href="/blog" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
                 Dhamaan <ChevronRight size={16} />
@@ -389,10 +392,10 @@ export default function HomePage() {
                     <span className="text-yellow-400 font-bold">PREMIUM</span>
                   </div>
 
-                  <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
-                    Hel Waxa Ugu<br />
+                  <h2 className="text-3xl md:text-5xl font-black text-white leading-tight uppercase">
+                    Premium Somali<br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                      Fiican
+                      Entertainment
                     </span>
                   </h2>
 

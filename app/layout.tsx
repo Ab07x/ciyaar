@@ -113,6 +113,7 @@ export default function RootLayout({
                   </p>
                   <nav className="flex flex-wrap justify-center items-center gap-6 mb-8">
                     <Link href="/" className="text-sm font-bold hover:text-accent-green transition-colors">HOME</Link>
+                    <Link href="/about" className="text-sm font-bold hover:text-accent-green transition-colors">ABOUT</Link>
                     <Link href="/ciyaar" className="text-sm font-bold hover:text-accent-green transition-colors">CIYAARAHA</Link>
 
                     {/* Footer specific links matching dropdown */}
