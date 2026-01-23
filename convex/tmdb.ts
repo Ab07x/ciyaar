@@ -32,15 +32,15 @@ export const fetchMovieFromTMDB = action({
 
         // Extract top 5 cast
         const cast = (data.credits?.cast || []).slice(0, 5).map((c: any) => ({
-            name: c.name,
-            character: c.character,
+            name: String(c.name || "Unknown"),
+            character: String(c.character || "Unknown"),
             profileUrl: c.profile_path
                 ? `${TMDB_IMAGE_BASE}/w185${c.profile_path}`
                 : undefined,
         }));
 
         // Generate slug from title
-        const slug = data.title
+        const slug = (data.title || "untitled")
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "");
@@ -48,7 +48,7 @@ export const fetchMovieFromTMDB = action({
         return {
             tmdbId: data.id,
             imdbId: data.imdb_id || undefined,
-            title: data.title,
+            title: data.title || "Untitled",
             overview: data.overview || "",
             posterUrl: data.poster_path
                 ? `${TMDB_IMAGE_BASE}/w500${data.poster_path}`
@@ -58,9 +58,9 @@ export const fetchMovieFromTMDB = action({
                 : undefined,
             releaseDate: data.release_date || "",
             runtime: data.runtime || undefined,
-            rating: data.vote_average || undefined,
-            voteCount: data.vote_count || undefined,
-            genres: (data.genres || []).map((g: any) => g.name),
+            rating: typeof data.vote_average === 'number' ? data.vote_average : undefined,
+            voteCount: typeof data.vote_count === 'number' ? data.vote_count : undefined,
+            genres: (data.genres || []).map((g: any) => String(g.name || "")).filter(Boolean),
             cast,
             director,
             slug,
@@ -88,21 +88,21 @@ export const fetchSeriesFromTMDB = action({
         const data = await response.json();
 
         const cast = (data.credits?.cast || []).slice(0, 5).map((c: any) => ({
-            name: c.name,
-            character: c.character,
+            name: String(c.name || "Unknown"),
+            character: String(c.character || "Unknown"),
             profileUrl: c.profile_path
                 ? `${TMDB_IMAGE_BASE}/w185${c.profile_path}`
                 : undefined,
         }));
 
-        const slug = data.name
+        const slug = (data.name || "untitled-series")
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "");
 
         return {
             tmdbId: data.id,
-            title: data.name,
+            title: data.name || "Untitled Series",
             overview: data.overview || "",
             posterUrl: data.poster_path
                 ? `${TMDB_IMAGE_BASE}/w500${data.poster_path}`
@@ -113,8 +113,8 @@ export const fetchSeriesFromTMDB = action({
             firstAirDate: data.first_air_date || "",
             lastAirDate: data.last_air_date || undefined,
             status: data.status || "Unknown",
-            rating: data.vote_average || undefined,
-            genres: (data.genres || []).map((g: any) => g.name),
+            rating: typeof data.vote_average === 'number' ? data.vote_average : undefined,
+            genres: (data.genres || []).map((g: any) => String(g.name || "")).filter(Boolean),
             cast,
             numberOfSeasons: data.number_of_seasons || 0,
             numberOfEpisodes: data.number_of_episodes || 0,
