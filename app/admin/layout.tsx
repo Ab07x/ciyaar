@@ -20,6 +20,7 @@ import {
     Sparkles,
     Palette,
     Image,
+    Search,
 } from "lucide-react";
 
 const navItems = [
