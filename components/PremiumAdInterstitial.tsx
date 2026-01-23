@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Play, Download, Sparkles, MessageSquare } from "lucide-react";
@@ -20,6 +20,7 @@ export function PremiumAdInterstitial({
 }: PremiumAdInterstitialProps) {
     const [countdown, setCountdown] = useState(duration);
     const [canSkip, setCanSkip] = useState(false);
+    const hasCompleted = useRef(false);
 
     // Fetch interstitial banner from database
     const banner = useQuery(api.promoBanners.getActiveBanner, { type: "interstitial" });
@@ -35,8 +36,6 @@ export function PremiumAdInterstitial({
 
     // Countdown timer
     useEffect(() => {
-        if (countdown <= 0) return;
-
         const timer = setInterval(() => {
             setCountdown((prev) => {
                 if (prev <= 1) {
@@ -50,9 +49,10 @@ export function PremiumAdInterstitial({
         return () => clearInterval(timer);
     }, []);
 
-    // Watch for countdown completion - separate effect to avoid setState during render
+    // Watch for countdown completion - use ref to prevent multiple calls
     useEffect(() => {
-        if (countdown === 0) {
+        if (countdown === 0 && !hasCompleted.current) {
+            hasCompleted.current = true;
             onComplete();
         }
     }, [countdown, onComplete]);
@@ -65,6 +65,14 @@ export function PremiumAdInterstitial({
 
         return () => clearTimeout(skipTimer);
     }, []);
+
+    // Handle skip click - use ref to prevent multiple calls
+    const handleSkip = () => {
+        if (!hasCompleted.current) {
+            hasCompleted.current = true;
+            onComplete();
+        }
+    };
 
     const features = [
         { icon: Play, label: "Watch", highlight: "Full HD", color: "bg-pink-500" },
@@ -93,7 +101,7 @@ export function PremiumAdInterstitial({
                 </Link>
                 {canSkip ? (
                     <button
-                        onClick={onComplete}
+                        onClick={handleSkip}
                         className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
                     >
                         <X size={20} />
@@ -175,7 +183,7 @@ export function PremiumAdInterstitial({
             {/* Skip Button (when available) */}
             {canSkip && (
                 <button
-                    onClick={onComplete}
+                    onClick={handleSkip}
                     className="absolute bottom-8 right-8 bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-bold transition-all flex items-center gap-2"
                 >
                     Skip Ad <Play size={16} fill="white" />

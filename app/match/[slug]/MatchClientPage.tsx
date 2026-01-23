@@ -15,16 +15,32 @@ import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { useUser } from "@/providers/UserProvider";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface MatchClientPageProps {
     slug: string;
 }
 
 export default function MatchClientPage({ slug }: MatchClientPageProps) {
-    const { isPremium } = useUser();
-    const [showInterstitial, setShowInterstitial] = useState(true);
+    const { isPremium, isLoading: userLoading } = useUser();
+    const [mounted, setMounted] = useState(false);
     const [adCompleted, setAdCompleted] = useState(false);
+
+    // Handle hydration - only check sessionStorage after mount
+    useEffect(() => {
+        setMounted(true);
+        const stored = sessionStorage.getItem(`ad_completed_${slug}`);
+        if (stored === "true") {
+            setAdCompleted(true);
+        }
+    }, [slug]);
+
+    // Memoized callback to prevent re-renders
+    const handleAdComplete = useCallback(() => {
+        setAdCompleted(true);
+        sessionStorage.setItem(`ad_completed_${slug}`, "true");
+    }, [slug]);
+
     const match = useQuery(api.matches.getMatchBySlug, { slug });
     const settings = useQuery(api.settings.getSettings);
     const relatedMatches = useQuery(api.matches.getRelatedMatches, (match && match.leagueId) ? { matchId: match._id, leagueId: match.leagueId } : "skip");
@@ -47,15 +63,12 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
     const otherLiveMatches = matchesStatus.live.filter((m: any) => m._id !== match._id);
 
     // Show interstitial ad for non-premium users before video
-    if (!isPremium && showInterstitial && !adCompleted) {
+    if (mounted && !userLoading && !isPremium && !adCompleted) {
         return (
             <PremiumAdInterstitial
                 movieTitle={`${match.teamA} vs ${match.teamB}`}
                 duration={10}
-                onComplete={() => {
-                    setAdCompleted(true);
-                    setShowInterstitial(false);
-                }}
+                onComplete={handleAdComplete}
             />
         );
     }

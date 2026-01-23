@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getCountdownValues } from "@/lib/date-utils";
 
 interface CountdownTimerProps {
@@ -10,14 +10,25 @@ interface CountdownTimerProps {
 
 export function CountdownTimer({ kickoffAt, onComplete }: CountdownTimerProps) {
     const [countdown, setCountdown] = useState(getCountdownValues(kickoffAt));
+    const hasCalledComplete = useRef(false);
 
     useEffect(() => {
+        // If already started, don't set up interval
+        const initialValues = getCountdownValues(kickoffAt);
+        if (initialValues.isStarted) {
+            setCountdown(initialValues);
+            return;
+        }
+
         const interval = setInterval(() => {
             const values = getCountdownValues(kickoffAt);
             setCountdown(values);
 
-            if (values.isStarted && onComplete) {
-                onComplete();
+            // Only call onComplete ONCE when countdown finishes
+            if (values.isStarted && onComplete && !hasCalledComplete.current) {
+                hasCalledComplete.current = true;
+                clearInterval(interval);
+                // Don't auto-reload, just update UI
             }
         }, 1000);
 
@@ -30,7 +41,12 @@ export function CountdownTimer({ kickoffAt, onComplete }: CountdownTimerProps) {
                 <p className="text-2xl font-bold text-accent-green mb-2">
                     ✅ Ciyaartu hadda way bilaabatay
                 </p>
-                <p className="text-text-secondary">Dib u cusboonaysii boggan</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="mt-4 px-6 py-3 bg-accent-green text-black font-bold rounded-lg hover:bg-accent-green/90 transition-colors"
+                >
+                    Riix si aad u daawato
+                </button>
             </div>
         );
     }

@@ -74,7 +74,7 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
             <div className={cn("player-stage bg-stadium-elevated flex flex-col items-center justify-center p-8", className)}>
                 <Badge variant="upcoming" className="mb-4" />
                 <h3 className="text-xl font-bold mb-6">Ciyaartu weli ma bilaaban</h3>
-                <CountdownTimer kickoffAt={match.kickoffAt} onComplete={() => window.location.reload()} />
+                <CountdownTimer kickoffAt={match.kickoffAt} />
             </div>
         );
     }
