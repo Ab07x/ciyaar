@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
     title: "Fanbroj Apps - Daawo Ciyaar iyo Filim Meel Kasta",
     description: "Kala deg Fanbroj App mobilkaaga Android, iOS ama TV-gaaga. Daawo ciyaaraha tooska ah iyo filimaanta ugu shidan.",
-    applicationCategory: "EntertainmentApplication",
     openGraph: {
         title: "Fanbroj Apps - Daawo Ciyaar iyo Filim Meel Kasta",
         description: "Hel khibrada u wanaagsan ee daawashada adigoo isticmaalaya Fanbroj App.",

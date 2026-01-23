@@ -204,7 +204,7 @@ export function Navbar() {
                         className="md:hidden overflow-hidden"
                     >
                         <div className="p-4 bg-stadium-elevated border-b border-border-subtle">
-                            <SearchBox autoFocus />
+                            <SearchBox />
                         </div>
                     </motion.div>
                 )}

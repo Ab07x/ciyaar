@@ -5,8 +5,6 @@ import { ArrowLeft, Tablet, Smartphone, Search, Zap, Star } from "lucide-react";
 export const metadata: Metadata = {
     title: "Fanbroj iOS App - iPhone & iPad",
     description: "Fanbroj App for iOS. Daawo ciyaaraha iyo filimaanta adigoo isticmaalaya iPhone ama iPad.",
-    applicationCategory: "EntertainmentApplication",
-    operatingSystem: "iOS",
     openGraph: {
         title: "Fanbroj for iPhone & iPad",
         description: "Khibrad heer sare ah oo loogu talagalay Apple devices.",

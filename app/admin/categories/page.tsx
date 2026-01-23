@@ -5,9 +5,11 @@ import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Eye, EyeOff, GripVertical, Palette } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useToast } from "@/providers/ToastProvider";
 
 export default function AdminCategoriesPage() {
-    const categories = useQuery(api.categories.listCategories);
+    const toast = useToast();
+    const categories = useQuery(api.categories.listCategories, {}) as any;
     const createCategory = useMutation(api.categories.createCategory);
     const updateCategory = useMutation(api.categories.updateCategory);
     const deleteCategory = useMutation(api.categories.deleteCategory);
@@ -26,15 +28,17 @@ export default function AdminCategoriesPage() {
 
     const handleSave = async () => {
         if (!formData.name || !formData.slug) {
-            alert("Name and slug are required");
+            toast("Name and slug are required", "error");
             return;
         }
 
         if (editingId) {
             await updateCategory({ id: editingId, ...formData });
+            toast("Category updated", "success");
             setEditingId(null);
         } else {
             await createCategory(formData);
+            toast("Category created", "success");
         }
         setIsAdding(false);
         setFormData({ name: "", slug: "", description: "", color: "#9AE600", order: 1, isActive: true });
@@ -202,7 +206,7 @@ export default function AdminCategoriesPage() {
                         </button>
                     </div>
                 ) : (
-                    categories.map((cat) => (
+                    categories.map((cat: any) => (
                         <div
                             key={cat._id}
                             className={`bg-stadium-elevated border border-border-strong rounded-2xl p-4 flex items-center gap-4 ${!cat.isActive ? "opacity-60" : ""}`}

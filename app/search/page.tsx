@@ -14,14 +14,18 @@ export default function SearchPage() {
     const router = useRouter();
 
     // @ts-ignore
-    const results = useQuery(api.search.searchAll, { query: query.length >= 2 ? query : "" });
+    const results = useQuery(api.search.searchAll, { query: query.length >= 2 ? query : "" }) as any;
 
     useEffect(() => {
         // Auto-focus input on mount
         inputRef.current?.focus();
     }, []);
 
-    const hasResults = results && (results.matches.length > 0 || results.movies.length > 0 || results.series.length > 0);
+    const hasResults = results && (
+        (results.matches?.length || 0) > 0 ||
+        (results.movies?.length || 0) > 0 ||
+        (results.series?.length || 0) > 0
+    );
 
     return (
         <div className="min-h-screen bg-stadium-dark pb-24">
@@ -72,7 +76,7 @@ export default function SearchPage() {
                 )}
 
                 {/* Matches */}
-                {results?.matches?.length > 0 && (
+                {results?.matches && results.matches.length > 0 && (
                     <section>
                         <h2 className="flex items-center gap-2 text-sm font-black text-text-muted uppercase tracking-widest mb-3">
                             <Trophy size={14} /> Matches
@@ -105,7 +109,7 @@ export default function SearchPage() {
                 )}
 
                 {/* Movies */}
-                {results?.movies?.length > 0 && (
+                {results?.movies && results.movies.length > 0 && (
                     <section>
                         <h2 className="flex items-center gap-2 text-sm font-black text-text-muted uppercase tracking-widest mb-3">
                             <Film size={14} /> Movies
@@ -132,7 +136,7 @@ export default function SearchPage() {
                 )}
 
                 {/* Series */}
-                {results?.series?.length > 0 && (
+                {results?.series && results.series.length > 0 && (
                     <section>
                         <h2 className="flex items-center gap-2 text-sm font-black text-text-muted uppercase tracking-widest mb-3">
                             <Tv size={14} /> Series

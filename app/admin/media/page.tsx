@@ -9,10 +9,10 @@ import { useToast } from "@/providers/ToastProvider";
 import { cn } from "@/lib/utils";
 
 export default function AdminMediaPage() {
-    const listMediaApi: any = api.media.listMedia;
-    const generateUploadUrlApi: any = api.media.generateUploadUrl;
-    const saveMediaApi: any = api.media.saveMedia;
-    const deleteMediaApi: any = api.media.deleteMedia;
+    const listMediaApi: any = api.media?.listMedia;
+    const generateUploadUrlApi: any = api.media?.generateUploadUrl;
+    const saveMediaApi: any = api.media?.saveMedia;
+    const deleteMediaApi: any = api.media?.deleteMedia;
 
     const mediaList = useQuery(listMediaApi) || [];
     const generateUploadUrl = useMutation(generateUploadUrlApi);

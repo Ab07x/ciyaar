@@ -57,6 +57,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                             {leftIcon}
                         </div>
                     )}
+                    {/* @ts-ignore */}
                     <motion.input
                         ref={ref}
                         type={inputType}

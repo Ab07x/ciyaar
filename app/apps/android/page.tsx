@@ -5,8 +5,6 @@ import { Download, CheckCircle, Smartphone, Wifi, Bell, Shield, HelpCircle, Arro
 export const metadata: Metadata = {
     title: "Fanbroj Android App - Daawo Ciyaar iyo Filim Af-Somali",
     description: "Soo degso Fanbroj Android App. Daawasho toos ah, filimaan cusub, iyo xog yar oo la isticmaalo.",
-    applicationCategory: "EntertainmentApplication",
-    operatingSystem: "Android",
     openGraph: {
         title: "Fanbroj Android App - Download Now",
         description: "App-ka rasmiga ah ee Fanbroj. Daawo ciyaaraha caalamka.",

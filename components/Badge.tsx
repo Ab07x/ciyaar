@@ -1,14 +1,15 @@
 import { cn } from "@/lib/utils";
 import { Crown, Clock, CheckCircle } from "lucide-react";
 
-type BadgeVariant = "live" | "premium" | "upcoming" | "finished";
+type BadgeVariant = "live" | "premium" | "upcoming" | "finished" | "danger" | "success" | "warning";
 
 interface BadgeProps {
     variant: BadgeVariant;
+    children?: React.ReactNode;
     className?: string;
 }
 
-export function Badge({ variant, className }: BadgeProps) {
+export function Badge({ variant, children, className }: BadgeProps) {
     if (variant === "live") {
         return (
             <span
@@ -18,7 +19,7 @@ export function Badge({ variant, className }: BadgeProps) {
                 )}
             >
                 <span className="live-dot" />
-                LIVE HADDA
+                {children || "LIVE HADDA"}
             </span>
         );
     }
@@ -32,7 +33,7 @@ export function Badge({ variant, className }: BadgeProps) {
                 )}
             >
                 <Crown size={10} />
-                PREMIUM
+                {children || "PREMIUM"}
             </span>
         );
     }
@@ -46,7 +47,7 @@ export function Badge({ variant, className }: BadgeProps) {
                 )}
             >
                 <Clock size={12} />
-                SOO SOCDA
+                {children || "SOO SOCDA"}
             </span>
         );
     }
@@ -60,7 +61,31 @@ export function Badge({ variant, className }: BadgeProps) {
                 )}
             >
                 <CheckCircle size={12} />
-                DHAMAATAY
+                {children || "DHAMAATAY"}
+            </span>
+        );
+    }
+
+    if (variant === "danger") {
+        return (
+            <span className={cn("inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-red-500/20 text-red-500", className)}>
+                {children}
+            </span>
+        );
+    }
+
+    if (variant === "success") {
+        return (
+            <span className={cn("inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-accent-green/20 text-accent-green", className)}>
+                {children}
+            </span>
+        );
+    }
+
+    if (variant === "warning") {
+        return (
+            <span className={cn("inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-accent-gold/20 text-accent-gold", className)}>
+                {children}
             </span>
         );
     }

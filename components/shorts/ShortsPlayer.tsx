@@ -200,6 +200,7 @@ export function ShortsPlayer({ shorts, initialIndex = 0, onClose }: ShortsPlayer
             </AnimatePresence>
 
             {/* Main content area */}
+            {/* @ts-ignore */}
             <motion.div
                 {...bind()}
                 style={{ y, touchAction: "none" }}

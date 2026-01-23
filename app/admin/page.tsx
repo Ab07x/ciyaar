@@ -67,28 +67,28 @@ export default function AdminDashboard() {
             users: Math.floor(d.views * 0.15), // Estimate unique users
         };
     }) || [
-        { date: "Mon", views: 2400, users: 400 },
-        { date: "Tue", views: 1398, users: 300 },
-        { date: "Wed", views: 9800, users: 800 },
-        { date: "Thu", views: 3908, users: 500 },
-        { date: "Fri", views: 4800, users: 600 },
-        { date: "Sat", views: 8800, users: 1200 },
-        { date: "Sun", views: 4300, users: 700 },
-    ];
+            { date: "Mon", views: 2400, users: 400 },
+            { date: "Tue", views: 1398, users: 300 },
+            { date: "Wed", views: 9800, users: 800 },
+            { date: "Thu", views: 3908, users: 500 },
+            { date: "Fri", views: 4800, users: 600 },
+            { date: "Sat", views: 8800, users: 1200 },
+            { date: "Sun", views: 4300, users: 700 },
+        ];
 
     const topContent = analyticsStats?.topPageTypes?.map(p => ({
         name: p.type.charAt(0).toUpperCase() + p.type.slice(1),
         views: p.views,
     })) || [
-        { name: "Home", views: 45000 },
-        { name: "Movie", views: 38000 },
-        { name: "Series", views: 32000 },
-        { name: "Match", views: 28000 },
-        { name: "Live", views: 22000 },
-    ];
+            { name: "Home", views: 45000 },
+            { name: "Movie", views: 38000 },
+            { name: "Series", views: 32000 },
+            { name: "Match", views: 28000 },
+            { name: "Live", views: 22000 },
+        ];
 
     const subscriptionData = [
-        { name: "Premium", value: codeStats.redeemed || 156, color: "#F59E0B" },
+        { name: "Premium", value: codeStats.used || 0, color: "#F59E0B" },
         { name: "Free", value: 1200, color: "#6B7280" },
         { name: "Trial", value: 89, color: "#22C55E" },
     ];

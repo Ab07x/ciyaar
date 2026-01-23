@@ -5,7 +5,6 @@ import { ArrowLeft, Tv, Monitor, Cast, Globe } from "lucide-react";
 export const metadata: Metadata = {
     title: "Fanbroj on TV - Android TV, Fire TV & Smart TV",
     description: "Sida loo daawado Fanbroj TV-gaaga. Android TV, Amazon Fire TV, iyo Smart TV Browser.",
-    applicationCategory: "EntertainmentApplication",
     openGraph: {
         title: "Fanbroj Smart TV App",
         description: "Ku raaxeyso shaashada weyn.",

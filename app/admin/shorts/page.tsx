@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 
 export default function ShortsAdminPage() {
-    const { toast } = useToast();
+    const toast = useToast();
 
     // Data
     const shorts = useQuery(api.shorts.list, { limit: 50 });
