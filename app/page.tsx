@@ -195,14 +195,14 @@ export default function HomePage() {
       {/* Main Content - Overlapping the hero */}
       <div className="-mt-32 md:-mt-40 relative z-10 space-y-8 md:space-y-12 pb-20">
 
-        {/* Shorts Row */}
+        {/* Premium Banner - Above CiyaarSnaps, Below Hero */}
+        <PremiumPromoBanner />
+
+        {/* Shorts Row (CiyaarSnaps) */}
         <ShortsRow />
 
-        {/* Ad Slot - Between Shorts and Slider */}
+        {/* Ad Slot - Between Shorts and Content */}
         <AdSlot slotKey="home_after_shorts" className="px-4" />
-
-        {/* Premium Banner */}
-        <PremiumPromoBanner />
 
         {/* Fanproj Play Section - Netflix Style */}
         <section className="px-4 md:px-6">
