@@ -17,6 +17,9 @@ import {
     Film,
     Tv,
     Smartphone,
+    Sparkles,
+    Palette,
+    Image,
 } from "lucide-react";
 
 const navItems = [
@@ -30,6 +33,9 @@ const navItems = [
     { href: "/admin/shorts", label: "Shorts", icon: Smartphone },
     { href: "/admin/blog", label: "Blog", icon: FileText },
     { href: "/admin/ads", label: "Ads", icon: Megaphone },
+    { href: "/admin/banners", label: "Banners", icon: Sparkles },
+    { href: "/admin/hero-slides", label: "Hero Slides", icon: Image },
+    { href: "/admin/categories", label: "Categories", icon: Palette },
     { href: "/admin/codes", label: "Codes", icon: Ticket },
     { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
     { href: "/admin/settings", label: "Settings", icon: Settings },

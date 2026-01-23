@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AdSlot } from "@/components/AdSlot";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -24,6 +24,7 @@ import {
 import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
+import { StreamPlayer } from "@/components/StreamPlayer";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function SeriesWatchPage() {
@@ -44,8 +45,10 @@ export default function SeriesWatchPage() {
         series ? { seriesId: series._id } : "skip"
     );
     const settings = useQuery(api.settings.getSettings);
+    const trackPageView = useMutation(api.analytics.trackPageView);
 
     const { isPremium, redeemCode } = useUser();
+    const hasTracked = useRef(false);
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
     const [code, setCode] = useState("");
@@ -54,6 +57,14 @@ export default function SeriesWatchPage() {
     const [localUnlocked, setLocalUnlocked] = useState(false);
     const [showInterstitial, setShowInterstitial] = useState(true);
     const [adCompleted, setAdCompleted] = useState(false);
+
+    // Track page view once on mount
+    useEffect(() => {
+        if (!hasTracked.current && series) {
+            hasTracked.current = true;
+            trackPageView({ pageType: "series", pageId: slug });
+        }
+    }, [series, trackPageView, slug]);
 
     // Effect to update active season if url changes
     useEffect(() => {
@@ -192,13 +203,21 @@ export default function SeriesWatchPage() {
                                         </div>
                                     </div>
                                 ) : activeEmbed?.url ? (
-                                    <div className="aspect-video w-full">
-                                        <iframe
-                                            src={activeEmbed.url}
-                                            className="w-full h-full"
-                                            allowFullScreen
-                                            scrolling="no"
-                                            allow="autoplay; encrypted-media"
+                                    <div className="aspect-video w-full relative">
+                                        <StreamPlayer
+                                            source={{
+                                                url: activeEmbed.url,
+                                                type: (activeEmbed as any).type || "auto",
+                                                isProtected: (activeEmbed as any).isProtected
+                                            }}
+                                            poster={series.backdropUrl || series.posterUrl}
+                                            className="absolute inset-0"
+                                            trackParams={{
+                                                contentType: "episode",
+                                                contentId: `${slug}-s${activeEpisode.seasonNumber}-e${activeEpisode.episodeNumber}`,
+                                                seriesId: slug,
+                                                duration: activeEpisode.runtime ? activeEpisode.runtime * 60 : undefined
+                                            }}
                                         />
                                     </div>
                                 ) : (

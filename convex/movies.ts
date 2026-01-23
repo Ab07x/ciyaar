@@ -64,6 +64,92 @@ export const getMoviesByGenre = query({
     },
 });
 
+export const getRelatedMovies = query({
+    args: {
+        slug: v.string(),
+        limit: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        const currentMovie = await ctx.db
+            .query("movies")
+            .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+            .first();
+
+        if (!currentMovie) return [];
+
+        const allMovies = await ctx.db
+            .query("movies")
+            .filter((q) => q.eq(q.field("isPublished"), true))
+            .collect();
+
+        const currentYear = currentMovie.releaseDate?.split("-")[0];
+        const currentGenres = currentMovie.genres || [];
+
+        // Score movies by relevance
+        const scoredMovies = allMovies
+            .filter((m) => m.slug !== args.slug)
+            .map((movie) => {
+                let score = 0;
+                const movieYear = movie.releaseDate?.split("-")[0];
+
+                // Same year = +3 points
+                if (movieYear === currentYear) score += 3;
+
+                // Adjacent year = +1 point
+                if (movieYear && currentYear) {
+                    const yearDiff = Math.abs(parseInt(movieYear) - parseInt(currentYear));
+                    if (yearDiff === 1) score += 1;
+                }
+
+                // Matching genres = +2 points each
+                const movieGenres = movie.genres || [];
+                const matchingGenres = movieGenres.filter((g) => currentGenres.includes(g));
+                score += matchingGenres.length * 2;
+
+                // Same category = +2 points
+                if (movie.category && movie.category === currentMovie.category) score += 2;
+
+                return { ...movie, score };
+            })
+            .filter((m) => m.score > 0)
+            .sort((a, b) => b.score - a.score);
+
+        const limit = args.limit || 10;
+        return scoredMovies.slice(0, limit);
+    },
+});
+
+export const getFeaturedMovies = query({
+    handler: async (ctx) => {
+        const movies = await ctx.db
+            .query("movies")
+            .withIndex("by_featured")
+            .filter((q) =>
+                q.and(
+                    q.eq(q.field("isFeatured"), true),
+                    q.eq(q.field("isPublished"), true)
+                )
+            )
+            .collect();
+
+        return movies.sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0));
+    },
+});
+
+export const getMoviesByCategory = query({
+    args: { category: v.string(), limit: v.optional(v.number()) },
+    handler: async (ctx, args) => {
+        const movies = await ctx.db
+            .query("movies")
+            .withIndex("by_category", (q) => q.eq("category", args.category))
+            .filter((q) => q.eq(q.field("isPublished"), true))
+            .collect();
+
+        const sorted = movies.sort((a, b) => b.createdAt - a.createdAt);
+        return args.limit ? sorted.slice(0, args.limit) : sorted;
+    },
+});
+
 // ============================================
 // MUTATIONS
 // ============================================
@@ -146,8 +232,12 @@ export const updateMovie = mutation({
         isDubbed: v.optional(v.boolean()),
         isPremium: v.optional(v.boolean()),
         isPublished: v.optional(v.boolean()),
+        category: v.optional(v.string()),
         seoTitle: v.optional(v.string()),
         seoDescription: v.optional(v.string()),
+        seoKeywords: v.optional(v.array(v.string())),
+        isFeatured: v.optional(v.boolean()),
+        featuredOrder: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;

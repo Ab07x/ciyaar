@@ -374,12 +374,20 @@ export default defineSchema({
         isPremium: v.boolean(),
         isPublished: v.boolean(),
 
+        // Category (Fanproj, Hindi AF Somali, etc)
+        category: v.optional(v.string()),
+
         // SEO
         seoTitle: v.optional(v.string()),
         seoDescription: v.optional(v.string()),
+        seoKeywords: v.optional(v.array(v.string())), // SEO tags/keywords
 
         // Stats
         views: v.optional(v.number()),
+
+        // Featured in hero slider
+        isFeatured: v.optional(v.boolean()),
+        featuredOrder: v.optional(v.number()),
 
         // Timestamps
         createdAt: v.number(),
@@ -389,7 +397,9 @@ export default defineSchema({
         .index("by_tmdb", ["tmdbId"])
         .index("by_published", ["isPublished"])
         .index("by_premium", ["isPremium"])
-        .index("by_dubbed", ["isDubbed"]),
+        .index("by_dubbed", ["isDubbed"])
+        .index("by_category", ["category"])
+        .index("by_featured", ["isFeatured"]),
 
     // ============================================
     // SERIES (TMDB auto-fetched)
@@ -425,15 +435,26 @@ export default defineSchema({
         isPremium: v.boolean(),
         isPublished: v.boolean(),
 
+        // Category
+        category: v.optional(v.string()),
+
         seoTitle: v.optional(v.string()),
         seoDescription: v.optional(v.string()),
+        seoKeywords: v.optional(v.array(v.string())),
         views: v.optional(v.number()),
+
+        // Featured
+        isFeatured: v.optional(v.boolean()),
+        featuredOrder: v.optional(v.number()),
+
         createdAt: v.number(),
         updatedAt: v.number(),
     })
         .index("by_slug", ["slug"])
         .index("by_tmdb", ["tmdbId"])
-        .index("by_published", ["isPublished"]),
+        .index("by_published", ["isPublished"])
+        .index("by_category", ["category"])
+        .index("by_featured", ["isFeatured"]),
 
     // ============================================
     // EPISODES
@@ -520,5 +541,103 @@ export default defineSchema({
         .index("by_views", ["views"])
         .index("by_live", ["isLive"])
         .index("by_published", ["isPublished"]),
+
+    // ============================================
+    // PROMO BANNERS (Customizable seasonal banners)
+    // ============================================
+    promo_banners: defineTable({
+        name: v.string(), // e.g. "Black Friday 2024", "New Year Sale"
+        type: v.union(
+            v.literal("main"), // Main premium promo banner
+            v.literal("small"), // Small inline banner
+            v.literal("popup"), // Popup/modal banner
+            v.literal("interstitial") // Full-screen interstitial
+        ),
+        // Content
+        headline: v.string(), // e.g. "Ads suck but keep the site free."
+        subheadline: v.optional(v.string()), // e.g. "Remove ads and get many features"
+        ctaText: v.string(), // e.g. "CHECK OPTIONS"
+        ctaLink: v.string(), // e.g. "/pricing"
+        // Images
+        leftImageUrl: v.optional(v.string()), // Left character/image
+        rightImageUrl: v.optional(v.string()), // Right character/image
+        backgroundImageUrl: v.optional(v.string()), // Background image
+        // Styling
+        backgroundColor: v.optional(v.string()), // e.g. "#1a3a5c"
+        accentColor: v.optional(v.string()), // e.g. "#9AE600"
+        // Scheduling
+        startDate: v.optional(v.number()), // Unix timestamp
+        endDate: v.optional(v.number()), // Unix timestamp
+        // Status
+        isActive: v.boolean(),
+        priority: v.number(), // Higher = more important
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_type", ["type"])
+        .index("by_active", ["isActive"])
+        .index("by_priority", ["priority"]),
+
+    // ============================================
+    // CATEGORIES (Fanproj, Hindi AF Somali, etc)
+    // ============================================
+    categories: defineTable({
+        name: v.string(), // e.g. "Fanproj", "Hindi AF Somali"
+        slug: v.string(), // e.g. "fanproj", "hindi-af-somali"
+        description: v.optional(v.string()),
+        iconUrl: v.optional(v.string()),
+        color: v.optional(v.string()), // Hex color for styling
+        order: v.number(), // Display order
+        isActive: v.boolean(),
+        createdAt: v.number(),
+    })
+        .index("by_slug", ["slug"])
+        .index("by_active", ["isActive"])
+        .index("by_order", ["order"]),
+
+    // ============================================
+    // PAGE VIEWS (Analytics)
+    // ============================================
+    page_views: defineTable({
+        date: v.string(), // YYYY-MM-DD format
+        pageType: v.union(
+            v.literal("home"),
+            v.literal("movie"),
+            v.literal("series"),
+            v.literal("match"),
+            v.literal("live"),
+            v.literal("blog"),
+            v.literal("pricing"),
+            v.literal("other")
+        ),
+        pageId: v.optional(v.string()), // slug or ID of the specific page
+        views: v.number(),
+        uniqueViews: v.optional(v.number()),
+    })
+        .index("by_date", ["date"])
+        .index("by_page_type", ["pageType"])
+        .index("by_date_type", ["date", "pageType"]),
+
+    // ============================================
+    // HERO SLIDES (Admin-controlled homepage slider)
+    // ============================================
+    hero_slides: defineTable({
+        contentType: v.union(v.literal("movie"), v.literal("series"), v.literal("custom")),
+        contentId: v.optional(v.string()), // slug for movie/series
+        // Custom slide fields
+        title: v.optional(v.string()),
+        subtitle: v.optional(v.string()),
+        description: v.optional(v.string()),
+        imageUrl: v.optional(v.string()), // Background image
+        ctaText: v.optional(v.string()),
+        ctaLink: v.optional(v.string()),
+        // Display settings
+        order: v.number(),
+        isActive: v.boolean(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_active", ["isActive"])
+        .index("by_order", ["order"]),
 
 });

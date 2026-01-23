@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { motion } from "framer-motion";
 import {
@@ -15,6 +15,11 @@ import {
     Tv,
     Eye,
     Crown,
+    ArrowUp,
+    ArrowDown,
+    BarChart3,
+    Clock,
+    Layers,
 } from "lucide-react";
 import Link from "next/link";
 import { StatsCard } from "@/components/admin/StatsCard";
@@ -25,6 +30,8 @@ export default function AdminDashboard() {
     const posts = useQuery(api.posts.listPosts, {});
     const codeStats = useQuery(api.redemptions.getCodeStats);
     const settings = useQuery(api.settings.getSettings);
+    const analyticsStats = useQuery(api.analytics.getDashboardStats);
+    const seedAnalytics = useMutation(api.analytics.seedSampleAnalytics);
 
     if (!matches || !posts || !codeStats) {
         return (
@@ -50,8 +57,16 @@ export default function AdminDashboard() {
         { label: "Active Codes", value: codeStats.available, icon: Ticket, color: "text-accent-blue" },
     ];
 
-    // Mock data for charts (in production, this would come from your analytics API)
-    const viewsData = [
+    // Use real analytics data or fallback to mock
+    const viewsData = analyticsStats?.dailyBreakdown?.map((d, i) => {
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const date = new Date(d.date);
+        return {
+            date: dayNames[date.getDay()],
+            views: d.views,
+            users: Math.floor(d.views * 0.15), // Estimate unique users
+        };
+    }) || [
         { date: "Mon", views: 2400, users: 400 },
         { date: "Tue", views: 1398, users: 300 },
         { date: "Wed", views: 9800, users: 800 },
@@ -61,12 +76,15 @@ export default function AdminDashboard() {
         { date: "Sun", views: 4300, users: 700 },
     ];
 
-    const topContent = [
-        { name: "Liverpool vs Chelsea", views: 45000 },
-        { name: "Real Madrid vs Barca", views: 38000 },
-        { name: "Man City vs Arsenal", views: 32000 },
-        { name: "Bayern vs Dortmund", views: 28000 },
-        { name: "PSG vs Marseille", views: 22000 },
+    const topContent = analyticsStats?.topPageTypes?.map(p => ({
+        name: p.type.charAt(0).toUpperCase() + p.type.slice(1),
+        views: p.views,
+    })) || [
+        { name: "Home", views: 45000 },
+        { name: "Movie", views: 38000 },
+        { name: "Series", views: 32000 },
+        { name: "Match", views: 28000 },
+        { name: "Live", views: 22000 },
     ];
 
     const subscriptionData = [
@@ -74,6 +92,14 @@ export default function AdminDashboard() {
         { name: "Free", value: 1200, color: "#6B7280" },
         { name: "Trial", value: 89, color: "#22C55E" },
     ];
+
+    // Calculate percentage change
+    const getPercentChange = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return Math.round(((current - previous) / previous) * 100);
+    };
+
+    const todayVsYesterday = analyticsStats ? getPercentChange(analyticsStats.today, analyticsStats.yesterday) : 0;
 
     return (
         <div className="space-y-8">
@@ -86,6 +112,89 @@ export default function AdminDashboard() {
                 <p className="text-text-muted">Aragtida guud ee Fanbroj</p>
             </motion.div>
 
+            {/* Page Views Analytics Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-text-muted text-sm">Today</span>
+                        <Clock size={16} className="text-accent-green" />
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                        {(analyticsStats?.today || 0).toLocaleString()}
+                    </div>
+                    {todayVsYesterday !== 0 && (
+                        <div className={`flex items-center gap-1 text-xs mt-1 ${todayVsYesterday >= 0 ? "text-accent-green" : "text-accent-red"}`}>
+                            {todayVsYesterday >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+                            {Math.abs(todayVsYesterday)}% vs yesterday
+                        </div>
+                    )}
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-text-muted text-sm">Yesterday</span>
+                        <Calendar size={16} className="text-accent-blue" />
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                        {(analyticsStats?.yesterday || 0).toLocaleString()}
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-text-muted text-sm">Last 7 Days</span>
+                        <BarChart3 size={16} className="text-purple-400" />
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                        {(analyticsStats?.lastWeek || 0).toLocaleString()}
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-text-muted text-sm">This Month</span>
+                        <TrendingUp size={16} className="text-accent-gold" />
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                        {(analyticsStats?.thisMonth || 0).toLocaleString()}
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-text-muted text-sm">Last Month</span>
+                        <Layers size={16} className="text-accent-red" />
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                        {(analyticsStats?.lastMonth || 0).toLocaleString()}
+                    </div>
+                </motion.div>
+            </div>
+
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
                 {stats.map((stat, i) => (
@@ -96,7 +205,7 @@ export default function AdminDashboard() {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ViewsChart data={viewsData} title="Views This Week" />
-                <TopContentChart data={topContent} title="Top Performing Content" />
+                <TopContentChart data={topContent} title="Top Page Types" />
             </div>
 
             {/* Second Row */}
@@ -175,6 +284,15 @@ export default function AdminDashboard() {
                             </motion.div>
                         ))}
                     </div>
+                    {/* Seed Analytics Button */}
+                    {(!analyticsStats || analyticsStats.today === 0) && (
+                        <button
+                            onClick={() => seedAnalytics()}
+                            className="w-full mt-4 py-2 bg-accent-green/20 text-accent-green rounded-lg text-sm font-semibold hover:bg-accent-green/30 transition-colors"
+                        >
+                            Generate Sample Analytics Data
+                        </button>
+                    )}
                 </motion.div>
             </div>
 

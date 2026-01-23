@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
 import { Check, X, MessageSquare, Sparkles, Shield, Zap, Crown } from "lucide-react";
@@ -56,11 +56,21 @@ const freeVsPremium = [
 
 export default function PricingPage() {
     const settings = useQuery(api.settings.getSettings);
+    const trackPageView = useMutation(api.analytics.trackPageView);
     const { deviceId, redeemCode } = useUser();
     const [selectedPlan, setSelectedPlan] = useState<string>("monthly");
     const [code, setCode] = useState("");
     const [redemptionResult, setRedemptionResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const hasTracked = useRef(false);
+
+    // Track page view once on mount
+    useEffect(() => {
+        if (!hasTracked.current) {
+            hasTracked.current = true;
+            trackPageView({ pageType: "pricing" });
+        }
+    }, [trackPageView]);
 
     const getPriceDisplay = (planId: string) => {
         if (!settings) return "...";

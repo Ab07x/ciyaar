@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Play, Download, Sparkles, MessageSquare } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface PremiumAdInterstitialProps {
     onComplete: () => void;
@@ -19,28 +21,50 @@ export function PremiumAdInterstitial({
     const [countdown, setCountdown] = useState(duration);
     const [canSkip, setCanSkip] = useState(false);
 
+    // Fetch interstitial banner from database
+    const banner = useQuery(api.promoBanners.getActiveBanner, { type: "interstitial" });
+
+    // Use banner data or defaults
+    const headline = banner?.headline || "Premium";
+    const subheadline = banner?.subheadline || "Membership ?";
+    const ctaText = banner?.ctaText || "CHECK OUR PLANS";
+    const ctaLink = banner?.ctaLink || "/pricing";
+    const leftImageUrl = banner?.leftImageUrl || "/premium-ad/movie-celebraty-min.png";
+    const backgroundImageUrl = banner?.backgroundImageUrl || "/premium-ad/premium-bg.png";
+    const accentColor = banner?.accentColor || "#9AE600";
+
+    // Countdown timer
     useEffect(() => {
+        if (countdown <= 0) return;
+
         const timer = setInterval(() => {
             setCountdown((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
-                    onComplete();
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
 
-        // Allow skip after 5 seconds
+        return () => clearInterval(timer);
+    }, []);
+
+    // Watch for countdown completion - separate effect to avoid setState during render
+    useEffect(() => {
+        if (countdown === 0) {
+            onComplete();
+        }
+    }, [countdown, onComplete]);
+
+    // Allow skip after 5 seconds
+    useEffect(() => {
         const skipTimer = setTimeout(() => {
             setCanSkip(true);
         }, 5000);
 
-        return () => {
-            clearInterval(timer);
-            clearTimeout(skipTimer);
-        };
-    }, [onComplete]);
+        return () => clearTimeout(skipTimer);
+    }, []);
 
     const features = [
         { icon: Play, label: "Watch", highlight: "Full HD", color: "bg-pink-500" },
@@ -54,7 +78,7 @@ export function PremiumAdInterstitial({
             {/* Background Image */}
             <div className="absolute inset-0">
                 <Image
-                    src="/premium-ad/premium-bg.png"
+                    src={backgroundImageUrl}
                     alt="Premium Background"
                     fill
                     className="object-cover opacity-30"
@@ -86,15 +110,15 @@ export function PremiumAdInterstitial({
                 {/* Left Side - Text */}
                 <div className="flex-1 text-center lg:text-left">
                     {/* Arrow decoration */}
-                    <div className="hidden lg:block absolute -top-8 left-1/4 text-accent-green text-4xl rotate-45">
+                    <div className="hidden lg:block absolute -top-8 left-1/4 text-4xl rotate-45" style={{ color: accentColor }}>
                         ↗
                     </div>
 
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2">
-                        <span className="text-accent-green">Premium</span>
+                        <span style={{ color: accentColor }}>{headline}</span>
                     </h1>
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-                        Membership ?
+                        {subheadline}
                     </h2>
 
                     <p className="text-white/70 text-sm md:text-base mb-8 max-w-md">
@@ -102,10 +126,10 @@ export function PremiumAdInterstitial({
                     </p>
 
                     <Link
-                        href="/pricing"
+                        href={ctaLink}
                         className="inline-block bg-accent-gold hover:bg-accent-gold/90 text-black font-bold px-8 py-4 rounded-lg text-lg transition-all hover:scale-105 uppercase tracking-wide"
                     >
-                        CHECK OUR PLANS
+                        {ctaText}
                     </Link>
 
                     {/* Countdown */}
@@ -121,7 +145,7 @@ export function PremiumAdInterstitial({
                 <div className="relative flex-shrink-0 order-first lg:order-none">
                     <div className="relative w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80">
                         <Image
-                            src="/premium-ad/movie-celebraty-min.png"
+                            src={leftImageUrl}
                             alt="Premium"
                             fill
                             className="object-contain drop-shadow-2xl"
@@ -138,7 +162,7 @@ export function PremiumAdInterstitial({
                         >
                             <div className="flex items-center gap-3">
                                 <span className="text-white font-medium">{feature.label}</span>
-                                <span className="text-accent-green font-bold">{feature.highlight}</span>
+                                <span className="font-bold" style={{ color: accentColor }}>{feature.highlight}</span>
                             </div>
                             <div className={`w-10 h-10 ${feature.color} rounded-full flex items-center justify-center`}>
                                 <feature.icon size={18} className="text-white" />
@@ -161,8 +185,11 @@ export function PremiumAdInterstitial({
             {/* Progress Bar */}
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
                 <div
-                    className="h-full bg-accent-green transition-all duration-1000 ease-linear"
-                    style={{ width: `${((duration - countdown) / duration) * 100}%` }}
+                    className="h-full transition-all duration-1000 ease-linear"
+                    style={{
+                        width: `${((duration - countdown) / duration) * 100}%`,
+                        backgroundColor: accentColor
+                    }}
                 />
             </div>
         </div>

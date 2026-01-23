@@ -6,7 +6,7 @@ import { PlayerStage } from "@/components/PlayerStage";
 import { MatchCard } from "@/components/MatchCard";
 import { AdSlot } from "@/components/AdSlot";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Newspaper } from "lucide-react";
 import { ViewCounter } from "@/components/ViewCounter";
 import { SocialShare } from "@/components/SocialShare";
 import { LiveChat } from "@/components/LiveChat";
@@ -111,34 +111,90 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
 
             <AdSlot slotKey="match_below_player" className="mb-8" />
 
-            {otherLiveMatches.length > 0 && (
-                <section className="mb-12">
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-2 h-2 bg-accent-red rounded-full animate-pulse" />
-                        <h2 className="text-xl font-black uppercase">CIYAARO KALE OO LIVE AH</h2>
+            {/* Floating Premium CTA Banner - for non-premium users */}
+            {!isPremium && (
+                <div className="relative my-8 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-transparent to-amber-500/20 animate-pulse" />
+
+                    <div className="relative bg-gradient-to-r from-amber-900/50 to-amber-800/50 border border-amber-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="text-center sm:text-left">
+                            <p className="text-amber-400 font-bold text-lg">Fur Premium Features</p>
+                            <p className="text-white/70 text-sm">Full HD • Xayeysiis La&apos;aan • Download</p>
+                        </div>
+                        <Link href="/pricing" className="px-6 py-3 bg-amber-500 text-black font-bold rounded-xl hover:bg-amber-400 transition-all hover:scale-105 whitespace-nowrap">
+                            Premium Ka Noqo
+                        </Link>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {otherLiveMatches.map((m: any) => <MatchCard key={m._id} {...m} />)}
+                </div>
+            )}
+
+            {otherLiveMatches.length > 0 && (
+                <section className="relative mb-12">
+                    {/* Background glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-red-500/10 to-transparent rounded-3xl" />
+
+                    {/* Animated border container */}
+                    <div className="relative border border-red-500/30 rounded-3xl p-6 backdrop-blur-sm">
+                        {/* Header with live pulse */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="relative">
+                                <div className="w-3 h-3 bg-red-500 rounded-full animate-ping absolute" />
+                                <div className="w-3 h-3 bg-red-500 rounded-full" />
+                            </div>
+                            <h2 className="text-2xl font-black text-white uppercase">LIVE HADDA</h2>
+                            <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-bold">
+                                {otherLiveMatches.length} ciyaar
+                            </span>
+                        </div>
+
+                        {/* Cards grid with hover glow */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {otherLiveMatches.map((m: any) => <MatchCard key={m._id} {...m} glowColor="red" />)}
+                        </div>
                     </div>
                 </section>
             )}
 
             {relatedMatches && relatedMatches.length > 0 && (
-                <section className="mb-12">
-                    <h2 className="text-xl font-black mb-4 uppercase">Ciyaaro kale oo xiiso leh</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {relatedMatches.slice(0, 6).map((m: any) => <MatchCard key={m._id} {...m} />)}
+                <section className="relative mb-12">
+                    {/* Background glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#9AE600]/5 to-transparent rounded-3xl" />
+
+                    <div className="relative border border-[#9AE600]/20 rounded-3xl p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <span className="w-1 h-6 bg-[#9AE600] rounded-full" />
+                                Ciyaaro kale oo xiiso leh
+                            </h2>
+                            <Link href={`/ciyaar?league=${match.leagueId}`} className="text-[#9AE600] hover:underline text-sm font-medium">
+                                Dhammaan →
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {relatedMatches.slice(0, 6).map((m: any) => <MatchCard key={m._id} {...m} glowColor="green" />)}
+                        </div>
                     </div>
                 </section>
             )}
 
             {/* Related News Section for SEO */}
-            <section>
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-black uppercase">Wararka Kubadda Cagta</h2>
-                    <Link href="/blog" className="text-sm text-accent-green hover:underline">Dhamaan Wararka</Link>
+            <section className="relative mb-12">
+                {/* Background glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent rounded-3xl" />
+
+                <div className="relative border border-blue-500/20 rounded-3xl p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <Newspaper className="text-blue-400" size={24} />
+                            Wararka Kubadda Cagta
+                        </h2>
+                        <Link href="/blog" className="text-blue-400 hover:underline text-sm font-medium">
+                            Dhamaan Wararka →
+                        </Link>
+                    </div>
+                    <RelatedNews limit={3} />
                 </div>
-                <RelatedNews limit={3} />
             </section>
         </div>
     );

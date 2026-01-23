@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useParams } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AdSlot } from "@/components/AdSlot";
 import { ChannelCard } from "@/components/ChannelCard";
 import { cn } from "@/lib/utils";
@@ -22,9 +22,19 @@ export default function ChannelWatchPage() {
     const channel = useQuery(api.channels.getChannelBySlug, { slug });
     const allChannels = useQuery(api.channels.getChannelsByStatus);
     const settings = useQuery(api.settings.getSettings);
+    const trackPageView = useMutation(api.analytics.trackPageView);
     const { isPremium, redeemCode } = useUser();
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
+    const hasTracked = useRef(false);
+
+    // Track page view once on mount
+    useEffect(() => {
+        if (!hasTracked.current && channel) {
+            hasTracked.current = true;
+            trackPageView({ pageType: "live", pageId: slug });
+        }
+    }, [channel, trackPageView, slug]);
     const [code, setCode] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);

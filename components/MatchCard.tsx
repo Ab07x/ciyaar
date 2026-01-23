@@ -21,7 +21,15 @@ interface MatchCardProps {
     thumbnailUrl?: string | null;
     views?: number;
     className?: string;
+    glowColor?: "red" | "green" | "blue" | "gold";
 }
+
+const glowStyles = {
+    red: "hover:shadow-lg hover:shadow-red-500/20 hover:border-red-500/40",
+    green: "hover:shadow-lg hover:shadow-[#9AE600]/20 hover:border-[#9AE600]/40",
+    blue: "hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500/40",
+    gold: "hover:shadow-lg hover:shadow-amber-500/20 hover:border-amber-500/40"
+};
 
 export function MatchCard({
     _id,
@@ -37,12 +45,14 @@ export function MatchCard({
     thumbnailUrl,
     views,
     className,
+    glowColor,
 }: MatchCardProps) {
     return (
         <Link href={`/match/${slug}`} className="block">
             <div
                 className={cn(
-                    "bg-stadium-elevated rounded-xl overflow-hidden border border-border-subtle card-hover group",
+                    "bg-stadium-elevated rounded-xl overflow-hidden border border-border-subtle card-hover group transition-all duration-300",
+                    glowColor && glowStyles[glowColor],
                     className
                 )}
             >

@@ -16,18 +16,24 @@ import {
     Clock,
     Calendar,
     MessageSquare,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
+import { MovieCard } from "@/components/MovieCard";
+import { StreamPlayer } from "@/components/StreamPlayer";
 
 export default function MovieWatchPage() {
     const params = useParams();
     const slug = params.slug as string;
 
     const movie = useQuery(api.movies.getMovieBySlug, { slug });
+    const relatedMovies = useQuery(api.movies.getRelatedMovies, { slug, limit: 10 });
     const settings = useQuery(api.settings.getSettings);
     const incrementViews = useMutation(api.movies.incrementViews);
+    const trackPageView = useMutation(api.analytics.trackPageView);
     const { isPremium, redeemCode } = useUser();
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
@@ -38,12 +44,13 @@ export default function MovieWatchPage() {
     const [showInterstitial, setShowInterstitial] = useState(true);
     const [adCompleted, setAdCompleted] = useState(false);
 
-    // Increment views on first load
+    // Increment views and track page view on first load
     useEffect(() => {
         if (movie && "_id" in movie) {
             incrementViews({ id: movie._id });
+            trackPageView({ pageType: "movie", pageId: slug });
         }
-    }, [movie?._id, incrementViews]);
+    }, [movie?._id, incrementViews, trackPageView, slug]);
 
     if (!movie || !settings) {
         return (
@@ -156,12 +163,19 @@ export default function MovieWatchPage() {
                             </div>
                         </div>
                     ) : activeEmbed?.url ? (
-                        <iframe
-                            src={activeEmbed.url}
-                            className="w-full h-full"
-                            allowFullScreen
-                            scrolling="no"
-                            allow="autoplay; encrypted-media"
+                        <StreamPlayer
+                            source={{
+                                url: activeEmbed.url,
+                                type: (activeEmbed as any).type || "auto",
+                                isProtected: (activeEmbed as any).isProtected
+                            }}
+                            poster={movie.backdropUrl || movie.posterUrl}
+                            className="absolute inset-0"
+                            trackParams={{
+                                contentType: "movie",
+                                contentId: slug,
+                                duration: movie.runtime ? movie.runtime * 60 : undefined
+                            }}
                         />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -291,6 +305,59 @@ export default function MovieWatchPage() {
                         <AdSlot slotKey="movie_sidebar" className="mb-6" />
                     </div>
                 </div>
+
+                {/* You May Also Like Section */}
+                {relatedMovies && relatedMovies.length > 0 && (
+                    <div className="mt-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl md:text-2xl font-black flex items-center gap-2">
+                                <span className="w-1 h-6 bg-accent-green rounded-full"></span>
+                                YOU MAY ALSO LIKE
+                            </h2>
+                        </div>
+                        <div className="relative group">
+                            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+                                {relatedMovies.map((m) => (
+                                    <Link
+                                        key={m._id}
+                                        href={`/movies/${m.slug}`}
+                                        className="flex-shrink-0 w-[140px] md:w-[180px] snap-start group/card"
+                                    >
+                                        <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-border-subtle group-hover/card:border-accent-green/50 transition-all">
+                                            <Image
+                                                src={m.posterUrl}
+                                                alt={m.title}
+                                                fill
+                                                className="object-cover group-hover/card:scale-105 transition-transform duration-300"
+                                            />
+                                            {/* Rating Badge */}
+                                            {m.rating && (
+                                                <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur px-2 py-0.5 rounded text-xs">
+                                                    <Star size={10} className="text-yellow-400" fill="currentColor" />
+                                                    <span className="text-white font-bold">{m.rating.toFixed(1)}</span>
+                                                    <span className="text-white/60">/10</span>
+                                                </div>
+                                            )}
+                                            {/* Year Badge */}
+                                            <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur px-2 py-0.5 rounded text-xs text-white">
+                                                {m.releaseDate?.split("-")[0]}
+                                            </div>
+                                            {/* Quality Badge */}
+                                            {m.embeds?.[0]?.quality && (
+                                                <div className="absolute bottom-2 right-2 bg-accent-green text-black px-2 py-0.5 rounded text-xs font-bold">
+                                                    {m.embeds[0].quality}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <h3 className="mt-2 text-sm font-semibold line-clamp-2 group-hover/card:text-accent-green transition-colors">
+                                            {m.titleSomali || m.title}
+                                        </h3>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
             {/* JSON-LD Schema */}
             <script
