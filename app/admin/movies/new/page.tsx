@@ -158,7 +158,12 @@ export default function MovieFormPage({ params }: Props) {
             if (id) {
                 await updateMovie({
                     id: id as Id<"movies">,
-                    embeds: formData.embeds,
+                    embeds: formData.embeds.map(e => ({
+                        label: e.label,
+                        url: e.url,
+                        quality: e.quality || undefined,
+                        type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
+                    })),
                     isDubbed: formData.isDubbed,
                     isPremium: formData.isPremium,
                     isPublished: formData.isPublished,
@@ -168,22 +173,43 @@ export default function MovieFormPage({ params }: Props) {
                     top10Order: formData.top10Order || undefined,
                 });
             } else {
+                // Prepare embeds with proper typing
+                const typedEmbeds = formData.embeds.map(e => ({
+                    label: e.label,
+                    url: e.url,
+                    quality: e.quality || undefined,
+                    type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
+                }));
+
                 await createMovie({
-                    ...formData,
+                    slug: formData.slug,
+                    tmdbId: formData.tmdbId,
                     imdbId: formData.imdbId || undefined,
+                    title: formData.title,
+                    titleSomali: formData.titleSomali || undefined,
+                    overview: formData.overview,
+                    overviewSomali: formData.overviewSomali || undefined,
+                    posterUrl: formData.posterUrl,
                     backdropUrl: formData.backdropUrl || undefined,
+                    releaseDate: formData.releaseDate,
                     runtime: formData.runtime || undefined,
                     rating: formData.rating || undefined,
                     voteCount: formData.voteCount || undefined,
+                    genres: formData.genres,
+                    cast: formData.cast,
                     director: formData.director || undefined,
-                    titleSomali: formData.titleSomali || undefined,
-                    overviewSomali: formData.overviewSomali || undefined,
+                    embeds: typedEmbeds,
+                    isDubbed: formData.isDubbed,
+                    isPremium: formData.isPremium,
+                    isPublished: formData.isPublished,
+                    isTop10: formData.isTop10 || undefined,
+                    top10Order: formData.top10Order || undefined,
                 });
             }
             router.push("/admin/movies");
         } catch (err) {
-            console.error(err);
-            alert("Failed to save movie");
+            console.error("Movie save error:", err);
+            alert("Failed to save movie: " + (err instanceof Error ? err.message : "Unknown error"));
         }
     };
 
