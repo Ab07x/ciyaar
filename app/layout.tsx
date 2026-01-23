@@ -12,8 +12,15 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settingsData = await fetchQuery(api.settings.getSettings);
-  const settings = settingsData as any;
+  let settings: any = null;
+
+  try {
+    const settingsData = await fetchQuery(api.settings.getSettings);
+    settings = settingsData;
+  } catch (error) {
+    // Fallback when Convex is unreachable (build time, network issues)
+    console.warn("Failed to fetch settings for metadata:", error);
+  }
 
   const siteName = settings?.siteName || "Fanbroj";
   const title = settings?.seoTagline ? `${siteName} | ${settings.seoTagline}` : `${siteName} - Daawo Ciyaar Live & Filimaan`;

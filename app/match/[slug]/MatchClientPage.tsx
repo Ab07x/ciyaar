@@ -14,6 +14,7 @@ import { RelatedNews } from "@/components/RelatedNews";
 import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
+import { PPVUnlockGate } from "@/components/PPVUnlockGate";
 import { useUser } from "@/providers/UserProvider";
 import { useState, useEffect, useCallback } from "react";
 
@@ -22,7 +23,7 @@ interface MatchClientPageProps {
 }
 
 export default function MatchClientPage({ slug }: MatchClientPageProps) {
-    const { isPremium, isLoading: userLoading } = useUser();
+    const { isPremium, isLoading: userLoading, userId } = useUser();
     const [mounted, setMounted] = useState(false);
     const [adCompleted, setAdCompleted] = useState(false);
 
@@ -45,6 +46,12 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
     const settings = useQuery(api.settings.getSettings);
     const relatedMatches = useQuery(api.matches.getRelatedMatches, (match && match.leagueId) ? { matchId: match._id, leagueId: match.leagueId } : "skip");
     const matchesStatus = useQuery(api.matches.getMatchesByStatus);
+
+    // PPV Access Check
+    const ppvAccess = useQuery(
+        api.ppv.checkAccess,
+        match ? { userId: userId || undefined, contentType: "match", contentId: match._id } : "skip"
+    );
 
     if (match === undefined || settings === undefined || matchesStatus === undefined) {
         return <div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div></div>;
@@ -98,7 +105,18 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
                 <div className="lg:col-span-8">
-                    <PlayerStage match={match as any} settings={settings} />
+                    {/* PPV Gate - Shows if content is PPV and user doesn't have access */}
+                    {ppvAccess?.isPPV && !ppvAccess?.hasAccess ? (
+                        <PPVUnlockGate
+                            contentType="match"
+                            contentId={match._id}
+                            contentTitle={`${match.teamA} vs ${match.teamB}`}
+                        >
+                            <PlayerStage match={match as any} settings={settings} />
+                        </PPVUnlockGate>
+                    ) : (
+                        <PlayerStage match={match as any} settings={settings} />
+                    )}
 
                     {/* Premium Promo Banner - Hidden for premium users */}
                     {!isPremium && (

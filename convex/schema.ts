@@ -166,16 +166,44 @@ export default defineSchema({
             v.literal("adsense"),
             v.literal("adsterra"),
             v.literal("monetag"),
-            v.literal("custom")
+            v.literal("custom"),
+            v.literal("vast"),
+            v.literal("video"),
+            v.literal("popup"),
+            v.literal("ppv")
         ),
         format: v.union(
             v.literal("responsive"),
             v.literal("banner"),
-            v.literal("native")
+            v.literal("native"),
+            v.literal("interstitial"),
+            v.literal("video_preroll"),
+            v.literal("video_midroll"),
+            v.literal("popunder"),
+            v.literal("social_bar")
         ),
+        // General
         codeHtml: v.optional(v.string()),
+        // AdSense
         adsenseClient: v.optional(v.string()),
         adsenseSlot: v.optional(v.string()),
+        // Adsterra
+        adsterraKey: v.optional(v.string()),
+        adsterraDomain: v.optional(v.string()),
+        // VAST/VPAID
+        vastUrl: v.optional(v.string()),
+        vpaidEnabled: v.optional(v.boolean()),
+        // Video Ad
+        videoUrl: v.optional(v.string()),
+        videoSkipAfter: v.optional(v.number()), // seconds before skip allowed
+        videoDuration: v.optional(v.number()), // required watch duration
+        // Popup/Popunder
+        popupUrl: v.optional(v.string()),
+        popupWidth: v.optional(v.number()),
+        popupHeight: v.optional(v.number()),
+        // Monetag
+        monetagId: v.optional(v.string()),
+        // Display settings
         showOn: v.array(v.string()),
         enabled: v.boolean(),
     }).index("by_slot", ["slotKey"]),
@@ -673,5 +701,114 @@ export default defineSchema({
     })
         .index("by_type", ["type"])
         .index("by_uploaded", ["uploadedAt"]),
+
+    // ============================================
+    // PAY-PER-VIEW (PPV) CONTENT
+    // ============================================
+    ppv_content: defineTable({
+        contentType: v.union(v.literal("match"), v.literal("movie")),
+        contentId: v.string(),
+        title: v.string(),
+        price: v.number(),
+        adSupportedEnabled: v.boolean(),
+        minAdsRequired: v.number(),
+        accessDuration: v.number(),
+        isActive: v.boolean(),
+        // Ad Configuration (embedded)
+        adType: v.optional(v.union(
+            v.literal("video"),
+            v.literal("vast"),
+            v.literal("adsense"),
+            v.literal("custom"),
+            v.literal("image")
+        )),
+        adVideoUrl: v.optional(v.string()),
+        adVastUrl: v.optional(v.string()),
+        adImageUrl: v.optional(v.string()),
+        adClickUrl: v.optional(v.string()),
+        adHtml: v.optional(v.string()),
+        adAdsenseClient: v.optional(v.string()),
+        adAdsenseSlot: v.optional(v.string()),
+        adDuration: v.optional(v.number()), // seconds
+        adSkipAfter: v.optional(v.number()), // seconds, 0 = no skip
+        // Timestamps
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_content", ["contentType", "contentId"])
+        .index("by_active", ["isActive"]),
+
+    // ============================================
+    // PPV PURCHASES
+    // ============================================
+    ppv_purchases: defineTable({
+        userId: v.id("users"),
+        contentType: v.union(v.literal("match"), v.literal("movie")),
+        contentId: v.string(),
+        ppvContentId: v.id("ppv_content"),
+        price: v.number(),
+        accessType: v.union(v.literal("paid"), v.literal("ad_supported")),
+        adsWatched: v.number(),
+        expiresAt: v.number(),
+        createdAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_content", ["contentType", "contentId"])
+        .index("by_user_content", ["userId", "contentType", "contentId"]),
+
+    // ============================================
+    // AD IMPRESSIONS TRACKING
+    // ============================================
+    ad_impressions: defineTable({
+        userId: v.optional(v.id("users")),
+        deviceId: v.string(),
+        adType: v.union(
+            v.literal("interstitial"),
+            v.literal("banner"),
+            v.literal("midroll"),
+            v.literal("preroll"),
+            v.literal("ppv_unlock")
+        ),
+        adSlot: v.string(),
+        pageType: v.string(),
+        contentId: v.optional(v.string()),
+        timestamp: v.number(),
+    })
+        .index("by_device", ["deviceId"])
+        .index("by_date", ["timestamp"])
+        .index("by_type", ["adType"]),
+
+    // ============================================
+    // USER RATINGS
+    // ============================================
+    ratings: defineTable({
+        userId: v.id("users"),
+        contentType: v.union(v.literal("movie"), v.literal("series")),
+        contentId: v.string(),
+        rating: v.number(),
+        review: v.optional(v.string()),
+        isVerifiedWatch: v.boolean(),
+        helpfulCount: v.number(),
+        reportCount: v.number(),
+        isHidden: v.boolean(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_content", ["contentType", "contentId"])
+        .index("by_user", ["userId"])
+        .index("by_user_content", ["userId", "contentType", "contentId"])
+        .index("by_helpful", ["contentType", "contentId", "helpfulCount"]),
+
+    // ============================================
+    // RATING HELPFUL VOTES
+    // ============================================
+    rating_votes: defineTable({
+        ratingId: v.id("ratings"),
+        userId: v.id("users"),
+        isHelpful: v.boolean(),
+        createdAt: v.number(),
+    })
+        .index("by_rating", ["ratingId"])
+        .index("by_user_rating", ["userId", "ratingId"]),
 
 });

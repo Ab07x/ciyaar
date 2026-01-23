@@ -10,12 +10,16 @@ interface AdSlotProps {
 }
 
 export function AdSlot({ slotKey, className = "" }: AdSlotProps) {
-    const { isPremium } = useUser();
+    const { isPremium, userId } = useUser();
     const ad = useQuery(api.ads.getAdBySlot, { slotKey });
     const settings = useQuery(api.settings.getSettings);
+    const hasActivePPV = useQuery(api.ppv.hasActivePPV, userId ? { userId } : "skip");
 
     // Don't show ads to premium users
     if (isPremium) return null;
+
+    // Don't show ads to users with active PPV access (they watched ads to unlock)
+    if (hasActivePPV) return null;
 
     // Don't show if ads disabled globally
     if (settings && !settings.adsEnabled) return null;

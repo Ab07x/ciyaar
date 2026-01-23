@@ -21,6 +21,7 @@ import {
     Palette,
     Image,
     Search,
+    CreditCard,
 } from "lucide-react";
 
 const navItems = [
@@ -38,6 +39,7 @@ const navItems = [
     { href: "/admin/hero-slides", label: "Hero Slides", icon: Image },
     { href: "/admin/categories", label: "Categories", icon: Palette },
     { href: "/admin/codes", label: "Codes", icon: Ticket },
+    { href: "/admin/ppv", label: "PPV", icon: CreditCard },
     { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
     { href: "/admin/seo", label: "SEO", icon: Search },
     { href: "/admin/media", label: "Media", icon: Image },

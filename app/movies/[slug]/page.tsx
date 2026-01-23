@@ -27,6 +27,8 @@ import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { MovieCard } from "@/components/MovieCard";
 import { StreamPlayer } from "@/components/StreamPlayer";
+import { PPVUnlockGate } from "@/components/PPVUnlockGate";
+import { RatingSystem } from "@/components/RatingSystem";
 
 export default function MovieWatchPage() {
     const params = useParams();
@@ -37,7 +39,13 @@ export default function MovieWatchPage() {
     const settings = useQuery(api.settings.getSettings);
     const incrementViews = useMutation(api.movies.incrementViews);
     const trackPageView = useMutation(api.analytics.trackPageView);
-    const { isPremium, redeemCode } = useUser();
+    const { isPremium, redeemCode, userId } = useUser();
+
+    // PPV Access Check
+    const ppvAccess = useQuery(
+        api.ppv.checkAccess,
+        { userId: userId || undefined, contentType: "movie", contentId: slug }
+    );
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
     const [code, setCode] = useState("");
@@ -126,73 +134,107 @@ export default function MovieWatchPage() {
                 </Link>
 
                 {/* Player - Full Width of Container (Centered & Bigger) */}
-                <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-8 relative aspect-video shadow-2xl">
-                    {movie.isPremium && !isUnlocked ? (
-                        /* Premium Lock */
-                        <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated z-10 overflow-y-auto">
-                            <div className="bg-stadium-dark border-2 border-accent-gold rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md text-center my-auto">
-                                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                                    <Crown size={20} className="sm:hidden text-accent-gold" />
-                                    <Crown size={28} className="hidden sm:block text-accent-gold" />
-                                </div>
-                                <h3 className="text-lg sm:text-xl font-bold text-accent-gold mb-1 sm:mb-2">PREMIUM FILM</h3>
-                                <p className="text-text-secondary text-sm sm:text-base mb-3 sm:mb-4">Film-kan waxaa u baahan subscription</p>
-                                <div className="space-y-2 sm:space-y-3">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={code}
-                                            onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                            placeholder="CODE"
-                                            className="flex-1 bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 sm:px-4 sm:py-3 uppercase text-center tracking-wider text-sm"
-                                        />
-                                        <button
-                                            onClick={handleRedeem}
-                                            disabled={loading}
-                                            className="px-4 py-2 sm:px-6 sm:py-3 bg-accent-green text-black font-bold rounded-lg text-sm"
-                                        >
-                                            {loading ? "..." : "Fur"}
-                                        </button>
+                {/* PPV Gate - Shows if content is PPV and user doesn't have access */}
+                {ppvAccess?.isPPV && !ppvAccess?.hasAccess ? (
+                    <div className="mb-8">
+                        <PPVUnlockGate
+                            contentType="movie"
+                            contentId={slug}
+                            contentTitle={movie.titleSomali || movie.title}
+                        >
+                            <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong relative aspect-video shadow-2xl">
+                                {activeEmbed?.url ? (
+                                    <StreamPlayer
+                                        source={{
+                                            url: activeEmbed.url,
+                                            type: (activeEmbed as any).type || "auto",
+                                            isProtected: (activeEmbed as any).isProtected
+                                        }}
+                                        poster={movie.backdropUrl || movie.posterUrl}
+                                        className="absolute inset-0"
+                                        trackParams={{
+                                            contentType: "movie",
+                                            contentId: slug,
+                                            duration: movie.runtime ? movie.runtime * 60 : undefined
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <p className="text-text-muted">Lama hayo embed links</p>
                                     </div>
-                                    {error && <p className="text-accent-red text-xs sm:text-sm">{error}</p>}
-                                    <div className="flex gap-2 sm:gap-3">
-                                        <Link href="/pricing" className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-accent-gold text-black font-bold rounded-lg text-center text-sm">
-                                            Iibso
-                                        </Link>
-                                        <a
-                                            href={whatsappLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-1 sm:gap-2 text-sm"
-                                        >
-                                            <MessageSquare size={16} />
-                                            WhatsApp
-                                        </a>
+                                )}
+                            </div>
+                        </PPVUnlockGate>
+                    </div>
+                ) : (
+                    <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-8 relative aspect-video shadow-2xl">
+                        {movie.isPremium && !isUnlocked ? (
+                            /* Premium Lock */
+                            <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated z-10 overflow-y-auto">
+                                <div className="bg-stadium-dark border-2 border-accent-gold rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md text-center my-auto">
+                                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                                        <Crown size={20} className="sm:hidden text-accent-gold" />
+                                        <Crown size={28} className="hidden sm:block text-accent-gold" />
+                                    </div>
+                                    <h3 className="text-lg sm:text-xl font-bold text-accent-gold mb-1 sm:mb-2">PREMIUM FILM</h3>
+                                    <p className="text-text-secondary text-sm sm:text-base mb-3 sm:mb-4">Film-kan waxaa u baahan subscription</p>
+                                    <div className="space-y-2 sm:space-y-3">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={code}
+                                                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                                                placeholder="CODE"
+                                                className="flex-1 bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 sm:px-4 sm:py-3 uppercase text-center tracking-wider text-sm"
+                                            />
+                                            <button
+                                                onClick={handleRedeem}
+                                                disabled={loading}
+                                                className="px-4 py-2 sm:px-6 sm:py-3 bg-accent-green text-black font-bold rounded-lg text-sm"
+                                            >
+                                                {loading ? "..." : "Fur"}
+                                            </button>
+                                        </div>
+                                        {error && <p className="text-accent-red text-xs sm:text-sm">{error}</p>}
+                                        <div className="flex gap-2 sm:gap-3">
+                                            <Link href="/pricing" className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-accent-gold text-black font-bold rounded-lg text-center text-sm">
+                                                Iibso
+                                            </Link>
+                                            <a
+                                                href={whatsappLink}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-1 sm:gap-2 text-sm"
+                                            >
+                                                <MessageSquare size={16} />
+                                                WhatsApp
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ) : activeEmbed?.url ? (
-                        <StreamPlayer
-                            source={{
-                                url: activeEmbed.url,
-                                type: (activeEmbed as any).type || "auto",
-                                isProtected: (activeEmbed as any).isProtected
-                            }}
-                            poster={movie.backdropUrl || movie.posterUrl}
-                            className="absolute inset-0"
-                            trackParams={{
-                                contentType: "movie",
-                                contentId: slug,
-                                duration: movie.runtime ? movie.runtime * 60 : undefined
-                            }}
-                        />
-                    ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <p className="text-text-muted">Lama hayo embed links</p>
-                        </div>
-                    )}
-                </div>
+                        ) : activeEmbed?.url ? (
+                            <StreamPlayer
+                                source={{
+                                    url: activeEmbed.url,
+                                    type: (activeEmbed as any).type || "auto",
+                                    isProtected: (activeEmbed as any).isProtected
+                                }}
+                                poster={movie.backdropUrl || movie.posterUrl}
+                                className="absolute inset-0"
+                                trackParams={{
+                                    contentType: "movie",
+                                    contentId: slug,
+                                    duration: movie.runtime ? movie.runtime * 60 : undefined
+                                }}
+                            />
+                        ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <p className="text-text-muted">Lama hayo embed links</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Action Buttons (Trailer, Download, My List) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

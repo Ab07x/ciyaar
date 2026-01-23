@@ -40,16 +40,44 @@ export const createAd = mutation({
             v.literal("adsense"),
             v.literal("adsterra"),
             v.literal("monetag"),
-            v.literal("custom")
+            v.literal("custom"),
+            v.literal("vast"),
+            v.literal("video"),
+            v.literal("popup"),
+            v.literal("ppv")
         ),
         format: v.union(
             v.literal("responsive"),
             v.literal("banner"),
-            v.literal("native")
+            v.literal("native"),
+            v.literal("interstitial"),
+            v.literal("video_preroll"),
+            v.literal("video_midroll"),
+            v.literal("popunder"),
+            v.literal("social_bar")
         ),
+        // General
         codeHtml: v.optional(v.string()),
+        // AdSense
         adsenseClient: v.optional(v.string()),
         adsenseSlot: v.optional(v.string()),
+        // Adsterra
+        adsterraKey: v.optional(v.string()),
+        adsterraDomain: v.optional(v.string()),
+        // VAST/VPAID
+        vastUrl: v.optional(v.string()),
+        vpaidEnabled: v.optional(v.boolean()),
+        // Video Ad
+        videoUrl: v.optional(v.string()),
+        videoSkipAfter: v.optional(v.number()),
+        videoDuration: v.optional(v.number()),
+        // Popup/Popunder
+        popupUrl: v.optional(v.string()),
+        popupWidth: v.optional(v.number()),
+        popupHeight: v.optional(v.number()),
+        // Monetag
+        monetagId: v.optional(v.string()),
+        // Display
         showOn: v.array(v.string()),
         enabled: v.boolean(),
     },
@@ -67,19 +95,47 @@ export const updateAd = mutation({
                 v.literal("adsense"),
                 v.literal("adsterra"),
                 v.literal("monetag"),
-                v.literal("custom")
+                v.literal("custom"),
+                v.literal("vast"),
+                v.literal("video"),
+                v.literal("popup"),
+                v.literal("ppv")
             )
         ),
         format: v.optional(
             v.union(
                 v.literal("responsive"),
                 v.literal("banner"),
-                v.literal("native")
+                v.literal("native"),
+                v.literal("interstitial"),
+                v.literal("video_preroll"),
+                v.literal("video_midroll"),
+                v.literal("popunder"),
+                v.literal("social_bar")
             )
         ),
+        // General
         codeHtml: v.optional(v.string()),
+        // AdSense
         adsenseClient: v.optional(v.string()),
         adsenseSlot: v.optional(v.string()),
+        // Adsterra
+        adsterraKey: v.optional(v.string()),
+        adsterraDomain: v.optional(v.string()),
+        // VAST/VPAID
+        vastUrl: v.optional(v.string()),
+        vpaidEnabled: v.optional(v.boolean()),
+        // Video Ad
+        videoUrl: v.optional(v.string()),
+        videoSkipAfter: v.optional(v.number()),
+        videoDuration: v.optional(v.number()),
+        // Popup/Popunder
+        popupUrl: v.optional(v.string()),
+        popupWidth: v.optional(v.number()),
+        popupHeight: v.optional(v.number()),
+        // Monetag
+        monetagId: v.optional(v.string()),
+        // Display
         showOn: v.optional(v.array(v.string())),
         enabled: v.optional(v.boolean()),
     },
