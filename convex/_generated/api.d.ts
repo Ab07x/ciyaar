@@ -18,6 +18,7 @@ import type * as fixtures from "../fixtures.js";
 import type * as heroSlides from "../heroSlides.js";
 import type * as leagues from "../leagues.js";
 import type * as matches from "../matches.js";
+import type * as media from "../media.js";
 import type * as messages from "../messages.js";
 import type * as movies from "../movies.js";
 import type * as mylist from "../mylist.js";
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   heroSlides: typeof heroSlides;
   leagues: typeof leagues;
   matches: typeof matches;
+  media: typeof media;
   messages: typeof messages;
   movies: typeof movies;
   mylist: typeof mylist;

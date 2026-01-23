@@ -19,7 +19,7 @@ export default function AdminMediaPage() {
     const saveMedia = useMutation(saveMediaApi);
     const deleteMedia = useMutation(deleteMediaApi);
 
-    const { toast } = useToast();
+    const toast = useToast();
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,7 +101,7 @@ export default function AdminMediaPage() {
         toast("URL copied to clipboard!", "success");
     };
 
-    const filteredMedia = mediaList.filter(item => {
+    const filteredMedia = mediaList.filter((item: any) => {
         if (filter === "all") return true;
         if (filter === "image") return item.type.startsWith("image/");
         return !item.type.startsWith("image/");
