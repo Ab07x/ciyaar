@@ -38,6 +38,7 @@ const navItems = [
     { href: "/admin/categories", label: "Categories", icon: Palette },
     { href: "/admin/codes", label: "Codes", icon: Ticket },
     { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
+    { href: "/admin/seo", label: "SEO", icon: Search },
     { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
