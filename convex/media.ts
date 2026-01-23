@@ -13,13 +13,18 @@ export const generateUploadUrl = mutation({
 // 2. Save Media Metadata
 export const saveMedia = mutation({
     args: {
-        storageId: v.id("_storage"),
+        storageId: v.optional(v.id("_storage")),
+        url: v.optional(v.string()),
         name: v.string(),
         type: v.string(),
         size: v.number(),
     },
     handler: async (ctx, args) => {
-        const url = await ctx.storage.getUrl(args.storageId);
+        let url = args.url;
+        if (args.storageId) {
+            url = await ctx.storage.getUrl(args.storageId) || undefined;
+        }
+
         if (!url) throw new Error("Failed to get media URL");
 
         await ctx.db.insert("media", {
@@ -52,11 +57,13 @@ export const listMedia = query({
 export const deleteMedia = mutation({
     args: {
         id: v.id("media"),
-        storageId: v.id("_storage"),
+        storageId: v.optional(v.id("_storage")),
     },
     handler: async (ctx, args) => {
-        // Delete from storage first
-        await ctx.storage.delete(args.storageId);
+        // Delete from storage if exists
+        if (args.storageId) {
+            await ctx.storage.delete(args.storageId);
+        }
         // Delete from DB
         await ctx.db.delete(args.id);
     },

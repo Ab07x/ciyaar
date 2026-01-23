@@ -291,6 +291,7 @@ export default defineSchema({
         googleAnalyticsId: v.optional(v.string()),
         googleVerification: v.optional(v.string()), // GCS Verification ID
         sitemapEnabled: v.optional(v.boolean()),
+        footballApiKey: v.optional(v.string()),
     }),
 
     // ============================================
@@ -663,7 +664,7 @@ export default defineSchema({
     // MEDIA LIBRARY
     // ============================================
     media: defineTable({
-        storageId: v.id("_storage"), // Convex Storage ID
+        storageId: v.optional(v.id("_storage")), // Convex Storage ID (optional for local files)
         url: v.string(),             // Public URL (via Convex or CDN)
         name: v.string(),            // Original filename
         type: v.string(),            // MIME type

@@ -54,29 +54,28 @@ export default function AdminMediaPage() {
     const handleUpload = async (file: File) => {
         setIsUploading(true);
         try {
-            // 1. Get secure upload URL
-            const postUrl = await generateUploadUrl();
+            // Use local API for VPS storage (utilizing AWS Lightsail 80GB)
+            const formData = new FormData();
+            formData.append("file", file);
 
-            // 2. Upload file
-            const result = await fetch(postUrl, {
+            const result = await fetch("/api/upload", {
                 method: "POST",
-                headers: { "Content-Type": file.type },
-                body: file,
+                body: formData,
             });
 
             if (!result.ok) throw new Error("Upload failed");
 
-            const { storageId } = await result.json();
+            const data = await result.json();
 
-            // 3. Save metadata
+            // Save metadata to Convex (URL reference)
             await saveMedia({
-                storageId,
-                name: file.name,
-                type: file.type,
-                size: file.size,
+                url: data.url,
+                name: data.name,
+                type: data.type,
+                size: data.size,
             });
 
-            toast("File uploaded successfully", "success");
+            toast("File uploaded to AWS storage", "success");
         } catch (error) {
             console.error(error);
             toast("Upload failed", "error");

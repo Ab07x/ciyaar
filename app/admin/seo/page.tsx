@@ -20,6 +20,7 @@ interface Settings {
     faviconUrl?: string;
     adminPassword?: string;
     sitemapEnabled?: boolean;
+    footballApiKey?: string;
     _id: string;
     _creationTime: number;
 }
@@ -49,6 +50,7 @@ export default function AdminSEOPage() {
             faviconUrl: s.faviconUrl || "",
             adminPassword: s.adminPassword || "",
             sitemapEnabled: s.sitemapEnabled ?? true,
+            footballApiKey: s.footballApiKey || "",
         });
         setInitialized(true);
     }
@@ -193,6 +195,33 @@ export default function AdminSEOPage() {
                             </div>
                             <p className="text-xs text-text-muted mt-1">Submit this URL to Google Search Console</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* INTEGRATIONS SECTION */}
+            <div className="bg-stadium-elevated border border-border-strong rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border-strong">
+                    <Check className="text-accent-blue" />
+                    <h2 className="text-xl font-bold">Integrations & API Keys</h2>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-text-secondary">FOOTBALL_API_KEY</label>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-3.5 text-text-muted" size={18} />
+                            <input
+                                type="text"
+                                value={formData.footballApiKey}
+                                onChange={(e) => handleChange("footballApiKey", e.target.value)}
+                                placeholder="Enter API-Football key..."
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-xl pl-12 pr-4 py-3 font-mono text-sm"
+                            />
+                        </div>
+                        <p className="text-xs text-text-muted">
+                            Used for syncing fixtures and livescores from API-Football.
+                        </p>
                     </div>
                 </div>
             </div>
