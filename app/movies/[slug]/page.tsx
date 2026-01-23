@@ -20,6 +20,7 @@ import {
     ChevronRight,
     Youtube,
     Download,
+    X,
 } from "lucide-react";
 import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
@@ -45,6 +46,13 @@ export default function MovieWatchPage() {
     const [localUnlocked, setLocalUnlocked] = useState(false);
     const [showInterstitial, setShowInterstitial] = useState(true);
     const [adCompleted, setAdCompleted] = useState(false);
+    const [showTrailer, setShowTrailer] = useState(false);
+
+    const getTrailerId = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
 
     // Increment views and track page view on first load
     useEffect(() => {
@@ -186,6 +194,42 @@ export default function MovieWatchPage() {
                     )}
                 </div>
 
+                {/* Action Buttons (Trailer, Download, My List) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    {/* Trailer */}
+                    {movie.trailerUrl && (
+                        <button
+                            onClick={() => setShowTrailer(true)}
+                            className="h-14 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border border-red-500/50"
+                        >
+                            <Youtube size={24} />
+                            TRAILER
+                        </button>
+                    )}
+
+                    {/* Download */}
+                    {movie.downloadUrl && (
+                        <a
+                            href={movie.downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border border-blue-500/50"
+                        >
+                            <Download size={24} />
+                            DOWNLOAD
+                        </a>
+                    )}
+
+                    {/* My List */}
+                    <div className="h-14">
+                        <MyListButton
+                            contentType="movie"
+                            contentId={slug}
+                            className="w-full h-full text-lg bg-green-600 hover:bg-green-700 text-white border-none shadow-lg"
+                        />
+                    </div>
+                </div>
+
                 {/* Premium Promo Banner - Hidden for premium users */}
                 {!isPremium && (
                     <div className="mb-8">
@@ -255,31 +299,7 @@ export default function MovieWatchPage() {
                                         )}
                                     </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="flex flex-wrap gap-3 mt-4">
-                                        {movie.trailerUrl && (
-                                            <a
-                                                href={movie.trailerUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
-                                            >
-                                                <Youtube size={16} />
-                                                Trailer
-                                            </a>
-                                        )}
-                                        {movie.downloadUrl && (
-                                            <a
-                                                href={movie.downloadUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-4 py-2 bg-stadium-elevated hover:bg-stadium-hover border border-border-subtle text-text-primary rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
-                                            >
-                                                <Download size={16} />
-                                                Download
-                                            </a>
-                                        )}
-                                    </div>
+
                                 </div>
                             </div>
 
@@ -387,6 +407,26 @@ export default function MovieWatchPage() {
                     </div>
                 )}
             </div>
+            {/* Trailer Modal */}
+            {showTrailer && movie.trailerUrl && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setShowTrailer(false)}>
+                    <div className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10" onClick={e => e.stopPropagation()}>
+                        <button
+                            className="absolute top-4 right-4 z-10 p-2 bg-black/50 text-white rounded-full hover:bg-white/20 transition-colors"
+                            onClick={() => setShowTrailer(false)}
+                        >
+                            <X size={24} />
+                        </button>
+                        <iframe
+                            src={`https://www.youtube.com/embed/${getTrailerId(movie.trailerUrl)}?autoplay=1`}
+                            className="w-full h-full"
+                            allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    </div>
+                </div>
+            )}
+
             {/* JSON-LD Schema */}
             <script
                 type="application/ld+json"
