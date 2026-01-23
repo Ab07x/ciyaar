@@ -16,14 +16,17 @@ import { AdSlot } from "@/components/AdSlot";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { useState, useEffect, useRef } from "react";
 import { MovieCard } from "@/components/MovieCard";
+import { useCountry } from "@/hooks/useCountry";
 
 export default function HomePage() {
   const matchData = useQuery(api.matches.getMatchesByStatus);
   const posts = useQuery(api.posts.listPosts, { isPublished: true, limit: 12 });
   const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 20 });
+  const top10Movies = useQuery(api.movies.getTop10Movies);
   const series = useQuery(api.series.listSeries, { isPublished: true, limit: 20 });
   const settings = useQuery(api.settings.getSettings);
   const trackPageView = useMutation(api.analytics.trackPageView);
+  const { country } = useCountry();
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const hasTracked = useRef(false);
@@ -301,7 +304,7 @@ export default function HomePage() {
         )}
 
         {/* Top 10 */}
-        <Top10Row data={movies} />
+        <Top10Row data={top10Movies && top10Movies.length > 0 ? top10Movies : movies} country={country} />
 
         {/* Movies Carousel */}
         <ContentCarousel

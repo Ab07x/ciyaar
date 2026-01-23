@@ -389,6 +389,10 @@ export default defineSchema({
         isFeatured: v.optional(v.boolean()),
         featuredOrder: v.optional(v.number()),
 
+        // Top 10 in Somalia
+        isTop10: v.optional(v.boolean()),
+        top10Order: v.optional(v.number()),
+
         // Timestamps
         createdAt: v.number(),
         updatedAt: v.number(),
@@ -399,7 +403,8 @@ export default defineSchema({
         .index("by_premium", ["isPremium"])
         .index("by_dubbed", ["isDubbed"])
         .index("by_category", ["category"])
-        .index("by_featured", ["isFeatured"]),
+        .index("by_featured", ["isFeatured"])
+        .index("by_top10", ["isTop10"]),
 
     // ============================================
     // SERIES (TMDB auto-fetched)

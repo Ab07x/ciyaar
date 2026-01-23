@@ -136,6 +136,26 @@ export const getFeaturedMovies = query({
     },
 });
 
+export const getTop10Movies = query({
+    handler: async (ctx) => {
+        const movies = await ctx.db
+            .query("movies")
+            .withIndex("by_top10")
+            .filter((q) =>
+                q.and(
+                    q.eq(q.field("isTop10"), true),
+                    q.eq(q.field("isPublished"), true)
+                )
+            )
+            .collect();
+
+        // Sort by top10Order, then by views as fallback
+        return movies
+            .sort((a, b) => (a.top10Order || 999) - (b.top10Order || 999))
+            .slice(0, 10);
+    },
+});
+
 export const getMoviesByCategory = query({
     args: { category: v.string(), limit: v.optional(v.number()) },
     handler: async (ctx, args) => {
@@ -238,6 +258,8 @@ export const updateMovie = mutation({
         seoKeywords: v.optional(v.array(v.string())),
         isFeatured: v.optional(v.boolean()),
         featuredOrder: v.optional(v.number()),
+        isTop10: v.optional(v.boolean()),
+        top10Order: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;

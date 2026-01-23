@@ -65,6 +65,8 @@ export default function MovieFormPage({ params }: Props) {
         isDubbed: false,
         isPremium: false,
         isPublished: false,
+        isTop10: false,
+        top10Order: 0,
     });
 
     useEffect(() => {
@@ -90,6 +92,8 @@ export default function MovieFormPage({ params }: Props) {
                 isDubbed: existingMovie.isDubbed,
                 isPremium: existingMovie.isPremium,
                 isPublished: existingMovie.isPublished,
+                isTop10: existingMovie.isTop10 || false,
+                top10Order: existingMovie.top10Order || 0,
             });
         }
     }, [existingMovie]);
@@ -160,6 +164,8 @@ export default function MovieFormPage({ params }: Props) {
                     isPublished: formData.isPublished,
                     titleSomali: formData.titleSomali || undefined,
                     overviewSomali: formData.overviewSomali || undefined,
+                    isTop10: formData.isTop10,
+                    top10Order: formData.top10Order || undefined,
                 });
             } else {
                 await createMovie({
@@ -382,6 +388,44 @@ export default function MovieFormPage({ params }: Props) {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Top 10 Section */}
+                            <div className="p-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-xl">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg">🏆</span>
+                                        <span className="font-bold text-red-400">Top 10 in Somalia</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setFormData({ ...formData, isTop10: !formData.isTop10 })
+                                        }
+                                        className={`w-12 h-6 rounded-full relative ${formData.isTop10 ? "bg-red-500" : "bg-border-strong"
+                                            }`}
+                                    >
+                                        <div
+                                            className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.isTop10 ? "right-1" : "left-1"
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+                                {formData.isTop10 && (
+                                    <div className="flex items-center gap-3">
+                                        <label className="text-sm text-text-secondary">Position (1-10):</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="10"
+                                            value={formData.top10Order || ""}
+                                            onChange={(e) => setFormData({ ...formData, top10Order: parseInt(e.target.value) || 0 })}
+                                            placeholder="1"
+                                            className="w-20 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm text-center"
+                                        />
+                                        <span className="text-xs text-text-muted">Lower number = higher rank</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
