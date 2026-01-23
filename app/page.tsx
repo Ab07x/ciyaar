@@ -185,9 +185,8 @@ export default function HomePage() {
             <button
               key={idx}
               onClick={() => setCurrentSlide(idx)}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                idx === currentSlide ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/60"
-              }`}
+              className={`h-1 rounded-full transition-all duration-300 ${idx === currentSlide ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/60"
+                }`}
             />
           ))}
         </div>
@@ -198,6 +197,9 @@ export default function HomePage() {
 
         {/* Shorts Row */}
         <ShortsRow />
+
+        {/* Ad Slot - Between Shorts and Slider */}
+        <AdSlot slotKey="home_after_shorts" className="px-4" />
 
         {/* Premium Banner */}
         <PremiumPromoBanner />
