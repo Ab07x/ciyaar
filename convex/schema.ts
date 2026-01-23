@@ -659,4 +659,18 @@ export default defineSchema({
         .index("by_active", ["isActive"])
         .index("by_order", ["order"]),
 
+    // ============================================
+    // MEDIA LIBRARY
+    // ============================================
+    media: defineTable({
+        storageId: v.id("_storage"), // Convex Storage ID
+        url: v.string(),             // Public URL (via Convex or CDN)
+        name: v.string(),            // Original filename
+        type: v.string(),            // MIME type
+        size: v.number(),            // Bytes
+        uploadedAt: v.number(),
+    })
+        .index("by_type", ["type"])
+        .index("by_uploaded", ["uploadedAt"]),
+
 });
