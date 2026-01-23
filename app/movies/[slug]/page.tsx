@@ -27,6 +27,7 @@ import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { MovieCard } from "@/components/MovieCard";
 import { StreamPlayer } from "@/components/StreamPlayer";
+import { RatingSystem } from "@/components/RatingSystem";
 
 export default function MovieWatchPage() {
     const params = useParams();
@@ -343,6 +344,15 @@ export default function MovieWatchPage() {
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* User Ratings Section */}
+                        <div className="mt-8">
+                            <RatingSystem
+                                contentType="movie"
+                                contentId={slug}
+                                contentTitle={movie.titleSomali || movie.title}
+                            />
                         </div>
 
                         <AdSlot slotKey="movie_below" className="mt-6" />
