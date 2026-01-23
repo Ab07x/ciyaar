@@ -101,6 +101,7 @@ export default function AdminMediaPage() {
     };
 
     const filteredMedia = mediaList.filter((item: any) => {
+        if (!item?.type) return false;
         if (filter === "all") return true;
         if (filter === "image") return item.type.startsWith("image/");
         return !item.type.startsWith("image/");
@@ -181,48 +182,51 @@ export default function AdminMediaPage() {
 
             {/* Media Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                {filteredMedia?.map((file: any) => (
-                    <div key={file._id} className="group relative bg-stadium-elevated rounded-xl overflow-hidden border border-border-strong hover:border-accent-gold/50 transition-all">
-                        {/* Preview */}
-                        <div className="aspect-square bg-black/20 flex items-center justify-center relative">
-                            {file.type.startsWith("image/") ? (
-                                <Image
-                                    src={file.url}
-                                    alt={file.name}
-                                    fill
-                                    className="object-cover"
-                                />
-                            ) : (
-                                <FileIcon size={48} className="text-text-muted" />
-                            )}
+                {filteredMedia?.map((file: any) => {
+                    if (!file) return null;
+                    return (
+                        <div key={file._id} className="group relative bg-stadium-elevated rounded-xl overflow-hidden border border-border-strong hover:border-accent-gold/50 transition-all">
+                            {/* Preview */}
+                            <div className="aspect-square bg-black/20 flex items-center justify-center relative">
+                                {file.type.startsWith("image/") ? (
+                                    <Image
+                                        src={file.url}
+                                        alt={file.name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <FileIcon size={48} className="text-text-muted" />
+                                )}
 
-                            {/* Overlay Controls */}
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
-                                <button
-                                    onClick={() => copyToClipboard(file.url)}
-                                    className="bg-white text-black px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:scale-105 transition-transform w-full justify-center"
-                                >
-                                    <Copy size={14} /> Copy URL
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(file._id, file.storageId)}
-                                    className="bg-accent-red/20 text-accent-red border border-accent-red/50 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:bg-accent-red/30 transition-colors w-full justify-center"
-                                >
-                                    <Trash2 size={14} /> Delete
-                                </button>
+                                {/* Overlay Controls */}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
+                                    <button
+                                        onClick={() => copyToClipboard(file.url)}
+                                        className="bg-white text-black px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:scale-105 transition-transform w-full justify-center"
+                                    >
+                                        <Copy size={14} /> Copy URL
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(file._id, file.storageId)}
+                                        className="bg-accent-red/20 text-accent-red border border-accent-red/50 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:bg-accent-red/30 transition-colors w-full justify-center"
+                                    >
+                                        <Trash2 size={14} /> Delete
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Info */}
+                            <div className="p-3">
+                                <p className="font-bold text-sm truncate" title={file.name}>{file.name}</p>
+                                <div className="flex justify-between items-center mt-1">
+                                    <span className="text-[10px] text-text-muted uppercase font-bold">{file.type.split("/")[1]}</span>
+                                    <span className="text-[10px] text-text-muted">{(file.size / 1024).toFixed(0)} KB</span>
+                                </div>
                             </div>
                         </div>
-
-                        {/* Info */}
-                        <div className="p-3">
-                            <p className="font-bold text-sm truncate" title={file.name}>{file.name}</p>
-                            <div className="flex justify-between items-center mt-1">
-                                <span className="text-[10px] text-text-muted uppercase font-bold">{file.type.split("/")[1]}</span>
-                                <span className="text-[10px] text-text-muted">{(file.size / 1024).toFixed(0)} KB</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {mediaList?.length === 0 && (

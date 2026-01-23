@@ -64,6 +64,7 @@ export const updateSettings = mutation({
         logoUrl: v.optional(v.string()),
         faviconUrl: v.optional(v.string()),
         sitemapEnabled: v.optional(v.boolean()),
+        footballApiKey: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const existing = await ctx.db.query("settings").first();

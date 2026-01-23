@@ -94,7 +94,7 @@ export default function AdminSEOPage() {
                         <label className="text-sm font-bold text-text-secondary">Site Name</label>
                         <input
                             type="text"
-                            value={formData.siteName}
+                            value={formData.siteName || ""}
                             onChange={(e) => handleChange("siteName", e.target.value)}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3"
                         />
@@ -103,7 +103,7 @@ export default function AdminSEOPage() {
                         <label className="text-sm font-bold text-text-secondary">Logo URL</label>
                         <input
                             type="text"
-                            value={formData.logoUrl}
+                            value={formData.logoUrl || ""}
                             onChange={(e) => handleChange("logoUrl", e.target.value)}
                             placeholder="https://example.com/logo.png"
                             className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3"
@@ -114,7 +114,7 @@ export default function AdminSEOPage() {
                         <label className="text-sm font-bold text-text-secondary">Favicon URL</label>
                         <input
                             type="text"
-                            value={formData.faviconUrl}
+                            value={formData.faviconUrl || ""}
                             onChange={(e) => handleChange("faviconUrl", e.target.value)}
                             placeholder="https://example.com/favicon.ico"
                             className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3"
@@ -137,7 +137,7 @@ export default function AdminSEOPage() {
                         <p className="text-xs text-text-muted">Appears after site name (e.g. Fanbroj | Your Tagline)</p>
                         <input
                             type="text"
-                            value={formData.seoTagline}
+                            value={formData.seoTagline || ""}
                             onChange={(e) => handleChange("seoTagline", e.target.value)}
                             placeholder="Daawo Ciyaar Live & Filimaan"
                             className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3"
@@ -147,7 +147,7 @@ export default function AdminSEOPage() {
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-text-secondary">Meta Description</label>
                         <textarea
-                            value={formData.seoDescription}
+                            value={formData.seoDescription || ""}
                             onChange={(e) => handleChange("seoDescription", e.target.value)}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3 min-h-[100px]"
                             placeholder="Brief description of your site for Google results..."
@@ -158,7 +158,7 @@ export default function AdminSEOPage() {
                         <label className="text-sm font-bold text-text-secondary">Keywords (comma separated)</label>
                         <input
                             type="text"
-                            value={formData.seoKeywords}
+                            value={formData.seoKeywords || ""}
                             onChange={(e) => handleChange("seoKeywords", e.target.value)}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3"
                             placeholder="ciyaar, live, somali, football..."
@@ -170,7 +170,7 @@ export default function AdminSEOPage() {
                             <label className="text-sm font-bold text-text-secondary">Google Verification ID (GCS)</label>
                             <input
                                 type="text"
-                                value={formData.googleVerification}
+                                value={formData.googleVerification || ""}
                                 onChange={(e) => handleChange("googleVerification", e.target.value)}
                                 placeholder="Verification string from GCS"
                                 className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3 font-mono text-sm"
@@ -213,7 +213,7 @@ export default function AdminSEOPage() {
                             <Lock className="absolute left-4 top-3.5 text-text-muted" size={18} />
                             <input
                                 type="text"
-                                value={formData.footballApiKey}
+                                value={formData.footballApiKey || ""}
                                 onChange={(e) => handleChange("footballApiKey", e.target.value)}
                                 placeholder="Enter API-Football key..."
                                 className="w-full bg-stadium-dark border border-border-subtle rounded-xl pl-12 pr-4 py-3 font-mono text-sm"
@@ -240,7 +240,7 @@ export default function AdminSEOPage() {
                             <Lock className="absolute left-4 top-3.5 text-text-muted" size={18} />
                             <input
                                 type="text"
-                                value={formData.adminPassword}
+                                value={formData.adminPassword || ""}
                                 onChange={(e) => handleChange("adminPassword", e.target.value)}
                                 placeholder="Set new admin password..."
                                 className="w-full bg-stadium-dark border border-border-subtle rounded-xl pl-12 pr-4 py-3"
