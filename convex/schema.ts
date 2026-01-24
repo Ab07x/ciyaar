@@ -213,8 +213,22 @@ export default defineSchema({
     // ============================================
     users: defineTable({
         phoneOrId: v.optional(v.string()),
+        // Trial system
+        trialExpiresAt: v.optional(v.number()), // When trial ends
+        isTrialUsed: v.optional(v.boolean()), // Has user used trial
+        // Free tier tracking
+        lastFreeMovieWatchedAt: v.optional(v.number()), // Last free movie watch date
+        freeMovieWatchedThisWeek: v.optional(v.string()), // Slug of free movie watched this week
+        // Referrals
+        referralCode: v.optional(v.string()), // Unique code for this user
+        referredBy: v.optional(v.id("users")), // Who referred this user
+        referralCount: v.optional(v.number()), // Number of successful referrals
+        referralEarnings: v.optional(v.number()), // Total days earned
+        isReferralCredited: v.optional(v.boolean()), // Has the referrer been credited for this user?
+        // Timestamps
         createdAt: v.number(),
-    }),
+    })
+        .index("by_referral_code", ["referralCode"]),
 
     // ============================================
     // DEVICES
@@ -288,6 +302,7 @@ export default defineSchema({
         premiumPriceText: v.optional(v.string()),
         // Pricing (in USD)
         priceMatch: v.number(),
+        priceDaily: v.optional(v.number()),
         priceWeekly: v.number(),
         priceMonthly: v.number(),
         priceYearly: v.number(),
@@ -320,6 +335,11 @@ export default defineSchema({
         googleVerification: v.optional(v.string()), // GCS Verification ID
         sitemapEnabled: v.optional(v.boolean()),
         footballApiKey: v.optional(v.string()),
+
+        // Free Tier Settings
+        freeMovieOfWeek: v.optional(v.string()), // Movie slug for free movie of the week
+        freeMatchPreviewMinutes: v.optional(v.number()), // Minutes of free match preview (default: 15)
+        trialDays: v.optional(v.number()), // Trial duration in days (default: 7)
     }),
 
     // ============================================
@@ -810,5 +830,39 @@ export default defineSchema({
     })
         .index("by_rating", ["ratingId"])
         .index("by_user_rating", ["userId", "ratingId"]),
+
+    // ============================================
+    // PUSH SUBSCRIPTIONS
+    // ============================================
+    push_subscriptions: defineTable({
+        userId: v.optional(v.id("users")),
+        deviceId: v.string(),
+        endpoint: v.string(),
+        keys: v.object({
+            p256dh: v.string(),
+            auth: v.string(),
+        }),
+        userAgent: v.optional(v.string()),
+        isActive: v.boolean(),
+        createdAt: v.number(),
+        lastUsedAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_device", ["deviceId"])
+        .index("by_endpoint", ["endpoint"]),
+
+    // ============================================
+    // MATCH REMINDERS
+    // ============================================
+    match_reminders: defineTable({
+        userId: v.optional(v.id("users")),
+        deviceId: v.string(),
+        matchId: v.id("matches"),
+        notified: v.boolean(),
+        createdAt: v.number(),
+    })
+        .index("by_match", ["matchId"])
+        .index("by_user_match", ["userId", "matchId"])
+        .index("by_device_match", ["deviceId", "matchId"]),
 
 });

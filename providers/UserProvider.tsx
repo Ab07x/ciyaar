@@ -11,6 +11,8 @@ interface UserContextType {
     userId: Id<"users"> | null;
     isLoading: boolean;
     isPremium: boolean;
+    isTrial: boolean;
+    trialDaysLeft: number | null;
     subscription: any;
     checkMatchAccess: (matchId: Id<"matches">) => boolean;
     redeemCode: (code: string, matchId?: Id<"matches">) => Promise<any>;
@@ -110,6 +112,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 userId,
                 isLoading: deviceId === "" || (userId !== null && subscription === undefined),
                 isPremium: (!!subscription) || (premiumAccess?.hasAccess ?? false),
+                isTrial: premiumAccess?.isTrial ?? false,
+                trialDaysLeft: premiumAccess?.daysLeft ?? null,
                 subscription,
                 checkMatchAccess,
                 redeemCode,

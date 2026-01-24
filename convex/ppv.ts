@@ -167,9 +167,38 @@ export const upsertPPVContent = mutation({
         minAdsRequired: v.number(),
         accessDuration: v.number(),
         isActive: v.boolean(),
+        // Ad Config (embedded)
+        adType: v.optional(v.union(
+            v.literal("video"),
+            v.literal("vast"),
+            v.literal("adsense"),
+            v.literal("custom"),
+            v.literal("image")
+        )),
+        adVideoUrl: v.optional(v.string()),
+        adVastUrl: v.optional(v.string()),
+        adImageUrl: v.optional(v.string()),
+        adClickUrl: v.optional(v.string()),
+        adHtml: v.optional(v.string()),
+        adAdsenseClient: v.optional(v.string()),
+        adAdsenseSlot: v.optional(v.string()),
+        adDuration: v.optional(v.number()),
+        adSkipAfter: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const now = Date.now();
+        const adConfig = {
+            adType: args.adType,
+            adVideoUrl: args.adVideoUrl,
+            adVastUrl: args.adVastUrl,
+            adImageUrl: args.adImageUrl,
+            adClickUrl: args.adClickUrl,
+            adHtml: args.adHtml,
+            adAdsenseClient: args.adAdsenseClient,
+            adAdsenseSlot: args.adAdsenseSlot,
+            adDuration: args.adDuration,
+            adSkipAfter: args.adSkipAfter,
+        };
 
         if (args.id) {
             await ctx.db.patch(args.id, {
@@ -180,6 +209,7 @@ export const upsertPPVContent = mutation({
                 accessDuration: args.accessDuration,
                 isActive: args.isActive,
                 updatedAt: now,
+                ...adConfig,
             });
             return args.id;
         } else {
@@ -199,6 +229,7 @@ export const upsertPPVContent = mutation({
                     accessDuration: args.accessDuration,
                     isActive: args.isActive,
                     updatedAt: now,
+                    ...adConfig,
                 });
                 return existing._id;
             }
@@ -214,6 +245,7 @@ export const upsertPPVContent = mutation({
                 isActive: args.isActive,
                 createdAt: now,
                 updatedAt: now,
+                ...adConfig,
             });
         }
     },

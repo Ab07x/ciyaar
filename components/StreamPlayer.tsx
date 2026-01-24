@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Play, Pause, Maximize, Minimize, Volume2, VolumeX, Volume1,
     Settings, RefreshCw, AlertCircle, Loader2, SkipForward, SkipBack,
-    ChevronUp, PictureInPicture2, X
+    ChevronUp, PictureInPicture2, X, Lock, Zap
 } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -136,6 +136,34 @@ export function StreamPlayer({
     const resumePoint = useQuery(api.watch.getResumePoint,
         (trackParams && userId) ? { userId, contentType: trackParams.contentType, contentId: trackParams.contentId } : "skip"
     );
+    const settings = useQuery(api.settings.getSettings);
+    const { isPremium, isTrial } = useUser();
+
+    const [showPaywall, setShowPaywall] = useState(false);
+    // Explicitly cast settings to any to avoid TS errors with new schema fields not yet picked up
+    const freePreviewLimit = ((settings as any)?.freeMatchPreviewMinutes || 15) * 60; // default 15 mins
+
+    // Free Tier Enforcement
+    useEffect(() => {
+        if (trackParams?.contentType !== "match") return;
+        if (isPremium || isTrial) {
+            setShowPaywall(false); // Hide if they become premium
+            return;
+        }
+
+        const video = videoRef.current;
+        if (!video) return;
+
+        // Check time limit
+        if (currentTime >= freePreviewLimit) {
+            video.pause();
+            setShowPaywall(true);
+            setIsPlaying(false);
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
+        }
+    }, [currentTime, isPremium, isTrial, freePreviewLimit, trackParams?.contentType]);
 
     // Controls timeout
     const controlsTimeoutRef = useRef<any>(null);
@@ -695,6 +723,36 @@ export function StreamPlayer({
                         <RefreshCw size={16} />
                         Try Again
                     </button>
+                </div>
+            )}
+
+            {/* Paywall Overlay */}
+            {showPaywall && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-6 text-center">
+                    <div className="max-w-md animate-in fade-in zoom-in duration-300">
+                        <Lock className="w-16 h-16 text-accent-gold mx-auto mb-4" />
+                        <h3 className="text-2xl font-black text-white mb-2">Free Preview Ended</h3>
+                        <p className="text-gray-300 mb-6">
+                            You've watched the free {Math.floor(freePreviewLimit / 60)} minutes of this match.
+                            Upgrade to Premium to continue watching live!
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            <a
+                                href="/pricing"
+                                className="w-full py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Zap size={20} />
+                                Unlock for $0.25
+                            </a>
+                            <a
+                                href="/pricing"
+                                className="w-full py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
+                            >
+                                See All Plans
+                            </a>
+                        </div>
+                    </div>
                 </div>
             )}
 

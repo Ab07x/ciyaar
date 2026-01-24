@@ -49,7 +49,43 @@ export function PPVUnlockGate({
             : { contentType, contentId }
     );
 
-    const ppvAd = useQuery(api.ads.getAdBySlot, { slotKey: "ppv_unlock" });
+    const globalAd = useQuery(api.ads.getAdBySlot, { slotKey: "ppv_unlock" });
+
+    // Determine the active ad configuration (Embedded > Global > Fallback)
+    const activeAd = (() => {
+        // 1. Embedded Ad in PPV Content
+        if (accessCheck?.config?.adType) {
+            const config = accessCheck.config;
+            let network = config.adType;
+            let codeHtml = config.adHtml;
+
+            // Handle image type as custom HTML
+            if (network === "image" && config.adImageUrl) {
+                network = "custom";
+                codeHtml = `<a href="${config.adClickUrl || '#'}" target="_blank"><img src="${config.adImageUrl}" style="width:100%;height:100%;object-fit:contain;" /></a>`;
+            }
+
+            return {
+                network,
+                videoUrl: config.adVideoUrl,
+                vastUrl: config.adVastUrl,
+                codeHtml,
+                adsenseClient: config.adAdsenseClient,
+                adsenseSlot: config.adAdsenseSlot,
+                videoDuration: config.adDuration || DEFAULT_AD_DURATION,
+                // Add clickUrl for tracking/handling if needed
+                clickUrl: config.adClickUrl,
+                skipAfter: config.adSkipAfter
+            };
+        }
+
+        // 2. Global Ad (if enabled)
+        if (globalAd?.enabled) {
+            return globalAd;
+        }
+
+        return null;
+    })();
 
     // Mutations
     const recordAdWatch = useMutation(api.ppv.recordAdWatch);
@@ -89,7 +125,7 @@ export function PPVUnlockGate({
     }, [userId, deviceId, contentType, contentId, recordAdWatch, trackAdImpression, onUnlock]);
 
     // Get ad duration from config or use default
-    const adDuration = ppvAd?.videoDuration || DEFAULT_AD_DURATION;
+    const adDuration = activeAd?.videoDuration || DEFAULT_AD_DURATION;
 
     // Load and show ad based on type
     const startWatchingAd = useCallback(() => {
@@ -97,8 +133,12 @@ export function PPVUnlockGate({
         setAdProgress(0);
 
         // Load AdSense ad if available
-        if ((ppvAd?.network === "adsense" || ppvAd?.network === "ppv") && ppvAd?.adsenseClient && adContainerRef.current) {
+        if ((activeAd?.network === "adsense" || activeAd?.network === "ppv") && activeAd?.adsenseClient && adContainerRef.current) {
             try {
+                // Remove existing scripts to force reload
+                const existing = adContainerRef.current.querySelector('.adsbygoogle');
+                if (existing) existing.innerHTML = '';
+
                 (window as any).adsbygoogle = (window as any).adsbygoogle || [];
                 (window as any).adsbygoogle.push({});
             } catch (e) {
@@ -107,7 +147,7 @@ export function PPVUnlockGate({
         }
 
         // Timer for ad duration
-        const duration = ppvAd?.videoDuration || DEFAULT_AD_DURATION;
+        const duration = activeAd?.videoDuration || DEFAULT_AD_DURATION;
         const interval = setInterval(() => {
             setAdProgress((prev) => {
                 if (prev >= 100) {
@@ -120,7 +160,7 @@ export function PPVUnlockGate({
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [handleAdComplete, ppvAd]);
+    }, [handleAdComplete, activeAd]);
 
     // Loading state
     if (userLoading || accessCheck === undefined) {
@@ -161,75 +201,102 @@ export function PPVUnlockGate({
                         </div>
 
                         {/* Video Ad (direct URL) */}
-                        {ppvAd?.videoUrl ? (
-                            <video
-                                src={ppvAd.videoUrl}
-                                autoPlay
-                                muted={false}
-                                playsInline
-                                className="w-full h-full object-contain relative z-10"
-                                onEnded={() => {
-                                    if (adProgress < 100) setAdProgress(100);
-                                }}
-                            />
-                        ) : ppvAd?.vastUrl ? (
+                        {activeAd?.videoUrl ? (
+                            <div className="w-full h-full bg-black relative z-10">
+                                <video
+                                    src={activeAd.videoUrl}
+                                    autoPlay
+                                    muted={false}
+                                    playsInline
+                                    controls={false}
+                                    className="w-full h-full object-contain"
+                                    onEnded={() => {
+                                        if (adProgress < 100) setAdProgress(100);
+                                    }}
+                                />
+                            </div>
+                        ) : activeAd?.vastUrl ? (
                             // VAST/VPAID - render iframe for VAST player
                             <iframe
-                                src={ppvAd.vastUrl}
+                                src={activeAd.vastUrl}
                                 className="w-full h-full border-0 relative z-10"
                                 allow="autoplay"
                             />
-                        ) : ppvAd?.codeHtml ? (
-                            // Custom HTML ad code
-                            <div
-                                className="w-full h-full flex items-center justify-center relative z-10"
-                                dangerouslySetInnerHTML={{ __html: ppvAd.codeHtml }}
-                            />
-                        ) : ppvAd?.adsenseClient && ppvAd?.adsenseSlot ? (
+                        ) : activeAd?.codeHtml ? (
+                            // Custom HTML ad code / Image
+                            <div className="w-full h-full flex items-center justify-center relative z-10 bg-black">
+                                <div
+                                    className="w-full h-full flex items-center justify-center"
+                                    dangerouslySetInnerHTML={{ __html: activeAd.codeHtml }}
+                                />
+                                {activeAd.network === 'custom' && (activeAd.videoDuration || 0) > 0 && (
+                                    <div className="absolute inset-0 pointer-events-none" /> // Overlay to prevent interaction if meant to be watched only? Or allow clicks? For Image usually allow.
+                                )}
+                            </div>
+                        ) : activeAd?.adsenseClient && activeAd?.adsenseSlot ? (
                             // AdSense
-                            <ins
-                                className="adsbygoogle relative z-10"
-                                style={{ display: "block", width: "100%", height: "100%" }}
-                                data-ad-client={ppvAd.adsenseClient}
-                                data-ad-slot={ppvAd.adsenseSlot}
-                                data-ad-format="auto"
-                                data-full-width-responsive="true"
-                            />
+                            <div className="w-full h-full bg-white relative z-10 flex items-center justify-center">
+                                <ins
+                                    className="adsbygoogle"
+                                    style={{ display: "block", width: "100%", height: "100%" }}
+                                    data-ad-client={activeAd.adsenseClient}
+                                    data-ad-slot={activeAd.adsenseSlot}
+                                    data-ad-format="auto"
+                                    data-full-width-responsive="true"
+                                />
+                            </div>
                         ) : (
                             // Fallback - animated placeholder with branding
-                            <div className="text-center relative z-10 p-8">
-                                {/* Animated rings */}
-                                <div className="relative w-32 h-32 mx-auto mb-6">
-                                    <div className="absolute inset-0 border-4 border-accent-green/30 rounded-full animate-ping" />
-                                    <div className="absolute inset-2 border-4 border-accent-gold/40 rounded-full animate-pulse" />
-                                    <div className="absolute inset-4 border-4 border-white/20 rounded-full" />
+                            <div className="text-center relative z-10 p-8 w-full h-full flex flex-col items-center justify-center">
+                                {/* Branding */}
+                                <div className="absolute top-8 left-0 right-0 flex justify-center opacity-50">
+                                    <span className="text-white/30 text-xs font-mono tracking-[0.5em] uppercase">Fanbroj Ads</span>
+                                </div>
+
+                                {/* Animated rings & Icon */}
+                                <div className="relative w-32 h-32 mx-auto mb-8">
+                                    <div className="absolute inset-0 border-4 border-accent-green/20 rounded-full animate-[ping_3s_linear_infinite]" />
+                                    <div className="absolute inset-0 border-4 border-accent-green/40 rounded-full animate-[ping_3s_linear_infinite_1.5s]" />
+                                    <div className="absolute inset-4 border-2 border-accent-gold/40 rounded-full animate-pulse" />
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-accent-green/10 to-transparent rounded-full backdrop-blur-sm" />
+
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <Tv className="w-12 h-12 text-accent-green" />
+                                        <Tv className="w-12 h-12 text-accent-green drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
                                     </div>
                                 </div>
 
-                                <h3 className="text-white text-2xl font-black mb-2">
-                                    FANBROJ AD
-                                </h3>
-                                <p className="text-accent-green text-lg font-bold mb-4">
-                                    Xayeysiis wuu socda...
-                                </p>
+                                <div className="space-y-4 relative">
+                                    <h3 className="text-white text-3xl font-black tracking-tight drop-shadow-lg">
+                                        FANBROJ
+                                        <span className="text-accent-gold ml-2">PREMIUM</span>
+                                    </h3>
 
-                                {/* Countdown */}
-                                <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3">
-                                    <div className="w-10 h-10 bg-accent-green rounded-full flex items-center justify-center">
-                                        <span className="text-black font-black text-lg">
-                                            {Math.ceil(adDuration - (adProgress * adDuration / 100))}
-                                        </span>
+                                    <p className="text-accent-green font-medium tracking-wide animate-pulse">
+                                        Xayeysiiska wuu socda...
+                                    </p>
+
+                                    {/* Large Countdown Pill */}
+                                    <div className="mt-8">
+                                        <div className="inline-flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-full pl-2 pr-6 py-2 shadow-2xl">
+                                            <div className="w-12 h-12 bg-gradient-to-br from-accent-green to-emerald-600 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden">
+                                                <div className="absolute inset-0 bg-white/20 animate-[spin_4s_linear_infinite] opacity-30" style={{ transformOrigin: 'center 60%' }}></div>
+                                                <span className="text-black font-black text-xl relative z-10">
+                                                    {Math.ceil(adDuration - (adProgress * adDuration / 100))}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col text-left">
+                                                <span className="text-white font-bold text-sm uppercase tracking-wider">Ilbiriqsi</span>
+                                                <span className="text-white/50 text-[10px]">Ka hartay xayeysiiska</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <span className="text-white/80 text-sm">
-                                        ilbiriqsi ka hartay
-                                    </span>
                                 </div>
 
-                                <p className="text-text-muted text-xs mt-6 max-w-xs mx-auto">
-                                    Daawo xayeysiiska si aad u furto content-ka. Mahadsanid taageeradaada!
-                                </p>
+                                <div className="absolute bottom-8 left-0 right-0 text-center">
+                                    <p className="text-white/40 text-xs max-w-xs mx-auto">
+                                        Daawo xayeysiiska oo dhan si aad u furto content-ka.
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -302,11 +369,10 @@ export function PPVUnlockGate({
                             (_, i) => (
                                 <div
                                     key={i}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                        i < adsWatched
-                                            ? "bg-accent-green text-black"
-                                            : "bg-stadium-hover text-text-muted"
-                                    }`}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center ${i < adsWatched
+                                        ? "bg-accent-green text-black"
+                                        : "bg-stadium-hover text-text-muted"
+                                        }`}
                                 >
                                     {i < adsWatched ? (
                                         <CheckCircle className="w-5 h-5" />

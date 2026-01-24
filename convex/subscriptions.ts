@@ -94,35 +94,55 @@ export const checkPremiumAccess = query({
     args: {
         userId: v.optional(v.id("users")),
         matchId: v.optional(v.id("matches")),
+        movieSlug: v.optional(v.string()), // Added for free movie check
     },
     handler: async (ctx, args) => {
-        if (!args.userId) {
-            return { hasAccess: false, reason: "no_user" };
+        const settings = await ctx.db.query("settings").first();
+        const now = Date.now();
+
+        // 0. Global Free Tier Check (Free Movie of Week)
+        if (args.movieSlug && settings?.freeMovieOfWeek === args.movieSlug) {
+            return { hasAccess: true, plan: "free_tier", expiresAt: now + 86400000, isTrial: false };
         }
 
+        if (!args.userId) {
+            return { hasAccess: false, reason: "no_user", isTrial: false };
+        }
+
+        // 1. First check: Active trial
+        const user = await ctx.db.get(args.userId);
+        if (user?.trialExpiresAt && user.trialExpiresAt > now) {
+            const daysLeft = Math.ceil((user.trialExpiresAt - now) / (24 * 60 * 60 * 1000));
+            return {
+                hasAccess: true,
+                plan: "trial",
+                expiresAt: user.trialExpiresAt,
+                isTrial: true,
+                daysLeft,
+            };
+        }
+
+        // 2. Second check: Active subscription
         const subs = await ctx.db
             .query("subscriptions")
             .withIndex("by_user", (q) => q.eq("userId", args.userId!))
             .collect();
 
-        const now = Date.now();
-
-        // Check for active subscription
         for (const sub of subs) {
             if (sub.status !== "active" || sub.expiresAt <= now) continue;
 
             // Match-specific subscription
             if (sub.plan === "match") {
                 if (args.matchId && sub.matchId === args.matchId) {
-                    return { hasAccess: true, plan: sub.plan, expiresAt: sub.expiresAt };
+                    return { hasAccess: true, plan: sub.plan, expiresAt: sub.expiresAt, isTrial: false };
                 }
             } else {
                 // Weekly/Monthly/Yearly grants access to all
-                return { hasAccess: true, plan: sub.plan, expiresAt: sub.expiresAt };
+                return { hasAccess: true, plan: sub.plan, expiresAt: sub.expiresAt, isTrial: false };
             }
         }
 
-        return { hasAccess: false, reason: "no_active_subscription" };
+        return { hasAccess: false, reason: "no_active_subscription", isTrial: false };
     },
 });
 

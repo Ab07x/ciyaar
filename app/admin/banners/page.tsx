@@ -27,11 +27,10 @@ export default function AdminBannersPage() {
         if (existingId) {
             router.push(`/admin/banners/${existingId}`);
         } else {
-            await seedBannerByType({ type });
-            // Wait a bit for the database to update, then refresh
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
+            const newId = await seedBannerByType({ type });
+            if (newId) {
+                router.push(`/admin/banners/${newId}`);
+            }
         }
     };
 

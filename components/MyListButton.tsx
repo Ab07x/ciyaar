@@ -2,11 +2,12 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Check, Heart, Loader2, Plus } from "lucide-react";
+import { Check, Heart, Loader2, Plus, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/providers/ToastProvider";
 import { useState } from "react";
 import { useUser } from "@/providers/UserProvider";
+import { PremiumPopupBanner } from "@/components/PremiumPopupBanner";
 
 interface MyListButtonProps {
     contentType: "movie" | "series" | "match";
@@ -16,7 +17,7 @@ interface MyListButtonProps {
 }
 
 export function MyListButton({ contentType, contentId, className, variant = "full" }: MyListButtonProps) {
-    const { userId } = useUser();
+    const { userId, isPremium } = useUser();
     const isListed = useQuery(api.mylist.checkStatus, userId ? { userId, contentType, contentId } : "skip");
     const toggle = useMutation(api.mylist.toggle);
 
@@ -25,6 +26,7 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
 
     const [isHovered, setIsHovered] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [showPremiumPopup, setShowPremiumPopup] = useState(false);
 
     const handleToggle = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -32,6 +34,12 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
 
         if (!userId) {
             toast("Please login to use My List", "error");
+            return;
+        }
+
+        // Lock My List for non-premium users
+        if (!isPremium) {
+            setShowPremiumPopup(true);
             return;
         }
 
@@ -57,36 +65,35 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
         return <div className="h-12 w-32 bg-white/10 rounded-xl animate-pulse" />;
     }
 
-    if (variant === "icon") {
-        return (
-            <button
-                onClick={handleToggle}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                disabled={isLoading}
-                className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border",
-                    isListed
-                        ? "bg-accent-green text-black border-accent-green hover:bg-red-500 hover:text-white hover:border-red-500"
-                        : "bg-black/40 text-white border-white/20 hover:bg-white/20",
-                    className
-                )}
-                title={isListed ? "Remove from My List" : "Add to My List"}
-            >
-                {isLoading ? (
-                    <Loader2 size={18} className="animate-spin" />
-                ) : isListed && isHovered ? (
-                    <Plus size={18} className="rotate-45" /> // X icon via rotation
-                ) : isListed ? (
-                    <Check size={18} />
-                ) : (
-                    <Plus size={18} />
-                )}
-            </button>
-        );
-    }
-
-    return (
+    const content = variant === "icon" ? (
+        <button
+            onClick={handleToggle}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            disabled={isLoading}
+            className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border",
+                isListed
+                    ? "bg-accent-green text-black border-accent-green hover:bg-red-500 hover:text-white hover:border-red-500"
+                    : "bg-black/40 text-white border-white/20 hover:bg-white/20",
+                !isPremium && "border-yellow-500/50",
+                className
+            )}
+            title={!isPremium ? "Premium Feature" : isListed ? "Remove from My List" : "Add to My List"}
+        >
+            {isLoading ? (
+                <Loader2 size={18} className="animate-spin" />
+            ) : !isPremium ? (
+                <Crown size={16} className="text-yellow-400" />
+            ) : isListed && isHovered ? (
+                <Plus size={18} className="rotate-45" /> // X icon via rotation
+            ) : isListed ? (
+                <Check size={18} />
+            ) : (
+                <Plus size={18} />
+            )}
+        </button>
+    ) : (
         <button
             onClick={handleToggle}
             onMouseEnter={() => setIsHovered(true)}
@@ -102,6 +109,11 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
         >
             {isLoading ? (
                 <Loader2 size={20} className="animate-spin" />
+            ) : !isPremium ? (
+                <>
+                    <Crown size={18} className="text-yellow-400" />
+                    <span>My List</span>
+                </>
             ) : isListed && isHovered ? (
                 <>
                     <Plus size={20} className="rotate-45" />
@@ -119,5 +131,15 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
                 </>
             )}
         </button>
+    );
+
+    return (
+        <>
+            {content}
+            <PremiumPopupBanner
+                show={showPremiumPopup}
+                onClose={() => setShowPremiumPopup(false)}
+            />
+        </>
     );
 }

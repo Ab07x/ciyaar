@@ -13,6 +13,7 @@ interface MovieCardProps {
     rating?: number;
     isPremium?: boolean;
     className?: string;
+    isLocked?: boolean; // New prop
 }
 
 export function MovieCard({
@@ -23,12 +24,17 @@ export function MovieCard({
     year,
     rating,
     isPremium,
-    className
+    className,
+    isLocked = false,
 }: MovieCardProps) {
     return (
         <Link
             href={`/movies/${slug}`}
-            className={cn("group block relative rounded-xl overflow-hidden bg-stadium-elevated card-hover", className)}
+            className={cn(
+                "group block relative rounded-xl overflow-hidden bg-stadium-elevated card-hover",
+                isLocked && "opacity-90 grayscale-[0.3]",
+                className
+            )}
         >
             {/* Poster Container */}
             <div className="aspect-[2/3] relative overflow-hidden">
@@ -58,8 +64,8 @@ export function MovieCard({
 
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-accent-blue text-white rounded-full p-4 transform scale-50 group-hover:scale-100 transition-transform duration-300">
-                        <Play fill="currentColor" size={24} />
+                    <div className={`text-white rounded-full p-4 transform scale-50 group-hover:scale-100 transition-transform duration-300 ${isLocked ? 'bg-accent-gold' : 'bg-accent-blue'}`}>
+                        {isLocked ? <Lock size={24} className="text-black" /> : <Play fill="currentColor" size={24} />}
                     </div>
                 </div>
 

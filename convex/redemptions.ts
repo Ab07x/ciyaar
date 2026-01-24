@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // ============================================
 // QUERIES
@@ -288,6 +289,9 @@ export const redeemCode = mutation({
             codeId: redemption._id,
             createdAt: now,
         });
+
+        // Trigger referral credit side-effect (async)
+        await ctx.scheduler.runAfter(0, internal.referrals.creditReferrer, { userId });
 
         return {
             success: true,

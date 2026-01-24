@@ -96,8 +96,9 @@ export default function AdminMediaPage() {
     };
 
     const copyToClipboard = (url: string) => {
-        navigator.clipboard.writeText(url);
-        toast("URL copied to clipboard!", "success");
+        const fullUrl = `${window.location.origin}${url}`;
+        navigator.clipboard.writeText(fullUrl);
+        toast("Full URL copied to clipboard!", "success");
     };
 
     const filteredMedia = mediaList.filter((item: any) => {

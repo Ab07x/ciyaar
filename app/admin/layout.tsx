@@ -22,6 +22,7 @@ import {
     Image,
     Search,
     CreditCard,
+    Bell,
 } from "lucide-react";
 
 const navItems = [
@@ -40,6 +41,7 @@ const navItems = [
     { href: "/admin/categories", label: "Categories", icon: Palette },
     { href: "/admin/codes", label: "Codes", icon: Ticket },
     { href: "/admin/ppv", label: "PPV", icon: CreditCard },
+    { href: "/admin/notifications", label: "Notifications", icon: Bell },
     { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
     { href: "/admin/seo", label: "SEO", icon: Search },
     { href: "/admin/media", label: "Media", icon: Image },

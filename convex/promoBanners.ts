@@ -184,15 +184,14 @@ export const seedBannerByType = mutation({
             },
             popup: {
                 name: "Default Popup Banner",
-                headline: "Limited Time Offer!",
-                subheadline: "Get 50% off Premium Membership today",
-                ctaText: "CLAIM OFFER",
+                headline: "Qaybtan Waxaa loogu talagalay Macaamiisha",
+                subheadline: "Markaad ku biirto Premium, waxaad heleysaa waxyaabo gaar ah, adigoo sidoo kale naga taageeraya in website-ka uu sii shaqeeyo.",
+                ctaText: "EEG NOOCYADA",
                 ctaLink: "/pricing",
-                leftImageUrl: "/img/dragon-left.png",
-                rightImageUrl: "/img/right-cartoons.png",
-                backgroundImageUrl: "/premium-ad/premium-bg.png",
-                backgroundColor: "#0d1117",
-                accentColor: "#FF6B6B",
+                leftImageUrl: "/premium-ad/movie-celebraty-min.png",
+                backgroundImageUrl: "", // No bg image for this specific clean design, just purple color
+                backgroundColor: "#2D2640", // Dark purple from the Yoda image
+                accentColor: "#FF8F8F", // Pinkish/Salmon color for button
             },
             interstitial: {
                 name: "Default Interstitial",
@@ -209,7 +208,7 @@ export const seedBannerByType = mutation({
 
         const defaults = bannerDefaults[type];
 
-        await ctx.db.insert("promo_banners", {
+        const id = await ctx.db.insert("promo_banners", {
             ...defaults,
             type,
             isActive: true,
@@ -218,6 +217,6 @@ export const seedBannerByType = mutation({
             updatedAt: now,
         });
 
-        return "seeded";
+        return id;
     },
 });

@@ -15,6 +15,7 @@ import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { PPVUnlockGate } from "@/components/PPVUnlockGate";
+import { MatchReminderButton } from "@/components/MatchReminderButton";
 import { useUser } from "@/providers/UserProvider";
 import { useState, useEffect, useCallback } from "react";
 
@@ -93,7 +94,12 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
                 </Link>
                 <div className="flex items-start justify-between gap-4">
                     <h1 className="text-2xl md:text-4xl font-black">{match.teamA} <span className="text-accent-green">vs</span> {match.teamB} – Ciyaar Live</h1>
-                    <MyListButton contentType="match" contentId={match._id} variant="icon" />
+                    <div className="flex gap-2">
+                        {match.status === "upcoming" && (
+                            <MatchReminderButton matchId={match._id} />
+                        )}
+                        <MyListButton contentType="match" contentId={match._id} variant="icon" />
+                    </div>
                 </div>
                 <div className="flex items-center gap-4 mt-2">
                     {match.isPremium && <span className="px-3 py-1 bg-accent-gold/20 text-accent-gold text-xs font-bold rounded-full">PREMIUM</span>}

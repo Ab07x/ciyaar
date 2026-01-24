@@ -378,8 +378,58 @@ export default function EditBannerPage() {
                     </div>
                 )}
 
-                {/* MAIN / SMALL / POPUP Preview */}
-                {formData.type !== "interstitial" && (
+                {/* POPUP Preview */}
+                {formData.type === "popup" && (
+                    <div className="relative w-full max-w-2xl mx-auto rounded-2xl overflow-visible shadow-2xl flex flex-col md:flex-row bg-transparent">
+                        <div
+                            className="absolute inset-0 rounded-2xl z-0"
+                            style={{ backgroundColor: formData.backgroundColor }}
+                        />
+                        {/* Close button mock */}
+                        <div className="absolute top-4 right-4 z-20 p-1.5 bg-white/10 rounded-full text-white/70">
+                            <span className="block w-4 h-4 text-center leading-none text-xs">✕</span>
+                        </div>
+
+                        {/* Left Image (Character) */}
+                        <div className="relative z-10 w-full md:w-5/12 h-64 md:h-auto flex-shrink-0">
+                            <div className="absolute bottom-0 left-0 md:-left-4 w-full h-full md:h-[115%] flex items-end justify-center md:justify-start">
+                                {formData.leftImageUrl && (
+                                    <div className="relative w-48 h-56 md:w-64 md:h-[300px]">
+                                        <img
+                                            src={formData.leftImageUrl}
+                                            alt="Preview"
+                                            className="w-full h-full object-contain object-bottom drop-shadow-2xl"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Content */}
+                        <div className="relative z-10 flex-1 p-6 flex flex-col justify-center text-center">
+                            <h2 className="text-2xl font-bold text-white mb-4 leading-tight">
+                                {formData.headline || "Headline"}
+                            </h2>
+                            <p className="text-white/80 text-sm mb-8 leading-relaxed">
+                                {formData.subheadline || "Subheadline"}
+                            </p>
+                            <div className="flex justify-center">
+                                <button
+                                    className="px-8 py-3 rounded-lg font-bold text-white shadow-lg text-sm uppercase tracking-wide"
+                                    style={{
+                                        backgroundColor: formData.accentColor,
+                                        boxShadow: `0 4px 14px 0 ${formData.accentColor}66`
+                                    }}
+                                >
+                                    {formData.ctaText || "CTA"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* MAIN / SMALL Preview (Default) */}
+                {formData.type !== "interstitial" && formData.type !== "popup" && (
                     <div
                         className="rounded-xl p-4 flex items-center justify-between"
                         style={{ backgroundColor: formData.backgroundColor }}

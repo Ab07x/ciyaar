@@ -89,7 +89,23 @@ export default async function MatchPage({ params }: MatchPageProps) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            <MatchClientPage slug={slug} />
+            <div className="relative min-h-screen">
+                {/* Background Image */}
+                <div
+                    className="fixed inset-0 z-0 pointer-events-none"
+                    style={{
+                        backgroundImage: "url('/stadium.jpg')",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center"
+                    }}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-b from-stadium-dark/90 via-stadium-dark/80 to-stadium-dark" />
+                </div>
+
+                <div className="relative z-10">
+                    <MatchClientPage slug={slug} />
+                </div>
+            </div>
         </>
     );
 }

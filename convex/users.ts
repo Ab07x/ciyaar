@@ -18,6 +18,13 @@ export const getUserByDevice = query({
     },
 });
 
+export const getUser = query({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        return await ctx.db.get(args.userId);
+    },
+});
+
 export const getUserDevices = query({
     args: { userId: v.id("users") },
     handler: async (ctx, args) => {
@@ -58,9 +65,15 @@ export const getOrCreateUser = mutation({
             return existingDevice.userId;
         }
 
-        // Create new user
+        // Create new user with 7-day free trial
+        const now = Date.now();
+        const trialDays = 7;
+        const trialExpiresAt = now + (trialDays * 24 * 60 * 60 * 1000);
+
         const userId = await ctx.db.insert("users", {
-            createdAt: Date.now(),
+            createdAt: now,
+            trialExpiresAt,
+            isTrialUsed: false,
         });
 
         // Register device
@@ -68,7 +81,7 @@ export const getOrCreateUser = mutation({
             userId,
             deviceId: args.deviceId,
             userAgent: args.userAgent,
-            lastSeenAt: Date.now(),
+            lastSeenAt: now,
         });
 
         return userId;

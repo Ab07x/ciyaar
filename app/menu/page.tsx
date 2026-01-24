@@ -3,9 +3,14 @@
 import { UserCircle, Settings, Download, Globe, LogOut, ChevronRight, Trophy, Film, Tv, Heart, Home } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ReferralCard } from "@/components/ReferralCard";
+
+import { useUser } from "@/providers/UserProvider";
+import { format } from "date-fns";
 
 export default function MenuPage() {
     const router = useRouter();
+    const { userId, isPremium, subscription, isLoading } = useUser();
 
     const menuItems = [
         { label: "Home", icon: Home, href: "/" },
@@ -22,32 +27,59 @@ export default function MenuPage() {
     ];
 
     const handleLogout = () => {
-        // Clear local storage or hit logout API
         if (confirm("Are you sure you want to logout?")) {
             localStorage.clear();
             window.location.href = "/";
         }
     };
 
+    // Determine user status label
+    let statusLabel = "Guest User";
+    let subLabel = "Sign in to sync watchlist";
+    let showUpgrade = true;
+
+    if (!isLoading && userId) {
+        if (isPremium) {
+            statusLabel = "Premium Member";
+            subLabel = subscription?.expiresAt
+                ? `Expires: ${format(subscription.expiresAt, 'MMM dd, yyyy')}`
+                : "Active Subscription";
+            showUpgrade = false;
+        } else {
+            statusLabel = "Free Account";
+            subLabel = "Limited Access";
+            showUpgrade = true;
+        }
+    }
+
     return (
         <div className="min-h-screen bg-stadium-dark pb-32">
             {/* Header */}
             <div className="p-6 pt-12 bg-gradient-to-b from-stadium-elevated to-stadium-dark border-b border-white/5">
                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-accent-green/20 flex items-center justify-center border-2 border-accent-green">
-                        <UserCircle size={32} className="text-accent-green" />
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 ${isPremium ? 'bg-accent-gold/20 border-accent-gold' : 'bg-accent-green/20 border-accent-green'}`}>
+                        {isPremium ? (
+                            <Trophy size={32} className="text-accent-gold" />
+                        ) : (
+                            <UserCircle size={32} className="text-accent-green" />
+                        )}
                     </div>
                     <div>
-                        <h1 className="text-xl font-black text-white">Guest User</h1>
-                        <p className="text-sm text-text-muted">Fanbroj Free Account</p>
-                        <Link href="/pricing" className="text-xs font-bold text-accent-gold mt-1 block hover:underline">
-                            Upgrade to Premium
-                        </Link>
+                        <h1 className="text-xl font-black text-white">{statusLabel}</h1>
+                        <p className="text-sm text-text-muted">{subLabel}</p>
+                        {showUpgrade && (
+                            <Link href="/pricing" className="text-xs font-bold text-accent-gold mt-1 block hover:underline flex items-center gap-1">
+                                Upgrade to Premium <ChevronRight size={12} />
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
 
             <div className="p-4 space-y-6">
+                {/* Referral Program */}
+                {userId && <ReferralCard />}
+
                 {/* Main Navigation */}
                 <section>
                     <h2 className="text-xs font-black text-text-muted uppercase tracking-widest mb-3 ml-2">Browse</h2>

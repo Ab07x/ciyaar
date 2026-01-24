@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import { Eye, Play, Tv } from "lucide-react";
 import { getBoostedViews, formatViews } from "@/lib/analytics";
 import type { Id } from "@/convex/_generated/dataModel";
+import { MatchReminderButton } from "./MatchReminderButton";
+
+import { Lock } from "lucide-react";
 
 interface MatchCardProps {
     _id: Id<"matches">;
@@ -22,6 +25,7 @@ interface MatchCardProps {
     views?: number;
     className?: string;
     glowColor?: "red" | "green" | "blue" | "gold";
+    isLocked?: boolean; // New prop
 }
 
 const glowStyles = {
@@ -46,6 +50,7 @@ export function MatchCard({
     views,
     className,
     glowColor,
+    isLocked = false,
 }: MatchCardProps) {
     return (
         <Link href={`/match/${slug}`} className="block">
@@ -53,6 +58,7 @@ export function MatchCard({
                 className={cn(
                     "bg-stadium-elevated rounded-xl overflow-hidden border border-border-subtle card-hover group transition-all duration-300",
                     glowColor && glowStyles[glowColor],
+                    isLocked && "opacity-90 grayscale-[0.3]",
                     className
                 )}
             >
@@ -71,10 +77,10 @@ export function MatchCard({
                         </div>
                     )}
 
-                    {/* Overlay on hover - Play button */}
+                    {/* Overlay on hover - Play/Lock button */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <div className="bg-accent-green text-black rounded-full p-3 transform scale-75 group-hover:scale-100 transition-transform">
-                            <Play size={24} fill="currentColor" />
+                        <div className={`bg-accent-green text-black rounded-full p-3 transform scale-75 group-hover:scale-100 transition-transform ${isLocked ? 'bg-accent-gold' : ''}`}>
+                            {isLocked ? <Lock size={24} className="text-black" /> : <Play size={24} fill="currentColor" />}
                         </div>
                     </div>
 
@@ -83,6 +89,13 @@ export function MatchCard({
                         {status === "live" && <Badge variant="live" />}
                         {isPremium && <Badge variant="premium" />}
                     </div>
+
+                    {/* Reminder Button */}
+                    {status === "upcoming" && (
+                        <div className="absolute top-3 right-3 z-10">
+                            <MatchReminderButton matchId={_id} />
+                        </div>
+                    )}
                 </div>
 
                 {/* Content */}
@@ -125,11 +138,20 @@ export function MatchCard({
                     {/* CTA Button */}
                     <div className="mt-4">
                         <span className={cn(
-                            "cta-primary w-full text-sm",
-                            status === "live" && "animate-pulse"
+                            "cta-primary w-full text-sm flex items-center justify-center gap-2",
+                            status === "live" && "animate-pulse",
+                            isLocked && "bg-accent-gold text-black border-accent-gold"
                         )}>
-                            <Play size={16} fill="currentColor" />
-                            {status === "live" ? "Daawo Hadda" : status === "upcoming" ? "Jadwalka" : "Dib u Eeg"}
+                            {isLocked ? (
+                                <>
+                                    <Lock size={14} /> Premium Only
+                                </>
+                            ) : (
+                                <>
+                                    <Play size={16} fill="currentColor" />
+                                    {status === "live" ? "Daawo Hadda" : status === "upcoming" ? "Jadwalka" : "Dib u Eeg"}
+                                </>
+                            )}
                         </span>
                     </div>
                 </div>

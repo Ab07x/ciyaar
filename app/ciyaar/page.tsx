@@ -11,6 +11,8 @@ import { useSearchParams } from "next/navigation";
 
 type FilterStatus = "all" | "live" | "upcoming" | "finished";
 
+import { useUser } from "@/providers/UserProvider";
+
 function ArchiveContent() {
     const searchParams = useSearchParams();
     const leagueIdParam = searchParams.get("league");
@@ -19,6 +21,7 @@ function ArchiveContent() {
         status: filter === "all" ? undefined : filter as any,
         leagueId: leagueIdParam || undefined
     });
+    const { isPremium } = useUser();
 
     return (
         <>
@@ -60,7 +63,11 @@ function ArchiveContent() {
             ) : matches.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {matches.map((match) => (
-                        <MatchCard key={match._id} {...match} />
+                        <MatchCard
+                            key={match._id}
+                            {...match}
+                            isLocked={match.isPremium && !isPremium}
+                        />
                     ))}
                 </div>
             ) : (
@@ -75,8 +82,24 @@ function ArchiveContent() {
 
 export default function CiyaarArchivePage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div></div>}>
-            <ArchiveContent />
-        </Suspense>
+        <div className="relative min-h-screen">
+            {/* Background Image */}
+            <div
+                className="fixed inset-0 z-0 pointer-events-none"
+                style={{
+                    backgroundImage: "url('/stadium.jpg')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center"
+                }}
+            >
+                <div className="absolute inset-0 bg-gradient-to-b from-stadium-dark/90 via-stadium-dark/80 to-stadium-dark" />
+            </div>
+
+            <main className="relative z-10 p-4 md:p-8 space-y-8 max-w-[1800px] mx-auto">
+                <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div></div>}>
+                    <ArchiveContent />
+                </Suspense>
+            </main>
+        </div>
     );
 }

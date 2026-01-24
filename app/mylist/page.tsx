@@ -8,10 +8,19 @@ import { SeriesCard } from "@/components/SeriesCard";
 import { List } from "lucide-react";
 import { useUser } from "@/providers/UserProvider";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { PremiumPopupBanner } from "@/components/PremiumPopupBanner";
 
 export default function MyListPage() {
-    const { userId } = useUser();
+    const { userId, isPremium } = useUser();
     const myList = useQuery(api.mylist.getMyList, userId ? { userId } : "skip");
+
+    if (!isPremium) {
+        return (
+            <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+                <PremiumPopupBanner show={true} />
+            </div>
+        );
+    }
 
 
 
