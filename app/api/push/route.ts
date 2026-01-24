@@ -3,12 +3,14 @@ import webpush from "web-push";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 
-// Configure web-push with VAPID keys
-webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:admin@fanbroj.net",
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-);
+// Configure web-push with VAPID keys - Wrap in a check for build environments
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+        process.env.VAPID_SUBJECT || "mailto:admin@fanbroj.net",
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -146,6 +148,15 @@ export async function POST(request: NextRequest) {
         );
     } catch (error: any) {
         console.error("Push notification error:", error);
+
+        // Handle missing VAPID keys specifically
+        if (error.message?.includes("publicKey") || error.message?.includes("privateKey")) {
+            return NextResponse.json(
+                { error: "VAPID keys are missing. Please configure them in Vercel environment variables." },
+                { status: 500 }
+            );
+        }
+
         return NextResponse.json(
             { error: error.message || "Failed to send notification" },
             { status: 500 }
