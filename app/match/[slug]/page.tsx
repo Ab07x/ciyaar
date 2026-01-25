@@ -1,3 +1,4 @@
+export const revalidate = 0;
 import type { Metadata } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
