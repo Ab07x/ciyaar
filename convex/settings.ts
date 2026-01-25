@@ -23,6 +23,7 @@ export const getSettings = query({
                 maxDevicesWeekly: 2,
                 maxDevicesMonthly: 3,
                 maxDevicesYearly: 5,
+                adminPassword: undefined,
             };
         }
         return settings;

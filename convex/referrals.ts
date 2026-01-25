@@ -2,8 +2,141 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 // ============================================
-// AB-27: REFERRAL ANALYTICS
+// REFERRAL SYSTEM (Core + Analytics)
 // ============================================
+
+/**
+ * Generate a unique referral code
+ */
+function generateReferralCode(): string {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+// --------------------------------------------
+// Core Functions (for ReferralCard.tsx)
+// --------------------------------------------
+
+export const createReferralCode = mutation({
+    args: {
+        userId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+        if (!user) throw new Error("User not found");
+        if (user.referralCode) return user.referralCode;
+
+        let code = generateReferralCode();
+        // Simple collision check (could be better)
+        const existing = await ctx.db
+            .query("users")
+            .withIndex("by_referral_code", (q) => q.eq("referralCode", code))
+            .first();
+
+        if (existing) code = generateReferralCode(); // Try once more
+
+        await ctx.db.patch(args.userId, {
+            referralCode: code,
+            referralCount: 0,
+            referralEarnings: 0,
+        });
+
+        return code;
+    },
+});
+
+export const getStats = query({
+    args: {
+        userId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+        if (!user) return null;
+
+        // If analytics are used, sync them?
+        // For now, rely on user fields
+        return {
+            code: user.referralCode,
+            count: user.referralCount || 0,
+            earnings: user.referralEarnings || 0,
+        };
+    },
+});
+
+export const getLeaderboard = query({
+    args: {
+        limit: v.number(),
+    },
+    handler: async (ctx, args) => {
+        // This is inefficient if many users, but fine for now
+        // Ideally should have an index on referralCount
+        // Currently schema doesn't have index on referralCount, only referralCode.
+        // We might need to index referralCount in schema for scalability.
+        // For now, fetch all users with referralCount > 0
+        const users = await ctx.db.query("users").collect();
+        const referrers = users.filter(u => (u.referralCount || 0) > 0);
+
+        referrers.sort((a, b) => (b.referralCount || 0) - (a.referralCount || 0));
+
+        return referrers.slice(0, args.limit).map(u => ({
+            userId: u._id,
+            name: u.displayName || u.phoneOrId || "User",
+            count: u.referralCount || 0
+        }));
+    },
+});
+
+export const redeemReferral = mutation({
+    args: {
+        userId: v.id("users"),
+        code: v.string(),
+        deviceId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+        if (!user) throw new Error("User not found");
+        if (user.referredBy) return { success: false, message: "Horey ayaa laguu casuumay" };
+
+        // Find referrer
+        const referrer = await ctx.db
+            .query("users")
+            .withIndex("by_referral_code", (q) => q.eq("referralCode", args.code.toUpperCase()))
+            .first();
+
+        if (!referrer) return { success: false, message: "Code-kan ma jiro" };
+        if (referrer._id === user._id) return { success: false, message: "Isma casuumi kartid!" };
+
+        // Mark as referred
+        await ctx.db.patch(user._id, {
+            referredBy: referrer._id,
+            isReferralCredited: false, // Credit happens when they subscribe/pay usually? Or just free trial extension?
+        });
+
+        // Credit referrer (e.g. +7 days free premium or similar reward)
+        // For now, just increment count
+        await ctx.db.patch(referrer._id, {
+            referralCount: (referrer.referralCount || 0) + 1,
+            referralEarnings: (referrer.referralEarnings || 0) + 7, // 7 days reward
+        });
+
+        // Mark user as having used a referral (maybe give them 3 days?)
+        // Example logic:
+        const currentTrial = user.trialExpiresAt || Date.now();
+        await ctx.db.patch(user._id, {
+            trialExpiresAt: currentTrial + (3 * 24 * 60 * 60 * 1000), // +3 days
+        });
+
+        return { success: true, message: "Hambalyo! Waxaad heshay 3 maalmood oo dheeraad ah." };
+    },
+});
+
+// --------------------------------------------
+// Analytical Functions (AB-27)
+// --------------------------------------------
 
 /**
  * Track a referral link click (before signup)
