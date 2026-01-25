@@ -58,12 +58,12 @@ export function SearchBox() {
 
             {/* Results Dropdown */}
             {isOpen && query.length >= 2 && hasResults && (
-                <div className="absolute top-full mt-2 w-full bg-stadium-elevated border border-border-strong rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 max-h-[80vh] overflow-y-auto">
+                <div className="absolute top-full mt-2 w-full bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200 max-h-[80vh] overflow-y-auto ring-1 ring-black/50">
 
                     {/* Matches */}
                     {results.matches.length > 0 && (
                         <div>
-                            <div className="p-2 border-b border-border-strong/50 bg-stadium-dark/30 flex items-center gap-2">
+                            <div className="p-2 border-b border-white/5 bg-white/5 flex items-center gap-2">
                                 <Trophy size={12} className="text-text-muted" />
                                 <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                                     Ciyaaro
@@ -73,9 +73,9 @@ export function SearchBox() {
                                 <button
                                     key={match._id}
                                     onClick={() => handleSelect(`/match/${match.slug}`)}
-                                    className="w-full text-left p-3 hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-border-strong/30 last:border-0 group"
+                                    className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-border-strong flex items-center justify-center flex-shrink-0 group-hover:border-accent-green/30 transition-colors">
+                                    <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:border-accent-green/30 transition-colors">
                                         <Trophy className="w-5 h-5 text-accent-gold" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -102,7 +102,7 @@ export function SearchBox() {
                     {/* Movies */}
                     {results.movies.length > 0 && (
                         <div>
-                            <div className="p-2 border-b border-border-strong/50 bg-stadium-dark/30 flex items-center gap-2">
+                            <div className="p-2 border-b border-white/5 bg-white/5 flex items-center gap-2">
                                 <Film size={12} className="text-text-muted" />
                                 <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                                     Filimo
@@ -112,9 +112,9 @@ export function SearchBox() {
                                 <button
                                     key={movie._id}
                                     onClick={() => handleSelect(`/movies/${movie.slug}`)}
-                                    className="w-full text-left p-3 hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-border-strong/30 last:border-0 group"
+                                    className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-border-strong overflow-hidden flex-shrink-0 group-hover:border-accent-blue/30 transition-colors relative">
+                                    <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-accent-blue/30 transition-colors relative">
                                         <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -136,7 +136,7 @@ export function SearchBox() {
                     {/* Series */}
                     {results.series.length > 0 && (
                         <div>
-                            <div className="p-2 border-b border-border-strong/50 bg-stadium-dark/30 flex items-center gap-2">
+                            <div className="p-2 border-b border-white/5 bg-white/5 flex items-center gap-2">
                                 <Tv size={12} className="text-text-muted" />
                                 <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                                     Musalsal
@@ -146,9 +146,9 @@ export function SearchBox() {
                                 <button
                                     key={show._id}
                                     onClick={() => handleSelect(`/series/${show.slug}`)}
-                                    className="w-full text-left p-3 hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-border-strong/30 last:border-0 group"
+                                    className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-border-strong overflow-hidden flex-shrink-0 group-hover:border-accent-green/30 transition-colors relative">
+                                    <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-accent-green/30 transition-colors relative">
                                         <img src={show.posterUrl} alt={show.title} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -167,7 +167,7 @@ export function SearchBox() {
                         </div>
                     )}
 
-                    <div className="p-2 bg-stadium-dark/30 border-t border-border-strong/50">
+                    <div className="p-2 bg-white/5 border-t border-white/5">
                         <p className="text-[10px] text-center text-text-muted">
                             Si aad u hesho natiijooyin badan, fadlan ku qor magaca buuxifa
                         </p>
@@ -176,7 +176,7 @@ export function SearchBox() {
             )}
 
             {isOpen && query.length >= 2 && results && !hasResults && (
-                <div className="absolute top-full mt-2 w-full bg-stadium-elevated border border-border-strong rounded-xl shadow-2xl p-6 text-center z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full mt-2 w-full bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl p-6 text-center z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
                     <p className="text-sm text-text-muted">Lama helin wax ciyaar, filim ama musalsal ah oo la mid ah "{query}"</p>
                 </div>
             )}

@@ -334,87 +334,95 @@ export default function MovieWatchPage() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                         {/* Main Content Info */}
-                        <div className="lg:col-span-2">
+                        <div className="lg:col-span-3">
                             {/* Movie Info */}
                             <div className="bg-stadium-elevated border border-border-strong rounded-2xl p-6">
-                                <div className="flex items-start gap-4 mb-6">
+                                <div className="flex flex-col md:flex-row items-start gap-6 mb-6">
+                                    {/* Large Poster (Mobile: Full width/Large, Desktop: Standard) */}
                                     {movie.posterUrl && (
-                                        <div className="relative w-24 h-36 flex-shrink-0 hidden sm:block">
+                                        <div className="relative w-[160px] md:w-[200px] aspect-[2/3] flex-shrink-0 mx-auto md:mx-0 shadow-2xl rounded-xl overflow-hidden border border-white/10 group">
                                             <Image
                                                 src={movie.posterUrl}
                                                 alt={movie.title}
                                                 fill
-                                                className="rounded-lg object-cover"
+                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                                priority
                                             />
+                                            {/* Poster Overlay Gradient */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                         </div>
                                     )}
-                                    <div className="flex-1">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <h1 className="text-2xl md:text-3xl font-black mb-2">
+                                    <div className="flex-1 w-full text-center md:text-left">
+                                        <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4 mb-2">
+                                            <h1 className="text-2xl md:text-4xl font-black leading-tight">
                                                 {movie.titleSomali || movie.title}
+                                                <span className="text-text-muted text-lg md:text-2xl font-normal ml-3">
+                                                    {movie.releaseDate?.split('-')[0]}
+                                                </span>
                                             </h1>
                                             <MyListButton contentType="movie" contentId={slug} variant="icon" />
                                         </div>
+
                                         {movie.titleSomali && (
-                                            <p className="text-text-muted text-sm mb-2">{movie.title}</p>
+                                            <p className="text-text-muted italic text-lg mb-4">{movie.title}</p>
                                         )}
-                                        <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
-                                            <span className="flex items-center gap-1">
-                                                <Calendar size={14} /> {movie.releaseDate}
-                                            </span>
+
+                                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-text-secondary mb-6">
                                             {movie.runtime && (
-                                                <span className="flex items-center gap-1">
+                                                <span className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
                                                     <Clock size={14} /> {movie.runtime} min
                                                 </span>
                                             )}
                                             {movie.rating && (
-                                                <span className="flex items-center gap-1">
-                                                    <Star size={14} className="text-accent-gold" /> {movie.rating.toFixed(1)}
+                                                <span className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
+                                                    <Star size={14} className="text-accent-gold" fill="currentColor" /> {movie.rating.toFixed(1)}
                                                 </span>
                                             )}
+                                            <span className="bg-accent-blue/10 text-accent-blue px-2 py-1 rounded font-bold text-xs uppercase">HD</span>
                                         </div>
 
+                                        {/* Genres */}
+                                        <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
+                                            {movie.genres.map((g) => (
+                                                <span key={g} className="px-3 py-1 bg-stadium-hover border border-white/5 rounded-full text-xs font-bold text-text-secondary hover:text-white transition-colors cursor-default">
+                                                    {g}
+                                                </span>
+                                            ))}
+                                        </div>
 
+                                        {/* Description */}
+                                        <p className="text-gray-300 leading-relaxed text-base md:text-lg">
+                                            {movie.overviewSomali || movie.overview}
+                                        </p>
                                     </div>
                                 </div>
 
-                                {/* Genres */}
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    {movie.genres.map((g) => (
-                                        <span key={g} className="px-3 py-1 bg-stadium-hover rounded-full text-xs font-medium">
-                                            {g}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                {/* Description */}
-                                <p className="text-text-secondary leading-relaxed">
-                                    {movie.overviewSomali || movie.overview}
-                                </p>
-
                                 {/* Cast */}
                                 {movie.cast.length > 0 && (
-                                    <div className="mt-6 pt-6 border-t border-border-subtle">
-                                        <h3 className="font-bold mb-3">Cast</h3>
-                                        <div className="flex flex-wrap gap-3">
+                                    <div className="mt-8 pt-8 border-t border-border-subtle">
+                                        <h3 className="font-bold text-text-muted uppercase tracking-widest text-sm mb-4">Starring</h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
                                             {movie.cast.map((c, i) => (
-                                                <div key={i} className="flex items-center gap-2 bg-stadium-hover rounded-full pr-3 relative">
-                                                    {c.profileUrl ? (
-                                                        <Image
-                                                            src={c.profileUrl}
-                                                            alt={c.name}
-                                                            width={32}
-                                                            height={32}
-                                                            className="w-8 h-8 rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-8 h-8 rounded-full bg-stadium-dark flex items-center justify-center text-xs">
-                                                            {c.name[0]}
-                                                        </div>
-                                                    )}
-                                                    <span className="text-sm">{c.name}</span>
+                                                <div key={i} className="flex flex-col items-center text-center gap-2 group">
+                                                    <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-accent-green transition-colors">
+                                                        {c.profileUrl ? (
+                                                            <Image
+                                                                src={c.profileUrl}
+                                                                alt={c.name}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-stadium-dark flex items-center justify-center text-lg font-bold text-text-muted">
+                                                                {c.name[0]}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs font-medium text-text-secondary group-hover:text-white transition-colors line-clamp-2">
+                                                        {c.name}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
@@ -422,25 +430,65 @@ export default function MovieWatchPage() {
                                 )}
                             </div>
 
-                            <AdSlot slotKey="movie_below" className="mt-6" />
+                            <AdSlot slotKey="movie_below" className="mt-8" />
+
+                            {/* Similar Content Section */}
+                            {similarContent && similarContent.length > 0 && (
+                                <div className="mt-12">
+                                    <ContentCarousel
+                                        title="YOU MAY ALSO LIKE"
+                                        data={similarContent}
+                                        type="mixed"
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* Sidebar */}
-                        <div className="lg:col-span-1">
-                            <AdSlot slotKey="movie_sidebar" className="mb-6" />
+                        <div className="lg:col-span-1 space-y-6">
+                            {/* Trailer Button Sidebar */}
+                            {movie.trailerUrl && (
+                                <div className="relative aspect-video rounded-xl overflow-hidden group cursor-pointer border border-white/10 shadow-lg" onClick={() => setShowTrailer(true)}>
+                                    <Image
+                                        src={`https://img.youtube.com/vi/${getTrailerId(movie.trailerUrl)}/hqdefault.jpg`}
+                                        alt="Trailer"
+                                        fill
+                                        className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors">
+                                        <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                                            <Play size={20} fill="currentColor" className="text-white ml-1" />
+                                        </div>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent">
+                                        <span className="text-xs font-bold text-white uppercase tracking-wider">Watch Trailer</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <AdSlot slotKey="movie_sidebar" />
+
+                            <div className="bg-stadium-elevated border border-border-strong rounded-xl p-4">
+                                <h3 className="font-bold text-sm text-text-muted uppercase tracking-widest mb-3">Info</h3>
+                                <dl className="space-y-3 text-sm">
+                                    <div className="flex justify-between">
+                                        <dt className="text-text-secondary">Released</dt>
+                                        <dd className="font-medium">{movie.releaseDate}</dd>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <dt className="text-text-secondary">Quality</dt>
+                                        <dd className="font-bold text-accent-green">HD 1080p</dd>
+                                    </div>
+                                    {movie.director && (
+                                        <div className="flex justify-between">
+                                            <dt className="text-text-secondary">Director</dt>
+                                            <dd className="font-medium text-right max-w-[60%] truncate">{movie.director}</dd>
+                                        </div>
+                                    )}
+                                </dl>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Similar Content Section */}
-                    {similarContent && similarContent.length > 0 && (
-                        <div className="mt-12">
-                            <ContentCarousel
-                                title="YOU MAY ALSO LIKE"
-                                data={similarContent}
-                                type="mixed"
-                            />
-                        </div>
-                    )}
                 </div>
                 {/* Trailer Modal */}
                 {showTrailer && movie.trailerUrl && (
