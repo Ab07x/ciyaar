@@ -21,6 +21,7 @@ import {
     Youtube,
     Download,
     X,
+    Play,
 } from "lucide-react";
 import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
@@ -329,7 +330,7 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
                     {/* Embed switcher */}
                     {isUnlocked && movie.embeds.length > 1 && (
                         <div className="flex flex-wrap gap-2 mb-8 justify-center">
-                            {movie.embeds.map((embed, i) => (
+                            {movie.embeds.map((embed: any, i: number) => (
                                 <button
                                     key={i}
                                     onClick={() => setActiveEmbedIndex(i)}
@@ -397,7 +398,7 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
 
                                         {/* Genres */}
                                         <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
-                                            {movie.genres.map((g) => (
+                                            {movie.genres.map((g: string) => (
                                                 <span key={g} className="px-3 py-1 bg-stadium-hover border border-white/5 rounded-full text-xs font-bold text-text-secondary hover:text-white transition-colors cursor-default">
                                                     {g}
                                                 </span>
@@ -416,7 +417,7 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
                                     <div className="mt-8 pt-8 border-t border-border-subtle">
                                         <h3 className="font-bold text-text-muted uppercase tracking-widest text-sm mb-4">Starring</h3>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                                            {movie.cast.map((c, i) => (
+                                            {movie.cast.map((c: any, i: number) => (
                                                 <div key={i} className="flex flex-col items-center text-center gap-2 group">
                                                     <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-accent-green transition-colors">
                                                         {c.profileUrl ? (
@@ -541,7 +542,7 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
                                 bestRating: "10",
                                 ratingCount: "100" // Placeholder or from DB
                             } : undefined,
-                            actor: movie.cast?.map(c => ({
+                            actor: movie.cast?.map((c: any) => ({
                                 "@type": "Person",
                                 name: c.name
                             })),
