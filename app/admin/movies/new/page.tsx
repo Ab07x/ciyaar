@@ -72,6 +72,15 @@ export default function MovieFormPage({ params }: Props) {
         tags: [] as string[],
     });
 
+    // Handle Edit Mode Loading
+    if (id && existingMovie === undefined) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="animate-spin w-10 h-10 text-accent-green" />
+            </div>
+        );
+    }
+
     useEffect(() => {
         if (existingMovie && "title" in existingMovie) {
             setFormData({

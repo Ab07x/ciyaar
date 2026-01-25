@@ -4,9 +4,8 @@ import { api } from "@/convex/_generated/api";
 import MovieClient from "./MovieClient";
 import type { Metadata } from "next";
 
-// Force static generation for this page (ISR)
-// Revalidate every 60 seconds
-export const revalidate = 60;
+// Force dynamic rendering to ensure Admin sees updates instantly
+export const revalidate = 0;
 export const dynamicParams = true; // Allow new pages to be generated on demand
 
 interface PageProps {
