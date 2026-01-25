@@ -25,6 +25,7 @@ import { MyListButton } from "@/components/MyListButton";
 import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { StreamPlayer } from "@/components/StreamPlayer";
+import { ContentCarousel } from "@/components/ContentCarousel";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function SeriesWatchPage() {
@@ -45,6 +46,11 @@ export default function SeriesWatchPage() {
         series ? { seriesId: series._id } : "skip"
     );
     const settings = useQuery(api.settings.getSettings);
+    const similarContent = useQuery(api.recommendations.getSimilarContent, {
+        contentId: slug,
+        contentType: "series",
+        limit: 10
+    });
     const trackPageView = useMutation(api.analytics.trackPageView);
 
     const { isPremium, redeemCode } = useUser();
@@ -474,6 +480,17 @@ export default function SeriesWatchPage() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Similar Content Section */}
+                        {similarContent && similarContent.length > 0 && (
+                            <div className="mt-8">
+                                <ContentCarousel
+                                    title="YOU MAY ALSO LIKE"
+                                    data={similarContent}
+                                    type="mixed"
+                                />
                             </div>
                         )}
                     </div>

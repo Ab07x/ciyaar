@@ -164,3 +164,20 @@ export const logout = mutation({
         }
     },
 });
+
+export const updateProfile = mutation({
+    args: {
+        userId: v.id("users"),
+        displayName: v.optional(v.string()),
+        avatarUrl: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+        if (!user) throw new Error("User not found");
+
+        await ctx.db.patch(args.userId, {
+            ...(args.displayName !== undefined && { displayName: args.displayName }),
+            ...(args.avatarUrl !== undefined && { avatarUrl: args.avatarUrl }),
+        });
+    },
+});

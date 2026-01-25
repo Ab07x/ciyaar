@@ -27,8 +27,8 @@ export function PremiumAdInterstitial({
 
     // Use banner data or defaults
     const headline = banner?.headline || "Premium";
-    const subheadline = banner?.subheadline || "Membership ?";
-    const ctaText = banner?.ctaText || "CHECK OUR PLANS";
+    const subheadline = banner?.subheadline || "Xubin Ka Noqo ?";
+    const ctaText = banner?.ctaText || "EEG QORSHAYAASHA";
     const ctaLink = banner?.ctaLink || "/pricing";
     const leftImageUrl = banner?.leftImageUrl || "/premium-ad/movie-celebraty-min.png";
     const backgroundImageUrl = banner?.backgroundImageUrl || "/premium-ad/premium-bg.png";
@@ -75,10 +75,10 @@ export function PremiumAdInterstitial({
     };
 
     const features = [
-        { icon: Play, label: "Watch", highlight: "Full HD", color: "bg-pink-500" },
-        { icon: Download, label: "Download", highlight: "Directly", color: "bg-gray-800" },
-        { icon: Sparkles, label: "Watch", highlight: "Without Ads", color: "bg-cyan-500" },
-        { icon: MessageSquare, label: "Request", highlight: "Content", color: "bg-pink-400" },
+        { icon: Play, label: "Daawo", highlight: "Full HD", color: "bg-pink-500" },
+        { icon: Download, label: "Download", highlight: "Si toos ah", color: "bg-gray-800" },
+        { icon: Sparkles, label: "Daawo", highlight: "Xayeysiis la'aan", color: "bg-cyan-500" },
+        { icon: MessageSquare, label: "Codso", highlight: "Muuqaalo", color: "bg-pink-400" },
     ];
 
     return (
@@ -108,7 +108,7 @@ export function PremiumAdInterstitial({
                     </button>
                 ) : (
                     <div className="text-white/50 text-sm">
-                        Skip in {Math.max(0, 5 - (duration - countdown))}s
+                        Ka bood {Math.max(0, 5 - (duration - countdown))}s gudahood
                     </div>
                 )}
             </div>
@@ -130,7 +130,7 @@ export function PremiumAdInterstitial({
                     </h2>
 
                     <p className="text-white/70 text-sm md:text-base mb-8 max-w-md">
-                        Get extra features by supporting us with server and development costs, which help keep this site alive and ad-free.
+                        Hel faa'iidooyin dheeri ah adigoo nagu taageeraya kharashka server-ka iyo horumarinta, taas oo naga caawinaysa inaan barta sii wadno oo aan ka dhigno xayeysiis la'aan.
                     </p>
 
                     <Link
@@ -145,7 +145,7 @@ export function PremiumAdInterstitial({
                         <div className="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center">
                             <span className="text-xl font-bold text-white">{countdown}</span>
                         </div>
-                        <span className="text-white/50 text-sm">Video starting in {countdown}s</span>
+                        <span className="text-white/50 text-sm">Muuqaalku wuxuu bilaabanayaa {countdown}s kadib</span>
                     </div>
                 </div>
 
@@ -186,7 +186,7 @@ export function PremiumAdInterstitial({
                     onClick={handleSkip}
                     className="absolute bottom-8 right-8 bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-bold transition-all flex items-center gap-2"
                 >
-                    Skip Ad <Play size={16} fill="white" />
+                    Ka bood xayeysiiska <Play size={16} fill="white" />
                 </button>
             )}
 

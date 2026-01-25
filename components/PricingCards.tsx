@@ -5,20 +5,22 @@ import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
 import {
   Zap,
-  Clock,
   Calendar,
   CalendarDays,
   Crown,
   Check,
   MessageCircle,
-  Sparkles
+  Sparkles,
+  Smartphone,
+  Tv,
+  Monitor
 } from "lucide-react";
 
 interface PricingPlan {
   id: string;
   name: string;
   nameSomali: string;
-  priceKey: "priceMatch" | "priceDaily" | "priceWeekly" | "priceMonthly" | "priceYearly";
+  priceKey: "priceMatch" | "priceWeekly" | "priceMonthly" | "priceYearly";
   defaultPrice: number;
   duration: string;
   durationSomali: string;
@@ -29,6 +31,7 @@ interface PricingPlan {
   savings?: string;
   color: string;
   bgGradient: string;
+  maxDevices: number;
 }
 
 const plans: PricingPlan[] = [
@@ -41,22 +44,10 @@ const plans: PricingPlan[] = [
     duration: "1 match",
     durationSomali: "Ciyaar 1",
     icon: Zap,
-    features: ["1 live match", "HD quality", "No ads during match"],
+    features: ["1 live match", "HD quality", "No ads during match", "1 device"],
     color: "text-blue-400",
     bgGradient: "from-blue-500/20 to-blue-600/5",
-  },
-  {
-    id: "daily",
-    name: "Day Pass",
-    nameSomali: "Maalinta",
-    priceKey: "priceDaily",
-    defaultPrice: 0.50,
-    duration: "24 hours",
-    durationSomali: "24 saac",
-    icon: Clock,
-    features: ["All matches", "All movies", "HD quality", "1 device"],
-    color: "text-purple-400",
-    bgGradient: "from-purple-500/20 to-purple-600/5",
+    maxDevices: 1,
   },
   {
     id: "weekly",
@@ -70,6 +61,7 @@ const plans: PricingPlan[] = [
     features: ["All matches", "All movies", "HD quality", "2 devices"],
     color: "text-orange-400",
     bgGradient: "from-orange-500/20 to-orange-600/5",
+    maxDevices: 2,
   },
   {
     id: "monthly",
@@ -84,6 +76,7 @@ const plans: PricingPlan[] = [
     popular: true,
     color: "text-green-400",
     bgGradient: "from-green-500/20 to-green-600/5",
+    maxDevices: 3,
   },
   {
     id: "yearly",
@@ -99,12 +92,24 @@ const plans: PricingPlan[] = [
     savings: "Save 45%",
     color: "text-yellow-400",
     bgGradient: "from-yellow-500/20 to-yellow-600/5",
+    maxDevices: 5,
   },
 ];
+
+const planRanks: Record<string, number> = {
+  match: 1,
+  weekly: 2,
+  monthly: 3,
+  yearly: 4,
+};
 
 export function PricingCards({ className }: { className?: string }) {
   const settings = useQuery(api.settings.getSettings);
   const { deviceId } = useUser();
+  const subDetails = useQuery(api.subscriptions.getUserSubscriptionDetails, { deviceId: deviceId || "" });
+
+  const currentPlanId = subDetails?.subscription?.plan;
+  const currentRank = currentPlanId ? (planRanks[currentPlanId] || 0) : 0;
 
   const getPrice = (plan: PricingPlan): number => {
     if (!settings) return plan.defaultPrice;
@@ -128,76 +133,135 @@ Waan bixiyay lacagta. Fadlan ii soo dir code-kayga.`;
 
   return (
     <section className={`py-8 ${className || ""}`}>
-      <div className="px-4 max-w-6xl mx-auto">
+      <div className="px-4 max-w-7xl mx-auto">
+        {/* Current Plan/Trial Banner */}
+        {(subDetails?.subscription || subDetails?.trial) && (
+          <div className={`mb-10 p-4 border rounded-2xl flex items-center justify-between group overflow-hidden relative ${subDetails.subscription ? "bg-accent-green/10 border-accent-green/20" : "bg-blue-500/10 border-blue-500/20"
+            }`}>
+            <div className={`absolute inset-0 bg-gradient-to-r ${subDetails.subscription ? "from-accent-green/5" : "from-blue-500/5"} to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000`} />
+            <div className="flex items-center gap-4 relative z-10">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${subDetails.subscription ? "bg-accent-green/20 text-accent-green" : "bg-blue-500/20 text-blue-400"}`}>
+                {subDetails.subscription ? <Crown size={24} /> : <Zap size={24} />}
+              </div>
+              <div>
+                <h4 className="font-bold text-white">
+                  {subDetails.subscription ? (
+                    <>Adigu hadda waxaad leedahay: <span className="text-accent-green uppercase">{subDetails.subscription.plan}</span></>
+                  ) : (
+                    <>Waxaad hadda ku jirtaa: <span className="text-blue-400 uppercase">7-Day Free Trial</span></>
+                  )}
+                </h4>
+                <p className="text-sm text-gray-400">
+                  {subDetails.subscription ? (
+                    <>Wuxuu dhacayaa: {new Date(subDetails.subscription.expiresAt).toLocaleDateString()} ({Math.ceil((subDetails.subscription.expiresAt - Date.now()) / (1000 * 60 * 60 * 24))} maalmood ayaa kuu haray)</>
+                  ) : (
+                    <>Wuxuu dhacayaa: {new Date(subDetails.trial!.expiresAt).toLocaleDateString()} ({Math.ceil((subDetails.trial!.expiresAt - Date.now()) / (1000 * 60 * 60 * 24))} maalmood ayaa kuu haray)</>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="text-right hidden md:block relative z-10">
+              <span className={`text-xs uppercase tracking-widest font-bold ${subDetails.subscription ? "text-accent-green" : "text-blue-400"}`}>
+                {subDetails.subscription ? "Active" : "Trial"}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Qiimaha Ugu Jaban Suuqa! 🔥
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
+            Dooro Plan-ka Kula Habboon
           </h2>
-          <p className="text-gray-400">
-            Bilow $0.25 kaliya — Cheaper than a sambuus!
+          <p className="text-gray-400 text-lg">
+            Daawasho aan xad lahayn. Qiimo jaban.
           </p>
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {plans.map((plan) => {
             const price = getPrice(plan);
             const Icon = plan.icon;
+            const isCurrent = currentPlanId === plan.id;
+            const isUpgrade = !isCurrent && (planRanks[plan.id] || 0) > currentRank;
 
             return (
               <div
                 key={plan.id}
-                className={`relative flex flex-col rounded-xl overflow-hidden border transition-all hover:scale-[1.02] hover:shadow-xl ${plan.popular
-                    ? "border-green-500/50 ring-2 ring-green-500/20"
+                className={`relative flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${isCurrent
+                  ? "border-accent-green ring-2 ring-accent-green/20 bg-gray-900/90 shadow-accent-green/10 font-bold"
+                  : plan.popular
+                    ? "border-green-500/50 ring-2 ring-green-500/20 shadow-green-900/20 bg-gray-900/80"
                     : plan.bestValue
-                      ? "border-yellow-500/50 ring-2 ring-yellow-500/20"
-                      : "border-white/10"
+                      ? "border-yellow-500/50 ring-2 ring-yellow-500/20 shadow-yellow-900/20 bg-gray-900/60"
+                      : "border-white/10 bg-gray-900/40"
                   }`}
               >
-                {/* Popular/Best Value Badge */}
-                {plan.popular && (
-                  <div className="absolute top-0 left-0 right-0 bg-green-500 text-black text-xs font-bold text-center py-1 flex items-center justify-center gap-1">
-                    <Sparkles size={12} />
-                    POPULAR
+                {/* Status Badge */}
+                {isCurrent && (
+                  <div className="absolute top-0 left-0 right-0 bg-accent-green text-black text-[10px] font-black text-center py-1 flex items-center justify-center gap-1 uppercase tracking-tighter">
+                    <Check size={10} /> Qorshahaaga (Active)
                   </div>
                 )}
-                {plan.bestValue && (
-                  <div className="absolute top-0 left-0 right-0 bg-yellow-500 text-black text-xs font-bold text-center py-1">
-                    ⭐ BEST VALUE
+                {!isCurrent && plan.popular && (
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-600 to-emerald-500 text-white text-xs font-bold text-center py-1.5 flex items-center justify-center gap-1 shadow-sm uppercase tracking-wide">
+                    <Sparkles size={12} />
+                    Most Popular
+                  </div>
+                )}
+                {!isCurrent && plan.bestValue && (
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold text-center py-1.5 uppercase tracking-wide">
+                    ⭐ Best Value
                   </div>
                 )}
 
                 {/* Card Content */}
-                <div className={`flex-1 flex flex-col p-4 bg-gradient-to-b ${plan.bgGradient} ${(plan.popular || plan.bestValue) ? "pt-8" : ""}`}>
+                <div className={`flex-1 flex flex-col p-6 ${(plan.popular || plan.bestValue || isCurrent) ? "pt-10" : ""}`}>
+
                   {/* Icon & Name */}
-                  <div className="text-center mb-3">
-                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/50 ${plan.color} mb-2`}>
-                      <Icon size={20} />
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className={`flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${plan.bgGradient} border border-white/5 ${plan.color}`}>
+                      <Icon size={24} />
                     </div>
-                    <h3 className={`font-bold ${plan.color}`}>{plan.nameSomali}</h3>
-                    <p className="text-xs text-gray-500">{plan.name}</p>
+                    <div>
+                      <h3 className={`font-bold text-xl text-white`}>{plan.nameSomali}</h3>
+                      <p className="text-sm text-gray-400">{plan.name}</p>
+                    </div>
                   </div>
 
                   {/* Price */}
-                  <div className="text-center mb-3">
-                    <span className="text-3xl md:text-4xl font-black text-white">
-                      ${price.toFixed(2)}
-                    </span>
-                    <p className="text-xs text-gray-400 mt-1">{plan.durationSomali}</p>
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-white">
+                        ${price.toFixed(2)}
+                      </span>
+                      <span className="text-gray-500 text-sm font-medium">/ {plan.duration}</span>
+                    </div>
                     {plan.savings && (
-                      <span className="inline-block bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full mt-1">
+                      <span className="inline-block bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded-md mt-2">
                         {plan.savings}
                       </span>
                     )}
                   </div>
 
+                  <div className="h-px bg-white/10 mb-6" />
+
                   {/* Features */}
-                  <ul className="flex-1 space-y-1 mb-4 text-xs">
-                    {plan.features.slice(0, 4).map((feature, i) => (
-                      <li key={i} className="flex items-center gap-1.5 text-gray-300">
-                        <Check size={12} className="text-green-500 flex-shrink-0" />
-                        <span className="truncate">{feature}</span>
+                  <ul className="flex-1 space-y-3 mb-8">
+                    <li className="flex items-center gap-3 text-gray-300 font-medium">
+                      <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+                        {plan.maxDevices === 1 ? <Smartphone size={14} className="text-gray-400" /> :
+                          plan.maxDevices > 1 ? <Monitor size={14} className="text-blue-400" /> : null}
+                      </div>
+                      <span>{plan.maxDevices} Device{plan.maxDevices > 1 ? 's' : ''}</span>
+                    </li>
+                    {plan.features.filter(f => !f.toLowerCase().includes('device')).map((feature, i) => (
+                      <li key={i} className="flex items-center gap-3 text-gray-300">
+                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+                          <Check size={14} className={`text-green-500 ${isCurrent ? "text-accent-green" : ""}`} />
+                        </div>
+                        <span className="text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -207,15 +271,19 @@ Waan bixiyay lacagta. Fadlan ii soo dir code-kayga.`;
                     href={getWhatsAppLink(plan)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-sm transition-all ${plan.popular
-                        ? "bg-green-500 hover:bg-green-600 text-black"
-                        : plan.bestValue
-                          ? "bg-yellow-500 hover:bg-yellow-600 text-black"
-                          : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                    className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all transform hover:scale-[1.02] active:scale-[0.98] ${isCurrent
+                      ? "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                      : isUpgrade
+                        ? "bg-accent-gold hover:bg-yellow-400 text-black shadow-lg shadow-yellow-900/50"
+                        : plan.popular
+                          ? "bg-green-500 hover:bg-green-400 text-black shadow-lg shadow-green-900/50"
+                          : "bg-white text-black hover:bg-gray-200"
                       }`}
                   >
-                    <MessageCircle size={16} />
-                    <span>WhatsApp</span>
+                    <MessageCircle size={18} />
+                    <span>
+                      {isCurrent ? "Qorshahaaga" : isUpgrade ? "Kor u qaad (Upgrade)" : "Iibso Hadda"}
+                    </span>
                   </a>
                 </div>
               </div>
@@ -224,17 +292,33 @@ Waan bixiyay lacagta. Fadlan ii soo dir code-kayga.`;
         </div>
 
         {/* Payment Instructions */}
-        <div className="mt-8 p-4 bg-green-500/10 border border-green-500/20 rounded-xl max-w-2xl mx-auto">
-          <h4 className="font-bold text-green-400 mb-2 flex items-center gap-2">
-            <MessageCircle size={18} />
+        <div className="mt-12 p-6 bg-gradient-to-r from-gray-900 to-gray-800 border border-white/10 rounded-2xl max-w-3xl mx-auto shadow-2xl">
+          <h4 className="font-bold text-white text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
+            <MessageCircle className="text-green-500" size={20} />
             Sida loo bixiyo (How to Pay):
           </h4>
-          <ol className="text-sm text-gray-300 space-y-1">
-            <li>1️⃣ Dooro plan-kaaga → Click WhatsApp</li>
-            <li>2️⃣ Bixi lacagta EVC/Zaad</li>
-            <li>3️⃣ Noo soo dir screenshot</li>
-            <li>4️⃣ Waxaan kuu soo diraynaa code-kaaga ✅</li>
-          </ol>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">1</span>
+                <p className="text-gray-300 text-sm">Dooro plan-kaaga oo riix batoonka WhatsApp.</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">2</span>
+                <p className="text-gray-300 text-sm">Waxaad si toos ah u aadi doontaa WhatsApp-ka maamulka.</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">3</span>
+                <p className="text-gray-300 text-sm">Ku bixi lacagta EVC Plus ama Zaad Service.</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">4</span>
+                <p className="text-gray-300 text-sm">Hel code-kaaga daawashada isla markiiba! ✅</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

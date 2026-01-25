@@ -71,7 +71,7 @@ interface NotificationForm {
     body: string;
     url: string;
     image: string;
-    targetPremiumOnly: boolean;
+    targetAudience: "all" | "premium" | "trial" | "free";
 }
 
 export default function AdminNotificationsPage() {
@@ -82,7 +82,7 @@ export default function AdminNotificationsPage() {
         body: "",
         url: "/",
         image: "",
-        targetPremiumOnly: false,
+        targetAudience: "all",
     });
     const [sending, setSending] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -156,7 +156,7 @@ export default function AdminNotificationsPage() {
                     body: "",
                     url: "/",
                     image: "",
-                    targetPremiumOnly: false,
+                    targetAudience: "all",
                 });
             } else {
                 alert("Lama helin macaamiil loo diro (Active subscribers: 0).");
@@ -284,18 +284,19 @@ export default function AdminNotificationsPage() {
                         <p className="text-xs text-text-muted mt-1">Where users go when they click the notification</p>
                     </div>
 
-                    {/* Target */}
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="checkbox"
-                            id="premium-only"
-                            checked={formData.targetPremiumOnly}
-                            onChange={(e) => setFormData({ ...formData, targetPremiumOnly: e.target.checked })}
-                            className="w-5 h-5 rounded"
-                        />
-                        <label htmlFor="premium-only" className="text-sm font-medium cursor-pointer">
-                            Send to Premium users only
-                        </label>
+                    {/* Target Audience */}
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Target Audience</label>
+                        <select
+                            value={formData.targetAudience || "all"}
+                            onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value as any })}
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                        >
+                            <option value="all">All Users</option>
+                            <option value="premium">Premium Subscribers Only</option>
+                            <option value="trial">Trial Users Only</option>
+                            <option value="free">Free Users Only</option>
+                        </select>
                     </div>
                 </div>
 

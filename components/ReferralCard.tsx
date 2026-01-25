@@ -97,8 +97,8 @@ Ku biir halkan: https://fanbroj.net/login`;
                         <Users size={20} />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-white">Invite Friends</h3>
-                        <p className="text-sm text-gray-400">Earn 7 days free for every friend!</p>
+                        <h3 className="text-xl font-bold text-white">Casuun Saaxiibadaa</h3>
+                        <p className="text-sm text-gray-400">U hel 7 casho oo bilaash ah saaxiib kasta!</p>
                     </div>
                 </div>
 
@@ -109,18 +109,18 @@ Ku biir halkan: https://fanbroj.net/login`;
                         <div className="grid grid-cols-2 gap-4">
                             <div className="bg-black/40 rounded-lg p-3 border border-white/5">
                                 <div className="text-2xl font-black text-white">{stats.count || 0}</div>
-                                <div className="text-xs text-gray-500 uppercase font-bold">Friends Joined</div>
+                                <div className="text-xs text-gray-500 uppercase font-bold">Saaxiibada ku soo biiray</div>
                             </div>
                             <div className="bg-black/40 rounded-lg p-3 border border-white/5">
                                 <div className="text-2xl font-black text-green-400">{stats.earnings || 0}</div>
-                                <div className="text-xs text-gray-500 uppercase font-bold">Days Earned</div>
+                                <div className="text-xs text-gray-500 uppercase font-bold">Maalmaha aad heshay</div>
                             </div>
                         </div>
 
                         {/* Code Display */}
                         <div className="bg-black/60 rounded-xl p-4 border border-green-500/30 flex items-center justify-between group">
                             <div>
-                                <div className="text-xs text-green-500 font-bold mb-1 uppercase tracking-wider">Your Referral Code</div>
+                                <div className="text-xs text-green-500 font-bold mb-1 uppercase tracking-wider">Code-kaaga Casuumaadda</div>
                                 <div className="text-2xl font-mono font-black text-white tracking-widest">{stats.code}</div>
                             </div>
                             <div className="flex gap-2">
@@ -145,20 +145,20 @@ Ku biir halkan: https://fanbroj.net/login`;
                             className="w-full py-3 bg-green-600 font-bold text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                         >
                             <Share2 size={18} />
-                            Share on WhatsApp
+                            Kula wadaag WhatsApp
                         </button>
                     </div>
                 ) : (
                     <div className="text-center py-6">
                         <p className="text-gray-400 mb-6 text-sm">
-                            Create your unique referral code and start earning free premium days instantly!
+                            Abuur code-kaaga casuumaadda oo bilow inaad hesho maalmo premium ah oo bilaash ah hadda!
                         </p>
                         <button
                             onClick={handleCreateCode}
                             disabled={isCreating}
                             className="w-full py-3 bg-green-600 font-bold text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                         >
-                            {isCreating ? <Loader2 className="animate-spin" /> : "Start Earning Rewards"}
+                            {isCreating ? <Loader2 className="animate-spin" /> : "Bilow inaad hesho abaalmarino"}
                         </button>
                     </div>
                 )}
@@ -169,7 +169,7 @@ Ku biir halkan: https://fanbroj.net/login`;
                 <div className="mt-8 pt-6 border-t border-white/10">
                     <h4 className="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-2">
                         <Trophy size={14} className="text-yellow-500" />
-                        Top Earners
+                        Kuwa ugu guulaha badan
                     </h4>
                     {leaderboard ? (
                         <div className="space-y-2">
@@ -189,7 +189,7 @@ Ku biir halkan: https://fanbroj.net/login`;
                             ))}
                             {leaderboard.length === 0 && (
                                 <p className="text-xs text-gray-500 italic text-center py-2">
-                                    Be the first to appear here!
+                                    Noqo qofka ugu horeeya ee halkan ka soo muuqda!
                                 </p>
                             )}
                         </div>
@@ -201,12 +201,12 @@ Ku biir halkan: https://fanbroj.net/login`;
                 {/* Redeem Section (Only if not referred) */}
                 {!user.referredBy && (
                     <div className="mt-8 pt-6 border-t border-white/10">
-                        <h4 className="text-sm font-bold text-white mb-3">Have a code from a friend?</h4>
+                        <h4 className="text-sm font-bold text-white mb-3">Ma haysataa code saaxiibkaa kuu soo diray?</h4>
                         <div className="flex gap-2">
                             <input
                                 value={redeemCode}
                                 onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
-                                placeholder="ENTER CODE"
+                                placeholder="GALI CODE-KA"
                                 className="flex-1 bg-black/40 border border-white/20 rounded-lg px-4 font-mono text-white placeholder:text-gray-600 focus:border-green-500 outline-none"
                             />
                             <button
@@ -214,7 +214,7 @@ Ku biir halkan: https://fanbroj.net/login`;
                                 disabled={!redeemCode || isRedeeming}
                                 className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg disabled:opacity-50"
                             >
-                                {isRedeeming ? <Loader2 size={18} className="animate-spin" /> : "Redeem"}
+                                {isRedeeming ? <Loader2 size={18} className="animate-spin" /> : "Isticmaal"}
                             </button>
                         </div>
 

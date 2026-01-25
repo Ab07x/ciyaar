@@ -77,6 +77,7 @@ export default function SeriesFormPage({ params }: Props) {
         isDubbed: false,
         isPremium: false,
         isPublished: false,
+        tags: [] as string[],
     });
 
     useEffect(() => {
@@ -101,6 +102,7 @@ export default function SeriesFormPage({ params }: Props) {
                 isDubbed: existingSeries.isDubbed,
                 isPremium: existingSeries.isPremium,
                 isPublished: existingSeries.isPublished,
+                tags: existingSeries.tags || [],
             });
         }
     }, [existingSeries]);
@@ -162,6 +164,7 @@ export default function SeriesFormPage({ params }: Props) {
                     isPublished: formData.isPublished,
                     titleSomali: formData.titleSomali || undefined,
                     overviewSomali: formData.overviewSomali || undefined,
+                    tags: formData.tags,
                 });
             } else {
                 const newId = await createSeries({
@@ -171,6 +174,7 @@ export default function SeriesFormPage({ params }: Props) {
                     rating: formData.rating || undefined,
                     titleSomali: formData.titleSomali || undefined,
                     overviewSomali: formData.overviewSomali || undefined,
+                    tags: formData.tags,
                 });
                 router.push(`/admin/series/${newId}`); // Redirect to edit mode to add episodes
             }
@@ -382,6 +386,43 @@ export default function SeriesFormPage({ params }: Props) {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+
+                                {/* Tags */}
+                                <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6">
+                                    <h3 className="font-bold border-b border-border-strong pb-3 mb-4">Genre Tags (for Recommendations)</h3>
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {formData.tags.map((tag, i) => (
+                                            <span key={i} className="flex items-center gap-1 px-3 py-1 bg-accent-green/20 rounded-full text-accent-green text-xs font-bold">
+                                                {tag}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, idx) => idx !== i) })}
+                                                    className="hover:text-white"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </span>
+                                        ))}
+                                        {formData.tags.length === 0 && <p className="text-xs text-text-muted italic">No tags added yet</p>}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Add tag and press Enter..."
+                                            className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    const val = (e.target as HTMLInputElement).value.trim();
+                                                    if (val && !formData.tags.includes(val)) {
+                                                        setFormData({ ...formData, tags: [...formData.tags, val] });
+                                                        (e.target as HTMLInputElement).value = "";
+                                                    }
+                                                }
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>

@@ -16,6 +16,7 @@ import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { PPVUnlockGate } from "@/components/PPVUnlockGate";
 import { MatchReminderButton } from "@/components/MatchReminderButton";
+import { PredictionCard } from "@/components/PredictionCard";
 import { useUser } from "@/providers/UserProvider";
 import { useState, useEffect, useCallback } from "react";
 
@@ -141,6 +142,13 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
                     )}
                 </div>
                 <div className="lg:col-span-4 space-y-6">
+                    <PredictionCard
+                        matchId={match._id}
+                        teamA={match.teamA}
+                        teamB={match.teamB}
+                        kickoffAt={match.kickoffAt}
+                        status={match.status}
+                    />
                     <AdSlot slotKey="match_sidebar" />
                     <LiveChat matchId={match._id} />
                 </div>

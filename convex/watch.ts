@@ -48,6 +48,20 @@ export const saveProgress = mutation({
     },
 });
 
+// Remove from continue watching
+export const removeFromWatchHistory = mutation({
+    args: {
+        id: v.id("user_watch_progress"),
+        userId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const item = await ctx.db.get(args.id);
+        if (!item || item.userId !== args.userId) return; // Security check
+
+        await ctx.db.delete(args.id);
+    },
+});
+
 // Get resume point for specific content
 export const getResumePoint = query({
     args: {
@@ -82,7 +96,7 @@ export const getContinueWatching = query({
     handler: async (ctx, args) => {
         if (!args.userId) return [];
 
-        // Fetch last 10 updated items that are NOT finished
+        // Fetch last 20 updated items that are NOT finished
         const progressItems = await ctx.db
             .query("user_watch_progress")
             .withIndex("by_user_updated", (q) => q.eq("userId", args.userId!))

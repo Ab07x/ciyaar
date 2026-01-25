@@ -2,107 +2,73 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { MatchCard } from "@/components/MatchCard";
+import { useUser } from "@/providers/UserProvider";
 import { MovieCard } from "@/components/MovieCard";
 import { SeriesCard } from "@/components/SeriesCard";
-import { List } from "lucide-react";
-import { useUser } from "@/providers/UserProvider";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { PremiumPopupBanner } from "@/components/PremiumPopupBanner";
+import { MatchCard } from "@/components/MatchCard";
+import { FolderHeart, Plus } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 export default function MyListPage() {
-    const { userId, isPremium } = useUser();
+    const { userId } = useUser();
     const myList = useQuery(api.mylist.getMyList, userId ? { userId } : "skip");
 
-    if (!isPremium) {
+    if (myList === undefined) {
         return (
-            <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
-                <PremiumPopupBanner show={true} />
+            <div className="container mx-auto px-4 py-8">
+                <div className="h-8 w-48 bg-white/10 rounded mb-8 animate-pulse" />
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {[...Array(10)].map((_, i) => (
+                        <div key={i} className="aspect-[2/3] bg-white/5 rounded-xl animate-pulse" />
+                    ))}
+                </div>
             </div>
         );
     }
 
-
-
-    if (myList === undefined) {
+    if (myList.length === 0) {
         return (
-            <div className="container mx-auto px-4 py-8 min-h-screen">
-                <div className="flex items-center gap-3 mb-8">
-                    <Skeleton className="w-12 h-12 rounded-xl" />
-                    <div className="space-y-2">
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="h-4 w-64" />
-                    </div>
+            <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center">
+                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                    <FolderHeart className="w-12 h-12 text-text-muted" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
-                </div>
+                <h1 className="text-3xl font-bold mb-2">Liiskaagu Waa Banaan Yahay</h1>
+                <p className="text-text-secondary max-w-md mb-8">
+                    Kudar filimada, musalsalada, iyo ciyaaraha aad rabto inaad daawato hadhow.
+                </p>
+                <Link href="/">
+                    <Button variant="primary" leftIcon={<Plus size={18} />}>
+                        Raadi Wax Aad Ku Darto
+                    </Button>
+                </Link>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 min-h-screen">
-            <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 bg-accent-green/20 rounded-xl flex items-center justify-center text-accent-green">
-                    <List size={24} />
-                </div>
-                <div>
-                    <h1 className="text-3xl font-black">Liiskeyga</h1>
-                    <p className="text-text-muted">Filimada, musalsalada iyo ciyaaraha aan keydsaday</p>
-                </div>
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-black mb-8 flex items-center gap-3">
+                <FolderHeart className="text-accent-gold" />
+                My List
+            </h1>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {myList.map((item) => {
+                    if (!item.details) return null;
+
+                    if (item.contentType === "movie") {
+                        return <MovieCard key={item._id} {...(item.details as any)} />;
+                    }
+                    if (item.contentType === "series") {
+                        return <SeriesCard key={item._id} {...(item.details as any)} />;
+                    }
+                    if (item.contentType === "match") {
+                        return <MatchCard key={item._id} {...(item.details as any)} />;
+                    }
+                    return null;
+                })}
             </div>
-
-            {myList.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {myList.map((item) => {
-                        const { contentType, details } = item;
-                        if (!details) return null;
-
-                        if (contentType === "match") {
-                            return <MatchCard key={item._id} {...details} />;
-                        }
-                        if (contentType === "movie") {
-                            return (
-                                <MovieCard
-                                    key={item._id}
-                                    id={details._id}
-                                    slug={details.slug}
-                                    title={details.titleSomali || details.title}
-                                    posterUrl={details.posterUrl}
-                                    year={details.releaseDate?.split("-")[0] || ""}
-                                    rating={details.rating}
-                                    isPremium={details.isPremium}
-                                />
-                            );
-                        }
-                        if (contentType === "series") {
-                            return (
-                                <SeriesCard
-                                    key={item._id}
-                                    id={details._id}
-                                    slug={details.slug}
-                                    title={details.titleSomali || details.title}
-                                    posterUrl={details.posterUrl}
-                                    seasons={details.numberOfSeasons}
-                                    episodes={details.numberOfEpisodes}
-                                    year={details.firstAirDate?.split("-")[0] || ""}
-                                    isPremium={details.isPremium}
-                                />
-                            );
-                        }
-                        return null;
-                    })}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center py-20 bg-stadium-elevated border border-border-strong rounded-2xl">
-                    <List size={48} className="text-text-muted mb-4 opacity-20" />
-                    <h2 className="text-xl font-bold mb-2">Liiskaagu wuu maranyahay</h2>
-                    <p className="text-text-secondary text-center max-w-sm mb-6">
-                        Ku dar filimada iyo musalsalada aad jeceshahay si aad hadhow u daawato.
-                    </p>
-                </div>
-            )}
         </div>
     );
 }

@@ -144,7 +144,7 @@ export function MatchCard({
                         )}>
                             {isLocked ? (
                                 <>
-                                    <Lock size={14} /> Premium Only
+                                    <Lock size={14} /> Premium Keliya
                                 </>
                             ) : (
                                 <>

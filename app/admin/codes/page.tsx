@@ -269,7 +269,15 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                     <label className="block text-sm text-text-secondary mb-2">Plan</label>
                                     <select
                                         value={plan}
-                                        onChange={(e) => setPlan(e.target.value as any)}
+                                        onChange={(e) => {
+                                            const newPlan = e.target.value as any;
+                                            setPlan(newPlan);
+                                            // Auto-suggest max devices based on tier
+                                            if (newPlan === "match") setCustomMaxDevices(1);
+                                            if (newPlan === "weekly") setCustomMaxDevices(2);
+                                            if (newPlan === "monthly") setCustomMaxDevices(3);
+                                            if (newPlan === "yearly") setCustomMaxDevices(5);
+                                        }}
                                         className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                     >
                                         {planOptions.map((p) => (
@@ -368,7 +376,15 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                     <label className="block text-sm text-text-secondary mb-2">Customer Plan</label>
                                     <select
                                         value={plan}
-                                        onChange={(e) => setPlan(e.target.value as any)}
+                                        onChange={(e) => {
+                                            const newPlan = e.target.value as any;
+                                            setPlan(newPlan);
+                                            // Auto-suggest max devices based on tier
+                                            if (newPlan === "match") setCustomMaxDevices(1);
+                                            if (newPlan === "weekly") setCustomMaxDevices(2);
+                                            if (newPlan === "monthly") setCustomMaxDevices(3);
+                                            if (newPlan === "yearly") setCustomMaxDevices(5);
+                                        }}
                                         className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                     >
                                         {planOptions.map((p) => (

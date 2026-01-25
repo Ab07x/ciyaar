@@ -18,6 +18,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { MovieCard } from "@/components/MovieCard";
 import { useCountry } from "@/hooks/useCountry";
 import { useUser } from "@/providers/UserProvider";
+import { useLanguage } from "@/providers/LanguageProvider";
 
 export default function HomePage() {
   const matchData = useQuery(api.matches.getMatchesByStatus);
@@ -26,9 +27,12 @@ export default function HomePage() {
   const top10Movies = useQuery(api.movies.getTop10Movies);
   const series = useQuery(api.series.listSeries, { isPublished: true, limit: 20 });
   const settings = useQuery(api.settings.getSettings);
-  const trackPageView = useMutation(api.analytics.trackPageView);
+  const { userId, isPremium } = useUser();
+  const { t } = useLanguage();
   const { country } = useCountry();
-  const { isPremium } = useUser();
+  const trending = useQuery(api.recommendations.getTrending, { limit: 12 });
+  const personalized = useQuery(api.recommendations.getPersonalizedHome, { userId: userId || undefined });
+  const trackPageView = useMutation(api.analytics.trackPageView);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const hasTracked = useRef(false);
@@ -120,7 +124,7 @@ export default function HomePage() {
                     </span>
                     {currentMovie.isPremium && (
                       <span className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs md:text-sm font-bold rounded flex items-center gap-1">
-                        <Crown size={12} /> PREMIUM
+                        <Crown size={12} /> {t("hero.premium_badge")}
                       </span>
                     )}
                     {currentMovie.rating && (
@@ -164,14 +168,14 @@ export default function HomePage() {
                       className="flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-white hover:bg-white/90 text-black font-bold rounded-lg text-sm md:text-lg transition-all"
                     >
                       <Play fill="currentColor" size={20} />
-                      Daawo
+                      {t("hero.watch")}
                     </Link>
                     <Link
                       href={`/movies/${currentMovie.slug}`}
                       className="flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-white/20 hover:bg-white/30 backdrop-blur text-white font-bold rounded-lg text-sm md:text-lg transition-all"
                     >
                       <Info size={20} />
-                      Faahfaahin
+                      {t("hero.details")}
                     </Link>
                   </div>
                 </div>
@@ -195,8 +199,10 @@ export default function HomePage() {
         {/* Main Content - Overlapping the hero */}
         <div className="-mt-32 md:-mt-40 relative z-10 space-y-8 md:space-y-12 pb-20">
 
-          {/* Premium Banner - Above CiyaarSnaps, Below Hero */}
           <PremiumPromoBanner />
+
+          {/* Continue Watching - First Row for Retention */}
+          <ContinueWatchingRow />
 
           {/* Shorts Row (CiyaarSnaps) */}
           <ShortsRow />
@@ -211,11 +217,11 @@ export default function HomePage() {
                 <div className="w-1 h-8 bg-accent-green rounded-full" />
                 <div className="flex items-center gap-2">
                   <Film className="text-accent-green" size={24} />
-                  <h2 className="text-xl md:text-2xl font-black uppercase">Filimo Af-Soomaali Dubbed</h2>
+                  <h2 className="text-xl md:text-2xl font-black uppercase">{t("sections.fanproj_play")}</h2>
                 </div>
               </div>
               <Link href="/movies" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                Dhamaan <ChevronRight size={16} />
+                {t("common.view_all")} <ChevronRight size={16} />
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
@@ -239,7 +245,7 @@ export default function HomePage() {
                     {movie.isPremium && (
                       <div className="absolute top-2 left-2 flex items-center gap-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-[10px] font-bold px-2 py-1 rounded shadow-lg">
                         <Crown size={10} />
-                        PREMIUM
+                        {t("hero.premium_badge")}
                       </div>
                     )}
 
@@ -283,7 +289,7 @@ export default function HomePage() {
           </section>
 
           {/* Continue Watching */}
-          <ContinueWatchingRow />
+
 
           {/* Live Matches */}
           {live.length > 0 && (
@@ -292,15 +298,15 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <div className="w-1 h-8 bg-red-500 rounded-full" />
                   <div>
-                    <h2 className="text-xl md:text-2xl font-black uppercase">Ciyaaro Live Maalin Kasta</h2>
+                    <h2 className="text-xl md:text-2xl font-black uppercase">{t("sections.live_matches")}</h2>
                     <span className="text-sm text-red-400 animate-pulse flex items-center gap-1">
                       <span className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
-                      {live.length} ciyaarood socda
+                      {live.length} live
                     </span>
                   </div>
                 </div>
                 <Link href="/ciyaar" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                  Dhamaan <ChevronRight size={16} />
+                  {t("common.view_all")} <ChevronRight size={16} />
                 </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -320,15 +326,42 @@ export default function HomePage() {
 
           {/* Movies Carousel */}
           <ContentCarousel
-            title="Filimada Cusub"
+            title={t("sections.latest_movies")}
             link="/movies"
             data={movies}
             type="movie"
           />
 
+          {/* Trending in Somalia */}
+          {trending && trending.length > 0 && (
+            <ContentCarousel
+              title="Trending in Somalia"
+              data={trending}
+              type="mixed"
+            />
+          )}
+
+          {/* Personalized recommendations */}
+          {personalized?.becauseYouWatched && personalized.becauseYouWatched.items.length > 0 && (
+            <ContentCarousel
+              title={`Maadaama aad daawatay ${personalized.becauseYouWatched.title}`}
+              data={personalized.becauseYouWatched.items}
+              type="mixed"
+            />
+          )}
+
+          {/* Personalized New Arrivals */}
+          {personalized?.personalizedNewArrivals && personalized.personalizedNewArrivals.length > 0 && (
+            <ContentCarousel
+              title="Kuu gaar ah: Kuwa cusub"
+              data={personalized.personalizedNewArrivals}
+              type="mixed"
+            />
+          )}
+
           {/* Series Carousel */}
           <ContentCarousel
-            title="Musalsalo Caan Ah"
+            title={t("sections.popular_series")}
             link="/series"
             data={series}
             type="series"
@@ -340,10 +373,10 @@ export default function HomePage() {
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-1 h-8 bg-accent-green rounded-full" />
-                  <h2 className="text-xl md:text-2xl font-black">KUWA SOO SOCDA</h2>
+                  <h2 className="text-xl md:text-2xl font-black">{t("sections.upcoming_matches")}</h2>
                 </div>
                 <Link href="/ciyaar" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                  Dhamaan <ChevronRight size={16} />
+                  {t("common.view_all")} <ChevronRight size={16} />
                 </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -367,10 +400,10 @@ export default function HomePage() {
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-1 h-8 bg-blue-500 rounded-full" />
-                  <h2 className="text-xl md:text-2xl font-black uppercase">Wararka Ciyaaraha & Falanqayn</h2>
+                  <h2 className="text-xl md:text-2xl font-black uppercase">{t("sections.news")}</h2>
                 </div>
                 <Link href="/blog" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                  Dhamaan <ChevronRight size={16} />
+                  {t("common.view_all")} <ChevronRight size={16} />
                 </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -404,9 +437,9 @@ export default function HomePage() {
                     </div>
 
                     <h2 className="text-3xl md:text-5xl font-black text-white leading-tight uppercase">
-                      Premium Somali<br />
+                      Madadaalada<br />
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                        Entertainment
+                        Premium Somali
                       </span>
                     </h2>
 
@@ -418,7 +451,7 @@ export default function HomePage() {
                       href="/pricing"
                       className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold rounded-lg text-lg transition-all shadow-lg shadow-orange-500/25"
                     >
-                      Bilow Hadda
+                      {t("common.start_now")}
                       <ChevronRight size={20} />
                     </Link>
                   </div>

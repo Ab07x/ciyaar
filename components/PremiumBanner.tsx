@@ -10,9 +10,9 @@ interface PremiumBannerProps {
 export function PremiumBanner({ className }: PremiumBannerProps) {
     const features = [
         "Dhammaan channels premium",
-        "Ad-free experience",
-        "HD/4K streaming quality",
-        "Priority support",
+        "Khibrad xayeysiis la'aan ah",
+        "Tayada daawashada HD/4K",
+        "Taageero gaar ah",
     ];
 
     return (
@@ -37,7 +37,7 @@ export function PremiumBanner({ className }: PremiumBannerProps) {
                 <div className="flex-1 text-center md:text-left">
                     <div className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-bold mb-4">
                         <Crown size={16} />
-                        PREMIUM MEMBERSHIP
+                        XUBINIMADA PREMIUM
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
                         Ku Raaxayso LIVE TV
@@ -62,7 +62,7 @@ export function PremiumBanner({ className }: PremiumBannerProps) {
                         <Zap size={20} className="group-hover:animate-bounce" />
                         Iibso Hadda
                     </Link>
-                    <span className="text-white/60 text-sm">Bilowga $2/ciyaar kaliya</span>
+                    <span className="text-white/60 text-sm">Bilowga $0.25/ciyaar kaliya</span>
                 </div>
             </div>
         </div>

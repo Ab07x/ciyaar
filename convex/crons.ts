@@ -19,6 +19,13 @@ crons.daily(
     internal.crons.checkTrialExpiry
 );
 
+// Send match reminders every 5 minutes (AB-7)
+crons.interval(
+    "Send Match Reminders",
+    { minutes: 5 },
+    internal.notifications.sendMatchReminders
+);
+
 export const rotateFreeMovie = internalMutation({
     handler: async (ctx) => {
         // 1. Get all published movies

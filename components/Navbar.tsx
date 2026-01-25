@@ -4,11 +4,13 @@ import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown, CreditCard, List, Zap } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown, CreditCard, List, Zap, MessageSquare } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
 import { Logo } from "./Logo";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useLanguage } from "@/providers/LanguageProvider";
 
 export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -16,6 +18,7 @@ export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const pathname = usePathname();
     const { isPremium, isLoading } = useUser();
+    const { t } = useLanguage();
 
     // Handle scroll for glassmorphism effect
     useEffect(() => {
@@ -34,12 +37,13 @@ export function Navbar() {
     }, [pathname]);
 
     const navItems = [
-        { href: "/ciyaar", label: "Ciyaaro", icon: Trophy, color: "text-[var(--color-sports)]" },
-        { href: "/live", label: "Live", icon: Radio, color: "text-[var(--color-cinema)]", hasLiveDot: true },
-        { href: "/movies", label: "Filimo", icon: Film, color: "text-blue-400" },
-        { href: "/series", label: "Musalsal", icon: Tv, color: "text-white" },
-        { href: "/blog", label: "Warar", icon: Newspaper, color: "text-[var(--color-text-secondary)]" },
-        { href: "/mylist", label: "Liiskeyga", icon: List, color: "text-[var(--color-premium)]" },
+        { href: "/ciyaar", label: t("nav.matches"), icon: Trophy, color: "text-[var(--color-sports)]" },
+        { href: "/live", label: t("nav.live"), icon: Radio, color: "text-[var(--color-cinema)]", hasLiveDot: true },
+        { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-blue-400" },
+        { href: "/series", label: t("nav.series"), icon: Tv, color: "text-white" },
+        { href: "/blog", label: t("nav.news"), icon: Newspaper, color: "text-[var(--color-text-secondary)]" },
+        { href: "/requests", label: "Codso", icon: MessageSquare, color: "text-purple-400" },
+        { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[var(--color-premium)]" },
     ];
 
     return (
@@ -157,6 +161,11 @@ export function Navbar() {
                     >
                         <Search size={22} />
                     </motion.button>
+
+                    {/* Language Switcher */}
+                    <div className="hidden md:block">
+                        <LanguageSwitcher />
+                    </div>
 
                     {/* Account Icon */}
                     {isLoading ? (

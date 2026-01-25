@@ -14,9 +14,9 @@ export function PremiumPromoBanner({ className, type = "main" }: PremiumPromoBan
   const banner = useQuery(api.promoBanners.getActiveBanner, { type });
 
   // Default values if no banner in database
-  const headline = banner?.headline || "Ads suck but keep the site free.";
-  const subheadline = banner?.subheadline || "Remove ads and get many features with Premium Membership";
-  const ctaText = banner?.ctaText || "CHECK OPTIONS";
+  const headline = banner?.headline || "Xayeysiiska waa dhib laakiin barta ayay bilaash ku dhigayaan.";
+  const subheadline = banner?.subheadline || "Ka saar xayeysiiska oo hel faa'iidooyin badan adigoo ku biiraya Xubinimada Premium.";
+  const ctaText = banner?.ctaText || "EEG DOOKHYADA";
   const ctaLink = banner?.ctaLink || "/pricing";
   const leftImageUrl = banner?.leftImageUrl || "/img/dragon-left.png";
   const rightImageUrl = banner?.rightImageUrl || "/img/right-cartoons.png";
@@ -24,7 +24,7 @@ export function PremiumPromoBanner({ className, type = "main" }: PremiumPromoBan
   const accentColor = banner?.accentColor || "#9AE600";
 
   // Split headline for styling
-  const headlineParts = headline.split("free.");
+  const headlineParts = headline.split("bilaash.");
   const hasFreePart = headlineParts.length > 1;
 
   return (
@@ -69,7 +69,7 @@ export function PremiumPromoBanner({ className, type = "main" }: PremiumPromoBan
                   {headlineParts[0].trim()}
                 </h3>
                 <h3 className="text-white text-xs md:text-base font-semibold leading-tight mb-0.5 md:mb-1">
-                  <span style={{ color: accentColor }} className="font-bold">free.</span>
+                  <span style={{ color: accentColor }} className="font-bold">bilaash.</span>
                 </h3>
               </>
             ) : (
@@ -78,13 +78,13 @@ export function PremiumPromoBanner({ className, type = "main" }: PremiumPromoBan
               </h3>
             )}
             <p className="text-gray-300 text-[9px] md:text-xs mb-1.5 md:mb-2">
-              {subheadline.includes("Premium Membership") ? (
+              {subheadline.includes("Xubinimada Premium") ? (
                 <>
-                  {subheadline.split("Premium Membership")[0]}
+                  {subheadline.split("Xubinimada Premium")[0]}
                   <Link href={ctaLink} className="underline font-semibold hover:brightness-110" style={{ color: accentColor }}>
-                    Premium Membership
+                    Xubinimada Premium
                   </Link>
-                  {subheadline.split("Premium Membership")[1] || ""}
+                  {subheadline.split("Xubinimada Premium")[1] || ""}
                 </>
               ) : (
                 subheadline

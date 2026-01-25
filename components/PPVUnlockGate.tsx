@@ -250,7 +250,7 @@ export function PPVUnlockGate({
                             <div className="text-center relative z-10 p-8 w-full h-full flex flex-col items-center justify-center">
                                 {/* Branding */}
                                 <div className="absolute top-8 left-0 right-0 flex justify-center opacity-50">
-                                    <span className="text-white/30 text-xs font-mono tracking-[0.5em] uppercase">Fanbroj Ads</span>
+                                    <span className="text-white/30 text-xs font-mono tracking-[0.5em] uppercase">Xayeysiiska Fanbroj</span>
                                 </div>
 
                                 {/* Animated rings & Icon */}

@@ -12,10 +12,10 @@ interface ContentCarouselProps {
     title: string;
     link?: string;
     data: any[];
-    type: "movie" | "series" | "match";
+    type?: "movie" | "series" | "match" | "mixed";
 }
 
-export function ContentCarousel({ title, link, data, type }: ContentCarouselProps) {
+export function ContentCarousel({ title, link, data, type = "movie" }: ContentCarouselProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const scroll = (direction: "left" | "right") => {
@@ -62,42 +62,45 @@ export function ContentCarousel({ title, link, data, type }: ContentCarouselProp
                     ref={scrollRef}
                     className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar px-4 pb-4"
                 >
-                    {data.map((item, index) => (
-                        <div
-                            key={item._id || index}
-                            className={cn(
-                                "snap-start flex-shrink-0 transition-transform duration-300",
-                                type === "match" ? "w-[280px] md:w-[320px]" : "w-[150px] md:w-[180px]"
-                            )}
-                        >
-                            {type === "movie" && (
-                                <MovieCard
-                                    id={item._id}
-                                    slug={item.slug}
-                                    title={item.titleSomali || item.title}
-                                    posterUrl={item.posterUrl}
-                                    year={item.releaseDate?.split("-")[0] || ""}
-                                    rating={item.rating}
-                                    isPremium={item.isPremium}
-                                />
-                            )}
-                            {type === "series" && (
-                                <SeriesCard
-                                    id={item._id}
-                                    slug={item.slug}
-                                    title={item.titleSomali || item.title}
-                                    posterUrl={item.posterUrl}
-                                    seasons={item.numberOfSeasons}
-                                    episodes={item.numberOfEpisodes}
-                                    year={item.firstAirDate?.split("-")[0] || ""}
-                                    isPremium={item.isPremium}
-                                />
-                            )}
-                            {type === "match" && (
-                                <MatchCard {...item} />
-                            )}
-                        </div>
-                    ))}
+                    {data.map((item, index) => {
+                        const itemType = item.type || type;
+                        return (
+                            <div
+                                key={item._id || index}
+                                className={cn(
+                                    "snap-start flex-shrink-0 transition-transform duration-300",
+                                    itemType === "match" ? "w-[280px] md:w-[320px]" : "w-[150px] md:w-[180px]"
+                                )}
+                            >
+                                {itemType === "movie" && (
+                                    <MovieCard
+                                        id={item._id}
+                                        slug={item.slug}
+                                        title={item.titleSomali || item.title}
+                                        posterUrl={item.posterUrl}
+                                        year={item.releaseDate?.split("-")[0] || ""}
+                                        rating={item.rating}
+                                        isPremium={item.isPremium}
+                                    />
+                                )}
+                                {itemType === "series" && (
+                                    <SeriesCard
+                                        id={item._id}
+                                        slug={item.slug}
+                                        title={item.titleSomali || item.title}
+                                        posterUrl={item.posterUrl}
+                                        seasons={item.numberOfSeasons}
+                                        episodes={item.numberOfEpisodes}
+                                        year={item.firstAirDate?.split("-")[0] || ""}
+                                        isPremium={item.isPremium}
+                                    />
+                                )}
+                                {itemType === "match" && (
+                                    <MatchCard {...item} />
+                                )}
+                            </div>
+                        );
+                    })}
 
                     {/* End spacer for easy scrolling */}
                     <div className="w-4 flex-shrink-0" />

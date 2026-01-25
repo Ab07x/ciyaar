@@ -72,16 +72,49 @@ export default function SubscriptionPage() {
         );
     }
 
-    const { subscription, devices, code } = subscriptionData;
-    const isExpired = Date.now() > subscription.expiresAt;
-    const expiresInDays = Math.ceil((subscription.expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+    const { subscription, devices, code, trial } = subscriptionData;
+
+    // Use trial expiresAt if subscription is missing
+    const expiresAt = subscription?.expiresAt || trial?.expiresAt || 0;
+    const isExpired = Date.now() > expiresAt;
+    const expiresInDays = Math.ceil((expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+
+    if (!subscription && !trial) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 text-center">
+                <div className="bg-stadium-elevated p-8 rounded-2xl border border-border-subtle max-w-md w-full">
+                    <div className="w-16 h-16 bg-stadium-hover rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Crown className="text-text-muted" size={32} />
+                    </div>
+                    <h2 className="text-2xl font-black text-white mb-2">Ma lihid Premium</h2>
+                    <p className="text-text-secondary mb-8">
+                        Iska diiwaan geli si aad u hesho ciyaaro toos ah, musalsalo, iyo filimo cusub.
+                    </p>
+                    <div className="space-y-3">
+                        <Link
+                            href="/pricing"
+                            className="block w-full bg-accent-gold text-black font-bold py-3 rounded-xl hover:brightness-110 transition-all"
+                        >
+                            Iibso Premium
+                        </Link>
+                        <Link
+                            href="/login"
+                            className="block w-full bg-stadium-hover text-white font-bold py-3 rounded-xl hover:bg-white/10 transition-all"
+                        >
+                            Geli Code
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-2xl">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                    <Crown className="text-accent-gold" />
-                    Your Subscription
+                    <Crown className={trial ? "text-blue-400" : "text-accent-gold"} />
+                    {trial && !subscription ? "Trial Status" : "Your Subscription"}
                 </h1>
                 <button
                     onClick={logout}
@@ -93,24 +126,27 @@ export default function SubscriptionPage() {
             </div>
 
             {/* Status Card */}
-            <div className="bg-stadium-elevated border border-accent-gold/20 rounded-2xl p-6 mb-6 shadow-elevated relative overflow-hidden">
+            <div className={`bg-stadium-elevated border rounded-2xl p-6 mb-6 shadow-elevated relative overflow-hidden ${trial && !subscription ? "border-blue-500/20" : "border-accent-gold/20"
+                }`}>
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <Crown size={120} className="text-accent-gold" />
+                    <Crown size={120} className={trial && !subscription ? "text-blue-500" : "text-accent-gold"} />
                 </div>
 
                 <div className="relative z-10">
                     <div className="flex items-start justify-between mb-6">
                         <div>
-                            <p className="text-text-secondary text-sm font-bold uppercase tracking-wider mb-1">Current Plan</p>
+                            <p className="text-text-secondary text-sm font-bold uppercase tracking-wider mb-1">Current Status</p>
                             <h2 className="text-3xl font-black text-white capitalize">
-                                {subscription.plan} Package
+                                {subscription ? `${subscription.plan} Package` : "7-Day Free Trial"}
                             </h2>
                         </div>
                         <Badge
-                            variant={isExpired ? "danger" : "success"}
-                            className="px-3 py-1 text-sm"
+                            variant={isExpired ? "danger" : (subscription ? "success" : "warning")}
+                            className="px-3 py-1 text-sm uppercase"
                         >
-                            {subscription.status === "active" && !isExpired ? "ACTIVE" : subscription.status.toUpperCase()}
+                            {subscription?.status === "active" && !isExpired ? "ACTIVE" :
+                                trial && !isExpired ? "TRIAL" :
+                                    isExpired ? "EXPIRED" : "INACTIVE"}
                         </Badge>
                     </div>
 
@@ -121,9 +157,9 @@ export default function SubscriptionPage() {
                                 <span className="text-xs font-bold uppercase">Expires On</span>
                             </div>
                             <p className="text-white font-mono font-bold">
-                                {new Date(subscription.expiresAt).toLocaleDateString()}
+                                {new Date(expiresAt).toLocaleDateString()}
                             </p>
-                            <p className="text-accent-gold text-sm mt-1">
+                            <p className={`${expiresInDays > 2 ? "text-accent-green" : "text-accent-gold"} text-sm mt-1 font-bold`}>
                                 {expiresInDays > 0 ? `${expiresInDays} days left` : "Expired"}
                             </p>
                         </div>
@@ -131,10 +167,10 @@ export default function SubscriptionPage() {
                         <div className="bg-stadium-dark/50 rounded-xl p-4 border border-border-subtle">
                             <div className="flex items-center gap-2 text-text-secondary mb-2">
                                 <Clock size={18} />
-                                <span className="text-xs font-bold uppercase">Activated On</span>
+                                <span className="text-xs font-bold uppercase">{subscription ? "Activated On" : "Started On"}</span>
                             </div>
                             <p className="text-white font-mono font-bold">
-                                {new Date(subscription.createdAt).toLocaleDateString()}
+                                {new Date(subscription?.createdAt || (expiresAt - 7 * 24 * 60 * 60 * 1000)).toLocaleDateString()}
                             </p>
                         </div>
                     </div>
@@ -166,7 +202,7 @@ export default function SubscriptionPage() {
                         Connected Devices
                     </h3>
                     <span className="text-xs font-bold bg-stadium-dark px-2 py-1 rounded-md text-text-secondary">
-                        {devices.length} / {subscription.maxDevices}
+                        {devices.length} / {subscription?.maxDevices ?? 1}
                     </span>
                 </div>
 

@@ -213,6 +213,9 @@ export default defineSchema({
     // ============================================
     users: defineTable({
         phoneOrId: v.optional(v.string()),
+        // Profile (AB-25)
+        displayName: v.optional(v.string()),
+        avatarUrl: v.optional(v.string()),
         // Trial system
         trialExpiresAt: v.optional(v.number()), // When trial ends
         isTrialUsed: v.optional(v.boolean()), // Has user used trial
@@ -432,6 +435,7 @@ export default defineSchema({
         isDubbed: v.boolean(),
         isPremium: v.boolean(),
         isPublished: v.boolean(),
+        tags: v.optional(v.array(v.string())),
 
         // Category (Fanproj, Hindi AF Somali, etc)
         category: v.optional(v.string()),
@@ -502,6 +506,7 @@ export default defineSchema({
         isDubbed: v.boolean(),
         isPremium: v.boolean(),
         isPublished: v.boolean(),
+        tags: v.optional(v.array(v.string())),
 
         // Category
         category: v.optional(v.string()),
@@ -795,8 +800,64 @@ export default defineSchema({
         timestamp: v.number(),
     })
         .index("by_device", ["deviceId"])
-        .index("by_date", ["timestamp"])
-        .index("by_type", ["adType"]),
+        .index("by_date", ["timestamp"]),
+
+    // ============================================
+    // CONTENT REQUESTS
+    // ============================================
+    content_requests: defineTable({
+        userId: v.id("users"),
+        tmdbId: v.number(),
+        type: v.union(v.literal("movie"), v.literal("tv")),
+        title: v.string(),
+        posterUrl: v.optional(v.string()),
+        year: v.optional(v.string()),
+        votes: v.number(),
+        status: v.union(v.literal("pending"), v.literal("approved"), v.literal("fulfilled"), v.literal("rejected")),
+        createdAt: v.number(),
+    })
+        .index("by_votes", ["votes"])
+        .index("by_status", ["status"])
+        .index("by_tmdb", ["tmdbId", "type"]),
+
+    content_request_votes: defineTable({
+        requestId: v.id("content_requests"),
+        userId: v.id("users"),
+        createdAt: v.number(),
+    })
+        .index("by_request_user", ["requestId", "userId"])
+        .index("by_user", ["userId"]),
+
+    // ============================================
+    // MATCH PREDICTIONS & LEADERBOARDS
+    // ============================================
+    predictions: defineTable({
+        userId: v.id("users"),
+        matchId: v.id("matches"),
+        prediction: v.union(v.literal("home"), v.literal("away"), v.literal("draw")),
+        status: v.union(v.literal("pending"), v.literal("correct"), v.literal("incorrect")),
+        pointsAwarded: v.optional(v.number()),
+        createdAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_match", ["matchId"])
+        .index("by_user_match", ["userId", "matchId"]),
+
+    leaderboards: defineTable({
+        userId: v.id("users"),
+        totalPoints: v.number(),
+        weeklyPoints: v.number(),
+        monthlyPoints: v.number(),
+        streakCount: v.number(),
+        bestStreak: v.number(),
+        predictionsCount: v.number(),
+        correctPredictionsCount: v.number(),
+        lastPredictionAt: v.optional(v.number()),
+        updatedAt: v.number(),
+    })
+        .index("by_total_points", ["totalPoints"])
+        .index("by_weekly_points", ["weeklyPoints"])
+        .index("by_streak", ["streakCount"]),
 
     // ============================================
     // USER RATINGS
@@ -864,5 +925,105 @@ export default defineSchema({
         .index("by_match", ["matchId"])
         .index("by_user_match", ["userId", "matchId"])
         .index("by_device_match", ["deviceId", "matchId"]),
+
+    // ============================================
+    // REFERRAL CLICKS (AB-27)
+    // ============================================
+    referral_clicks: defineTable({
+        referralCode: v.string(),
+        referrerId: v.optional(v.id("users")),
+        deviceId: v.optional(v.string()),
+        userAgent: v.optional(v.string()),
+        converted: v.boolean(), // Did they sign up?
+        convertedUserId: v.optional(v.id("users")),
+        createdAt: v.number(),
+    })
+        .index("by_code", ["referralCode"])
+        .index("by_referrer", ["referrerId"])
+        .index("by_converted", ["converted"]),
+
+    // ============================================
+    // GIFT CODES (AB-13)
+    // ============================================
+    gift_codes: defineTable({
+        code: v.string(),
+        purchaserId: v.id("users"),
+        purchaserDeviceId: v.optional(v.string()),
+        plan: v.union(
+            v.literal("monthly"),
+            v.literal("3month"),
+            v.literal("yearly")
+        ),
+        durationDays: v.number(),
+        maxDevices: v.number(),
+        // Gift metadata
+        recipientName: v.optional(v.string()),
+        senderMessage: v.optional(v.string()),
+        occasion: v.optional(v.union(
+            v.literal("ramadan"),
+            v.literal("eid"),
+            v.literal("birthday"),
+            v.literal("general")
+        )),
+        // Redemption
+        recipientId: v.optional(v.id("users")),
+        redeemedAt: v.optional(v.number()),
+        // Status
+        expiresAt: v.number(), // When the gift code expires (not the subscription)
+        createdAt: v.number(),
+    })
+        .index("by_code", ["code"])
+        .index("by_purchaser", ["purchaserId"])
+        .index("by_recipient", ["recipientId"]),
+
+    // ============================================
+    // NOTIFICATION PREFERENCES (AB-7)
+    // ============================================
+    notification_preferences: defineTable({
+        userId: v.optional(v.id("users")),
+        deviceId: v.string(),
+        // Notification types
+        matchReminders: v.boolean(),
+        newReleases: v.boolean(),
+        promotions: v.boolean(),
+        contentRequests: v.boolean(),
+        // Settings
+        reminderMinutesBefore: v.number(), // default: 15
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_user", ["userId"])
+        .index("by_device", ["deviceId"]),
+
+    // ============================================
+    // NOTIFICATION LOGS (AB-7)
+    // ============================================
+    notification_logs: defineTable({
+        type: v.union(
+            v.literal("match_reminder"),
+            v.literal("new_release"),
+            v.literal("promotion"),
+            v.literal("content_fulfilled"),
+            v.literal("admin_broadcast")
+        ),
+        title: v.string(),
+        body: v.string(),
+        url: v.optional(v.string()),
+        targetAudience: v.union(
+            v.literal("all"),
+            v.literal("premium"),
+            v.literal("trial"),
+            v.literal("free"),
+            v.literal("specific")
+        ),
+        targetUserIds: v.optional(v.array(v.id("users"))),
+        sentCount: v.number(),
+        deliveredCount: v.optional(v.number()),
+        clickedCount: v.optional(v.number()),
+        createdAt: v.number(),
+        sentBy: v.optional(v.string()), // "system" or admin identifier
+    })
+        .index("by_type", ["type"])
+        .index("by_created", ["createdAt"]),
 
 });

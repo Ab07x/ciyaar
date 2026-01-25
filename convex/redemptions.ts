@@ -290,9 +290,6 @@ export const redeemCode = mutation({
             createdAt: now,
         });
 
-        // Trigger referral credit side-effect (async)
-        await ctx.scheduler.runAfter(0, internal.referrals.creditReferrer, { userId });
-
         return {
             success: true,
             plan: redemption.plan,

@@ -50,9 +50,8 @@ export const getUserSubscriptionDetails = query({
             (s) => s.status === "active" && s.expiresAt > now
         );
 
-        if (!activeSub) {
-            return null;
-        }
+        // Get user for trial info
+        const user = await ctx.db.get(userId);
 
         // Get all user's devices
         const devices = await ctx.db
@@ -62,7 +61,7 @@ export const getUserSubscriptionDetails = query({
 
         // Get the redemption code if available
         let codeInfo = null;
-        if (activeSub.codeId) {
+        if (activeSub && activeSub.codeId) {
             const redemption = await ctx.db.get(activeSub.codeId);
             if (redemption) {
                 codeInfo = {
@@ -73,13 +72,17 @@ export const getUserSubscriptionDetails = query({
         }
 
         return {
-            subscription: {
-                plan: activeSub.plan,
-                status: activeSub.status,
-                expiresAt: activeSub.expiresAt,
-                createdAt: activeSub.createdAt,
-                maxDevices: activeSub.maxDevices,
-            },
+            subscription: activeSub ? {
+                plan: activeSub!.plan,
+                status: activeSub!.status,
+                expiresAt: activeSub!.expiresAt,
+                createdAt: activeSub!.createdAt,
+                maxDevices: activeSub!.maxDevices,
+            } : null,
+            trial: (user?.trialExpiresAt && user.trialExpiresAt > now) ? {
+                expiresAt: user.trialExpiresAt,
+                isTrial: true,
+            } : null,
             devices: devices.map((d) => ({
                 deviceId: d.deviceId,
                 userAgent: d.userAgent,

@@ -81,6 +81,7 @@ export const createSeries = mutation({
         isDubbed: v.boolean(),
         isPremium: v.boolean(),
         isPublished: v.boolean(),
+        tags: v.optional(v.array(v.string())),
     },
     handler: async (ctx, args) => {
         const now = Date.now();
@@ -111,6 +112,7 @@ export const updateSeries = mutation({
         isDubbed: v.optional(v.boolean()),
         isPremium: v.optional(v.boolean()),
         isPublished: v.optional(v.boolean()),
+        tags: v.optional(v.array(v.string())),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;

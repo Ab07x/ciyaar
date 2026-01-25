@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
-import { Send, User, Crown, Info, Loader2 } from "lucide-react";
+import { Send, User, Crown, Info, Loader2, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -166,6 +166,3 @@ export function LiveChat({ matchId, className }: LiveChatProps) {
         </div>
     );
 }
-
-// Re-using MessageCircle icon logic
-import { MessageCircle } from "lucide-react";
