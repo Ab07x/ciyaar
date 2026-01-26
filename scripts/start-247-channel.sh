@@ -48,8 +48,8 @@ while true; do
         -headers "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"$'\r\n'"Accept: */*"$'\r\n'"Connection: keep-alive"$'\r\n' \
         -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
         -i "$INPUT_URL" \
-        -c:v libx264 -preset ultrafast -tune zerolatency \
-        -b:v 1500k -maxrate 1500k -bufsize 3000k \
+        -c:v libx264 -preset veryfast -tune zerolatency \
+        -b:v 4500k -maxrate 5000k -bufsize 8000k \
         -c:a copy \
         -hls_time 6 \
         -hls_list_size 10 \
