@@ -326,6 +326,12 @@ export function StreamPlayer({
             url = decodeProtectedUrl(url);
         }
 
+        // AUTO-FIX: Upgrade to HTTPS if site is HTTPS to prevent "Network Error" (Mixed Content)
+        if (typeof window !== "undefined" && window.location.protocol === "https:" && url.startsWith("http://")) {
+            url = url.replace("http://", "https://");
+            console.log("Upgraded stream URL to HTTPS to prevent Mixed Content block:", url);
+        }
+
         setResolvedUrl(url);
         setStreamType(type || detectStreamType(url));
     }, [source]);
