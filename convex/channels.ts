@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
 
 // List all channels
 export const list = query({
@@ -8,26 +9,43 @@ export const list = query({
         isLive: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
-        const q = args.isLive !== undefined
-            ? ctx.db.query("channels").withIndex("by_live", (q) => q.eq("isLive", args.isLive!))
-            : ctx.db.query("channels");
+        let q = ctx.db.query("channels");
 
-        let channels = await q.collect();
+        if (args.isLive !== undefined) {
+            q = q.withIndex("by_live", (q) => q.eq("isLive", args.isLive!));
+        }
+
+        const channels = await q.collect();
 
         // Sort by priority (descending)
         channels.sort((a, b) => b.priority - a.priority);
 
         // Filter category manually if needed
         if (args.category) {
-            channels = channels.filter((c) => c.category === args.category);
+            return channels.filter((c) => c.category === args.category);
         }
 
         return channels;
     },
 });
 
-// Alias for UI consistency
 export const listChannels = list;
+
+// Function to match UI expectation in /live and /live/[slug]
+export const getChannelsByStatus = query({
+    args: {},
+    handler: async (ctx) => {
+        const channels = await ctx.db.query("channels").collect();
+        const sorted = channels.sort((a, b) => b.priority - a.priority);
+
+        return {
+            all: sorted,
+            live: sorted.filter(c => c.isLive),
+            free: sorted.filter(c => !c.isPremium),
+            premium: sorted.filter(c => c.isPremium),
+        };
+    }
+});
 
 // Get single channel by slug
 export const getChannelBySlug = query({
@@ -62,7 +80,6 @@ export const createChannel = mutation({
         priority: v.number(),
     },
     handler: async (ctx, args) => {
-        // Check if slug exists
         const existing = await ctx.db
             .query("channels")
             .withIndex("by_slug", (q) => q.eq("slug", args.slug))
@@ -70,7 +87,7 @@ export const createChannel = mutation({
 
         if (existing) throw new Error("Slug already exists");
 
-        const channelId = await ctx.db.insert("channels", {
+        return await ctx.db.insert("channels", {
             name: args.name,
             slug: args.slug,
             category: args.category,
@@ -89,8 +106,6 @@ export const createChannel = mutation({
             createdAt: Date.now(),
             updatedAt: Date.now(),
         });
-
-        return channelId;
     },
 });
 
@@ -124,7 +139,6 @@ export const updateChannel = mutation({
             updatedAt: Date.now(),
         };
 
-        // If stream URL is provided, update the first embed
         if (streamUrl) {
             updates.embeds = [
                 {
