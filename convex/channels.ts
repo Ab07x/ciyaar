@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-// List all channels (for Admin & User)
+// List all channels
 export const list = query({
     args: {
         category: v.optional(v.string()),
@@ -28,8 +28,11 @@ export const list = query({
     },
 });
 
+// Alias for UI consistency
+export const listChannels = list;
+
 // Get single channel by slug
-export const getBySlug = query({
+export const getChannelBySlug = query({
     args: { slug: v.string() },
     handler: async (ctx, args) => {
         return await ctx.db
@@ -39,15 +42,23 @@ export const getBySlug = query({
     },
 });
 
+export const getBySlug = getChannelBySlug;
+
 // Create Channel (Admin)
-export const create = mutation({
+export const createChannel = mutation({
     args: {
         name: v.string(),
         slug: v.string(),
         category: v.union(v.literal("sports"), v.literal("entertainment"), v.literal("news"), v.literal("movies")),
         description: v.optional(v.string()),
         thumbnailUrl: v.optional(v.string()),
-        streamUrl: v.string(), // Simplified input for convenience
+        streamUrl: v.optional(v.string()),
+        embeds: v.optional(v.array(v.object({
+            label: v.string(),
+            url: v.string(),
+            type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+            isProtected: v.optional(v.boolean()),
+        }))),
         isLive: v.boolean(),
         isPremium: v.boolean(),
         priority: v.number(),
@@ -67,10 +78,10 @@ export const create = mutation({
             category: args.category,
             description: args.description,
             thumbnailUrl: args.thumbnailUrl,
-            embeds: [
+            embeds: args.embeds || [
                 {
                     label: "Main Stream",
-                    url: args.streamUrl,
+                    url: args.streamUrl || "",
                     type: "m3u8",
                 },
             ],
@@ -85,8 +96,10 @@ export const create = mutation({
     },
 });
 
+export const create = createChannel;
+
 // Update Channel (Admin)
-export const update = mutation({
+export const updateChannel = mutation({
     args: {
         id: v.id("channels"),
         name: v.optional(v.string()),
@@ -95,6 +108,12 @@ export const update = mutation({
         description: v.optional(v.string()),
         thumbnailUrl: v.optional(v.string()),
         streamUrl: v.optional(v.string()),
+        embeds: v.optional(v.array(v.object({
+            label: v.string(),
+            url: v.string(),
+            type: v.optional(v.union(v.literal("m3u8"), v.literal("iframe"), v.literal("video"))),
+            isProtected: v.optional(v.boolean()),
+        }))),
         isLive: v.optional(v.boolean()),
         isPremium: v.optional(v.boolean()),
         priority: v.optional(v.number()),
@@ -122,10 +141,14 @@ export const update = mutation({
     },
 });
 
+export const update = updateChannel;
+
 // Delete Channel (Admin)
-export const remove = mutation({
+export const deleteChannel = mutation({
     args: { id: v.id("channels") },
     handler: async (ctx, args) => {
         await ctx.db.delete(args.id);
     },
 });
+
+export const remove = deleteChannel;
