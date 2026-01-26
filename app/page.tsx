@@ -86,7 +86,17 @@ export default function HomePage() {
   return (
     <div className="relative min-h-screen">
       {/* Fixed Background Image */}
-
+      <div className="fixed inset-0 z-0">
+        <Image
+          src="/bgcdn.webp"
+          alt="Background"
+          fill
+          className="object-cover opacity-20"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+      </div>
 
       <div className="relative z-10">
         {/* Hidden SEO H1 */}
