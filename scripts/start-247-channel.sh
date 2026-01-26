@@ -1,12 +1,10 @@
 #!/bin/bash
 # ==============================================================================
-# FANBROJ 24/7 CHANNEL RELAY - Stable Version
+# FANBROJ 24/7 CHANNEL RELAY - Performance Optimized
 # ==============================================================================
-# Uses lightweight transcoding to fix timestamp/freezing issues.
-# -preset ultrafast: Very low CPU usage
-# -tune zerolatency: Keeps stream live
-#
-# Usage: ./start-247-channel.sh <slug> <username> <password> <channel_id> <host>
+# - Video: 1500k bitrate (720p/1080p optimized for stability)
+# - Audio: COPY (Zero CPU usage for audio)
+# - Preset: ultrafast (Lowest CPU usage)
 # ==============================================================================
 
 # Exit on undefined variable
@@ -39,7 +37,7 @@ rm -f "$STREAM_DIR"/*.ts 2>/dev/null
 rm -f "$STREAM_DIR"/*.m3u8 2>/dev/null
 
 echo "=============================================="
-echo "📺 STARTING STABILIZED STREAM: $SLUG"
+echo "📺 STARTING OPTIMIZED STREAM: $SLUG"
 echo "=============================================="
 
 RESTART_COUNT=0
@@ -48,19 +46,18 @@ while true; do
     RESTART_COUNT=$((RESTART_COUNT + 1))
     echo "[$(date)] Starting Stream (Attempt $RESTART_COUNT)..." >> "$LOG_FILE"
     
-    # STABILIZED TRANSCODING COMMAND
-    # -c:v libx264: Re-encode video to fix timestamps
-    # -preset ultrafast: Use minimal CPU
-    # -b:v 2500k: Cap bitrate at 2.5Mbps (good quality, lighter on network)
-    # -hls_list_size 10: Keep 40 seconds buffer (10 * 4s) to prevent stopping
+    # OPTIMIZED COMMAND
+    # -c:v libx264 -preset ultrafast -b:v 1500k: Very fast video encoding at 1.5Mbps
+    # -c:a copy: DIRECT COPY of audio (No CPU usage)
+    # -hls_time 6: Longer segments = Less HTTP requests = Less buffering
     ffmpeg -hide_banner -loglevel error \
         -user_agent "VLC/3.0.18" \
         -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
         -i "$INPUT_URL" \
         -c:v libx264 -preset ultrafast -tune zerolatency \
-        -b:v 2500k -maxrate 2500k -bufsize 5000k \
-        -c:a aac -b:a 128k -ac 2 \
-        -hls_time 4 \
+        -b:v 1500k -maxrate 1500k -bufsize 3000k \
+        -c:a copy \
+        -hls_time 6 \
         -hls_list_size 10 \
         -hls_flags delete_segments \
         -hls_segment_filename "$STREAM_DIR/%03d.ts" \
