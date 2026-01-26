@@ -1,136 +1,269 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import Link from "next/link";
-import { Plus, Edit, Trash2, Radio, Crown, Search, Tv, Power } from "lucide-react";
-import { useState } from "react";
+import { Plus, Edit, Trash2, Save, X, Play } from "lucide-react";
 
-export default function AdminChannelsPage() {
-    const channels = useQuery(api.channels.listChannels, {});
-    const deleteChannel = useMutation(api.channels.deleteChannel);
-    const toggleLive = useMutation(api.channels.toggleChannelLive);
+export default function ChannelsAdminPage() {
+    const channels = useQuery(api.channels.list, {});
+    const createChannel = useMutation(api.channels.create);
+    const updateChannel = useMutation(api.channels.update);
+    const deleteChannel = useMutation(api.channels.remove);
 
-    const [filter, setFilter] = useState<"all" | "live" | "free" | "premium">("all");
-    const [search, setSearch] = useState("");
+    const [isEditing, setIsEditing] = useState<string | null>(null);
+    const [isCreating, setIsCreating] = useState(false);
 
-    const filtered = channels?.filter(c => {
-        if (filter === "live") return c.isLive;
-        if (filter === "free") return !c.isPremium;
-        if (filter === "premium") return c.isPremium;
-        return true;
-    }).filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+    // Form State
+    const [formData, setFormData] = useState({
+        name: "",
+        slug: "",
+        category: "sports" as const,
+        streamUrl: "",
+        thumbnailUrl: "",
+        isLive: true,
+        isPremium: false,
+        priority: 10,
+    });
+
+    const resetForm = () => {
+        setFormData({
+            name: "",
+            slug: "",
+            category: "sports",
+            streamUrl: "",
+            thumbnailUrl: "",
+            isLive: true,
+            isPremium: false,
+            priority: 10,
+        });
+        setIsCreating(false);
+        setIsEditing(null);
+    };
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await createChannel(formData);
+            resetForm();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to create channel");
+        }
+    };
+
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!isEditing) return;
+        try {
+            await updateChannel({
+                id: isEditing as any,
+                ...formData,
+            });
+            resetForm();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update channel");
+        }
+    };
+
+    const startEdit = (channel: any) => {
+        setFormData({
+            name: channel.name,
+            slug: channel.slug,
+            category: channel.category,
+            streamUrl: channel.embeds[0]?.url || "",
+            thumbnailUrl: channel.thumbnailUrl || "",
+            isLive: channel.isLive,
+            isPremium: channel.isPremium,
+            priority: channel.priority,
+        });
+        setIsEditing(channel._id);
+        setIsCreating(true);
+    };
+
+    const handleDelete = async (id: any) => {
+        if (confirm("Are you sure you want to delete this channel?")) {
+            await deleteChannel({ id });
+        }
+    };
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-black">CHANNELS</h1>
-                    <p className="text-text-muted">Maamul Live TV channels</p>
-                </div>
-                <Link href="/admin/channels/new" className="px-4 py-2 bg-accent-green text-black rounded-lg font-bold flex items-center gap-2">
-                    <Plus size={18} />Add Channel
-                </Link>
+        <div className="p-8 max-w-6xl mx-auto text-white">
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold flex items-center gap-3">
+                    <Play className="text-red-500" /> Live Channels
+                </h1>
+                <button
+                    onClick={() => { setIsCreating(true); setIsEditing(null); }}
+                    className="flex items-center gap-2 bg-red-600 px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                >
+                    <Plus size={20} /> Add Channel
+                </button>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex gap-2">
-                    {["all", "live", "free", "premium"].map(f => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f as any)}
-                            className={`px-3 py-1 rounded-full text-sm ${filter === f ? "bg-accent-green text-black font-bold" : "bg-stadium-hover text-text-secondary"}`}
-                        >
-                            {f}
-                        </button>
-                    ))}
-                </div>
-                <div className="flex-1 relative">
-                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-                    <input
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search channels..."
-                        className="w-full bg-stadium-elevated border border-border-subtle rounded-lg pl-10 pr-4 py-2"
-                    />
-                </div>
-            </div>
+            {/* Create/Edit Form */}
+            {isCreating && (
+                <div className="mb-8 bg-zinc-900 p-6 rounded-xl border border-zinc-800">
+                    <h2 className="text-xl font-bold mb-4">{isEditing ? "Edit Channel" : "New Channel"}</h2>
+                    <form onSubmit={isEditing ? handleUpdate : handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            <div className="bg-stadium-elevated border border-border-strong rounded-xl overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-stadium-dark border-b border-border-strong">
-                        <tr>
-                            <th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Channel</th>
-                            <th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Category</th>
-                            <th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Links</th>
-                            <th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Status</th>
-                            <th className="text-right px-4 py-3 text-xs font-bold text-text-muted uppercase">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered?.map(c => (
-                            <tr key={c._id} className="border-b border-border-subtle last:border-0">
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-8 bg-stadium-dark rounded flex items-center justify-center flex-shrink-0">
-                                            {c.thumbnailUrl ? (
-                                                <img src={c.thumbnailUrl} alt={c.name} className="w-full h-full object-cover rounded" />
-                                            ) : (
-                                                <Tv size={16} className="text-text-muted" />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                {c.isPremium && <Crown size={14} className="text-accent-gold" />}
-                                                {c.isLive && <Radio size={14} className="text-accent-red animate-pulse" />}
-                                                <span className="font-bold">{c.name}</span>
-                                            </div>
-                                            <span className="text-xs text-text-muted">/live/{c.slug}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 text-text-secondary text-sm capitalize">{c.category}</td>
-                                <td className="px-4 py-3 text-sm font-mono text-accent-green">{c.embeds.length} links</td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className={`text-xs font-bold px-2 py-1 rounded ${c.isLive ? "bg-accent-red/20 text-accent-red" : "bg-text-muted/20 text-text-muted"}`}>
-                                            {c.isLive ? "LIVE" : "OFFLINE"}
-                                        </span>
-                                        <span className={`text-xs font-bold px-2 py-1 rounded ${c.isPremium ? "bg-accent-gold/20 text-accent-gold" : "bg-accent-green/20 text-accent-green"}`}>
-                                            {c.isPremium ? "PREMIUM" : "FREE"}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <button
-                                            onClick={() => toggleLive({ id: c._id })}
-                                            className={`p-2 rounded-lg ${c.isLive ? "bg-accent-red/20 text-accent-red" : "hover:bg-stadium-hover text-text-muted"}`}
-                                            title={c.isLive ? "Go Offline" : "Go Live"}
-                                        >
-                                            <Power size={16} />
-                                        </button>
-                                        <Link href={`/admin/channels/${c._id}`} className="p-2 hover:bg-stadium-hover rounded-lg">
-                                            <Edit size={16} />
-                                        </Link>
-                                        <button
-                                            onClick={() => deleteChannel({ id: c._id })}
-                                            className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {filtered?.length === 0 && (
-                    <div className="p-12 text-center text-text-muted">
-                        <Tv size={48} className="mx-auto mb-4 opacity-30" />
-                        <p>Ma jiraan channels. Ku dar mid cusub.</p>
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-400">Name</label>
+                            <input
+                                required
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 focus:ring-2 focus:ring-red-500 outline-none"
+                                placeholder="e.g. beIN Sports 1"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-400">Slug</label>
+                            <input
+                                required
+                                value={formData.slug}
+                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 outline-none"
+                                placeholder="e.g. bein-1"
+                            />
+                        </div>
+
+                        <div className="space-y-2 col-span-2">
+                            <label className="text-sm text-gray-400">Stream URL (HLS/M3U8)</label>
+                            <input
+                                required
+                                value={formData.streamUrl}
+                                onChange={(e) => setFormData({ ...formData, streamUrl: e.target.value })}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 font-mono text-sm outline-none"
+                                placeholder="http://13.x.x.x/hls/bein1/index.m3u8"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-400">Logo/Thumbnail URL</label>
+                            <input
+                                value={formData.thumbnailUrl}
+                                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 outline-none"
+                                placeholder="https://..."
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-400">Category</label>
+                            <select
+                                value={formData.category}
+                                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 outline-none"
+                            >
+                                <option value="sports">Sports</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="news">News</option>
+                                <option value="movies">Movies</option>
+                            </select>
+                        </div>
+
+                        <div className="flex gap-6 mt-2 items-center">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isLive}
+                                    onChange={(e) => setFormData({ ...formData, isLive: e.target.checked })}
+                                    className="w-5 h-5 rounded bg-zinc-800 border-zinc-700 text-red-600"
+                                />
+                                <span>Is Live</span>
+                            </label>
+
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isPremium}
+                                    onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
+                                    className="w-5 h-5 rounded bg-zinc-800 border-zinc-700 text-yellow-500"
+                                />
+                                <span>Premium Only</span>
+                            </label>
+
+                            <label className="flex items-center gap-2">
+                                <span className="text-sm">Priority:</span>
+                                <input
+                                    type="number"
+                                    value={formData.priority}
+                                    onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })}
+                                    className="w-16 bg-zinc-800 border border-zinc-700 rounded p-1 text-center"
+                                />
+                            </label>
+                        </div>
+
+                        <div className="col-span-2 flex justify-end gap-3 mt-4">
+                            <button
+                                type="button"
+                                onClick={resetForm}
+                                className="px-4 py-2 text-gray-400 hover:text-white"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="flex items-center gap-2 bg-green-600 px-6 py-2 rounded-lg hover:bg-green-700 font-bold"
+                            >
+                                <Save size={18} /> {isEditing ? "Update Channel" : "Create Channel"}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* Channels List */}
+            <div className="grid gap-4">
+                {channels?.length === 0 && (
+                    <div className="text-center py-20 text-gray-500">
+                        No channels found. Create one to get started!
                     </div>
                 )}
+
+                {channels?.map((channel) => (
+                    <div key={channel._id} className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex items-center justify-between group hover:border-zinc-700 transition">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-black rounded-lg flex items-center justify-center overflow-hidden">
+                                {channel.thumbnailUrl ? (
+                                    <img src={channel.thumbnailUrl} alt={channel.name} className="w-10 h-10 object-contain" />
+                                ) : (
+                                    <Play className="text-zinc-700" />
+                                )}
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg flex items-center gap-2">
+                                    {channel.name}
+                                    {channel.isLive && <span className="text-[10px] bg-red-600 px-1.5 py-0.5 rounded uppercase">Live</span>}
+                                    {channel.isPremium && <span className="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded uppercase">Premium</span>}
+                                </h3>
+                                <p className="text-gray-400 text-sm font-mono truncate max-w-md">
+                                    {channel.embeds[0]?.url}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={() => startEdit(channel)}
+                                className="p-2 hover:bg-zinc-800 rounded-lg text-blue-400"
+                                title="Edit"
+                            >
+                                <Edit size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(channel._id)}
+                                className="p-2 hover:bg-zinc-800 rounded-lg text-red-500"
+                                title="Delete"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

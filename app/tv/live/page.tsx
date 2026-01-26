@@ -1,73 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StreamPlayer } from "@/components/StreamPlayer";
-import { Tv, ArrowLeft, RefreshCw } from "lucide-react";
+import { Tv, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-// Your restreamed beIN Sports channels
-// Replace YOUR_LIGHTSAIL_IP with your actual IP
-const LIGHTSAIL_IP = "13.61.187.198";
-
-const LIVE_CHANNELS = [
-    {
-        id: "bein1",
-        name: "beIN Sports 1 HD",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/BeIN_Sports_logo_%282017%29.svg",
-        streamUrl: `http://${LIGHTSAIL_IP}/hls/bein1/index.m3u8`,
-        category: "Sports",
-    },
-    {
-        id: "bein2",
-        name: "beIN Sports 2 HD",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/BeIN_Sports_logo_%282017%29.svg",
-        streamUrl: `http://${LIGHTSAIL_IP}/hls/bein2/index.m3u8`,
-        category: "Sports",
-    },
-    {
-        id: "bein3",
-        name: "beIN Sports 3 HD",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/BeIN_Sports_logo_%282017%29.svg",
-        streamUrl: `http://${LIGHTSAIL_IP}/hls/bein3/index.m3u8`,
-        category: "Sports",
-    },
-    {
-        id: "bein4",
-        name: "beIN Sports 4 HD",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/BeIN_Sports_logo_%282017%29.svg",
-        streamUrl: `http://${LIGHTSAIL_IP}/hls/bein4/index.m3u8`,
-        category: "Sports",
-    },
-    {
-        id: "bein5",
-        name: "beIN Sports 5 HD",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/BeIN_Sports_logo_%282017%29.svg",
-        streamUrl: `http://${LIGHTSAIL_IP}/hls/bein5/index.m3u8`,
-        category: "Sports",
-    },
-];
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function LiveTVPage() {
-    const [selectedChannel, setSelectedChannel] = useState(LIVE_CHANNELS[0]);
-    const [isLoading, setIsLoading] = useState(false);
+    // Fetch channels from database
+    const channels = useQuery(api.channels.list, { isLive: true });
 
-    const handleChannelChange = (channel: typeof LIVE_CHANNELS[0]) => {
+    // State
+    const [selectedChannel, setSelectedChannel] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    // Auto-select first channel when loaded
+    useEffect(() => {
+        if (channels && channels.length > 0 && !selectedChannel) {
+            setSelectedChannel(channels[0]);
+        }
+    }, [channels, selectedChannel]);
+
+    const handleChannelChange = (channel: any) => {
         setIsLoading(true);
         setSelectedChannel(channel);
-        // Reset loading after a brief moment
         setTimeout(() => setIsLoading(false), 500);
     };
 
     const handleRefresh = () => {
         setIsLoading(true);
-        // Force re-mount of StreamPlayer
-        const currentChannel = selectedChannel;
-        setSelectedChannel({ ...currentChannel, id: `${currentChannel.id}-refresh-${Date.now()}` });
-        setTimeout(() => {
-            setSelectedChannel(currentChannel);
-            setIsLoading(false);
-        }, 100);
+        setRefreshKey(prev => prev + 1);
+        setTimeout(() => setIsLoading(false), 500);
     };
+
+    // Loading State
+    if (!channels) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <Loader2 className="animate-spin text-red-600 w-12 h-12" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -97,39 +72,52 @@ export default function LiveTVPage() {
                 </button>
             </header>
 
+            {/* Header content remains same... */}
             <div className="flex h-screen pt-20">
                 {/* Video Player Area */}
                 <main className="flex-1 p-4">
                     <div className="relative w-full aspect-video bg-zinc-900 rounded-2xl overflow-hidden">
-                        <StreamPlayer
-                            key={selectedChannel.id}
-                            source={{
-                                url: selectedChannel.streamUrl,
-                                type: "m3u8",
-                            }}
-                            className="w-full h-full rounded-2xl"
-                            onError={(error) => console.error("Stream error:", error)}
-                            onReady={() => setIsLoading(false)}
-                        />
+                        {selectedChannel ? (
+                            <StreamPlayer
+                                key={`${selectedChannel._id}-${refreshKey}`}
+                                source={{
+                                    url: selectedChannel.embeds[0]?.url || "",
+                                    type: "m3u8",
+                                }}
+                                className="w-full h-full rounded-2xl"
+                                onError={(error) => console.error("Stream error:", error)}
+                                onReady={() => setIsLoading(false)}
+                            />
+                        ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                                Select a channel
+                            </div>
+                        )}
                     </div>
 
                     {/* Now Playing Info */}
-                    <div className="mt-4 flex items-center gap-4">
-                        <div className="w-16 h-16 bg-zinc-800 rounded-xl flex items-center justify-center overflow-hidden">
-                            <img
-                                src={selectedChannel.logo}
-                                alt={selectedChannel.name}
-                                className="w-10 h-10 object-contain"
-                            />
+                    {selectedChannel && (
+                        <div className="mt-4 flex items-center gap-4">
+                            <div className="w-16 h-16 bg-zinc-800 rounded-xl flex items-center justify-center overflow-hidden">
+                                {selectedChannel.thumbnailUrl ? (
+                                    <img
+                                        src={selectedChannel.thumbnailUrl}
+                                        alt={selectedChannel.name}
+                                        className="w-10 h-10 object-contain"
+                                    />
+                                ) : (
+                                    <Tv className="w-8 h-8 text-white/50" />
+                                )}
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold">{selectedChannel.name}</h2>
+                                <p className="text-gray-400 capitalize">
+                                    <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse" />
+                                    {selectedChannel.category || "Live"}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-2xl font-bold">{selectedChannel.name}</h2>
-                            <p className="text-gray-400">
-                                <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse" />
-                                Live Now
-                            </p>
-                        </div>
-                    </div>
+                    )}
                 </main>
 
                 {/* Channel Sidebar */}
@@ -137,27 +125,31 @@ export default function LiveTVPage() {
                     <h3 className="text-lg font-bold mb-4 text-white/80">Channels</h3>
 
                     <div className="space-y-2">
-                        {LIVE_CHANNELS.map((channel) => (
+                        {channels.map((channel: any) => (
                             <button
-                                key={channel.id}
+                                key={channel._id}
                                 onClick={() => handleChannelChange(channel)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-red-500 ${selectedChannel.id === channel.id
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-red-500 ${selectedChannel?._id === channel._id
                                     ? "bg-red-600 text-white"
                                     : "bg-zinc-800/50 hover:bg-zinc-800 text-white/80 hover:text-white"
                                     }`}
                             >
                                 <div className="w-10 h-10 bg-black/30 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={channel.logo}
-                                        alt={channel.name}
-                                        className="w-6 h-6 object-contain"
-                                    />
+                                    {channel.thumbnailUrl ? (
+                                        <img
+                                            src={channel.thumbnailUrl}
+                                            alt={channel.name}
+                                            className="w-6 h-6 object-contain"
+                                        />
+                                    ) : (
+                                        <Tv size={16} />
+                                    )}
                                 </div>
                                 <div className="text-left flex-1 min-w-0">
                                     <p className="font-medium truncate">{channel.name}</p>
-                                    <p className="text-xs text-white/50">{channel.category}</p>
+                                    <p className="text-xs text-white/50 capitalize">{channel.category}</p>
                                 </div>
-                                {selectedChannel.id === channel.id && (
+                                {selectedChannel?._id === channel._id && (
                                     <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
                                 )}
                             </button>
