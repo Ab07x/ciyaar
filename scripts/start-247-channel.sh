@@ -45,7 +45,7 @@ while true; do
     echo "[$(date)] Starting Stream (Attempt $RESTART_COUNT)..." >> "$LOG_FILE"
     
     ffmpeg -hide_banner -loglevel error \
-        -user_agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+        -headers "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"$'\r\n'"Accept: */*"$'\r\n'"Connection: keep-alive"$'\r\n' \
         -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
         -i "$INPUT_URL" \
         -c:v libx264 -preset ultrafast -tune zerolatency \
