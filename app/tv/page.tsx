@@ -1,11 +1,12 @@
 
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
 import { TVMovieCard } from "@/components/tv/TVMovieCard";
-import { Tv, Search, User, LogOut, Home, PlayCircle } from "lucide-react";
+import { Tv, Search, User, LogOut, Home, PlayCircle, Play } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
