@@ -9,13 +9,15 @@ export const list = query({
         isLive: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
-        let q = ctx.db.query("channels");
-
+        let channels;
         if (args.isLive !== undefined) {
-            q = q.withIndex("by_live", (q) => q.eq("isLive", args.isLive!));
+            channels = await ctx.db
+                .query("channels")
+                .withIndex("by_live", (q) => q.eq("isLive", args.isLive!))
+                .collect();
+        } else {
+            channels = await ctx.db.query("channels").collect();
         }
-
-        const channels = await q.collect();
 
         // Sort by priority (descending)
         channels.sort((a, b) => b.priority - a.priority);
