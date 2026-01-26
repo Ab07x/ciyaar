@@ -310,7 +310,7 @@ function SeriesWatchContent() {
                         {/* Embed switcher if watching and unlocked */}
                         {activeEpisode && !isLocked && activeEpisode.embeds && activeEpisode.embeds.length > 1 && (
                             <div className="flex flex-wrap gap-2 mb-6">
-                                {activeEpisode.embeds.map((embed, i) => (
+                                {activeEpisode.embeds.map((embed: any, i: number) => (
                                     <button
                                         key={i}
                                         onClick={() => setActiveEmbedIndex(i)}
@@ -464,7 +464,7 @@ function SeriesWatchContent() {
                             <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6">
                                 <h3 className="font-bold mb-4">Cast</h3>
                                 <div className="flex flex-col gap-3">
-                                    {series.cast.slice(0, 5).map((c, i) => (
+                                    {series.cast.slice(0, 5).map((c: any, i: number) => (
                                         <div key={i} className="flex items-center gap-3">
                                             {c.profileUrl ? (
                                                 <Image src={c.profileUrl} alt={c.name} width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
@@ -516,7 +516,7 @@ function SeriesWatchContent() {
                             bestRating: "10",
                             ratingCount: "100" // Placeholder
                         } : undefined,
-                        actor: series.cast?.map(c => ({
+                        actor: series.cast?.map((c: any) => ({
                             "@type": "Person",
                             name: c.name
                         })),
