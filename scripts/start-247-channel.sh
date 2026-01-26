@@ -1,10 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# FANBROJ 24/7 CHANNEL RELAY - Performance Optimized
-# ==============================================================================
-# - Video: 1500k bitrate (720p/1080p optimized for stability)
-# - Audio: COPY (Zero CPU usage for audio)
-# - Preset: ultrafast (Lowest CPU usage)
+# FANBROJ 24/7 CHANNEL RELAY - Stable Local Logs Version
 # ==============================================================================
 
 # Exit on undefined variable
@@ -24,11 +20,13 @@ HOST=$5
 # Configuration
 WEB_ROOT="/var/www/html"
 STREAM_DIR="$WEB_ROOT/hls/$SLUG"
-LOG_DIR="/var/log/streams"
+# Move logs to current project directory to avoid root permission issues
+LOG_DIR="$HOME/ciyaar/logs"
 LOG_FILE="$LOG_DIR/$SLUG.log"
 
 INPUT_URL="http://$HOST/live/$IPTV_USER/$IPTV_PASS/$CH_ID.ts"
 
+# Create directories
 mkdir -p "$STREAM_DIR"
 mkdir -p "$LOG_DIR"
 
@@ -46,10 +44,6 @@ while true; do
     RESTART_COUNT=$((RESTART_COUNT + 1))
     echo "[$(date)] Starting Stream (Attempt $RESTART_COUNT)..." >> "$LOG_FILE"
     
-    # OPTIMIZED COMMAND
-    # -c:v libx264 -preset ultrafast -b:v 1500k: Very fast video encoding at 1.5Mbps
-    # -c:a copy: DIRECT COPY of audio (No CPU usage)
-    # -hls_time 6: Longer segments = Less HTTP requests = Less buffering
     ffmpeg -hide_banner -loglevel error \
         -user_agent "VLC/3.0.18" \
         -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
