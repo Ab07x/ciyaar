@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
@@ -11,18 +10,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
-export default function TVPage() {
+function TVPageContent() {
     const searchParams = useSearchParams();
     const isGuest = searchParams.get("guest") === "true";
     const { userId, isPremium } = useUser();
     const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 50 });
     const [activeCategory, setActiveCategory] = useState("all");
 
-    // D-pad navigation helper could go here, but relying on native focus for now
-
     if (!movies) {
         return (
-            <div className="flex items-center justify-center h-screen">
+            <div className="flex items-center justify-center h-screen bg-black">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
             </div>
         );
@@ -86,7 +83,11 @@ export default function TVPage() {
                                 {featuredMovie.isPremium && (
                                     <span className="bg-yellow-500 text-black font-bold px-3 py-1 rounded text-sm">PREMIUM</span>
                                 )}
-                                <span className="text-white/80 font-medium">{new Date(featuredMovie.releaseDate).getFullYear()}</span>
+                                {featuredMovie.releaseDate && (
+                                    <span className="text-white/80 font-medium">
+                                        {new Date(featuredMovie.releaseDate).getFullYear()}
+                                    </span>
+                                )}
                                 <span className="bg-white/20 px-2 py-0.5 rounded text-sm">HD</span>
                             </div>
                             <h1 className="text-5xl font-black mb-4 leading-tight">
@@ -166,6 +167,18 @@ export default function TVPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function TVPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-screen bg-black">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+            </div>
+        }>
+            <TVPageContent />
+        </Suspense>
     );
 }
 

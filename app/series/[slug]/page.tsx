@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { AdSlot } from "@/components/AdSlot";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -28,7 +28,7 @@ import { StreamPlayer } from "@/components/StreamPlayer";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import type { Id } from "@/convex/_generated/dataModel";
 
-export default function SeriesWatchPage() {
+function SeriesWatchContent() {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -92,8 +92,8 @@ export default function SeriesWatchPage() {
     const currentSeasonNumber = seasonParam ? parseInt(seasonParam) : null;
 
     let activeEpisode = null;
-    if (currentSeasonNumber && currentEpisodeNumber && episodesData[currentSeasonNumber]) {
-        activeEpisode = episodesData[currentSeasonNumber].find(e => e.episodeNumber === currentEpisodeNumber);
+    if (currentSeasonNumber && currentEpisodeNumber && (episodesData as any)[currentSeasonNumber]) {
+        activeEpisode = (episodesData as any)[currentSeasonNumber].find((e: any) => e.episodeNumber === currentEpisodeNumber);
     }
 
     const isLocked = series.isPremium && !isPremium && !localUnlocked;
@@ -285,7 +285,7 @@ export default function SeriesWatchPage() {
                                             <button
                                                 onClick={() => {
                                                     const firstS = Object.keys(episodesData).sort()[0];
-                                                    const firstE = episodesData[Number(firstS)][0];
+                                                    const firstE = (episodesData as any)[Number(firstS)][0];
                                                     handleEpisodeClick(Number(firstS), firstE.episodeNumber);
                                                 }}
                                                 className="px-6 py-3 bg-accent-green text-black font-bold rounded-xl flex items-center gap-2 hover:brightness-110 transition-all"
@@ -362,7 +362,7 @@ export default function SeriesWatchPage() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {episodesData[activeSeason]?.map((ep) => (
+                                {(episodesData as any)[activeSeason]?.map((ep: any) => (
                                     <button
                                         key={ep._id}
                                         onClick={() => handleEpisodeClick(ep.seasonNumber, ep.episodeNumber)}
@@ -415,7 +415,7 @@ export default function SeriesWatchPage() {
                                     </button>
                                 ))}
 
-                                {(!episodesData[activeSeason] || episodesData[activeSeason].length === 0) && (
+                                {(!(episodesData as any)[activeSeason] || (episodesData as any)[activeSeason].length === 0) && (
                                     <div className="col-span-full py-12 text-center text-text-muted bg-stadium-elevated/50 rounded-xl border border-dashed border-border-subtle">
                                         No episodes found for Season {activeSeason}
                                     </div>
@@ -484,7 +484,7 @@ export default function SeriesWatchPage() {
                         )}
 
                         {/* Similar Content Section */}
-                        {similarContent && similarContent.length > 0 && (
+                        {similarContent && (similarContent as any).length > 0 && (
                             <div className="mt-8">
                                 <ContentCarousel
                                     title="YOU MAY ALSO LIKE"
@@ -531,5 +531,13 @@ export default function SeriesWatchPage() {
                 }}
             />
         </div>
+    );
+}
+
+export default function SeriesWatchPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div></div>}>
+            <SeriesWatchContent />
+        </Suspense>
     );
 }
