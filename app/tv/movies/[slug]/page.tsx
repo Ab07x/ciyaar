@@ -54,10 +54,10 @@ export default function TVMovieDetailPage() {
                             Premium
                         </span>
                     )}
-                    {movie.rating > 0 && (
+                    {(movie.rating || 0) > 0 && (
                         <div className="flex items-center gap-2 text-yellow-400 font-bold text-xl">
                             <Star fill="currentColor" />
-                            {movie.rating.toFixed(1)}
+                            {movie.rating?.toFixed(1)}
                         </div>
                     )}
                     <div className="flex items-center gap-2 text-white/60 font-bold text-xl">
