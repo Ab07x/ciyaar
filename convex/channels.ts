@@ -8,11 +8,9 @@ export const list = query({
         isLive: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
-        let q = ctx.db.query("channels");
-
-        if (args.isLive !== undefined) {
-            q = q.withIndex("by_live", (q) => q.eq("isLive", args.isLive!));
-        }
+        const q = args.isLive !== undefined
+            ? ctx.db.query("channels").withIndex("by_live", (q) => q.eq("isLive", args.isLive!))
+            : ctx.db.query("channels");
 
         let channels = await q.collect();
 
