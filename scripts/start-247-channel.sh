@@ -77,9 +77,17 @@ USER_AGENT="${USER_AGENT:-${MOBILE_AGENTS[$RANDOM_INDEX]}}"
 mkdir -p "$STREAM_DIR"
 mkdir -p "$LOG_DIR"
 
-# Clean old segments
-rm -f "$STREAM_DIR"/*.ts 2>/dev/null
-rm -f "$STREAM_DIR"/*.m3u8 2>/dev/null
+# IMPORTANT: Do NOT delete old segments on restart
+# CloudFront may still be serving cached playlists referencing them
+# FFmpeg will continue numbering from the highest existing segment
+# Old segments will be auto-deleted by hls_flags delete_segments once outside the playlist window
+
+# Only clean on very first start (if no m3u8 exists)
+if [ ! -f "$STREAM_DIR/index.m3u8" ]; then
+    log "🧹 First start detected - cleaning directory"
+    rm -f "$STREAM_DIR"/*.ts 2>/dev/null
+    rm -f "$STREAM_DIR"/*.m3u8 2>/dev/null
+fi
 
 # Logging function
 log() {
@@ -156,8 +164,9 @@ while true; do
         -hls_delete_threshold "$HLS_DELETE_THRESHOLD" \
         -hls_flags delete_segments+append_list+omit_endlist+temp_file \
         -hls_segment_type mpegts \
+        -hls_start_number_source epoch \
         -hls_allow_cache 1 \
-        -hls_segment_filename "$STREAM_DIR/%03d.ts" \
+        -hls_segment_filename "$STREAM_DIR/%d.ts" \
         "$STREAM_DIR/index.m3u8" 2>> "$LOG_FILE"
     
     EXIT_CODE=$?
