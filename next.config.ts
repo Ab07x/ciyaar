@@ -12,19 +12,12 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true, // Temporarily ignore to pass build
   },
-  eslint: {
-    ignoreDuringBuilds: true, // Temporarily ignore to pass build
-  },
-  experimental: {
-    // Disable Turbopack for stable builds
-    turbo: undefined,
-  },
-
-  // Optimize build performance
-  swcMinify: true,
 
   // Static generation configuration
   staticPageGenerationTimeout: 120, // 2 minutes timeout for static pages
+
+  // Fix workspace root warning
+  outputFileTracingRoot: process.cwd(),
 
   // Reduce bundle size
   outputFileTracingExcludes: {
