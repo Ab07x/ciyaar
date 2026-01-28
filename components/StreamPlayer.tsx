@@ -125,11 +125,22 @@ export function StreamPlayer({
     const [resolvedUrl, setResolvedUrl] = useState("");
     const [canShowSkipIntro, setCanShowSkipIntro] = useState(false);
     const [canShowNextEpisode, setCanShowNextEpisode] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    const [needsUserInteraction, setNeedsUserInteraction] = useState(false);
 
     // Double-tap state
     const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(null);
     const tapTimeoutRef = useRef<any>(null);
     const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
+
+    // Detect mobile on mount
+    useEffect(() => {
+        const checkMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        setIsMobile(checkMobile);
+        if (checkMobile) {
+            setShowControls(true); // Always show controls on mobile initially
+        }
+    }, []);
 
     // Convex Mutations
     const saveProgress = useMutation(api.watch.saveProgress);
@@ -173,10 +184,13 @@ export function StreamPlayer({
         if (controlsTimeoutRef.current) {
             clearTimeout(controlsTimeoutRef.current);
         }
-        controlsTimeoutRef.current = setTimeout(() => {
-            if (isPlaying) setShowControls(false);
-        }, 3000);
-    }, [isPlaying]);
+        // On mobile, keep controls visible longer or always visible
+        if (!isMobile) {
+            controlsTimeoutRef.current = setTimeout(() => {
+                if (isPlaying) setShowControls(false);
+            }, 3000);
+        }
+    }, [isPlaying, isMobile]);
 
     // Skip intro/next episode logic
     useEffect(() => {
@@ -386,7 +400,16 @@ export function StreamPlayer({
                         }));
                         setQualities(levels);
 
-                        video.play().catch(() => { });
+                        // On mobile, require user interaction to play
+                        if (isMobile) {
+                            setNeedsUserInteraction(true);
+                            setShowControls(true);
+                        } else {
+                            video.play().catch(() => {
+                                setNeedsUserInteraction(true);
+                                setShowControls(true);
+                            });
+                        }
                     });
 
                     hls.on(Hls.Events.ERROR, (_: any, data: any) => {
@@ -419,7 +442,16 @@ export function StreamPlayer({
                     video.addEventListener("loadedmetadata", () => {
                         setIsLoading(false);
                         onReady?.();
-                        video.play().catch(() => { });
+                        // On mobile, require user interaction to play
+                        if (isMobile) {
+                            setNeedsUserInteraction(true);
+                            setShowControls(true);
+                        } else {
+                            video.play().catch(() => {
+                                setNeedsUserInteraction(true);
+                                setShowControls(true);
+                            });
+                        }
                     });
                 } else {
                     setError("HLS not supported in this browser");
@@ -455,7 +487,16 @@ export function StreamPlayer({
         const handleLoaded = () => {
             setIsLoading(false);
             onReady?.();
-            video.play().catch(() => { });
+            // On mobile, require user interaction to play
+            if (isMobile) {
+                setNeedsUserInteraction(true);
+                setShowControls(true);
+            } else {
+                video.play().catch(() => {
+                    setNeedsUserInteraction(true);
+                    setShowControls(true);
+                });
+            }
         };
 
         const handleError = () => {
@@ -520,8 +561,15 @@ export function StreamPlayer({
     const togglePlay = () => {
         const video = videoRef.current;
         if (!video) return;
-        if (video.paused) video.play();
-        else video.pause();
+        if (video.paused) {
+            video.play().then(() => {
+                setNeedsUserInteraction(false);
+            }).catch((err) => {
+                console.error("Play failed:", err);
+            });
+        } else {
+            video.pause();
+        }
     };
 
     const toggleMute = () => {
@@ -630,16 +678,19 @@ export function StreamPlayer({
     };
 
     // Double-tap handler for mobile seek
-    const handleVideoAreaClick = (e: React.MouseEvent) => {
+    const handleVideoAreaClick = (e: React.MouseEvent | React.TouchEvent) => {
         if (streamType === "iframe") return;
 
         const now = Date.now();
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        const x = e.clientX - rect.left;
+
+        // Handle both mouse and touch events
+        const clientX = 'touches' in e ? e.touches[0]?.clientX || e.changedTouches[0]?.clientX : e.clientX;
+        const x = clientX - rect.left;
         const isLeftSide = x < rect.width / 2;
 
-        if (now - lastTapRef.current.time < 300) {
-            // Double tap
+        if (now - lastTapRef.current.time < 300 && Math.abs(x - lastTapRef.current.x) < 50) {
+            // Double tap in same area
             if (isLeftSide) {
                 seekBackward();
             } else {
@@ -676,17 +727,26 @@ export function StreamPlayer({
     return (
         <div
             ref={containerRef}
-            className={cn("stream-player relative bg-black aspect-video rounded-xl overflow-hidden group", className)}
+            className={cn("stream-player relative bg-black aspect-video rounded-xl overflow-hidden group touch-none", className)}
             onMouseMove={resetControlsTimeout}
             onMouseEnter={() => setShowControls(true)}
             onClick={handleVideoAreaClick}
+            onTouchStart={handleVideoAreaClick}
         >
             {/* Video Element */}
             <video
                 ref={videoRef}
                 poster={poster}
                 playsInline
+                webkit-playsinline="true"
+                x5-playsinline="true"
+                x-webkit-airplay="allow"
+                preload="metadata"
                 className="absolute inset-0 w-full h-full object-contain"
+                style={{
+                    WebkitTapHighlightColor: 'transparent',
+                    touchAction: 'manipulation'
+                }}
             />
 
             {/* Buffer Indicator */}
@@ -869,14 +929,19 @@ export function StreamPlayer({
                         </div>
 
                         {/* Center play button */}
-                        {!isPlaying && !isLoading && (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+                        {(!isPlaying || needsUserInteraction) && !isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-auto z-20">
                                 <button
                                     onClick={togglePlay}
-                                    className="w-20 h-20 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110"
+                                    className="w-20 h-20 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
                                 >
                                     <Play size={36} className="text-white ml-1" />
                                 </button>
+                                {needsUserInteraction && (
+                                    <div className="absolute top-full mt-4 bg-black/80 px-4 py-2 rounded-lg text-sm text-white">
+                                        Tap to play
+                                    </div>
+                                )}
                             </div>
                         )}
 
