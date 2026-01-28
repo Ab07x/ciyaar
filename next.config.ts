@@ -11,6 +11,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  experimental: {
+    // Disable Turbopack for stable builds
+    turbo: undefined,
+  },
 
   // Allow iframe embeds from external sources
   async headers() {

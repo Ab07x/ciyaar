@@ -1,0 +1,14 @@
+# Ignore files that don't need to be deployed to Vercel
+scripts/
+docs/
+logs/
+config/
+*.md
+!README.md
+.git
+.github
+mobile/
+AWS_LIGHTSAIL_RESTREAM_MASTER_GUIDE.md
+DEPLOYMENT_GUIDE.md
+QUICK_DEPLOY.md
+*.log
