@@ -42,7 +42,7 @@ export function generateMetadata(): Metadata {
       siteName: siteName,
       images: [
         {
-          url: settings?.ogImage || settings?.logoUrl || "/og-image.jpg",
+          url: "/og-image.jpg",
           width: 1200,
           height: 630,
           alt: `${siteName} - Ciyaaraha & Madadaalada`,
@@ -50,9 +50,9 @@ export function generateMetadata(): Metadata {
       ],
     },
     icons: {
-      icon: settings?.faviconUrl || "/favicon.ico",
-      shortcut: settings?.faviconUrl || "/favicon.ico",
-      apple: settings?.logoUrl || "/apple-touch-icon.png",
+      icon: "/favicon.ico",
+      shortcut: "/favicon.ico",
+      apple: "/apple-touch-icon.png",
     },
     manifest: "/manifest.json",
     robots: {
@@ -65,9 +65,6 @@ export function generateMetadata(): Metadata {
         "max-image-preview": "large",
         "max-snippet": -1,
       },
-    },
-    verification: {
-      google: settings?.googleVerification || undefined,
     },
   };
 }
