@@ -1,30 +1,46 @@
 #!/bin/bash
 # ==============================================================================
-# FANBROJ 24/7 CHANNEL RELAY - Stable Local Logs Version
+# FANBROJ 24/7 CHANNEL RELAY - Flexible Input Version
 # ==============================================================================
 
 # Exit on undefined variable
 set -u
 
-if [ "$#" -ne 5 ]; then
-    echo "Usage: $0 <slug> <username> <password> <channel_id> <host>"
+# Function to display usage
+usage() {
+    echo "Usage: $0 <slug> <input_url>"
+    echo "   OR: $0 <slug> <username> <password> <channel_id> <host>"
     exit 1
+}
+
+if [ "$#" -lt 2 ]; then
+    usage
 fi
 
 SLUG=$1
-IPTV_USER=$2
-IPTV_PASS=$3
-CH_ID=$4
-HOST=$5
+INPUT_URL=""
+
+# Handle different input formats
+if [ "$#" -eq 2 ]; then
+    # Direct URL mode
+    INPUT_URL=$2
+elif [ "$#" -eq 5 ]; then
+    # Legacy mode (constructed URL)
+    IPTV_USER=$2
+    IPTV_PASS=$3
+    CH_ID=$4
+    HOST=$5
+    INPUT_URL="http://$HOST/live/$IPTV_USER/$IPTV_PASS/$CH_ID.ts"
+else
+    echo "Error: Invalid number of arguments."
+    usage
+fi
 
 # Configuration
 WEB_ROOT="/var/www/html"
 STREAM_DIR="$WEB_ROOT/hls/$SLUG"
-# Move logs to current project directory to avoid root permission issues
 LOG_DIR="$HOME/ciyaar/logs"
 LOG_FILE="$LOG_DIR/$SLUG.log"
-
-INPUT_URL="http://$HOST/live/$IPTV_USER/$IPTV_PASS/$CH_ID.ts"
 
 # Create directories
 mkdir -p "$STREAM_DIR"
@@ -35,7 +51,8 @@ rm -f "$STREAM_DIR"/*.ts 2>/dev/null
 rm -f "$STREAM_DIR"/*.m3u8 2>/dev/null
 
 echo "=============================================="
-echo "📺 STARTING OPTIMIZED STREAM: $SLUG"
+echo "📺 STARTING STREAM: $SLUG"
+echo "🔗 URL: $INPUT_URL"
 echo "=============================================="
 
 RESTART_COUNT=0
@@ -44,12 +61,15 @@ while true; do
     RESTART_COUNT=$((RESTART_COUNT + 1))
     echo "[$(date)] Starting Stream (Attempt $RESTART_COUNT)..." >> "$LOG_FILE"
     
-    ffmpeg -hide_banner -loglevel error \
-        -headers "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"$'\r\n'"Accept: */*"$'\r\n'"Connection: keep-alive"$'\r\n' \
+    # Using the exact FFmpeg command that worked for the user, but sending to HLS
+    # Removing -c:v libx264 (transcoding) and using -c copy for performance as per original guide unless transcoding is needed
+    # The user's manual test used -c copy and worked perfectly.
+    
+    ffmpeg -hide_banner -loglevel warning \
+        -headers "User-Agent: VLC/3.0.18 LibVLC/3.0.18"$'\r\n' \
         -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
         -i "$INPUT_URL" \
-        -c:v libx264 -preset veryfast -tune zerolatency \
-        -b:v 4500k -maxrate 5000k -bufsize 8000k \
+        -c:v copy \
         -c:a copy \
         -hls_time 6 \
         -hls_list_size 10 \
@@ -59,5 +79,6 @@ while true; do
     
     EXIT_CODE=$?
     echo "[$(date)] Stream crashed (Exit: $EXIT_CODE). Restarting..." >> "$LOG_FILE"
+    echo "⚠️ Stream crashed! Restarting in 5s..."
     sleep 5
 done
