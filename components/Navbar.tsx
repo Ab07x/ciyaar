@@ -41,7 +41,6 @@ export function Navbar() {
         { href: "/live", label: t("nav.live"), icon: Radio, color: "text-[var(--color-cinema)]", hasLiveDot: true },
         { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-blue-400" },
         { href: "/series", label: t("nav.series"), icon: Tv, color: "text-white" },
-        { href: "/blog", label: t("nav.news"), icon: Newspaper, color: "text-[var(--color-text-secondary)]" },
         { href: "/requests", label: "Codso", icon: MessageSquare, color: "text-purple-400" },
         { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[var(--color-premium)]" },
     ];

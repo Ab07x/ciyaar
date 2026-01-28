@@ -13,6 +13,16 @@ export default function ChannelsAdminPage() {
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Loading state
+    if (channels === undefined) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-stadium-dark">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div>
+            </div>
+        );
+    }
 
     // Form State
     const [formData, setFormData] = useState({
