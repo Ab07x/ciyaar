@@ -1,0 +1,140 @@
+2026-01-28T17:43:13: ══════════════════════════════════════════════════════════════
+2026-01-28T17:43:13:   📺 FANBROJ STREAMING SERVER - Auto-Recovery Mode
+2026-01-28T17:43:13: ══════════════════════════════════════════════════════════════
+2026-01-28T17:43:13:   Channel:  SLUG
+2026-01-28T17:43:13:   Output:   /var/www/html/hls/SLUG/index.m3u8
+2026-01-28T17:43:13:   Log:      /home/ubuntu/ciyaar/logs/SLUG.log
+2026-01-28T17:43:13:   Started:  Wed Jan 28 17:43:13 EAT 2026
+2026-01-28T17:43:13: ══════════════════════════════════════════════════════════════
+[2026-01-28 17:43:13] 🚀 Starting stream for SLUG
+2026-01-28T17:43:13: [2026-01-28 17:43:13] 🚀 Starting stream for SLUG
+[2026-01-28 17:43:13] 📡 Source URL: http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts
+2026-01-28T17:43:13: [2026-01-28 17:43:13] 📡 Source URL: http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts
+[2026-01-28 17:43:13] ▶️  Starting FFmpeg (attempt 1)
+2026-01-28T17:43:13: [2026-01-28 17:43:13] ▶️  Starting FFmpeg (attempt 1)
+[http @ 0x5d22504b5e00] HTTP error 512 
+[http @ 0x5d22504b5e00] Will reconnect at 0 in 0 second(s).
+[http @ 0x5d22504b5e00] HTTP error 512 
+[http @ 0x5d22504b5e00] Will reconnect at 0 in 1 second(s).
+[http @ 0x5d22504b5e00] HTTP error 512 
+[http @ 0x5d22504b5e00] Will reconnect at 0 in 3 second(s).
+[http @ 0x5d22504b5e00] HTTP error 512 
+[http @ 0x5d22504b5e00] Will reconnect at 0 in 7 second(s).
+[http @ 0x5d22504b5e00] HTTP error 512 
+[in#0 @ 0x5d22504b5040] Error opening input: Server returned 5XX Server Error reply
+Error opening input file http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts.
+Error opening input files: Server returned 5XX Server Error reply
+[2026-01-28 17:43:25] ❌ FFmpeg error (exit code: 8)
+2026-01-28T17:43:25: [2026-01-28 17:43:25] ❌ FFmpeg error (exit code: 8)
+[2026-01-28 17:43:25] 🔄 Restarting in 3s... (retry 1)
+2026-01-28T17:43:25: [2026-01-28 17:43:25] 🔄 Restarting in 3s... (retry 1)
+[2026-01-28 17:43:28] ▶️  Starting FFmpeg (attempt 2)
+2026-01-28T17:43:28: [2026-01-28 17:43:28] ▶️  Starting FFmpeg (attempt 2)
+[http @ 0x621370ad9e00] HTTP error 512 
+[http @ 0x621370ad9e00] Will reconnect at 0 in 0 second(s).
+[http @ 0x621370ad9e00] HTTP error 512 
+[http @ 0x621370ad9e00] Will reconnect at 0 in 1 second(s).
+[http @ 0x621370ad9e00] HTTP error 512 
+[http @ 0x621370ad9e00] Will reconnect at 0 in 3 second(s).
+[http @ 0x621370ad9e00] HTTP error 512 
+[http @ 0x621370ad9e00] Will reconnect at 0 in 7 second(s).
+[http @ 0x621370ad9e00] HTTP error 512 
+[in#0 @ 0x621370ad9040] Error opening input: Server returned 5XX Server Error reply
+Error opening input file http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts.
+Error opening input files: Server returned 5XX Server Error reply
+[2026-01-28 17:43:41] ❌ FFmpeg error (exit code: 8)
+2026-01-28T17:43:41: [2026-01-28 17:43:41] ❌ FFmpeg error (exit code: 8)
+[2026-01-28 17:43:41] 🔄 Restarting in 5s... (retry 2)
+2026-01-28T17:43:41: [2026-01-28 17:43:41] 🔄 Restarting in 5s... (retry 2)
+[2026-01-28 17:43:46] ▶️  Starting FFmpeg (attempt 3)
+2026-01-28T17:43:46: [2026-01-28 17:43:46] ▶️  Starting FFmpeg (attempt 3)
+[http @ 0x5e191c64ae00] HTTP error 512 
+[http @ 0x5e191c64ae00] Will reconnect at 0 in 0 second(s).
+[http @ 0x5e191c64ae00] HTTP error 512 
+[http @ 0x5e191c64ae00] Will reconnect at 0 in 1 second(s).
+[http @ 0x5e191c64ae00] HTTP error 512 
+[http @ 0x5e191c64ae00] Will reconnect at 0 in 3 second(s).
+[http @ 0x5e191c64ae00] HTTP error 512 
+[http @ 0x5e191c64ae00] Will reconnect at 0 in 7 second(s).
+[http @ 0x5e191c64ae00] HTTP error 512 
+[in#0 @ 0x5e191c64a040] Error opening input: Server returned 5XX Server Error reply
+Error opening input file http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts.
+Error opening input files: Server returned 5XX Server Error reply
+[2026-01-28 17:43:58] ❌ FFmpeg error (exit code: 8)
+2026-01-28T17:43:58: [2026-01-28 17:43:58] ❌ FFmpeg error (exit code: 8)
+[2026-01-28 17:43:58] 🔄 Restarting in 7s... (retry 3)
+2026-01-28T17:43:58: [2026-01-28 17:43:58] 🔄 Restarting in 7s... (retry 3)
+[2026-01-28 17:44:05] ▶️  Starting FFmpeg (attempt 4)
+2026-01-28T17:44:05: [2026-01-28 17:44:05] ▶️  Starting FFmpeg (attempt 4)
+[http @ 0x63ed1157be00] HTTP error 512 
+[http @ 0x63ed1157be00] Will reconnect at 0 in 0 second(s).
+[http @ 0x63ed1157be00] HTTP error 512 
+[http @ 0x63ed1157be00] Will reconnect at 0 in 1 second(s).
+[http @ 0x63ed1157be00] HTTP error 512 
+[http @ 0x63ed1157be00] Will reconnect at 0 in 3 second(s).
+[http @ 0x63ed1157be00] HTTP error 512 
+[http @ 0x63ed1157be00] Will reconnect at 0 in 7 second(s).
+[http @ 0x63ed1157be00] HTTP error 512 
+[in#0 @ 0x63ed1157b040] Error opening input: Server returned 5XX Server Error reply
+Error opening input file http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts.
+Error opening input files: Server returned 5XX Server Error reply
+[2026-01-28 17:44:17] ❌ FFmpeg error (exit code: 8)
+2026-01-28T17:44:17: [2026-01-28 17:44:17] ❌ FFmpeg error (exit code: 8)
+[2026-01-28 17:44:17] 🔄 Restarting in 9s... (retry 4)
+2026-01-28T17:44:17: [2026-01-28 17:44:17] 🔄 Restarting in 9s... (retry 4)
+[2026-01-28 17:44:26] ▶️  Starting FFmpeg (attempt 5)
+2026-01-28T17:44:26: [2026-01-28 17:44:26] ▶️  Starting FFmpeg (attempt 5)
+[http @ 0x55c85496ce00] HTTP error 512 
+[http @ 0x55c85496ce00] Will reconnect at 0 in 0 second(s).
+[http @ 0x55c85496ce00] HTTP error 512 
+[http @ 0x55c85496ce00] Will reconnect at 0 in 1 second(s).
+[http @ 0x55c85496ce00] HTTP error 512 
+[http @ 0x55c85496ce00] Will reconnect at 0 in 3 second(s).
+[http @ 0x55c85496ce00] HTTP error 512 
+[http @ 0x55c85496ce00] Will reconnect at 0 in 7 second(s).
+[http @ 0x55c85496ce00] HTTP error 512 
+[in#0 @ 0x55c85496c040] Error opening input: Server returned 5XX Server Error reply
+Error opening input file http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts.
+Error opening input files: Server returned 5XX Server Error reply
+[2026-01-28 17:44:38] ❌ FFmpeg error (exit code: 8)
+2026-01-28T17:44:38: [2026-01-28 17:44:38] ❌ FFmpeg error (exit code: 8)
+[2026-01-28 17:44:38] 🔄 Restarting in 11s... (retry 5)
+2026-01-28T17:44:38: [2026-01-28 17:44:38] 🔄 Restarting in 11s... (retry 5)
+[2026-01-28 17:44:49] ▶️  Starting FFmpeg (attempt 6)
+2026-01-28T17:44:49: [2026-01-28 17:44:49] ▶️  Starting FFmpeg (attempt 6)
+[http @ 0x5a54cacdbe00] HTTP error 512 
+[http @ 0x5a54cacdbe00] Will reconnect at 0 in 0 second(s).
+[http @ 0x5a54cacdbe00] HTTP error 512 
+[http @ 0x5a54cacdbe00] Will reconnect at 0 in 1 second(s).
+[http @ 0x5a54cacdbe00] HTTP error 512 
+[http @ 0x5a54cacdbe00] Will reconnect at 0 in 3 second(s).
+[http @ 0x5a54cacdbe00] HTTP error 512 
+[http @ 0x5a54cacdbe00] Will reconnect at 0 in 7 second(s).
+[http @ 0x5a54cacdbe00] HTTP error 512 
+[in#0 @ 0x5a54cacdb040] Error opening input: Server returned 5XX Server Error reply
+Error opening input file http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts.
+Error opening input files: Server returned 5XX Server Error reply
+[2026-01-28 17:45:01] ❌ FFmpeg error (exit code: 8)
+2026-01-28T17:45:01: [2026-01-28 17:45:01] ❌ FFmpeg error (exit code: 8)
+[2026-01-28 17:45:01] 🔄 Restarting in 13s... (retry 6)
+2026-01-28T17:45:01: [2026-01-28 17:45:01] 🔄 Restarting in 13s... (retry 6)
+[2026-01-28 17:45:14] ▶️  Starting FFmpeg (attempt 7)
+2026-01-28T17:45:14: [2026-01-28 17:45:14] ▶️  Starting FFmpeg (attempt 7)
+[http @ 0x56b922ab3e00] HTTP error 512 
+[http @ 0x56b922ab3e00] Will reconnect at 0 in 0 second(s).
+[http @ 0x56b922ab3e00] HTTP error 512 
+[http @ 0x56b922ab3e00] Will reconnect at 0 in 1 second(s).
+[http @ 0x56b922ab3e00] HTTP error 512 
+[http @ 0x56b922ab3e00] Will reconnect at 0 in 3 second(s).
+[http @ 0x56b922ab3e00] HTTP error 512 
+[http @ 0x56b922ab3e00] Will reconnect at 0 in 7 second(s).
+[http @ 0x56b922ab3e00] HTTP error 512 
+[in#0 @ 0x56b922ab3040] Error opening input: Server returned 5XX Server Error reply
+Error opening input file http://iptvtour.store/live/jjZM7NxD/fuBhAnf/http://iptvtour.store:80/jjZM7NxD/fuBhAnf/118094.ts.
+Error opening input files: Server returned 5XX Server Error reply
+[2026-01-28 17:45:27] ❌ FFmpeg error (exit code: 8)
+2026-01-28T17:45:27: [2026-01-28 17:45:27] ❌ FFmpeg error (exit code: 8)
+[2026-01-28 17:45:27] 🔄 Restarting in 15s... (retry 7)
+2026-01-28T17:45:27: [2026-01-28 17:45:27] 🔄 Restarting in 15s... (retry 7)
+[2026-01-28 17:45:35] 🛑 Received shutdown signal for SLUG
+2026-01-28T17:45:35: [2026-01-28 17:45:35] 🛑 Received shutdown signal for SLUG
