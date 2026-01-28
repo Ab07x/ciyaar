@@ -15,21 +15,13 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 
-export async function generateMetadata(): Promise<Metadata> {
-  let settings: any = null;
-
-  try {
-    const settingsData = await fetchQuery(api.settings.getSettings);
-    settings = settingsData;
-  } catch (error) {
-    // Fallback when Convex is unreachable (build time, network issues)
-    console.warn("Failed to fetch settings for metadata:", error);
-  }
-
-  const siteName = settings?.siteName || "Fanbroj";
-  const title = settings?.seoTagline ? `${siteName} | ${settings.seoTagline}` : `${siteName} - Daawo Ciyaar Live & Filimaan`;
-  const description = settings?.seoDescription || "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta.";
-  const keywords = settings?.seoKeywords?.split(",").map((k: string) => k.trim()) || ["ciyaar live", "somali", "kubadda cagta"];
+// Use static metadata to prevent build hangs
+// Dynamic settings loaded client-side via Convex provider
+export function generateMetadata(): Metadata {
+  const siteName = "Fanbroj";
+  const title = `${siteName} - Daawo Ciyaar Live & Filimaan`;
+  const description = "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta.";
+  const keywords = ["ciyaar live", "somali", "kubadda cagta", "fanbroj", "live sports"];
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net"),

@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "build:prod": "NODE_ENV=production NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "build:debug": "NODE_OPTIONS='--max-old-space-size=4096' next build --debug",
     "start": "next start",
     "lint": "eslint",
     "mobile": "cd mobile && npx expo start"
