@@ -84,9 +84,34 @@ log_warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 log_error() { echo -e "${RED}❌ $1${NC}"; }
 log_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 
-# Get server IP
+# Get server IP (prefer CloudFront domain if configured)
 get_server_ip() {
+    # Load config to check for CloudFront
+    if [ -f "$CONFIG_FILE" ]; then
+        source "$CONFIG_FILE"
+    fi
+    
+    # If CloudFront is configured, use it
+    if [ -n "$CLOUDFRONT_DOMAIN" ]; then
+        echo "$CLOUDFRONT_DOMAIN"
+        return
+    fi
+    
+    # Otherwise return the public IP
     curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "localhost"
+}
+
+# Get the protocol (https for CloudFront, http for direct)
+get_protocol() {
+    if [ -f "$CONFIG_FILE" ]; then
+        source "$CONFIG_FILE"
+    fi
+    
+    if [ -n "$CLOUDFRONT_DOMAIN" ]; then
+        echo "https"
+    else
+        echo "http"
+    fi
 }
 
 # Start a channel
@@ -128,11 +153,12 @@ start_channel() {
     # Check if stream is working
     if [ -f "$HLS_DIR/$SLUG/index.m3u8" ]; then
         local SERVER_IP=$(get_server_ip)
+        local PROTOCOL=$(get_protocol)
         echo ""
         log_success "Channel '$SLUG' started successfully!"
         echo ""
         echo "═══════════════════════════════════════════════════════════════"
-        echo -e "  ${GREEN}Stream URL:${NC} http://$SERVER_IP/hls/$SLUG/index.m3u8"
+        echo -e "  ${GREEN}Stream URL:${NC} ${PROTOCOL}://$SERVER_IP/hls/$SLUG/index.m3u8"
         echo "═══════════════════════════════════════════════════════════════"
         echo ""
     else
@@ -219,10 +245,11 @@ list_channels() {
     fi
     
     local SERVER_IP=$(get_server_ip)
+    local PROTOCOL=$(get_protocol)
     
     echo ""
-    printf "%-15s %-10s %-10s %-40s\n" "CHANNEL" "STATUS" "UPTIME" "STREAM URL"
-    echo "───────────────────────────────────────────────────────────────────────────────"
+    printf "%-15s %-10s %-10s %-50s\n" "CHANNEL" "STATUS" "UPTIME" "STREAM URL"
+    echo "───────────────────────────────────────────────────────────────────────────────────────"
     
     pm2 jlist 2>/dev/null | jq -r '.[] | select(.name | startswith("ch-")) | "\(.name)|\(.pm2_env.status)|\(.pm2_env.pm_uptime)"' 2>/dev/null | while IFS='|' read -r name status uptime; do
         local slug="${name#ch-}"
@@ -243,7 +270,7 @@ list_channels() {
         local status_color="${GREEN}"
         [ "$status" != "online" ] && status_color="${RED}"
         
-        printf "%-15s ${status_color}%-10s${NC} %-10s http://%s/hls/%s/index.m3u8\n" "$slug" "$status" "$uptime_human" "$SERVER_IP" "$slug"
+        printf "%-15s ${status_color}%-10s${NC} %-10s ${PROTOCOL}://%s/hls/%s/index.m3u8\n" "$slug" "$status" "$uptime_human" "$SERVER_IP" "$slug"
     done
     
     echo ""
@@ -382,21 +409,30 @@ get_url() {
         exit 1
     fi
     
+    # Reload config to get CloudFront domain
+    if [ -f "$CONFIG_FILE" ]; then
+        source "$CONFIG_FILE"
+    fi
+    
     local SERVER_IP=$(get_server_ip)
+    local PROTOCOL=$(get_protocol)
     
     if [ -f "$HLS_DIR/$SLUG/index.m3u8" ]; then
         echo ""
         echo "Stream URLs for '$SLUG':"
         echo "═══════════════════════════════════════════════════════════════"
         echo ""
-        echo "  Direct URL:"
-        echo "    http://$SERVER_IP/hls/$SLUG/index.m3u8"
-        echo ""
         if [ -n "$CLOUDFRONT_DOMAIN" ]; then
-            echo "  CloudFront URL:"
+            echo -e "  ${GREEN}CloudFront URL (recommended):${NC}"
             echo "    https://$CLOUDFRONT_DOMAIN/hls/$SLUG/index.m3u8"
             echo ""
+            echo "  Direct URL (hidden - use CloudFront instead):"
+            echo "    [IP hidden for security]"
+        else
+            echo "  Stream URL:"
+            echo "    ${PROTOCOL}://$SERVER_IP/hls/$SLUG/index.m3u8"
         fi
+        echo ""
     else
         log_error "Channel '$SLUG' is not streaming"
     fi

@@ -34,6 +34,12 @@ if [ -z "$URL" ]; then
     exit 1
 fi
 
+# Load config file if exists
+CONFIG_FILE="$HOME/ciyaar/config/iptv.conf"
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+fi
+
 # Directories
 WEB_ROOT="/var/www/html"
 STREAM_DIR="$WEB_ROOT/hls/$SLUG"
@@ -43,7 +49,28 @@ LOG_FILE="$LOG_DIR/$SLUG.log"
 # FFmpeg Settings - Optimized for stability
 HLS_TIME="${HLS_TIME:-4}"
 HLS_LIST_SIZE="${HLS_LIST_SIZE:-10}"
-USER_AGENT="${USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36}"
+
+# Proxy Settings (optional - for residential IP masking)
+# Set in config file: PROXY_URL="http://user:pass@proxy:port"
+PROXY_URL="${PROXY_URL:-}"
+PROXY_ARGS=""
+if [ -n "$PROXY_URL" ]; then
+    PROXY_ARGS="-http_proxy $PROXY_URL"
+fi
+
+# Mobile device User-Agents (rotates for anti-detection)
+MOBILE_AGENTS=(
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1"
+    "Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.144 Mobile Safari/537.36"
+    "Mozilla/5.0 (iPad; CPU OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1"
+    "IPTV Smarters Pro/3.1.5"
+    "VLC/3.0.18 LibVLC/3.0.18"
+    "Lavf/60.3.100"
+)
+
+# Select random User-Agent
+RANDOM_INDEX=$((RANDOM % ${#MOBILE_AGENTS[@]}))
+USER_AGENT="${USER_AGENT:-${MOBILE_AGENTS[$RANDOM_INDEX]}}"
 
 # Create directories
 mkdir -p "$STREAM_DIR"
@@ -92,12 +119,21 @@ CURRENT_DELAY=$BASE_DELAY
 # Main streaming loop with auto-restart
 while true; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
-    log "▶️  Starting FFmpeg (attempt $RETRY_COUNT)"
+    
+    # Log proxy status
+    if [ -n "$PROXY_URL" ]; then
+        log "▶️  Starting FFmpeg (attempt $RETRY_COUNT) via PROXY"
+    else
+        log "▶️  Starting FFmpeg (attempt $RETRY_COUNT)"
+    fi
     
     # FFmpeg command with optimized settings for stability
+    # Using mobile device headers to avoid detection
+    # shellcheck disable=SC2086
     ffmpeg -hide_banner \
         -loglevel warning \
-        -headers "User-Agent: $USER_AGENT"$'\r\n'"Referer: http://iptvtour.store/"$'\r\n' \
+        $PROXY_ARGS \
+        -headers "User-Agent: $USER_AGENT"$'\r\n'"Accept: */*"$'\r\n'"Accept-Language: en-US,en;q=0.9"$'\r\n'"Connection: keep-alive"$'\r\n'"X-Requested-With: com.nst.iptvsmarterstvbox"$'\r\n' \
         -fflags +genpts+discardcorrupt+nobuffer \
         -flags low_delay \
         -analyzeduration 3000000 \
