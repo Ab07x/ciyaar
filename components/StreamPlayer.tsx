@@ -595,7 +595,16 @@ export function StreamPlayer({
             if (document.fullscreenElement) {
                 await document.exitFullscreen();
             } else {
-                await container.requestFullscreen();
+                // Try different fullscreen APIs for mobile compatibility
+                if (container.requestFullscreen) {
+                    await container.requestFullscreen();
+                } else if ((container as any).webkitRequestFullscreen) {
+                    await (container as any).webkitRequestFullscreen();
+                } else if ((container as any).mozRequestFullScreen) {
+                    await (container as any).mozRequestFullScreen();
+                } else if ((container as any).msRequestFullscreen) {
+                    await (container as any).msRequestFullscreen();
+                }
             }
         } catch (err) {
             console.error("Fullscreen error:", err);
@@ -697,8 +706,11 @@ export function StreamPlayer({
                 seekForward();
             }
         } else {
-            // Single tap - toggle controls
-            resetControlsTimeout();
+            // Single tap - toggle controls and ensure they stay visible on mobile
+            setShowControls(true);
+            if (!isMobile) {
+                resetControlsTimeout();
+            }
         }
 
         lastTapRef.current = { time: now, x };
@@ -933,7 +945,7 @@ export function StreamPlayer({
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-auto z-20">
                                 <button
                                     onClick={togglePlay}
-                                    className="w-20 h-20 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                                    className="w-20 h-20 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
                                 >
                                     <Play size={36} className="text-white ml-1" />
                                 </button>
@@ -943,6 +955,25 @@ export function StreamPlayer({
                                     </div>
                                 )}
                             </div>
+                        )}
+
+                        {/* Mobile Fullscreen FAB (Floating Action Button) */}
+                        {isMobile && isPlaying && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                onClick={toggleFullscreen}
+                                onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleFullscreen();
+                                }}
+                                className="absolute top-4 right-4 z-30 p-3 bg-black/60 backdrop-blur rounded-full text-white active:scale-95 transition-transform touch-manipulation min-w-[48px] min-h-[48px] flex items-center justify-center pointer-events-auto"
+                                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                            >
+                                {isFullscreen ? <Minimize size={24} /> : <Maximize size={24} />}
+                            </motion.button>
                         )}
 
                         {/* Bottom controls */}
@@ -967,8 +998,17 @@ export function StreamPlayer({
 
                             {/* Control buttons */}
                             <div className="flex items-center gap-2 md:gap-4">
-                                <button onClick={togglePlay} className="p-2 text-white hover:text-accent-green transition-colors">
-                                    {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                                <button
+                                    onClick={togglePlay}
+                                    onTouchEnd={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        togglePlay();
+                                    }}
+                                    className="p-3 md:p-2 text-white hover:text-accent-green transition-colors active:scale-95 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                    aria-label={isPlaying ? "Pause" : "Play"}
+                                >
+                                    {isPlaying ? <Pause size={28} className="md:w-6 md:h-6" /> : <Play size={28} className="md:w-6 md:h-6" />}
                                 </button>
 
                                 <button onClick={seekBackward} className="p-2 text-white hover:text-accent-green transition-colors hidden md:block">
@@ -1068,9 +1108,18 @@ export function StreamPlayer({
                                     <PictureInPicture2 size={20} />
                                 </button>
 
-                                {/* Fullscreen */}
-                                <button onClick={toggleFullscreen} className="p-2 text-white hover:text-accent-green transition-colors">
-                                    {isFullscreen ? <Minimize size={24} /> : <Maximize size={24} />}
+                                {/* Fullscreen - Larger touch target for mobile */}
+                                <button
+                                    onClick={toggleFullscreen}
+                                    onTouchEnd={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleFullscreen();
+                                    }}
+                                    className="p-3 md:p-2 text-white hover:text-accent-green transition-colors active:scale-95 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                    aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                                >
+                                    {isFullscreen ? <Minimize size={28} className="md:w-6 md:h-6" /> : <Maximize size={28} className="md:w-6 md:h-6" />}
                                 </button>
                             </div>
                         </div>
