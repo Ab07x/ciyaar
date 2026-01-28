@@ -16465,3 +16465,1594 @@
 [vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 43446320000
 [http @ 0x652949eb0e00] Stream ends prematurely at 10221048, should be 18446744073709551615
 [http @ 0x652949eb0e00] Will reconnect at 10221048 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4596778800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4595454000 < 4596775200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14720000, new offset= 43461040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10221048, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10221048 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4596778800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4595454000 < 4596775200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14720000, new offset= 43475760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11006712, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11006712 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4596894000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4595454000 < 4596890400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16000000, new offset= 43491760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11792376, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11792376 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4596980400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4595454000 < 4596976800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16960000, new offset= 43508720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12316152, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12316152 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597059600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4595454000 < 4597056000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17840000, new offset= 43526560000
+[mpegts @ 0x652949eb0200] PES packet size mismatch
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 1, dts = 4597050915), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 13101816, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13101816 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597149600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597146000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -8840000, new offset= 43535400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6968968, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6968968 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597250400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597246800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 43545360000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4188184515, current: 4188184275; changing to 4188184516. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 7754632, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7754632 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597333200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597329600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10880000, new offset= 43556240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 2621120, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 2621120 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4596692400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -3800000, new offset= 43560040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8802184, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8802184 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597470000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597466400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12400000, new offset= 43572440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9849736, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9849736 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597614000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597610400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 43586440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10111624, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10111624 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597639200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597635600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14280000, new offset= 43600720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11159176, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11159176 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597790400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597786800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15960000, new offset= 43616680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11159176, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11159176 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597790400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597786800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15960000, new offset= 43632640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11682952, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11682952 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597840800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597837200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16520000, new offset= 43649160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12730504, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12730504 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4597974000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4597970400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18000000, new offset= 43667160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13254280, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13254280 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598028000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4598024400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18600000, new offset= 43685760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13778056, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13778056 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598107200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4596354000 < 4598103600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19480000, new offset= 43705240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14825692, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14825692 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 71630881), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598236800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10960000, new offset= 43716200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8904272, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8904272 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598344800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598341200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12120000, new offset= 43728320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9689936, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9689936 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598427600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598424000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13040000, new offset= 43741360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10475600, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10475600 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598506800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598503200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13920000, new offset= 43755280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10475600, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10475600 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598506800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598503200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13920000, new offset= 43769200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10999376, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10999376 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598557200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598553600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14480000, new offset= 43783680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12308816, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12308816 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598708400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598704800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16160000, new offset= 43799840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12570704, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12570704 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598737200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598733600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16480000, new offset= 43816320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13356368, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13356368 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4598848800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4597254000 < 4598845200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17720000, new offset= 43834040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15401528, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15401528 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = NOPTS), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599054000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10040000, new offset= 43844080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8330472, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8330472 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = NOPTS), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599054000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10040000, new offset= 43854120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7830600, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7830600 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599021600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599018000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9640000, new offset= 43863760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9901800, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9901800 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = NOPTS), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599234000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12040000, new offset= 43875800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10163688, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10163688 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599262800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599259200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12320000, new offset= 43888120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11473128, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11473128 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599414000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14040000, new offset= 43902160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9558072, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9558072 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599226800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599223200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11920000, new offset= 43914080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11996904, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11996904 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599475200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14720000, new offset= 43928800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13044456, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13044456 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = NOPTS), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599594000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16040000, new offset= 43944840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13830120, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13830120 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599694800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17160000, new offset= 43962000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14092008, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14092008 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599734400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599730800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17560000, new offset= 43979560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15139560, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15139560 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599856800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4598154000 < 4599853200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18920000, new offset= 43998480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15663336, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15663336 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599928800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4599925200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9720000, new offset= 44008200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8607592, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8607592 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600036800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600033200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10920000, new offset= 44019120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9655144, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9655144 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600148400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600144800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12160000, new offset= 44031280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9655144, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9655144 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600148400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600144800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12160000, new offset= 44043440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10178920, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10178920 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600209600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600206000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12840000, new offset= 44056280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12274024, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12274024 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600407600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600404000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15040000, new offset= 44071320000
+[mpegts @ 0x652949eb0200] PES packet size mismatch
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 1, dts = 4600399395), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 7306376, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7306376 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599889200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4599885600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9280000, new offset= 44080600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8141104, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8141104 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4599972000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4599968400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10200000, new offset= 44090800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14107240, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14107240 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600594800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17160000, new offset= 44107960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14892904, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14892904 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600684800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600681200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18120000, new offset= 44126080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14892904, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14892904 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600684800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600681200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18120000, new offset= 44144200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15940456, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15940456 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600778400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599054000 < 4600774800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19160000, new offset= 44163360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16662064, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16662064 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600850400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4600846800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 44173320000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4248300915, current: 4248300675; changing to 4248300916. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 9887688, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9887688 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600954800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4600951200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11120000, new offset= 44184440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10935240, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10935240 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601044800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4601041200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12120000, new offset= 44196560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11459016, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11459016 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601095200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4601091600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12680000, new offset= 44209240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12244680, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12244680 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601174400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4601170800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13560000, new offset= 44222800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13554120, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13554120 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601343600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4601340000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15440000, new offset= 44238240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9429384, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9429384 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600911600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4600908000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10640000, new offset= 44248880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14339784, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14339784 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601408400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4601404800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16160000, new offset= 44265040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15387336, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15387336 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601509200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4601505600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17280000, new offset= 44282320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16173000, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16173000 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601577600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4599954000 < 4601574000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18040000, new offset= 44300360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7896128, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7896128 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4600760400), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 6814912, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6814912 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601534400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4601530800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -7560000, new offset= 44307920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9349992, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9349992 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601775600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4601772000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10240000, new offset= 44318160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10135656, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10135656 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601847600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4601844000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11040000, new offset= 44329200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11183208, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11183208 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4601937600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4601934000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12040000, new offset= 44341240000
+[mpegts @ 0x652949eb0200] PES packet size mismatch
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 1, dts = 4601929635), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 11706984, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11706984 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602002400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4601998800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12760000, new offset= 44354000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13016424, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13016424 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602139200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4602135600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14280000, new offset= 44368280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14063976, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14063976 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602229200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4602225600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15280000, new offset= 44383560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14849640, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14849640 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602308400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4602304800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16160000, new offset= 44399720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15897192, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15897192 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602409200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4602405600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17280000, new offset= 44417000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15897192, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15897192 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602409200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4602405600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17280000, new offset= 44434280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16944744, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16944744 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602510000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4600854000 < 4602506400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18400000, new offset= 44452680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17738596, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17738596 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602582000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4602578400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9200000, new offset= 44461880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9648536, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9648536 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602679200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4602675600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10280000, new offset= 44472160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10434200, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10434200 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602751200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4602747600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11080000, new offset= 44483240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11481752, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11481752 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602848400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4602844800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12160000, new offset= 44495400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12791192, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12791192 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4602981600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4602978000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13640000, new offset= 44509040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13314968, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13314968 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603021200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4603017600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14080000, new offset= 44523120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14362520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14362520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603122000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4603118400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15200000, new offset= 44538320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14362520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14362520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603122000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4603118400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15200000, new offset= 44553520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15148184, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15148184 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603197600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4603194000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16040000, new offset= 44569560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16457624, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16457624 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603316400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4603312800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17360000, new offset= 44586920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17505176, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17505176 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603410000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4603406400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18400000, new offset= 44605320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 18299028, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 18299028 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603496400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4601754000 < 4603492800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19360000, new offset= 44624680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 18890240, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 18890240 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603550400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4603546800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 44634640000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4292521155, current: 4292518995; changing to 4292521156. This may result in incorrect timestamps in the output file.
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4292521156, current: 4292520915; changing to 4292521157. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 10289248, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10289248 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603640400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4603636800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10960000, new offset= 44645600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11336800, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11336800 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603741200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4603737600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12080000, new offset= 44657680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11336800, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11336800 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603741200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4603737600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12080000, new offset= 44669760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12384352, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12384352 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603842000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4603838400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13200000, new offset= 44682960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9618160, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9618160 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4603561200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4603557600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10080000, new offset= 44693040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14217568, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14217568 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604040000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4604036400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15400000, new offset= 44708440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16050784, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16050784 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604209200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4604205600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17280000, new offset= 44725720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16050784, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16050784 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604209200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4604205600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17280000, new offset= 44743000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17098336, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17098336 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604317200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4602654000 < 4604313600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18480000, new offset= 44761480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17360224, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17360224 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604342400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604338800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -8760000, new offset= 44770240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8974368, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8974368 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604450400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604446800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 44780200000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4306520115, current: 4306519875; changing to 4306520116. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 10021920, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10021920 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604569200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604565600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11280000, new offset= 44791480000
+[mpegts @ 0x652949eb0200] PES packet size mismatch
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 1, dts = 4604560035), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 11069472, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11069472 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604659200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604655600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12280000, new offset= 44803760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8518640, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8518640 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604403600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604400000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9440000, new offset= 44813200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12640800, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12640800 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604806800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604803200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13920000, new offset= 44827120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14212128, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14212128 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604950800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604947200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15520000, new offset= 44842640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14735904, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14735904 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605001200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4604997600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16080000, new offset= 44858720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15521568, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15521568 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605073200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4605069600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16880000, new offset= 44875600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17092896, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17092896 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605228000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4603554000 < 4605224400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18600000, new offset= 44894200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 18090676, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 18090676 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605350400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10000000, new offset= 44904200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10425744, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10425744 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605498000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605494400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11600000, new offset= 44915800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10425744, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10425744 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605498000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605494400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11600000, new offset= 44927400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11211408, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11211408 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605562800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605559200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12320000, new offset= 44939720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12782736, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12782736 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605739200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605735600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14280000, new offset= 44954000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12782736, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12782736 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605739200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605735600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14280000, new offset= 44968280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 2457224, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 2457224 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4604695200), dropping it.
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -2680000, new offset= 44970960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13830288, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13830288 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605832800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605829200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15320000, new offset= 44986280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14877840, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14877840 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605937200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605933600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16480000, new offset= 45002760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15663504, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15663504 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606012800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4606009200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17320000, new offset= 45020080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16449168, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16449168 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606099200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4606095600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18280000, new offset= 45038360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8715224, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8715224 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4605300000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4604454000 < 4605296400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9400000, new offset= 45047760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 18307632, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 18307632 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606272000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606268400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10200000, new offset= 45057960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9976984, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9976984 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606351200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606347600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11080000, new offset= 45069040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11024536, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11024536 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606470000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606466400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12400000, new offset= 45081440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12857752, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12857752 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606642800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606639200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14320000, new offset= 45095760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13119640, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13119640 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606668000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606664400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14600000, new offset= 45110360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14167192, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14167192 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606822800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606819200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16320000, new offset= 45126680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7371904, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7371904 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606106400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606102800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -8360000, new offset= 45135040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14527288, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14527288 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4606884000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4606880400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17000000, new offset= 45152040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15738520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15738520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607010000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4605354000 < 4607006400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18400000, new offset= 45170440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16786072, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16786072 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607107200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607103600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9480000, new offset= 45179920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8674320, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8674320 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607175600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607172000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10240000, new offset= 45190160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8674320, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8674320 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607175600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607172000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10240000, new offset= 45200400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9721872, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9721872 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607269200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607265600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11280000, new offset= 45211680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10245648, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10245648 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607334000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607330400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12000000, new offset= 45223680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11031312, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11031312 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607438400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607434800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13160000, new offset= 45236840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12078864, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12078864 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607546400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607542800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14360000, new offset= 45251200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12864528, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12864528 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607622000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607618400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15200000, new offset= 45266400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13912080, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13912080 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607722800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607719200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16320000, new offset= 45282720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14697744, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14697744 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607798400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607794800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17160000, new offset= 45299880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15483408, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15483408 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607870400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607866800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17960000, new offset= 45317840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15483408, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15483408 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4607870400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4606254000 < 4607866800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17960000, new offset= 45335800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16801036, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16801036 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608003600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608000000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9440000, new offset= 45345240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9932992, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9932992 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608165600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608162000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11240000, new offset= 45356480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10980544, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10980544 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608252000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608248400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12200000, new offset= 45368680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12028096, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12028096 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608374400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608370800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13560000, new offset= 45382240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13075648, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13075648 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608475200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608471600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14680000, new offset= 45396920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13337536, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13337536 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608500400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608496800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14960000, new offset= 45411880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14646976, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14646976 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608633600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608630000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16440000, new offset= 45428320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15432640, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15432640 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608702000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608698400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17200000, new offset= 45445520000
+[mpegts @ 0x652949eb0200] PES packet size mismatch
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 1, dts = 4608693795), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 16742080, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16742080 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608817200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608813600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18480000, new offset= 45464000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15800920, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15800920 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608734400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4607154000 < 4608730800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17560000, new offset= 45481560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17797820, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17797820 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608921600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4608918000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9640000, new offset= 45491200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9686520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9686520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609000800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4608997200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10520000, new offset= 45501720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10472184, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10472184 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609072800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4609069200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11320000, new offset= 45513040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11519736, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11519736 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609162800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4609159200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12320000, new offset= 45525360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8518640, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8518640 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4608882000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4608878400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9200000, new offset= 45534560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12305400, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12305400 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609252800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4609249200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13320000, new offset= 45547880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13091064, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13091064 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609350000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4609346400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14400000, new offset= 45562280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14138616, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14138616 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609443600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4609440000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15440000, new offset= 45577720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15709944, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15709944 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609609200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4609605600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17280000, new offset= 45595000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16495608, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16495608 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609695600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608054000 < 4609692000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18240000, new offset= 45613240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17281272, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17281272 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609796400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4609792800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9360000, new offset= 45622600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8810248, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8810248 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609875600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4609872000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10240000, new offset= 45632840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9857800, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9857800 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4609972800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4609969200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11320000, new offset= 45644160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10905352, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10905352 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610073600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610070000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12440000, new offset= 45656600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11691016, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11691016 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610152800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610149200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13320000, new offset= 45669920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13000456, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13000456 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610268000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610264400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14600000, new offset= 45684520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13524232, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13524232 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610318400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610314800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15160000, new offset= 45699680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14833672, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14833672 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610455200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610451600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16680000, new offset= 45716360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15619336, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15619336 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610523600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610520000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17440000, new offset= 45733800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15881224, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15881224 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610545200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610541600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17680000, new offset= 45751480000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4399334595, current: 4399334115; changing to 4399334596. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 17198848, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17198848 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610707200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4608954000 < 4610703600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19480000, new offset= 45770960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17908884, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17908884 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610775600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4610772000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10240000, new offset= 45781200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10146184, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10146184 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610854800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4610851200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11120000, new offset= 45792320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10146184, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10146184 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610854800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4610851200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11120000, new offset= 45803440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10931848, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10931848 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610952000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4610948400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12200000, new offset= 45815640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11717512, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11717512 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611038400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4611034800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13160000, new offset= 45828800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7437432, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7437432 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610556000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4610552400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -7800000, new offset= 45836600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13026952, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13026952 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611196800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4611193200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14920000, new offset= 45851520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13812616, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13812616 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611294000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4611290400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16000000, new offset= 45867520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14598280, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14598280 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611391200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4611387600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17080000, new offset= 45884600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15015664, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15015664 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611448800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4611445200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17720000, new offset= 45902320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7371904, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7371904 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4610548800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4609854000 < 4610545200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -7720000, new offset= 45910040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16169608, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16169608 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611589200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4611585600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9280000, new offset= 45919320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7526016, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7526016 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611650400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4611646800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 45929280000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4417137315, current: 4417137075; changing to 4417137316. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 8049792, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8049792 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611697200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4611693600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10480000, new offset= 45939760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8311680, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8311680 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611715200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4611711600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10680000, new offset= 45950440000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8311680, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8311680 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611715200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4611711600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10680000, new offset= 45961120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8835456, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8835456 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4611834000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4611830400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12000000, new offset= 45973120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9359232, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9359232 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612014000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612010400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 45987120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9621120, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9621120 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612046400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612042800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14360000, new offset= 46001480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9621120, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9621120 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612046400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612042800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14360000, new offset= 46015840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10144896, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10144896 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612194000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612190400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16000000, new offset= 46031840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10144896, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10144896 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612194000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612190400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16000000, new offset= 46047840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10668672, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10668672 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612374000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612370400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18000000, new offset= 46065840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11192448, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11192448 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612503600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612500000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19440000, new offset= 46085280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11192448, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11192448 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612503600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4610754000 < 4612500000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19440000, new offset= 46104720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11343732, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11343732 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612550400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4612546800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 46114680000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4434723795, current: 4434721635; changing to 4434723796. This may result in incorrect timestamps in the output file.
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4434723796, current: 4434723555; changing to 4434723797. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 4341488, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 4341488 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612672800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4612669200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11320000, new offset= 46126000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 4341488, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 4341488 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612672800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4612669200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11320000, new offset= 46137320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 4865264, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 4865264 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612824000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4612820400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13000000, new offset= 46150320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 5127152, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 5127152 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612914000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4612910400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 46164320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 5389040, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 5389040 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4612942800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4612939200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14320000, new offset= 46178640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 5912816, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 5912816 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613094000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4613090400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16000000, new offset= 46194640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6174704, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6174704 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613169600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4613166000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16840000, new offset= 46211480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6174704, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6174704 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613169600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4613166000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16840000, new offset= 46228320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6436592, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6436592 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613270400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4611654000 < 4613266800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17960000, new offset= 46246280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6960368, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6960368 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613392800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4613389200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9320000, new offset= 46255600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 3311240, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 3311240 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613450400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4613446800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 46265560000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4449203475, current: 4449201315; changing to 4449203476. This may result in incorrect timestamps in the output file.
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4449203476, current: 4449203235; changing to 4449203477. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 3835016, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 3835016 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613576400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4613572800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11360000, new offset= 46276920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 3835016, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 3835016 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613576400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4613572800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11360000, new offset= 46288280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 4358792, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 4358792 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613698800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4613695200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12720000, new offset= 46301000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 5406344, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 5406344 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613828400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4613824800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14160000, new offset= 46315160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6192008, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6192008 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4613961600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4613958000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15640000, new offset= 46330800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6977672, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6977672 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614030000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4614026400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16400000, new offset= 46347200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7763336, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7763336 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614123600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4614120000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17440000, new offset= 46364640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8810888, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8810888 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614217200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4614213600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18480000, new offset= 46383120000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9858440, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9858440 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614310800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4612554000 < 4614307200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19520000, new offset= 46402640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11092200, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11092200 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614422400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614418800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10760000, new offset= 46413400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8566616, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8566616 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614490800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614487200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11520000, new offset= 46424920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9614168, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9614168 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614595200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614591600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12680000, new offset= 46437600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10137944, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10137944 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614649200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614645600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13280000, new offset= 46450880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10137944, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10137944 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614649200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614645600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13280000, new offset= 46464160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10923608, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10923608 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614732000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614728400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14200000, new offset= 46478360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11709272, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11709272 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614800400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15000000, new offset= 46493360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12494936, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12494936 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4614912000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4614908400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16200000, new offset= 46509560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13804376, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13804376 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615030800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4615027200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17520000, new offset= 46527080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13804376, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13804376 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615030800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4615027200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17520000, new offset= 46544600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14851928, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14851928 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615124400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4613454000 < 4615120800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18560000, new offset= 46563160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15645780, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15645780 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615203600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615200000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9440000, new offset= 46572600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9902344, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9902344 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615322400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615318800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10760000, new offset= 46583360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10164232, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10164232 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615354800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615351200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11120000, new offset= 46594480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11473672, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11473672 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615488000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615484400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12600000, new offset= 46607080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12259336, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12259336 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615574400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615570800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13560000, new offset= 46620640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13045000, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13045000 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615646400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615642800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14360000, new offset= 46635000000
+[mpegts @ 0x652949eb0200] PES packet size mismatch
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 1, dts = 4615638435), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 14354440, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14354440 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615765200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615761600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15680000, new offset= 46650680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14878216, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14878216 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615812000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615808400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16200000, new offset= 46666880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16187656, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16187656 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615945200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4615941600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17680000, new offset= 46684560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16973320, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16973320 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616006400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4614354000 < 4616002800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18360000, new offset= 46702920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 18618024, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 18618024 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616208000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616204400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10600000, new offset= 46713520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10025112, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10025112 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616265600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616262000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11240000, new offset= 46724760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11072664, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11072664 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616352000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616348400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12200000, new offset= 46736960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12382104, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12382104 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616492400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616488800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13760000, new offset= 46750720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13167768, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13167768 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616568000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616564400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14600000, new offset= 46765320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13953432, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13953432 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616640000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616636400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15400000, new offset= 46780720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14477208, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14477208 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616694000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616690400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16000000, new offset= 46796720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 5897520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 5897520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4615822800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4615819200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -6320000, new offset= 46803040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16310424, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16310424 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616902800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4615254000 < 4616899200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18320000, new offset= 46821360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 17096088, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17096088 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4616996400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4616992800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9360000, new offset= 46830720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10549648, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10549648 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617226800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617223200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11920000, new offset= 46842640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11073424, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11073424 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617273600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617270000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12440000, new offset= 46855080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12120976, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12120976 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617378000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617374400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13600000, new offset= 46868680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9412072, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9412072 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617126000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617122400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10800000, new offset= 46879480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12644752, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12644752 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617424800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617421200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14120000, new offset= 46893600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14739856, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14739856 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617648000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617644400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16600000, new offset= 46910200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14739856, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14739856 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617648000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617644400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16600000, new offset= 46926800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15787408, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15787408 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617738000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617734400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17600000, new offset= 46944400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16573072, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16573072 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4616154000 < 4617799200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18320000, new offset= 46962720000
+[mpegts @ 0x652949eb0200] PES packet size mismatch
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 1, dts = 4617790755), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 17105032, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 17105032 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617882000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4617878400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9200000, new offset= 46971920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8832992, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8832992 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4617950400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4617946800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 46981880000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4518172755, current: 4518170595; changing to 4518172756. This may result in incorrect timestamps in the output file.
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4518172756, current: 4518172515; changing to 4518172757. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 9356768, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9356768 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618036800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618033200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10920000, new offset= 46992800000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9356768, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9356768 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618036800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618033200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10920000, new offset= 47003720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10404320, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10404320 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618180800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618177200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12520000, new offset= 47016240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11189984, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11189984 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618278000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618274400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13600000, new offset= 47029840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11975648, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11975648 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618350000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618346400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14400000, new offset= 47044240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12458504, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12458504 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618389600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618386000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14840000, new offset= 47059080000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12499424, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12499424 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618393200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618389600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14880000, new offset= 47073960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14070752, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14070752 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618623600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618620000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17440000, new offset= 47091400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14594528, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14594528 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618674000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618670400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18000000, new offset= 47109400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14291720, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14291720 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618656000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617054000 < 4618652400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17800000, new offset= 47127200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 15380192, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 15380192 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618792800), dropping it.
+[http @ 0x652949eb0e00] Stream ends prematurely at 7737528, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7737528 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619851200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4619847600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11080000, new offset= 47138280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8261304, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8261304 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619934000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617954000 < 4619930400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -22000000, new offset= 47160280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 3735096, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 3735096 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4618396800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617954000 < 4618393200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -4920000, new offset= 47165200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9570744, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9570744 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619228400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617954000 < 4619224800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14160000, new offset= 47179360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10356408, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10356408 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619329200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617954000 < 4619325600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15280000, new offset= 47194640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11142072, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11142072 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619430000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617954000 < 4619426400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16400000, new offset= 47211040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11665848, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11665848 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619502000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617954000 < 4619498400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17200000, new offset= 47228240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12189624, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12189624 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619574000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4617954000 < 4619570400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18000000, new offset= 47246240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13237176, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13237176 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619718000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4619714400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9600000, new offset= 47255840000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6829288, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6829288 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619790000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4619786400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10400000, new offset= 47266240000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6829288, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6829288 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619790000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4619786400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10400000, new offset= 47276640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7353064, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7353064 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619869200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4619865600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11280000, new offset= 47287920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8138728, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8138728 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4619966400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4619962800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12360000, new offset= 47300280000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8662504, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8662504 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620031200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4620027600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13080000, new offset= 47313360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9186280, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9186280 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620114000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4620110400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 47327360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9186280, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9186280 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620114000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4620110400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 47341360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9186280, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9186280 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620114000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4620110400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 47355360000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9448168, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9448168 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620142800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4620139200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14320000, new offset= 47369680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9448168, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9448168 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620142800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4618854000 < 4620139200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14320000, new offset= 47384000000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9448168, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9448168 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620142800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4620139200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -4320000, new offset= 47388320000
+[http @ 0x652949eb0e00] Stream ends prematurely at 3670888, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 3670888 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620650400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4620646800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -9960000, new offset= 47398280000
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4558348275, current: 4558346115; changing to 4558348276. This may result in incorrect timestamps in the output file.
+[hls @ 0x65294a077a40] Non-monotonic DTS in output stream 0:1; previous: 4558348276, current: 4558348035; changing to 4558348277. This may result in incorrect timestamps in the output file.
+[http @ 0x652949eb0e00] Stream ends prematurely at 5242216, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 5242216 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620870000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4620866400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12400000, new offset= 47410680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6027880, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6027880 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4620956400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4620952800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13360000, new offset= 47424040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6551656, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6551656 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621014000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621010400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 47438040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 6551656, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 6551656 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621014000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621010400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14000000, new offset= 47452040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 7337320, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 7337320 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621136400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621132800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -15360000, new offset= 47467400000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8384872, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8384872 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621244400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621240800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -16560000, new offset= 47483960000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8908648, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8908648 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621302000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621298400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17200000, new offset= 47501160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9956200, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9956200 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621417200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18520000, new offset= 47519680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9956200, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9956200 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621417200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18520000, new offset= 47538200000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10741864, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10741864 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] DTS 4619754000 < 4621489200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -19320000, new offset= 47557520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11523088, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11523088 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621557600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4621554000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10040000, new offset= 47567560000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9161640, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9161640 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621730400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4621726800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11960000, new offset= 47579520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9423528, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9423528 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621744800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4621741200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12120000, new offset= 47591640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9423528, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9423528 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621744800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4621741200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -12120000, new offset= 47603760000
+[http @ 0x652949eb0e00] Stream ends prematurely at 10209192, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 10209192 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621834800), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4621831200 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13120000, new offset= 47616880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11256744, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11256744 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4621971600), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4621968000 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -14640000, new offset= 47631520000
+[http @ 0x652949eb0e00] Stream ends prematurely at 11780520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 11780520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622018400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4622014800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -5160000, new offset= 47636680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 12566184, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 12566184 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4623012000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4623008400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -26200000, new offset= 47662880000
+[http @ 0x652949eb0e00] Stream ends prematurely at 13351848, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 13351848 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622238000), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4622234400 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -17600000, new offset= 47680480000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14399400, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14399400 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622324400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4620654000 < 4622320800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -18560000, new offset= 47699040000
+[http @ 0x652949eb0e00] Stream ends prematurely at 14399400, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 14399400 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622324400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4622320800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -8560000, new offset= 47707600000
+[http @ 0x652949eb0e00] Stream ends prematurely at 16074948, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 16074948 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4623404400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4623400800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -20560000, new offset= 47728160000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8484632, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8484632 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622504400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4622500800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10560000, new offset= 47738720000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8746520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8746520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622540400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4622536800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10960000, new offset= 47749680000
+[http @ 0x652949eb0e00] Stream ends prematurely at 8746520, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 8746520 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622540400), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4622536800 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -10960000, new offset= 47760640000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9008408, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9008408 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622569200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4622565600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -11280000, new offset= 47771920000
+[http @ 0x652949eb0e00] Stream ends prematurely at 9532184, should be 18446744073709551615
+[http @ 0x652949eb0e00] Will reconnect at 9532184 in 0 second(s), error=Input/output error.
+[mpegts @ 0x652949eb0200] Packet corrupt (stream = 0, dts = 4622731200), dropping it.
+[mpegts @ 0x652949eb0200] DTS 4621554000 < 4622727600 out of order
+[vist#0:0/h264 @ 0x652949ebf800] timestamp discontinuity (stream id=256): -13080000, new offset= 47785000000

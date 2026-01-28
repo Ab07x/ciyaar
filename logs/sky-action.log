@@ -7777,3 +7777,12 @@
 [2026-01-28 19:48:04] ▶️  Starting FFmpeg (attempt 2)
 2026-01-28T19:48:04: [2026-01-28 19:48:04] ▶️  Starting FFmpeg (attempt 2)
 [h264 @ 0x5e5d8943c0c0] non-existing SPS 0 referenced in buffering period
+    Last message repeated 1 times
+[http @ 0x5e5d89431f40] Stream ends prematurely at 1323706576, should be 18446744073709551615
+[http @ 0x5e5d89431f40] Will reconnect at 1323706576 in 0 second(s), error=Input/output error.
+[http @ 0x5e5d89431f40] Stream ends prematurely at 0, should be 18446744073709551615
+[http @ 0x5e5d89431f40] Will reconnect at 0 in 1 second(s), error=Input/output error.
+[http @ 0x5e5d89431f40] Stream ends prematurely at 0, should be 18446744073709551615
+[http @ 0x5e5d89431f40] Will reconnect at 0 in 3 second(s), error=Input/output error.
+[http @ 0x5e5d89431f40] Stream ends prematurely at 0, should be 18446744073709551615
+[http @ 0x5e5d89431f40] Will reconnect at 0 in 7 second(s), error=Input/output error.
