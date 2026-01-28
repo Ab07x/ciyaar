@@ -36,10 +36,10 @@ STREAM_DIR="$WEB_ROOT/hls/$SLUG"
 LOG_DIR="${LOG_DIR:-$HOME/ciyaar/logs}"
 LOG_FILE="$LOG_DIR/$SLUG.log"
 
-# Event streaming settings (optimized for 2-hour events)
+# Event streaming settings (optimized for 2-hour events with unstable sources)
 HLS_TIME="${HLS_TIME:-4}"                    # 4-second segments
-HLS_LIST_SIZE="${HLS_LIST_SIZE:-10}"         # Keep only 40 seconds (10 segments)
-HLS_DELETE_THRESHOLD="${HLS_DELETE_THRESHOLD:-15}"  # Delete after 60 seconds
+HLS_LIST_SIZE="${HLS_LIST_SIZE:-45}"         # Keep 3 minutes buffer (45 segments)
+HLS_DELETE_THRESHOLD="${HLS_DELETE_THRESHOLD:-60}"  # Delete after 4 minutes
 
 # Proxy settings
 PROXY_URL="${PROXY_URL:-}"
