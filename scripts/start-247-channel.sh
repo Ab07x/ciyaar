@@ -46,9 +46,10 @@ STREAM_DIR="$WEB_ROOT/hls/$SLUG"
 LOG_DIR="${LOG_DIR:-$HOME/ciyaar/logs}"
 LOG_FILE="$LOG_DIR/$SLUG.log"
 
-# FFmpeg Settings - Optimized for stability
+# FFmpeg Settings - Optimized for CDN/CloudFront compatibility
 HLS_TIME="${HLS_TIME:-4}"
-HLS_LIST_SIZE="${HLS_LIST_SIZE:-10}"
+HLS_LIST_SIZE="${HLS_LIST_SIZE:-900}"  # 900 segments = 1 hour retention (matches CloudFront cache)
+HLS_DELETE_THRESHOLD="${HLS_DELETE_THRESHOLD:-5}"  # Keep 5x more segments before deletion
 
 # Proxy Settings (optional - for residential IP masking)
 # Set in config file: PROXY_URL="http://user:pass@proxy:port"
@@ -152,6 +153,7 @@ while true; do
         -f hls \
         -hls_time "$HLS_TIME" \
         -hls_list_size "$HLS_LIST_SIZE" \
+        -hls_delete_threshold "$HLS_DELETE_THRESHOLD" \
         -hls_flags delete_segments+append_list+omit_endlist+temp_file \
         -hls_segment_type mpegts \
         -hls_allow_cache 1 \
