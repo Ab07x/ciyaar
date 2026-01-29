@@ -1,0 +1,48 @@
+# ======================================================================
+# COPY & PASTE THESE COMMANDS - NO BULLSHIT
+# ======================================================================
+
+# 1. FROM YOUR LOCAL MACHINE - Upload scripts
+scp scripts/cdnfly-production/stream-5-channels.sh ubuntu@ip-172-26-2-90:~/
+scp scripts/cdnfly-production/nginx-cdnfly.conf ubuntu@ip-172-26-2-90:~/
+
+# 2. SSH INTO SERVER
+ssh ubuntu@ip-172-26-2-90
+
+# 3. SETUP NGINX (ONE TIME ONLY)
+sudo cp ~/nginx-cdnfly.conf /etc/nginx/sites-available/cdnfly
+sudo ln -sf /etc/nginx/sites-available/cdnfly /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+
+# 4. MAKE SCRIPT EXECUTABLE
+chmod +x ~/stream-5-channels.sh
+
+# 5. START ALL 5 CHANNELS
+./stream-5-channels.sh on
+
+# 6. CHECK STATUS
+./stream-5-channels.sh status
+
+# ======================================================================
+# YOUR STREAM URLS (Use in your app):
+# ======================================================================
+
+https://stream.cdnfly.online/channel-1/stream.m3u8  (Sky Sports Main Event)
+https://stream.cdnfly.online/channel-2/stream.m3u8  (Sky Sports Football)
+https://stream.cdnfly.online/channel-3/stream.m3u8  (Sky Sports Action)
+https://stream.cdnfly.online/channel-4/stream.m3u8  (TNT Sport 1)
+https://stream.cdnfly.online/channel-5/stream.m3u8  (TNT Sport 2)
+
+# ======================================================================
+# DAILY COMMANDS
+# ======================================================================
+
+./stream-5-channels.sh on       # Turn ON all channels
+./stream-5-channels.sh off      # Turn OFF all channels
+./stream-5-channels.sh status   # Check if healthy
+pm2 monit                       # Live monitoring
+
+# ======================================================================
+# THAT'S IT!
+# ======================================================================
