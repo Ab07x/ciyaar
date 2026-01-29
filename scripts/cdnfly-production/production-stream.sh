@@ -58,10 +58,8 @@ start_channel() {
 
     pm2 start ffmpeg \
         --name "ch$num" \
-        --max-restarts 999 \
-        --min-uptime 5000 \
-        --exp-backoff-restart-delay 100 \
-        --log "$log" \
+        --restart-delay 3000 \
+        --max-restarts 99999 \
         -- \
         $RECONNECT_OPTS \
         $INPUT_OPTS \
@@ -78,7 +76,8 @@ start_channel() {
         -hls_allow_cache 1 \
         -hls_segment_filename "$out/seg%d.ts" \
         $OUTPUT_OPTS \
-        "$out/stream.m3u8"
+        "$out/stream.m3u8" \
+        >> "$log" 2>&1
 }
 
 case "$1" in
