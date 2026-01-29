@@ -1,0 +1,116 @@
+##############################################################################
+# NGINX SETUP FOR CDNFly - COMPLETE GUIDE
+##############################################################################
+
+# SSH into server first
+ssh ubuntu@ip-172-26-2-90
+
+# ======================================================================
+# 1. CHECK IF NGINX IS INSTALLED
+# ======================================================================
+
+nginx -v
+
+# If not installed, install it:
+sudo apt update
+sudo apt install nginx -y
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+# ======================================================================
+# 2. UPLOAD CONFIG FILE (from your local machine)
+# ======================================================================
+
+# Run this from YOUR LOCAL MACHINE (not on server):
+scp scripts/cdnfly-production/nginx-cdnfly-fixed.conf ubuntu@ip-172-26-2-90:~/nginx-cdnfly.conf
+
+# ======================================================================
+# 3. INSTALL CONFIG ON SERVER
+# ======================================================================
+
+# Back on the SERVER, run these:
+sudo cp ~/nginx-cdnfly.conf /etc/nginx/sites-available/cdnfly
+sudo ln -sf /etc/nginx/sites-available/cdnfly /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# ======================================================================
+# 4. CREATE HLS DIRECTORY
+# ======================================================================
+
+mkdir -p ~/ciyaar/hls
+sudo chown -R ubuntu:ubuntu ~/ciyaar
+
+# ======================================================================
+# 5. TEST AND RELOAD NGINX
+# ======================================================================
+
+sudo nginx -t
+
+# If test passes, reload:
+sudo systemctl reload nginx
+
+# If test fails, check the error:
+sudo nginx -t
+sudo tail -50 /var/log/nginx/error.log
+
+# ======================================================================
+# 6. VERIFY NGINX IS RUNNING
+# ======================================================================
+
+sudo systemctl status nginx
+curl -I http://localhost/status
+
+# Expected: HTTP/1.1 200 OK with {"status":"live"}
+
+# ======================================================================
+# 7. CHECK FIREWALL (if needed)
+# ======================================================================
+
+# Make sure port 80 is open:
+sudo ufw status
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# ======================================================================
+# 8. TEST FROM OUTSIDE (from your local machine)
+# ======================================================================
+
+curl -I http://origin.cdnfly.online/status
+
+# Expected: HTTP/1.1 200 OK
+
+# ======================================================================
+# TROUBLESHOOTING
+# ======================================================================
+
+# View nginx error log:
+sudo tail -f /var/log/nginx/error.log
+
+# View nginx access log:
+sudo tail -f /var/log/nginx/access.log
+
+# Restart nginx completely:
+sudo systemctl restart nginx
+
+# Check nginx config syntax:
+sudo nginx -t
+
+# Check what's listening on port 80:
+sudo netstat -tlnp | grep :80
+
+# ======================================================================
+# DONE!
+# ======================================================================
+
+# Once nginx is running, you can start streaming:
+./stream.sh on
+
+# Your origin URLs will be accessible at:
+# http://origin.cdnfly.online/channel-1/stream.m3u8
+# http://origin.cdnfly.online/channel-2/stream.m3u8
+# etc.
+
+# CloudFront URLs (for production):
+# https://stream.cdnfly.online/channel-1/stream.m3u8
+# https://stream.cdnfly.online/channel-2/stream.m3u8
+# etc.

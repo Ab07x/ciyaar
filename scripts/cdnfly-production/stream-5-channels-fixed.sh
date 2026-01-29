@@ -15,13 +15,13 @@ BASE="http://iptvtour.store:80"
 OUT_DIR="$HOME/ciyaar/hls"
 mkdir -p $OUT_DIR
 
-# 5 Channels - Top Sports
+# 5 Channels - User Tested Channels
 declare -A CHANNELS=(
-    [1]="9701:sky-main"      # Sky Sports Main Event
-    [2]="9700:sky-football"  # Sky Sports Football
-    [3]="9696:sky-action"    # Sky Sports Action
-    [4]="14345:tnt1"         # TNT Sport 1
-    [5]="14346:tnt2"         # TNT Sport 2
+    [1]="178437:nova-sport"   # Nova Sport (TESTED)
+    [2]="45487:sky-sports-1"  # Sky Sports 1 (TESTED)
+    [3]="45491:sky-sports-2"  # Sky Sports 2 (TESTED)
+    [4]="9701:sky-main"       # Sky Sports Main Event
+    [5]="9700:sky-football"   # Sky Sports Football
 )
 
 # HLS Settings - ZERO BUFFER/LOOP

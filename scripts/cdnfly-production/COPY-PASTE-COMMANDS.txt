@@ -3,44 +3,58 @@
 # ======================================================================
 
 # 1. FROM YOUR LOCAL MACHINE - Upload scripts
-scp scripts/cdnfly-production/stream-5-channels.sh ubuntu@ip-172-26-2-90:~/
-scp scripts/cdnfly-production/nginx-cdnfly.conf ubuntu@ip-172-26-2-90:~/
+scp scripts/cdnfly-production/stream-5-channels-fixed.sh ubuntu@ip-172-26-2-90:~/stream.sh
+scp scripts/cdnfly-production/nginx-cdnfly-fixed.conf ubuntu@ip-172-26-2-90:~/nginx-cdnfly.conf
+scp scripts/cdnfly-production/find-channels.sh ubuntu@ip-172-26-2-90:~/
+scp scripts/cdnfly-production/setup-nginx.sh ubuntu@ip-172-26-2-90:~/
 
 # 2. SSH INTO SERVER
 ssh ubuntu@ip-172-26-2-90
 
-# 3. SETUP NGINX (ONE TIME ONLY)
-sudo cp ~/nginx-cdnfly.conf /etc/nginx/sites-available/cdnfly
-sudo ln -sf /etc/nginx/sites-available/cdnfly /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
+# 3. SETUP NGINX (ONE TIME ONLY) - AUTOMATIC
+chmod +x ~/setup-nginx.sh
+./setup-nginx.sh
 
-# 4. MAKE SCRIPT EXECUTABLE
-chmod +x ~/stream-5-channels.sh
+# OR MANUAL NGINX SETUP:
+# sudo cp ~/nginx-cdnfly.conf /etc/nginx/sites-available/cdnfly
+# sudo ln -sf /etc/nginx/sites-available/cdnfly /etc/nginx/sites-enabled/
+# sudo rm -f /etc/nginx/sites-enabled/default
+# mkdir -p ~/ciyaar/hls
+# sudo nginx -t && sudo systemctl reload nginx
 
-# 5. START ALL 5 CHANNELS
-./stream-5-channels.sh on
+# 4. MAKE SCRIPTS EXECUTABLE
+chmod +x ~/stream.sh ~/find-channels.sh
 
-# 6. CHECK STATUS
-./stream-5-channels.sh status
+# 5. FIND MORE CHANNELS (Optional)
+./find-channels.sh                # Interactive menu
+./find-channels.sh "premier"      # Quick search for Premier League
+./find-channels.sh "sky"          # Quick search for Sky Sports
+./find-channels.sh "sport"        # Search all sports
+
+# 6. START ALL 5 CHANNELS (Using your tested channels!)
+./stream.sh on
+
+# 7. CHECK STATUS
+./stream.sh status
 
 # ======================================================================
 # YOUR STREAM URLS (Use in your app):
 # ======================================================================
 
-https://stream.cdnfly.online/channel-1/stream.m3u8  (Sky Sports Main Event)
-https://stream.cdnfly.online/channel-2/stream.m3u8  (Sky Sports Football)
-https://stream.cdnfly.online/channel-3/stream.m3u8  (Sky Sports Action)
-https://stream.cdnfly.online/channel-4/stream.m3u8  (TNT Sport 1)
-https://stream.cdnfly.online/channel-5/stream.m3u8  (TNT Sport 2)
+https://stream.cdnfly.online/channel-1/stream.m3u8  (Nova Sport - TESTED ✓)
+https://stream.cdnfly.online/channel-2/stream.m3u8  (Sky Sports 1 - TESTED ✓)
+https://stream.cdnfly.online/channel-3/stream.m3u8  (Sky Sports 2 - TESTED ✓)
+https://stream.cdnfly.online/channel-4/stream.m3u8  (Sky Sports Main Event)
+https://stream.cdnfly.online/channel-5/stream.m3u8  (Sky Sports Football)
 
 # ======================================================================
 # DAILY COMMANDS
 # ======================================================================
 
-./stream-5-channels.sh on       # Turn ON all channels
-./stream-5-channels.sh off      # Turn OFF all channels
-./stream-5-channels.sh status   # Check if healthy
+./stream.sh on                  # Turn ON all channels
+./stream.sh off                 # Turn OFF all channels
+./stream.sh status              # Check if healthy
+./find-channels.sh "premier"    # Find Premier League channels
 pm2 monit                       # Live monitoring
 
 # ======================================================================
