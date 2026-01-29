@@ -414,8 +414,22 @@ export function StreamPlayer({
                 if (Hls.isSupported()) {
                     hls = new Hls({
                         enableWorker: true,
-                        lowLatencyMode: true,
-                        backBufferLength: 90,
+                        lowLatencyMode: false,        // Disabled for smooth playback (user accepts 2-5 min delay)
+                        backBufferLength: 90,         // Keep 90s of played video
+                        maxBufferLength: 120,         // Buffer up to 2 minutes ahead
+                        maxMaxBufferLength: 300,      // Allow up to 5 minutes buffer if needed
+                        maxBufferSize: 60 * 1000 * 1000, // 60MB buffer
+                        maxBufferHole: 0.5,           // Max gap allowed in buffer
+                        liveSyncDurationCount: 5,     // Stay 5 segments behind live (30s delay)
+                        liveMaxLatencyDurationCount: 15, // Max 15 segments behind (90s)
+                        liveDurationInfinity: true,   // Treat as infinite live stream
+                        levelLoadingTimeOut: 20000,   // 20s timeout for level loading
+                        manifestLoadingTimeOut: 20000,// 20s timeout for manifest
+                        fragLoadingTimeOut: 30000,    // 30s timeout for segments
+                        levelLoadingMaxRetry: 6,      // Retry level loading 6 times
+                        manifestLoadingMaxRetry: 6,   // Retry manifest 6 times
+                        fragLoadingMaxRetry: 6,       // Retry segment loading 6 times
+                        startFragPrefetch: true,      // Prefetch next segment
                     });
 
                     hlsRef.current = hls;
