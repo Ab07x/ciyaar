@@ -48,8 +48,8 @@ cd "$HOME"
 log_header "STEP 1: Creating Directory Structure"
 
 mkdir -p "$INSTALL_DIR"/{scripts,logs,pids,config}
-mkdir -p /var/www/html/sports
-mkdir -p /var/recordings/sports
+sudo mkdir -p /var/www/html/sports
+sudo mkdir -p /var/recordings/sports
 
 log_success "Directories created"
 
