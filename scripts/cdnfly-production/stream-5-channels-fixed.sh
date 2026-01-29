@@ -24,10 +24,10 @@ declare -A CHANNELS=(
     [5]="9700:sky-football"   # Sky Sports Football
 )
 
-# HLS Settings - ZERO BUFFER/LOOP
-HLS_TIME=2
-HLS_LIST=10
-HLS_DELETE=15
+# HLS Settings - SMOOTH PLAYBACK (30 seconds buffer)
+HLS_TIME=6
+HLS_LIST=6
+HLS_DELETE=1
 
 start_channel() {
     local num=$1
@@ -43,19 +43,27 @@ start_channel() {
 
     echo "[$num/5] Starting: channel-$num (stream $id)"
 
+    # Start number based on timestamp to avoid conflicts
+    local start_num=$(date +%s)
+
     pm2 start ffmpeg \
         --name "ch$num" \
         -- \
-        -re \
+        -reconnect 1 \
+        -reconnect_streamed 1 \
+        -reconnect_delay_max 5 \
+        -fflags +genpts+discardcorrupt \
         -i "$source" \
         -c:v copy \
-        -c:a aac -b:a 128k \
+        -c:a aac -b:a 128k -ar 48000 \
         -f hls \
         -hls_time $HLS_TIME \
         -hls_list_size $HLS_LIST \
         -hls_delete_threshold $HLS_DELETE \
-        -hls_flags delete_segments+append_list+omit_endlist \
-        -hls_segment_filename "$out/seg%05d.ts" \
+        -hls_flags delete_segments+append_list+omit_endlist+program_date_time \
+        -hls_segment_type mpegts \
+        -start_number $start_num \
+        -hls_segment_filename "$out/seg%d.ts" \
         "$out/stream.m3u8" \
         >/dev/null 2>&1
 }
