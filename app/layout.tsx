@@ -14,6 +14,7 @@ import { NotificationOptIn } from "@/components/NotificationOptIn";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { ConnectionIndicator } from "@/components/mobile/OfflineIndicator";
 
 // Use static metadata to prevent build hangs
 // Dynamic settings loaded client-side via Convex provider
@@ -77,6 +78,18 @@ export default function RootLayout({
   return (
     <html lang="so" suppressHydrationWarning>
       <head>
+        {/* Mobile Viewport - Optimized for iOS and Android */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, viewport-fit=cover, user-scalable=yes" />
+
+        {/* iOS Web App Meta Tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Fanbroj" />
+
+        {/* Android Web App Meta Tags */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#000000" />
+
         {/* Stadium Noir Typography - Outfit (Display) + Inter (Body) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -152,6 +165,7 @@ export default function RootLayout({
 
                   <BottomNav />
                   <NotificationOptIn />
+                  <ConnectionIndicator />
                   <div className="fixed bottom-24 md:bottom-8 right-4 z-40">
                     <WhatsAppButton showLabel={false} className="w-14 h-14 p-0 flex items-center justify-center rounded-full" />
                   </div>

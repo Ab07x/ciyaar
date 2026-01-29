@@ -1,0 +1,284 @@
+/* ============================================
+   MOBILE OPTIMIZATIONS - Fanbroj Platform
+   ============================================ */
+
+/* iOS Safe Area Support */
+:root {
+    --safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-inset-left: env(safe-area-inset-left, 0px);
+    --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
+/* Mobile-First Performance */
+@media (max-width: 768px) {
+    /* Hardware Acceleration */
+    * {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+
+    /* Smooth Scrolling */
+    html {
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+        /* Prevent overscroll bounce */
+        overscroll-behavior-y: contain;
+        /* Optimize text rendering */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Touch Optimizations */
+    button,
+    a,
+    [role="button"],
+    [onclick] {
+        /* Remove tap highlight */
+        -webkit-tap-highlight-color: transparent;
+        /* Prevent text selection */
+        -webkit-user-select: none;
+        user-select: none;
+        /* Instant touch response */
+        touch-action: manipulation;
+        /* Minimum touch target size (44x44px iOS, 48x48px Android) */
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Input Optimizations */
+    input,
+    textarea,
+    select {
+        /* Prevent zoom on focus (iOS) */
+        font-size: 16px !important;
+        /* Better touch scrolling in textareas */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent text selection on UI elements */
+    .no-select {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+
+    /* Image Optimization */
+    img {
+        /* Prevent image drag on mobile */
+        -webkit-user-drag: none;
+        user-drag: none;
+        /* Better image rendering */
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    /* Video Player Optimizations */
+    video {
+        /* Inline playback on iOS */
+        -webkit-playsinline: true;
+        /* Prevent fullscreen takeover */
+        object-fit: contain;
+        /* Better touch handling */
+        touch-action: none;
+    }
+
+    video::-webkit-media-controls {
+        /* Custom controls only */
+        display: none !important;
+    }
+
+    /* Fix iOS input zoom */
+    @supports (-webkit-touch-callout: none) {
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"],
+        textarea {
+            font-size: 16px !important;
+        }
+    }
+
+    /* Landscape Mode Optimizations */
+    @media (orientation: landscape) and (max-height: 500px) {
+        /* Hide less important UI elements in landscape */
+        .hide-landscape {
+            display: none !important;
+        }
+
+        /* Reduce padding in landscape */
+        .player-container {
+            padding: 0 !important;
+        }
+
+        /* Full viewport for video */
+        .stream-player {
+            height: 100vh !important;
+            height: 100dvh !important; /* Dynamic viewport height */
+        }
+    }
+
+    /* Pull-to-Refresh */
+    .pull-to-refresh-container {
+        overscroll-behavior-y: contain;
+    }
+
+    /* Swipe Gestures */
+    .swipeable {
+        touch-action: pan-y;
+    }
+
+    /* Loading Performance */
+    .lazy-load {
+        content-visibility: auto;
+        contain-intrinsic-size: 300px;
+    }
+
+    /* Smooth Animations */
+    @media (prefers-reduced-motion: no-preference) {
+        .smooth-animation {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    }
+
+    /* Disable animations for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+
+    /* Card Touch Interactions */
+    .card-touch {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-touch:active {
+        transform: scale(0.98);
+    }
+
+    /* Bottom Navigation Safe Area */
+    .bottom-nav {
+        padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+    }
+
+    /* Modal Safe Area */
+    .modal-mobile {
+        padding-top: calc(env(safe-area-inset-top) + 1rem);
+        padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+    }
+
+    /* Scrollbar Hidden (cleaner mobile UX) */
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Sticky Header Safe Area */
+    .sticky-header {
+        top: var(--safe-area-inset-top);
+        padding-top: var(--safe-area-inset-top);
+    }
+
+    /* Better Focus States for Mobile */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+        outline: 2px solid var(--accent-green);
+        outline-offset: 2px;
+    }
+
+    /* Prevent iOS Safari Bounce */
+    html,
+    body {
+        position: fixed;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+    }
+
+    #__next,
+    main {
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Dark Mode Optimizations */
+@media (prefers-color-scheme: dark) {
+    /* Better contrast in dark mode */
+    body {
+        background-color: #000;
+    }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2),
+       (min-resolution: 192dpi) {
+    img {
+        image-rendering: -webkit-optimize-contrast;
+    }
+}
+
+/* Notch Support (iPhone X+) */
+@supports (padding: max(0px)) {
+    .safe-top {
+        padding-top: max(1rem, env(safe-area-inset-top));
+    }
+
+    .safe-bottom {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .safe-left {
+        padding-left: max(1rem, env(safe-area-inset-left));
+    }
+
+    .safe-right {
+        padding-right: max(1rem, env(safe-area-inset-right));
+    }
+}
+
+/* PWA Display Mode */
+@media (display-mode: standalone) {
+    /* App is installed as PWA */
+    .pwa-only {
+        display: block;
+    }
+
+    .browser-only {
+        display: none;
+    }
+}
+
+/* Hover Devices Only (prevents stuck hover states on mobile) */
+@media (hover: hover) and (pointer: fine) {
+    .hover-effect:hover {
+        opacity: 0.8;
+    }
+}
+
+/* Touch Devices Only */
+@media (hover: none) and (pointer: coarse) {
+    .touch-only {
+        display: block;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+}

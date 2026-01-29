@@ -12,6 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
 import { BufferIndicator } from "./player/BufferIndicator";
+import { MobileGestures } from "./player/MobileGestures";
 
 // Types
 export interface StreamSource {
@@ -141,6 +142,40 @@ export function StreamPlayer({
             setShowControls(true); // Always show controls on mobile initially
         }
     }, []);
+
+    // Landscape auto-fullscreen for mobile
+    useEffect(() => {
+        if (!isMobile || streamType === "iframe") return;
+
+        const handleOrientationChange = () => {
+            const container = containerRef.current;
+            if (!container) return;
+
+            const isLandscape = window.innerWidth > window.innerHeight;
+
+            // Auto-enter fullscreen in landscape
+            if (isLandscape && isPlaying && !document.fullscreenElement) {
+                // Try to enter fullscreen
+                if (container.requestFullscreen) {
+                    container.requestFullscreen().catch(() => { });
+                } else if ((container as any).webkitRequestFullscreen) {
+                    (container as any).webkitRequestFullscreen().catch(() => { });
+                }
+            }
+            // Auto-exit fullscreen in portrait
+            else if (!isLandscape && document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
+        };
+
+        window.addEventListener('orientationchange', handleOrientationChange);
+        window.addEventListener('resize', handleOrientationChange);
+
+        return () => {
+            window.removeEventListener('orientationchange', handleOrientationChange);
+            window.removeEventListener('resize', handleOrientationChange);
+        };
+    }, [isMobile, isPlaying, streamType]);
 
     // Convex Mutations
     const saveProgress = useMutation(api.watch.saveProgress);
@@ -763,6 +798,18 @@ export function StreamPlayer({
 
             {/* Buffer Indicator */}
             <BufferIndicator isBuffering={isBuffering && !isLoading} />
+
+            {/* Mobile Gestures - Swipe for seek/volume */}
+            {isMobile && (
+                <MobileGestures
+                    videoRef={videoRef}
+                    onSeek={handleSeek}
+                    onVolumeChange={handleVolumeChange}
+                    currentTime={currentTime}
+                    duration={duration}
+                    volume={volume}
+                />
+            )}
 
             {/* Double-tap seek indicators */}
             <AnimatePresence>
