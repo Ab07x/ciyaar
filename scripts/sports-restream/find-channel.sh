@@ -43,8 +43,8 @@ grep -i -A 1 "$SEARCH_TERM" "$CACHE_FILE" | while read -r line; do
         NAME=$(echo "$line" | sed 's/.*,//')
         echo -e "${GREEN}Channel:${NC} $NAME"
     elif [[ $line == http* ]]; then
-        # Extract ID from URL (usually the last numeric part before .ts)
-        ID=$(echo "$line" | grep -oE '[0-9]+\.ts$' | cut -d'.' -f1 || echo "unknown")
+        # Extract ID from URL (the last part of the path)
+        ID=$(echo "$line" | grep -oE '[^/]+$' | sed 's/\.ts$//' || echo "unknown")
         echo -e "${YELLOW}URL:${NC} $line"
         echo -e "${CYAN}ID:${NC}  $ID"
         echo "------------------------------------------------------"
