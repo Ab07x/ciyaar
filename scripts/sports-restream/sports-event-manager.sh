@@ -184,7 +184,8 @@ start_event() {
     test_source "$source_url"
     
     # Create stream directory
-    mkdir -p "$event_stream_dir"
+    sudo mkdir -p "$event_stream_dir"
+    sudo chown $USER:$USER "$event_stream_dir"
     
     # Calculate end time
     local end_time=$(($(date +%s) + duration_minutes * 60))

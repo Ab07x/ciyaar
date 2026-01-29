@@ -120,16 +120,17 @@ fi
 
 # ==============================================================================
 # STEP 5: Set Permissions
+# STEP 5: Setting Permissions
 # ==============================================================================
 log_header "STEP 5: Setting Permissions"
 
 chmod 700 "$INSTALL_DIR/config"
 chmod -R +x "$INSTALL_DIR/scripts"
 
-# Set web directory permissions
-sudo chown -R www-data:www-data /var/www/html 2>/dev/null || log_warn "Could not chown /var/www/html (run with sudo if needed)"
-sudo chown -R www-data:www-data /var/recordings 2>/dev/null || true
-
+# Set web directory permissions to current user so we can write streams
+sudo chown -R $USER:$USER /var/www/html/sports 2>/dev/null || true
+sudo chown -R $USER:$USER /var/recordings/sports 2>/dev/null || true
+sudo chmod -R 755 /var/www/html/sports /var/recordings/sports 2>/dev/null || true
 log_success "Permissions set"
 
 # ==============================================================================
