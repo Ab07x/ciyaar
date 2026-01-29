@@ -66,6 +66,7 @@ SCRIPTS=(
     "stealth-restreamer.sh"
     "monitor-health.sh"
     "setup-sports-server.sh"
+    "find-channel.sh"
 )
 
 for script in "${SCRIPTS[@]}"; do
