@@ -43,6 +43,19 @@ INSTALL_DIR="$HOME/sports-stream"
 cd "$HOME"
 
 # ==============================================================================
+# STEP 0: Install System Dependencies
+# ==============================================================================
+log_header "STEP 0: Installing System Dependencies"
+
+log_info "Updating package lists..."
+sudo apt update -qq
+
+log_info "Installing ffmpeg, jq, and other tools..."
+sudo apt install -y -qq ffmpeg jq curl openssl vnstat dnsutils
+
+log_success "Dependencies installed"
+
+# ==============================================================================
 # STEP 1: Create Directory Structure
 # ==============================================================================
 log_header "STEP 1: Creating Directory Structure"

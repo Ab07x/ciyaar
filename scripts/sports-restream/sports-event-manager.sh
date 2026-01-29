@@ -250,6 +250,8 @@ EOF
         return 0
     else
         log_error "Failed to start FFmpeg"
+        echo -e "${YELLOW}Check logs for details:${NC}"
+        tail -n 10 "$log_file"
         rm -f "$pid_file"
         return 1
     fi
