@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { AdSlot } from "@/components/AdSlot";
 import { useUser } from "@/providers/UserProvider";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Film, Crown, Star, Play, Lock, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
@@ -13,7 +13,7 @@ import { useSearchParams } from "next/navigation";
 
 const ITEMS_PER_PAGE = 35; // 7x5
 
-export default function MoviesPage() {
+function MoviesContent() {
     const movies = useQuery(api.movies.listMovies, { isPublished: true });
     const { isPremium } = useUser();
     const searchParams = useSearchParams();
@@ -301,5 +301,17 @@ export default function MoviesPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function MoviesPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-[#0d1b2a]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f0ad4e]"></div>
+            </div>
+        }>
+            <MoviesContent />
+        </Suspense>
     );
 }
