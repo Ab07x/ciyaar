@@ -355,7 +355,7 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
                                 <div className="flex flex-col md:flex-row items-start gap-6 mb-6">
                                     {/* Large Poster (Mobile: Full width/Large, Desktop: Standard) */}
                                     {movie.posterUrl && (
-                                        <div className="relative w-[160px] md:w-[200px] aspect-[2/3] flex-shrink-0 mx-auto md:mx-0 shadow-2xl rounded-xl overflow-hidden border border-white/10 group">
+                                        <div className="relative w-[280px] md:w-[340px] lg:w-[400px] aspect-[2/3] flex-shrink-0 mx-auto md:mx-0 shadow-2xl rounded-xl overflow-hidden border border-white/10 group">
                                             <Image
                                                 src={movie.posterUrl}
                                                 alt={movie.title}

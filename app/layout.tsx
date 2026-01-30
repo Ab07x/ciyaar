@@ -97,7 +97,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className="antialiased bg-[var(--bg-primary)] text-[var(--color-text-primary)] min-h-screen"
+        className="antialiased bg-[var(--bg-primary)] text-[var(--color-text-primary)] min-h-screen overflow-x-hidden max-w-[100vw]"
       >
         <ConvexClientProvider>
           <LanguageProvider>

@@ -25,7 +25,7 @@ export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
     if (!data || data.length === 0) return null;
 
     return (
-        <section className="mb-12 group/section relative">
+        <section className="mb-12 group/section relative overflow-hidden">
             {/* Section Header */}
             <div className="flex items-center gap-3 px-4 md:px-6 mb-4">
                 <div className="w-1 h-8 bg-red-500 rounded-full" />
@@ -35,18 +35,18 @@ export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
                 </div>
             </div>
 
-            <div className="relative group/carousel">
+            <div className="relative group/carousel overflow-hidden">
                 {/* Scroll Buttons (Desktop) */}
                 <button
                     onClick={() => scroll("left")}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/70 hover:bg-white hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center shadow-2xl border border-white/10"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/70 hover:bg-white hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center shadow-2xl border border-white/10"
                     aria-label="Scroll left"
                 >
                     <ChevronLeft size={28} />
                 </button>
                 <button
                     onClick={() => scroll("right")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/70 hover:bg-white hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center shadow-2xl border border-white/10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/70 hover:bg-white hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center shadow-2xl border border-white/10"
                     aria-label="Scroll right"
                 >
                     <ChevronRight size={28} />
@@ -93,13 +93,20 @@ export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
 
                             {/* Movie Poster Card */}
                             <div className="relative z-10 w-[110px] md:w-[160px] aspect-[2/3] rounded-md overflow-hidden bg-stadium-elevated border border-white/10 group-hover/item:border-white/40 transition-all duration-300 shadow-2xl group-hover/item:scale-105 group-hover/item:shadow-[0_0_40px_rgba(255,255,255,0.15)]">
-                                <Image
-                                    src={item.posterUrl}
-                                    alt={item.title}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 110px, 160px"
-                                />
+                                {item.posterUrl ? (
+                                    <Image
+                                        src={item.posterUrl}
+                                        alt={item.title}
+                                        fill
+                                        className="object-cover"
+                                        sizes="(max-width: 768px) 110px, 160px"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/5 flex flex-col items-center justify-center text-white/30">
+                                        <Play size={24} className="mb-2" />
+                                        <span className="text-[10px] font-bold text-center px-2 line-clamp-2">{item.title}</span>
+                                    </div>
+                                )}
 
                                 {/* Hover overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />

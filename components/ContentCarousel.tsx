@@ -28,8 +28,8 @@ export function ContentCarousel({ title, link, data, type = "movie" }: ContentCa
     if (!data || data.length === 0) return null;
 
     return (
-        <section className="mb-8 md:mb-12 group/section">
-            <div className="flex items-center justify-between px-4 mb-4">
+        <section className="mb-8 md:mb-12 group/section overflow-hidden">
+            <div className="flex items-center justify-between px-4 md:px-6 mb-4">
                 <h2 className="text-lg md:text-xl font-black text-white flex items-center gap-2">
                     <span className="w-1 h-6 bg-accent-green rounded-full inline-block"></span>
                     {title}
@@ -41,18 +41,18 @@ export function ContentCarousel({ title, link, data, type = "movie" }: ContentCa
                 )}
             </div>
 
-            <div className="relative group/carousel">
+            <div className="relative group/carousel overflow-hidden">
                 {/* Scroll Buttons (Desktop) */}
                 <button
                     onClick={() => scroll("left")}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/50 hover:bg-accent-green hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center -ml-5 shadow-elevated"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/70 hover:bg-accent-green hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center shadow-xl"
                     aria-label="Scroll left"
                 >
                     <ChevronLeft size={24} />
                 </button>
                 <button
                     onClick={() => scroll("right")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/50 hover:bg-accent-green hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center -mr-5 shadow-elevated"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/70 hover:bg-accent-green hover:text-black rounded-full text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hidden md:flex items-center justify-center shadow-xl"
                     aria-label="Scroll right"
                 >
                     <ChevronRight size={24} />
@@ -60,7 +60,7 @@ export function ContentCarousel({ title, link, data, type = "movie" }: ContentCa
 
                 <div
                     ref={scrollRef}
-                    className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar px-4 pb-4"
+                    className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar px-4 md:px-6 pb-4"
                 >
                     {data.map((item, index) => {
                         const itemType = item.type || type;
