@@ -2,11 +2,10 @@
 #
 # START.sh - Production 5-Channel Streaming (720p Transcoded)
 #
-# Features:
-# - 720p transcoding for stability (not copy)
-# - Timestamp-based segments (prevents 404 caching)
-# - Auto-restart on failure
-# - Input stabilization flags
+# Usage:
+#   ./START.sh                           # Uses default channels
+#   ./START.sh 9704 52331 7018 16643 52332   # Custom channel IDs
+#   ./START.sh 9704 "Premier League" 52331 "PL 50FPS" ...  # With names
 #
 
 # Colors
@@ -24,23 +23,57 @@ HLS_BASE="$HOME/ciyaar/hls"
 LOG_DIR="$HOME/ciyaar/logs"
 CDN_URL="https://stream.cdnfly.online"
 
-# Channel IDs (use find_channels.sh to discover more)
-CHANNELS=(
-    "9704|Sky Sports Premier League HD"
-    "52331|Sky Sports Premier League HD 50FPS"
-    "7018|Sky Sports Racing"
-    "16643|Sky Sports Racing HD"
-    "52332|Sky Sports Racing HD 50FPS"
-)
-
 # FFmpeg settings
 HLS_TIME=10
 HLS_LIST_SIZE=30
 HLS_DELETE_THRESHOLD=60
 
+# Default channels (if no arguments provided)
+DEFAULT_CHANNELS=(
+    "9704|Sky Sports Premier League HD"
+    "52331|Sky Sports Premier League 50FPS"
+    "7018|Sky Sports Racing"
+    "16643|Sky Sports Racing HD"
+    "52332|Sky Sports Racing HD 50FPS"
+)
+
+# Parse arguments into channels array
+parse_channels() {
+    CHANNELS=()
+
+    if [ $# -eq 0 ]; then
+        # No arguments - use defaults
+        CHANNELS=("${DEFAULT_CHANNELS[@]}")
+    else
+        # Parse arguments: can be just IDs or "ID NAME" pairs
+        local i=1
+        while [ $# -gt 0 ]; do
+            local id="$1"
+            shift
+
+            # Check if next arg is a name (not a number)
+            if [ $# -gt 0 ] && ! [[ "$1" =~ ^[0-9]+$ ]]; then
+                local name="$1"
+                shift
+            else
+                local name="Channel $i"
+            fi
+
+            CHANNELS+=("$id|$name")
+            ((i++))
+
+            # Max 5 channels
+            [ ${#CHANNELS[@]} -ge 5 ] && break
+        done
+    fi
+}
+
+# Parse command line
+parse_channels "$@"
+
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║      CIYAAR PRODUCTION STREAMING - 5 CHANNELS (720p)         ║${NC}"
+echo -e "${CYAN}║      CIYAAR PRODUCTION STREAMING - ${#CHANNELS[@]} CHANNELS (720p)          ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -68,7 +101,7 @@ echo ""
 # START CHANNELS
 # ============================================================================
 echo -e "${YELLOW}========================================${NC}"
-echo -e "${YELLOW}  STARTING 5 CHANNELS (720p TRANSCODE)${NC}"
+echo -e "${YELLOW}  STARTING ${#CHANNELS[@]} CHANNELS (720p TRANSCODE)${NC}"
 echo -e "${YELLOW}========================================${NC}"
 echo ""
 echo -e "  ${BLUE}Segment Duration:${NC}    ${HLS_TIME}s"
@@ -80,7 +113,7 @@ echo ""
 
 start_channel() {
     local channel_num=$1
-    local channel_config="${CHANNELS[$((channel_num-1))]}"
+    local channel_config="$2"
     local stream_id="${channel_config%%|*}"
     local channel_name="${channel_config#*|}"
     local channel_dir="$HLS_BASE/channel-$channel_num"
@@ -91,6 +124,9 @@ start_channel() {
 
     echo -e "${GREEN}Starting Channel $channel_num:${NC} $channel_name"
     echo -e "  ${BLUE}Stream ID:${NC} $stream_id"
+
+    # Save channel info for status script
+    echo "$stream_id|$channel_name" > "$channel_dir/.channel_info"
 
     # Start FFmpeg with auto-restart loop
     (
@@ -127,9 +163,9 @@ start_channel() {
     echo ""
 }
 
-# Start all 5 channels
-for i in 1 2 3 4 5; do
-    start_channel $i
+# Start all channels
+for i in "${!CHANNELS[@]}"; do
+    start_channel $((i+1)) "${CHANNELS[$i]}"
 done
 
 # Wait for initialization
@@ -146,22 +182,23 @@ echo -e "${CYAN}========================================${NC}"
 echo ""
 
 echo -e "${BOLD}${BLUE}Stream URLs:${NC}"
-for i in 1 2 3 4 5; do
-    channel_config="${CHANNELS[$((i-1))]}"
+for i in "${!CHANNELS[@]}"; do
+    channel_config="${CHANNELS[$i]}"
     channel_name="${channel_config#*|}"
-    echo -e "  Channel $i: ${GREEN}$CDN_URL/channel-$i/stream.m3u8${NC}"
+    echo -e "  Channel $((i+1)): ${GREEN}$CDN_URL/channel-$((i+1))/stream.m3u8${NC}"
     echo -e "             ${BLUE}($channel_name)${NC}"
 done
 echo ""
 
 echo -e "${BOLD}${BLUE}Initial Segment Check:${NC}"
-for i in 1 2 3 4 5; do
-    seg_count=$(ls -1 "$HLS_BASE/channel-$i"/*.ts 2>/dev/null | wc -l | tr -d ' ')
+for i in "${!CHANNELS[@]}"; do
+    ch=$((i+1))
+    seg_count=$(ls -1 "$HLS_BASE/channel-$ch"/*.ts 2>/dev/null | wc -l | tr -d ' ')
     if [ "$seg_count" -gt 0 ]; then
-        latest=$(ls -t "$HLS_BASE/channel-$i"/*.ts 2>/dev/null | head -1 | xargs basename 2>/dev/null)
-        echo -e "  Channel $i: ${GREEN}$seg_count segments${NC} (latest: $latest)"
+        latest=$(ls -t "$HLS_BASE/channel-$ch"/*.ts 2>/dev/null | head -1 | xargs basename 2>/dev/null)
+        echo -e "  Channel $ch: ${GREEN}$seg_count segments${NC} (latest: $latest)"
     else
-        echo -e "  Channel $i: ${YELLOW}Initializing...${NC}"
+        echo -e "  Channel $ch: ${YELLOW}Initializing...${NC}"
     fi
 done
 echo ""

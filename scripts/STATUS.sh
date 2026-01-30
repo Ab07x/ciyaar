@@ -28,13 +28,11 @@ echo ""
 echo -e "${BOLD}${BLUE}[SYSTEM RESOURCES]${NC}"
 
 if [ "$(uname)" == "Darwin" ]; then
-    # macOS
     cpu_usage=$(top -l 1 | grep "CPU usage" | awk '{print $3}' | tr -d '%')
     mem_info=$(vm_stat | awk '/Pages free/ {free=$3} /Pages active/ {active=$3} END {printf "%.0f%% used", (active/(free+active))*100}')
     echo "CPU: ${cpu_usage:-N/A}"
     echo "RAM: $mem_info"
 else
-    # Linux
     cpu_usage=$(top -bn1 | grep 'Cpu(s)' | awk '{print $2}')
     mem_info=$(free -h | awk '/^Mem:/ {print $3 "/" $2}')
     echo "CPU: ${cpu_usage}% used"
@@ -77,6 +75,14 @@ echo -e "${BOLD}${BLUE}[CHANNEL STATUS]${NC}"
 for i in 1 2 3 4 5; do
     dir="$HLS_BASE/channel-$i"
     m3u8="$dir/stream.m3u8"
+    info_file="$dir/.channel_info"
+
+    # Get channel name from info file
+    if [ -f "$info_file" ]; then
+        channel_name=$(cat "$info_file" | cut -d'|' -f2)
+    else
+        channel_name="Not configured"
+    fi
 
     if [ -f "$m3u8" ]; then
         # Check age
@@ -102,9 +108,11 @@ for i in 1 2 3 4 5; do
         fi
 
         echo -e "Channel $i: $status"
+        echo -e "           ${CYAN}$channel_name${NC}"
         echo -e "           Segments: $segment_count | Latest: ${latest_segment:-none}"
     else
-        echo -e "Channel $i: ${RED}● OFFLINE${NC} (no stream.m3u8)"
+        echo -e "Channel $i: ${RED}● OFFLINE${NC}"
+        echo -e "           ${CYAN}$channel_name${NC}"
     fi
 done
 echo ""
@@ -152,7 +160,11 @@ echo ""
 # ============================================================================
 echo -e "${BOLD}${BLUE}[STREAM URLs]${NC}"
 for i in 1 2 3 4 5; do
-    echo "  $CDN_URL/channel-$i/stream.m3u8"
+    info_file="$HLS_BASE/channel-$i/.channel_info"
+    if [ -f "$info_file" ]; then
+        channel_name=$(cat "$info_file" | cut -d'|' -f2)
+        echo -e "  Ch$i: $CDN_URL/channel-$i/stream.m3u8 ${CYAN}($channel_name)${NC}"
+    fi
 done
 echo ""
 
@@ -160,8 +172,9 @@ echo ""
 # COMMANDS
 # ============================================================================
 echo -e "${BOLD}${BLUE}[QUICK COMMANDS]${NC}"
-echo -e "  Start:   ${GREEN}~/ciyaar/scripts/START.sh${NC}"
+echo -e "  Start:   ${GREEN}~/ciyaar/scripts/START.sh [id1] [id2] [id3] [id4] [id5]${NC}"
 echo -e "  Stop:    ${RED}~/ciyaar/scripts/STOP.sh${NC}"
 echo -e "  Restart: ${YELLOW}~/ciyaar/scripts/RESTART.sh${NC}"
 echo -e "  Monitor: ${BLUE}~/ciyaar/scripts/monitor.sh${NC}"
+echo -e "  Find:    ${CYAN}~/ciyaar/scripts/find_channels.sh \"keyword\"${NC}"
 echo ""

@@ -2,6 +2,7 @@
 #
 # watchdog.sh - Auto-recovery watchdog for stale/dead streams
 #
+# Reads channel info from .channel_info files created by START.sh
 # Add to crontab:
 #   * * * * * /home/ubuntu/ciyaar/scripts/watchdog.sh
 #   * * * * * sleep 30 && /home/ubuntu/ciyaar/scripts/watchdog.sh
@@ -13,14 +14,6 @@ LOG_DIR="$HOME/ciyaar/logs"
 LOGFILE="$LOG_DIR/watchdog.log"
 MAX_AGE=60
 
-# Channel configurations
-declare -A CHANNELS
-CHANNELS[1]="9704"
-CHANNELS[2]="52331"
-CHANNELS[3]="7018"
-CHANNELS[4]="16643"
-CHANNELS[5]="52332"
-
 mkdir -p "$LOG_DIR"
 
 log() {
@@ -29,7 +22,7 @@ log() {
 
 restart_channel() {
     local channel=$1
-    local channel_id=${CHANNELS[$channel]}
+    local channel_id=$2
     local channel_dir="$HLS_BASE/channel-$channel"
     local stream_url="$IPTV_BASE/$channel_id"
     local channel_log="$LOG_DIR/channel-$channel.log"
@@ -38,9 +31,14 @@ restart_channel() {
     pkill -9 -f "channel-$channel" 2>/dev/null
     sleep 2
 
-    # Recreate directory
+    # Recreate directory but preserve .channel_info
+    local channel_info=""
+    [ -f "$channel_dir/.channel_info" ] && channel_info=$(cat "$channel_dir/.channel_info")
+
     rm -rf "$channel_dir"
     mkdir -p "$channel_dir"
+
+    [ -n "$channel_info" ] && echo "$channel_info" > "$channel_dir/.channel_info"
 
     # Restart channel
     (
@@ -76,7 +74,17 @@ restart_channel() {
 
 # Check each channel
 for channel in 1 2 3 4 5; do
-    m3u8="$HLS_BASE/channel-$channel/stream.m3u8"
+    channel_dir="$HLS_BASE/channel-$channel"
+    info_file="$channel_dir/.channel_info"
+    m3u8="$channel_dir/stream.m3u8"
+
+    # Skip if no channel info (channel not configured)
+    [ ! -f "$info_file" ] && continue
+
+    # Get channel ID from info file
+    channel_id=$(cat "$info_file" | cut -d'|' -f1)
+    [ -z "$channel_id" ] && continue
+
     restart_needed=false
 
     if [ ! -f "$m3u8" ]; then
@@ -99,6 +107,6 @@ for channel in 1 2 3 4 5; do
     fi
 
     if [ "$restart_needed" = true ]; then
-        restart_channel $channel
+        restart_channel $channel $channel_id
     fi
 done
