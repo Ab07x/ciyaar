@@ -542,6 +542,7 @@ export default defineSchema({
         title: v.string(),
         titleSomali: v.optional(v.string()),
         overview: v.optional(v.string()),
+        overviewSomali: v.optional(v.string()),
         stillUrl: v.optional(v.string()),
         airDate: v.optional(v.string()),
         runtime: v.optional(v.number()),

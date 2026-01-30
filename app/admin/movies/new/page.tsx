@@ -64,7 +64,7 @@ export default function MovieFormPage({ params }: Props) {
         embeds: [{ label: "Server 1", url: "", quality: "720p", type: "iframe" }] as { label: string; url: string; quality?: string; type?: string }[],
         isDubbed: false,
         isPremium: false,
-        isPublished: false,
+        isPublished: true,
         isFeatured: false,
         isTop10: false,
         top10Order: 0,
@@ -595,6 +595,19 @@ export default function MovieFormPage({ params }: Props) {
                                     Add
                                 </button>
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const commonTags = "anproj, fanproj nxt, hindi af somali, fanproj afsomali, streamnxt fanproj, fanproj afsomali 2025, fanproj hindi af somali, hindi af somali fanproj, fanprojnxt, fanproj.com, streamnxt, saafi films, fanproj play, mysomali, astaan films hindi af somali, filim hindi afsomali 2025, fanprojnet, fanbroj, fanproj net, film hindi af somali, fanproj aflaam, hindi afsomali, filim hindi afsomali, fanbaroj, fanproj films, zee films tv, zee films, astaan films, saafi films hindi af somali, www.fanproj.com hindi af somali, hindi af somali cusub 2025, fanproj nxt af somali, hindi af somali cusub, dhurandhar af somali, www.fanproj.com, fanproj af somali, mysomali fanproj, fanproj 2025, fanproj tv, fanproj stream nxt, fanproj.net, stream nxt fanproj, fanprojplay, fanproj next, faanproj, saafi films fanproj, fanbaroj af somali, fanproj.nxt, zee films tv af somali, streamnxt hindi af somali, hindi af somali fanproj 2025, somfilms, fanparoj, fanproj .com, fanproj production, fanproj com, film hindi af somali 2025, streamnxt af somali, filim hindi afsomali fanproj 2025, hindi af somali mysomali, fanproj musalsal, fanproj hindi af somali telegram link, fanproj telegram, fanproj.com 2025, famproj, aflaam fanproj, www fanproj.com, zee films af somali, fanproj aflaam.com, saafifilms, musalsal af somali, streamnxt fanproj 2025, film hindi af somali fanproj, dhurandhar afsomali, zee films afsomali, fanproj somali, asal24 hindi af somali, fanproj nxt 2025, baaghi 4 afsomali, filim hindi afsomali 2025 telegram, rashka vip hindi af somali, saafi films musalsal, faanproj.com, war 2 afsomali, fanproj streamnxt, filin hindi af somali, hindi af somali.com, hindi afsomali 2025, tere ishq mein afsomali, streamnxt #hindi af somali, fanoroj, fanproj. com, hindi fanproj, fanproj hindi af somali 2025, salaar afsomali, fanproj american, hindi af somali mysomali, fanproj musalsal turkish, fanproj.com hindi afsomali";
+                                    const newTags = commonTags.split(",").map(t => t.trim().toLowerCase()).filter(t => t && !formData.tags.includes(t));
+                                    if (newTags.length > 0) {
+                                        setFormData({ ...formData, tags: [...formData.tags, ...newTags] });
+                                    }
+                                }}
+                                className="w-full mt-3 px-4 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg text-sm font-bold hover:bg-blue-500/20 transition-all"
+                            >
+                                + Add Common SEO Tags
+                            </button>
                             {formData.tags.length > 0 && (
                                 <button
                                     type="button"
