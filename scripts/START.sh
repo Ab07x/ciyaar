@@ -26,11 +26,11 @@ CDN_URL="https://stream.cdnfly.online"
 
 # Channel IDs (use find_channels.sh to discover more)
 CHANNELS=(
-    "178437|BeIN Sports 1 HD"
-    "45487|Sky Sports Premier League"
-    "45491|Sky Sports Football"
-    "9701|Sky Sports Main Event"
-    "9700|Sky Sports Arena"
+    "9704|Sky Sports Premier League HD"
+    "52331|Sky Sports Premier League HD 50FPS"
+    "7018|Sky Sports Racing"
+    "16643|Sky Sports Racing HD"
+    "52332|Sky Sports Racing HD 50FPS"
 )
 
 # FFmpeg settings
