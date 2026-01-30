@@ -249,7 +249,7 @@ export function CategoryRow({ title, items, href, showRank = false }: CategoryRo
                                                 className="flex-1 flex items-center justify-center gap-2 py-2 bg-white text-black font-bold rounded-lg hover:bg-white/90 transition-colors text-sm"
                                             >
                                                 <Play size={16} fill="currentColor" />
-                                                Play
+                                                Daawo NOW
                                             </Link>
                                             <button
                                                 onClick={() => toggleMyList(item._id)}

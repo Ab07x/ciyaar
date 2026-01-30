@@ -3,8 +3,10 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Film, Crown, Eye, Search, Check, X } from "lucide-react";
+import { Plus, Edit, Trash2, Film, Crown, Eye, Search, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+
+const ITEMS_PER_PAGE = 35; // 7 columns x 5 rows
 
 export default function AdminMoviesPage() {
     const movies = useQuery(api.movies.listMovies, {});
@@ -12,6 +14,7 @@ export default function AdminMoviesPage() {
 
     const [filter, setFilter] = useState<"all" | "published" | "draft" | "premium" | "dubbed">("all");
     const [search, setSearch] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
 
     const filtered = movies?.filter((m) => {
         if (filter === "published") return m.isPublished;
@@ -20,15 +23,34 @@ export default function AdminMoviesPage() {
         if (filter === "dubbed") return m.isDubbed;
         return true;
     }).filter((m) =>
-        m.title.toLowerCase().includes(search.toLowerCase())
+        m.title.toLowerCase().includes(search.toLowerCase()) ||
+        m.titleSomali?.toLowerCase().includes(search.toLowerCase())
     );
+
+    // Pagination
+    const totalItems = filtered?.length || 0;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedMovies = filtered?.slice(startIndex, endIndex);
+
+    // Reset to page 1 when filter/search changes
+    const handleFilterChange = (newFilter: typeof filter) => {
+        setFilter(newFilter);
+        setCurrentPage(1);
+    };
+
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        setCurrentPage(1);
+    };
 
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black">MOVIES</h1>
-                    <p className="text-text-muted">Filimada – One-click TMDB import</p>
+                    <p className="text-text-muted">Filimada – One-click TMDB import ({totalItems} total)</p>
                 </div>
                 <Link
                     href="/admin/movies/new"
@@ -45,7 +67,7 @@ export default function AdminMoviesPage() {
                     {["all", "published", "draft", "premium", "dubbed"].map((f) => (
                         <button
                             key={f}
-                            onClick={() => setFilter(f as any)}
+                            onClick={() => handleFilterChange(f as any)}
                             className={`px-3 py-1 rounded-full text-sm capitalize ${filter === f
                                 ? "bg-accent-green text-black font-bold"
                                 : "bg-stadium-hover text-text-secondary"
@@ -59,7 +81,7 @@ export default function AdminMoviesPage() {
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
                     <input
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                         placeholder="Search movies..."
                         className="w-full bg-stadium-elevated border border-border-subtle rounded-lg pl-10 pr-4 py-2"
                     />
@@ -67,8 +89,8 @@ export default function AdminMoviesPage() {
             </div>
 
             {/* Movies Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filtered?.map((movie) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-4">
+                {paginatedMovies?.map((movie) => (
                     <div
                         key={movie._id}
                         className="bg-stadium-elevated border border-border-strong rounded-xl overflow-hidden group"
@@ -137,7 +159,7 @@ export default function AdminMoviesPage() {
                         </div>
 
                         <div className="p-3">
-                            <h3 className="font-bold text-sm truncate">{movie.title}</h3>
+                            <h3 className="font-bold text-sm truncate">{movie.titleSomali || movie.title}</h3>
                             <div className="flex items-center justify-between mt-1">
                                 <span className="text-xs text-text-muted">
                                     {movie.releaseDate?.split("-")[0]}
@@ -151,6 +173,79 @@ export default function AdminMoviesPage() {
                     </div>
                 ))}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-6 border-t border-border-subtle">
+                    <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 rounded-lg bg-stadium-elevated border border-border-subtle disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stadium-hover"
+                    >
+                        <ChevronLeft size={18} />
+                    </button>
+
+                    <div className="flex gap-1">
+                        {/* First page */}
+                        {currentPage > 3 && (
+                            <>
+                                <button
+                                    onClick={() => setCurrentPage(1)}
+                                    className="px-3 py-1 rounded-lg bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover text-sm"
+                                >
+                                    1
+                                </button>
+                                {currentPage > 4 && <span className="px-2 text-text-muted">...</span>}
+                            </>
+                        )}
+
+                        {/* Page numbers */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(page =>
+                                page >= currentPage - 2 &&
+                                page <= currentPage + 2
+                            )
+                            .map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`px-3 py-1 rounded-lg text-sm ${
+                                        currentPage === page
+                                            ? "bg-accent-green text-black font-bold"
+                                            : "bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover"
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                        {/* Last page */}
+                        {currentPage < totalPages - 2 && (
+                            <>
+                                {currentPage < totalPages - 3 && <span className="px-2 text-text-muted">...</span>}
+                                <button
+                                    onClick={() => setCurrentPage(totalPages)}
+                                    className="px-3 py-1 rounded-lg bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover text-sm"
+                                >
+                                    {totalPages}
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="p-2 rounded-lg bg-stadium-elevated border border-border-subtle disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stadium-hover"
+                    >
+                        <ChevronRight size={18} />
+                    </button>
+
+                    <span className="ml-4 text-sm text-text-muted">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                </div>
+            )}
 
             {filtered?.length === 0 && (
                 <div className="text-center py-12">

@@ -11,8 +11,6 @@ interface UserContextType {
     userId: Id<"users"> | null;
     isLoading: boolean;
     isPremium: boolean;
-    isTrial: boolean;
-    trialDaysLeft: number | null;
     subscription: any;
     checkMatchAccess: (matchId: Id<"matches">) => boolean;
     redeemCode: (code: string, matchId?: Id<"matches">) => Promise<any>;
@@ -87,20 +85,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const logoutMutation = useMutation(api.users.logout);
 
-    const logout = async () => {
+    const logout = () => {
         if (typeof window !== "undefined") {
-            try {
-                if (deviceId) {
-                    await logoutMutation({ deviceId });
-                }
-            } catch (error) {
-                console.error("Logout failed on server:", error);
-            }
+            // IMMEDIATELY clear local storage first
             localStorage.removeItem("fanbroj_device_id");
             localStorage.removeItem("fanbroj_subscription");
+
+            // Clear state
+            const oldDeviceId = deviceId;
             setDeviceId("");
             setUserId(null);
-            // Reload to clear all state/cache
+
+            // Try to notify server (fire and forget)
+            if (oldDeviceId) {
+                logoutMutation({ deviceId: oldDeviceId }).catch(() => { });
+            }
+
+            // Force hard redirect immediately
             window.location.href = "/";
         }
     };
@@ -112,8 +113,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 userId,
                 isLoading: deviceId === "" || (userId !== null && subscription === undefined),
                 isPremium: (!!subscription) || (premiumAccess?.hasAccess ?? false),
-                isTrial: premiumAccess?.isTrial ?? false,
-                trialDaysLeft: premiumAccess?.daysLeft ?? null,
                 subscription,
                 checkMatchAccess,
                 redeemCode,

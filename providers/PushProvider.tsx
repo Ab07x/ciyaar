@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "./UserProvider";
+import { getDeviceId } from "@/lib/device";
 
 interface PushContextType {
     isSupported: boolean;
@@ -22,15 +23,14 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
     const [permission, setPermission] = useState<NotificationPermission>("default");
-    const [deviceId] = useState(() => {
-        if (typeof window === "undefined") return "";
-        let id = localStorage.getItem("device_id");
-        if (!id) {
-            id = crypto.randomUUID();
-            localStorage.setItem("device_id", id);
+    const [deviceId, setDeviceId] = useState("");
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            // Use the same device ID as the rest of the app
+            setDeviceId(getDeviceId());
         }
-        return id;
-    });
+    }, []);
 
     const saveSubscription = useMutation(api.push.saveSubscription);
     const unsubscribeMutation = useMutation(api.push.unsubscribe);

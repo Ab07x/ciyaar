@@ -88,7 +88,7 @@ export default function RootLayout({
 
         {/* Android Web App Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#0d1b2a" />
 
         {/* Stadium Noir Typography - Outfit (Display) + Inter (Body) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -112,45 +112,45 @@ export default function RootLayout({
                   </main>
 
                   {/* Footer */}
-                  <footer className="border-t border-[var(--glass-border)] py-12 mt-12 bg-[var(--bg-elevated)] mb-32 md:mb-0">
+                  <footer className="border-t border-[#1a3a5c] py-12 mt-12 bg-[#1b2838] mb-32 md:mb-0">
                     <div className="container mx-auto px-4 text-center">
                       <p className="text-2xl font-black tracking-tighter mb-4">
-                        FAN<span className="text-accent-green">BROJ</span>
+                        FAN<span className="text-[#f0ad4e]">BROJ</span>
                       </p>
                       <p className="text-text-muted text-sm max-w-md mx-auto mb-8">
                         Halkani waa hoyga taageerayaasha ciyaaraha ee Soomaaliyeed. Waxaan idiin soo gudbinnaa ciyaaraha ugu xiisaha badan dunida.
                       </p>
                       <nav className="flex flex-wrap justify-center items-center gap-6 mb-8">
-                        <Link href="/" className="text-sm font-bold hover:text-accent-green transition-colors">HOME</Link>
-                        <Link href="/about" className="text-sm font-bold hover:text-accent-green transition-colors">ABOUT</Link>
-                        <Link href="/ciyaar" className="text-sm font-bold hover:text-accent-green transition-colors">CIYAARAHA</Link>
+                        <Link href="/" className="text-sm font-bold hover:text-[#f0ad4e] transition-colors">HOME</Link>
+                        <Link href="/about" className="text-sm font-bold hover:text-[#f0ad4e] transition-colors">ABOUT</Link>
+                        <Link href="/ciyaar" className="text-sm font-bold hover:text-[#9AE600] transition-colors">CIYAARAHA</Link>
 
                         {/* Footer specific links matching dropdown */}
-                        <Link href="/movies" className="text-sm font-bold hover:text-accent-green transition-colors">HINDI AF SOMALI</Link>
-                        <Link href="/series" className="text-sm font-bold hover:text-accent-green transition-colors">MUSALSAL</Link>
-                        <Link href="/live" className="text-sm font-bold hover:text-accent-green transition-colors">FANPROJ TV</Link>
-                        <Link href="/pricing" className="text-sm font-bold text-accent-gold hover:text-accent-gold/80 transition-colors">PREMIUM</Link>
+                        <Link href="/movies" className="text-sm font-bold hover:text-[#f0ad4e] transition-colors">HINDI AF SOMALI</Link>
+                        <Link href="/series" className="text-sm font-bold hover:text-[#DC2626] transition-colors">MUSALSAL</Link>
+                        <Link href="/live" className="text-sm font-bold hover:text-[#3B82F6] transition-colors">FANPROJ TV</Link>
+                        <Link href="/pricing" className="text-sm font-bold text-[#f0ad4e] hover:text-[#f0ad4e]/80 transition-colors">PREMIUM</Link>
                       </nav>
 
                       {/* Apps Section */}
-                      <div className="flex flex-col items-center gap-4 mb-8 p-6 bg-stadium-dark rounded-2xl border border-white/5 max-w-lg mx-auto">
+                      <div className="flex flex-col items-center gap-4 mb-8 p-6 bg-[#0d1b2a] rounded-2xl border border-[#1a3a5c] max-w-lg mx-auto">
                         <span className="text-xs font-black text-text-secondary uppercase tracking-widest">Download Apps</span>
                         <div className="flex gap-6">
                           <Link href="/apps/android" aria-label="Download Android App" className="group flex flex-col items-center gap-2">
-                            <div className="p-3 bg-white/5 rounded-xl group-hover:bg-accent-green/20 group-hover:text-accent-green transition-all border border-transparent group-hover:border-accent-green/20">
+                            <div className="p-3 bg-[#1a3a5c] rounded-xl group-hover:bg-[#9AE600]/20 group-hover:text-[#9AE600] transition-all border border-transparent group-hover:border-[#9AE600]/20">
                               {/* Icon placeholder - using generic SVG since lucide imports might not be at top level context correctly if strictly replacing block */}
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></svg>
                             </div>
                             <span className="text-[10px] font-bold text-text-muted group-hover:text-white transition-colors">Android</span>
                           </Link>
                           <Link href="/apps/ios" aria-label="Download iOS App" className="group flex flex-col items-center gap-2">
-                            <div className="p-3 bg-white/5 rounded-xl group-hover:bg-white/20 group-hover:text-white transition-all border border-transparent group-hover:border-white/20">
+                            <div className="p-3 bg-[#1a3a5c] rounded-xl group-hover:bg-[#f0ad4e]/20 group-hover:text-[#f0ad4e] transition-all border border-transparent group-hover:border-[#f0ad4e]/20">
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="12" x="3" y="2" rx="2" /><path d="M10 20.4C8 22 4 21.8 2 20c.5-1.4 3-2 3-2a4 4 0 0 0 6 0s2.5.6 3 2c-2 1.8-6 2-8 .4" /></svg>
                             </div>
                             <span className="text-[10px] font-bold text-text-muted group-hover:text-white transition-colors">iOS</span>
                           </Link>
                           <Link href="/apps/tv" aria-label="Get Smart TV App" className="group flex flex-col items-center gap-2">
-                            <div className="p-3 bg-white/5 rounded-xl group-hover:bg-accent-blue/20 group-hover:text-accent-blue transition-all border border-transparent group-hover:border-accent-blue/20">
+                            <div className="p-3 bg-[#1a3a5c] rounded-xl group-hover:bg-[#3B82F6]/20 group-hover:text-[#3B82F6] transition-all border border-transparent group-hover:border-[#3B82F6]/20">
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" /></svg>
                             </div>
                             <span className="text-[10px] font-bold text-text-muted group-hover:text-white transition-colors">Smart TV</span>

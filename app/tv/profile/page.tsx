@@ -7,12 +7,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function TVProfilePage() {
-    const { userId, user, isPremium, isTrial, logout } = useUser();
+    const { userId, isPremium, logout } = useUser();
     const router = useRouter();
 
-    const handleLogout = async () => {
-        await logout();
-        router.push("/login");
+    const handleLogout = () => {
+        logout();
     };
 
     return (
@@ -68,11 +67,11 @@ export default function TVProfilePage() {
                             <div className="bg-zinc-900/80 backdrop-blur border border-white/10 rounded-3xl p-8">
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-orange-600 rounded-full flex items-center justify-center text-3xl font-black">
-                                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                                        U
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-bold">{user?.name || "User"}</h2>
-                                        <p className="text-white/60">{user?.email || user?.phoneNumber}</p>
+                                        <h2 className="text-2xl font-bold">User</h2>
+                                        <p className="text-white/60">Premium Account</p>
                                     </div>
                                 </div>
 
@@ -81,13 +80,11 @@ export default function TVProfilePage() {
                                     <Crown className={isPremium ? "text-yellow-500" : "text-white/30"} size={32} />
                                     <div className="flex-1">
                                         <p className="font-bold">
-                                            {isPremium ? "Premium Member" : isTrial ? "Trial Member" : "Free Member"}
+                                            {isPremium ? "Premium Member" : "Free Member"}
                                         </p>
                                         <p className="text-sm text-white/60">
                                             {isPremium
                                                 ? "Unlimited access to all content"
-                                                : isTrial
-                                                ? "Limited time trial access"
                                                 : "Upgrade to unlock premium content"}
                                         </p>
                                     </div>

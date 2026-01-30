@@ -72,14 +72,14 @@ export default function SubscriptionPage() {
         );
     }
 
-    const { subscription, devices, code, trial } = subscriptionData;
+    const { subscription, devices, code } = subscriptionData;
 
-    // Use trial expiresAt if subscription is missing
-    const expiresAt = subscription?.expiresAt || trial?.expiresAt || 0;
+    // Use subscription expiresAt
+    const expiresAt = subscription?.expiresAt || 0;
     const isExpired = Date.now() > expiresAt;
     const expiresInDays = Math.ceil((expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
 
-    if (!subscription && !trial) {
+    if (!subscription) {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 text-center">
                 <div className="bg-stadium-elevated p-8 rounded-2xl border border-border-subtle max-w-md w-full">
@@ -113,8 +113,8 @@ export default function SubscriptionPage() {
         <div className="container mx-auto px-4 py-8 max-w-2xl">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                    <Crown className={trial ? "text-blue-400" : "text-accent-gold"} />
-                    {trial && !subscription ? "Trial Status" : "Your Subscription"}
+                    <Crown className="text-accent-gold" />
+                    Your Subscription
                 </h1>
                 <button
                     onClick={logout}
@@ -126,10 +126,9 @@ export default function SubscriptionPage() {
             </div>
 
             {/* Status Card */}
-            <div className={`bg-stadium-elevated border rounded-2xl p-6 mb-6 shadow-elevated relative overflow-hidden ${trial && !subscription ? "border-blue-500/20" : "border-accent-gold/20"
-                }`}>
+            <div className="bg-stadium-elevated border rounded-2xl p-6 mb-6 shadow-elevated relative overflow-hidden border-accent-gold/20">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <Crown size={120} className={trial && !subscription ? "text-blue-500" : "text-accent-gold"} />
+                    <Crown size={120} className="text-accent-gold" />
                 </div>
 
                 <div className="relative z-10">
@@ -137,16 +136,15 @@ export default function SubscriptionPage() {
                         <div>
                             <p className="text-text-secondary text-sm font-bold uppercase tracking-wider mb-1">Current Status</p>
                             <h2 className="text-3xl font-black text-white capitalize">
-                                {subscription ? `${subscription.plan} Package` : "7-Day Free Trial"}
+                                {`${subscription?.plan || "Premium"} Package`}
                             </h2>
                         </div>
                         <Badge
-                            variant={isExpired ? "danger" : (subscription ? "success" : "warning")}
+                            variant={isExpired ? "danger" : "success"}
                             className="px-3 py-1 text-sm uppercase"
                         >
                             {subscription?.status === "active" && !isExpired ? "ACTIVE" :
-                                trial && !isExpired ? "TRIAL" :
-                                    isExpired ? "EXPIRED" : "INACTIVE"}
+                                isExpired ? "EXPIRED" : "INACTIVE"}
                         </Badge>
                     </div>
 
@@ -170,7 +168,7 @@ export default function SubscriptionPage() {
                                 <span className="text-xs font-bold uppercase">{subscription ? "Activated On" : "Started On"}</span>
                             </div>
                             <p className="text-white font-mono font-bold">
-                                {new Date(subscription?.createdAt || (expiresAt - 7 * 24 * 60 * 60 * 1000)).toLocaleDateString()}
+                                {subscription?.createdAt ? new Date(subscription.createdAt).toLocaleDateString() : "N/A"}
                             </p>
                         </div>
                     </div>

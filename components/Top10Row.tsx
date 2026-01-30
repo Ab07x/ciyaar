@@ -8,11 +8,10 @@ import Image from "next/image";
 import { Star, Play, Crown } from "lucide-react";
 
 interface Top10RowProps {
-    data: any[]; // Assuming Movies for now
-    country?: string;
+    data: any[];
 }
 
-export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
+export function Top10Row({ data }: Top10RowProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const scroll = (direction: "left" | "right") => {
@@ -31,7 +30,7 @@ export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
                 <div className="w-1 h-8 bg-red-500 rounded-full" />
                 <div className="flex items-center gap-2">
                     <Trophy className="text-red-500" size={24} />
-                    <h2 className="text-xl md:text-2xl font-black text-white">Top 10 in {country}</h2>
+                    <h2 className="text-xl md:text-2xl font-black text-white">Top 10</h2>
                 </div>
             </div>
 
@@ -127,10 +126,11 @@ export function Top10Row({ data, country = "Somalia" }: Top10RowProps) {
                                     </div>
                                 )}
 
-                                {/* Play button on hover */}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-all duration-300">
-                                    <div className="w-12 h-12 bg-white/95 rounded-full flex items-center justify-center shadow-2xl transform scale-50 group-hover/item:scale-100 transition-transform duration-300">
-                                        <Play size={20} className="text-black ml-1" fill="currentColor" />
+                                {/* Play button on hover - Daawo NOW */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-all duration-300 bg-black/40">
+                                    <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg transform scale-90 group-hover/item:scale-100 transition-transform">
+                                        Daawo NOW
+                                        <Play size={16} fill="currentColor" />
                                     </div>
                                 </div>
                             </div>

@@ -37,12 +37,11 @@ export function Navbar() {
     }, [pathname]);
 
     const navItems = [
-        { href: "/ciyaar", label: t("nav.matches"), icon: Trophy, color: "text-[var(--color-sports)]" },
-        { href: "/live", label: t("nav.live"), icon: Radio, color: "text-[var(--color-cinema)]", hasLiveDot: true },
-        { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-blue-400" },
-        { href: "/series", label: t("nav.series"), icon: Tv, color: "text-white" },
-        { href: "/requests", label: "Codso", icon: MessageSquare, color: "text-purple-400" },
-        { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[var(--color-premium)]" },
+        { href: "/ciyaar", label: t("nav.matches"), icon: Trophy, color: "text-[#9AE600]" },
+        { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-[#f0ad4e]" },
+        { href: "/series", label: t("nav.series"), icon: Tv, color: "text-[#DC2626]" },
+        { href: "/requests", label: "Codso", icon: MessageSquare, color: "text-[#3B82F6]" },
+        { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[#f0ad4e]" },
     ];
 
     return (
@@ -52,8 +51,8 @@ export function Navbar() {
             className={cn(
                 "sticky top-0 z-50 transition-all duration-300",
                 isScrolled
-                    ? "bg-[rgba(0,0,0,0.8)] backdrop-blur-xl border-b border-white/10 shadow-lg"
-                    : "bg-transparent border-b border-transparent bg-gradient-to-b from-black/80 to-transparent"
+                    ? "bg-[rgba(13,27,42,0.95)] backdrop-blur-xl border-b border-[#1a3a5c] shadow-lg"
+                    : "bg-transparent border-b border-transparent bg-gradient-to-b from-[#0d1b2a]/90 to-transparent"
             )}
         >
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -110,13 +109,6 @@ export function Navbar() {
                             >
                                 <span className="relative">
                                     <Icon size={18} />
-                                    {item.hasLiveDot && (
-                                        <motion.span
-                                            animate={{ scale: [1, 1.2, 1] }}
-                                            transition={{ duration: 1, repeat: Infinity }}
-                                            className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-accent-red rounded-full"
-                                        />
-                                    )}
                                 </span>
                                 <span className="hidden lg:inline">{item.label}</span>
 
@@ -237,7 +229,7 @@ export function Navbar() {
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="md:hidden fixed inset-y-0 left-0 top-16 w-[280px] bg-stadium-dark z-50 p-4 border-r border-border-subtle overflow-y-auto pb-safe"
+                            className="md:hidden fixed inset-y-0 left-0 top-16 w-[280px] bg-[#0d1b2a] z-50 p-4 border-r border-[#1a3a5c] overflow-y-auto pb-safe"
                         >
                             <nav className="flex flex-col space-y-1">
                                 {navItems.map((item, index) => {
@@ -255,19 +247,16 @@ export function Navbar() {
                                                 className={cn(
                                                     "p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 transition-all",
                                                     item.color,
-                                                    isActive ? "bg-white/10" : "hover:bg-stadium-elevated"
+                                                    isActive ? "bg-[#1a3a5c]" : "hover:bg-[#1a3a5c]"
                                                 )}
                                                 onClick={() => setMobileMenuOpen(false)}
                                             >
                                                 <span className="relative">
                                                     <Icon size={24} />
-                                                    {item.hasLiveDot && (
-                                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-accent-red rounded-full animate-pulse" />
-                                                    )}
                                                 </span>
                                                 {item.label}
                                                 {isActive && (
-                                                    <Zap size={16} className="ml-auto text-accent-green" />
+                                                    <Zap size={16} className="ml-auto text-[#f0ad4e]" />
                                                 )}
                                             </Link>
                                         </motion.div>
@@ -275,7 +264,7 @@ export function Navbar() {
                                 })}
 
                                 {/* Divider */}
-                                <div className="h-px bg-border-subtle my-4" />
+                                <div className="h-px bg-[#1a3a5c] my-4" />
 
                                 {!isPremium && (
                                     <motion.div

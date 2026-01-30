@@ -3,43 +3,30 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { MatchCardNew } from "@/components/MatchCardNew";
+import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { LiveBadge } from "@/components/ui/LiveBadge";
-import { SmartHero } from "@/components/SmartHero";
-import { ContentCarousel } from "@/components/ContentCarousel";
-import { Top10Row } from "@/components/Top10Row";
 import Link from "next/link";
 import Image from "next/image";
-import { Play, Star, Info, ChevronRight, Crown, Zap, Shield, Tv, Download, Users, Film } from "lucide-react";
-import { BlogCard } from "@/components/BlogCard";
-import { ContinueWatchingRow } from "@/components/ContinueWatchingRow";
+import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { AdSlot } from "@/components/AdSlot";
-import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
 import React, { useState, useEffect, useRef } from "react";
-import { MovieCard } from "@/components/MovieCard";
-import { useCountry } from "@/hooks/useCountry";
 import { useUser } from "@/providers/UserProvider";
-import { useLanguage } from "@/providers/LanguageProvider";
 
 export default function HomePage() {
   const matchData = useQuery(api.matches.getMatchesByStatus);
-  const posts = useQuery(api.posts.listPosts, { isPublished: true, limit: 12 });
-  const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 20 });
+  const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 50 });
   const featuredMovies = useQuery(api.movies.getFeaturedMovies);
-  const top10Movies = useQuery(api.movies.getTop10Movies);
-  const series = useQuery(api.series.listSeries, { isPublished: true, limit: 20 });
-  const settings = useQuery(api.settings.getSettings);
-  const { userId, isPremium } = useUser();
-  const { t } = useLanguage();
-  const { country } = useCountry();
-  const trending = useQuery(api.recommendations.getTrending, { limit: 12 });
-  const personalized = useQuery(api.recommendations.getPersonalizedHome, { userId: userId || undefined });
+
+  const { isPremium } = useUser();
   const trackPageView = useMutation(api.analytics.trackPageView);
 
-  /* State & Tracking */
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedGenre, setSelectedGenre] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+
   const hasTracked = useRef(false);
 
-  // Track page view once on mount
   useEffect(() => {
     if (!hasTracked.current) {
       hasTracked.current = true;
@@ -47,381 +34,302 @@ export default function HomePage() {
     }
   }, [trackPageView]);
 
-  if (!matchData || !posts || !movies || !series) {
+  // Hero movies: featured first, then fall back to latest movies by updatedAt
+  const heroMovies = (featuredMovies && featuredMovies.length > 0)
+    ? featuredMovies.slice(0, 8)
+    : (movies || [])
+      .filter((m: any) => m.posterUrl)
+      .sort((a: any, b: any) => (b.updatedAt || b._creationTime || 0) - (a.updatedAt || a._creationTime || 0))
+      .slice(0, 8);
+
+  useEffect(() => {
+    if (heroMovies.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroMovies.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroMovies.length]);
+
+  const isLoading = matchData === undefined && movies === undefined;
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-stadium-dark">
-        {/* Hero Skeleton */}
-        <div className="relative w-full h-[85vh] md:h-[90vh]">
-          <Skeleton className="w-full h-full" />
-        </div>
-        {/* Content Skeletons */}
-        <div className="space-y-12 -mt-32 relative z-10 px-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="space-y-4">
-              <Skeleton className="h-8 w-48 rounded-lg" />
-              <div className="flex gap-4 overflow-hidden">
-                {[...Array(6)].map((_, j) => (
-                  <Skeleton key={j} className="h-48 w-32 md:w-48 rounded-xl flex-shrink-0" />
-                ))}
-              </div>
-            </div>
+      <div className="min-h-screen bg-[#0d1b2a]">
+        <Skeleton className="w-full h-[400px]" />
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-8">
+          {[...Array(12)].map((_, j) => (
+            <Skeleton key={j} className="aspect-[2/3] rounded" />
           ))}
         </div>
       </div>
-
     );
   }
 
-  const { live, upcoming } = matchData;
-  const hasLiveMatches = live.length > 0;
+  const live = matchData?.live || [];
+  const upcoming = matchData?.upcoming || [];
+  const allMatches = [...live, ...upcoming];
+  const moviesList = movies || [];
 
-  // Dynamic Section Rendering
-  const renderSections = () => {
-    if (hasLiveMatches) {
-      // --- LIVE MODE LAYOUT ---
-      return (
-        <div className="-mt-32 md:-mt-40 relative z-10 space-y-8 md:space-y-12 pb-20">
-          <PremiumPromoBanner />
 
-          {/* Other Live Matches (if more than 1) */}
-          {live.length > 1 && (
-            <section className="px-4 md:px-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-1 h-8 bg-red-500 rounded-full" />
-                  <h2 className="text-xl font-black uppercase tracking-wider">{t("sections.live_matches")}</h2>
-                  <LiveBadge text={`${live.length - 1} MORE`} />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {live.slice(1).map((match) => (
-                  <MatchCardNew key={match._id} {...match} isLocked={match.isPremium && !isPremium} />
+  const filteredMovies = moviesList.filter((movie: any) => {
+    if (selectedGenre && !movie.genres?.includes(selectedGenre)) return false;
+    if (selectedYear && movie.releaseDate?.split("-")[0] !== selectedYear) return false;
+    return true;
+  }).sort((a: any, b: any) => {
+    if (sortBy === "newest") return (b._creationTime || 0) - (a._creationTime || 0);
+    if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
+    return 0;
+  });
+
+  const genres = [...new Set(moviesList.flatMap((m: any) => m.genres || []))].filter(Boolean).slice(0, 15);
+  const years = [...new Set(moviesList.map((m: any) => m.releaseDate?.split("-")[0]).filter(Boolean))].sort().reverse().slice(0, 10);
+
+  const currentHero = heroMovies[currentSlide];
+
+  return (
+    <div className="min-h-screen bg-[#0d1b2a]">
+      {/* HERO SLIDER - Lookmovie Style */}
+      {currentHero && (
+        <section className="relative w-full h-[400px] md:h-[450px] overflow-hidden">
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d1b2a] via-[#1b2838] to-[#0d1b2a]">
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: `url(${currentHero.backdropUrl || currentHero.posterUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(2px)'
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0d1b2a] via-transparent to-[#0d1b2a]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2a] via-transparent to-transparent" />
+          </div>
+
+          <div className="relative z-10 h-full flex items-center justify-between px-4 md:px-16 max-w-7xl mx-auto">
+            {/* Left - Movie Info */}
+            <div className="flex-1 max-w-lg">
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 uppercase">
+                {currentHero.titleSomali || currentHero.title}
+                <span className="text-[#f0ad4e] ml-2">({currentHero.releaseDate?.split("-")[0]})</span>
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
+                {currentHero.rating && (
+                  <span className="bg-[#1a3a5c] text-white px-2 py-1 rounded flex items-center gap-1">
+                    <Star size={10} className="text-yellow-400" fill="currentColor" />
+                    {currentHero.rating.toFixed(1)}
+                  </span>
+                )}
+                <span className="bg-[#1a3a5c] text-white px-2 py-1 rounded">HD</span>
+                {currentHero.genres?.slice(0, 2).map((g: string) => (
+                  <span key={g} className="bg-[#f0ad4e] text-black px-2 py-1 rounded font-bold">{g}</span>
                 ))}
               </div>
-            </section>
-          )}
 
-          {/* While You Wait (Short Movies) */}
-          <ContentCarousel
-            title="While You Wait (Quick Watch)"
-            data={movies.filter(m => m.duration && parseInt(m.duration) < 90).slice(0, 5)}
-            type="movie"
-            link="/movies"
-          />
+              <p className="text-gray-300 text-sm line-clamp-3 mb-6 hidden md:block">
+                {currentHero.overviewSomali || currentHero.overview}
+              </p>
 
-          <ContinueWatchingRow />
-
-          {/* Top 10 in Somalia - Netflix Style */}
-          {top10Movies && top10Movies.length > 0 && (
-            <Top10Row data={top10Movies} country={country || "Somalia"} />
-          )}
-
-          {/* Trending */}
-          {trending && trending.length > 0 && (
-            <ContentCarousel title="Trending Today" data={trending} type="mixed" />
-          )}
-
-          {/* Upcoming Matches */}
-          {upcoming.length > 0 && (
-            <section className="px-4 md:px-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-black uppercase text-white/50">{t("sections.upcoming_matches")}</h2>
-                <Link href="/ciyaar" className="text-accent-green text-xs font-bold uppercase">{t("common.view_all")}</Link>
+              <div className="flex gap-3">
+                <Link
+                  href={`/movies/${currentHero.slug}`}
+                  className="px-6 py-2 bg-[#f0ad4e] hover:bg-[#e09d3e] text-black font-bold rounded transition-colors flex items-center gap-2"
+                >
+                  <Play size={16} fill="black" /> DAAWO
+                </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {upcoming.slice(0, 3).map((match) => (
-                  <MatchCardNew key={match._id} {...match} isLocked={match.isPremium && !isPremium} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          <ContentCarousel title={t("sections.latest_movies")} link="/movies" data={movies} type="movie" />
-
-          {posts.length > 0 && (
-            <section className="px-4 md:px-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-1 h-8 bg-blue-500 rounded-full" />
-                <h2 className="text-xl font-black uppercase">{t("sections.news")}</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {posts.slice(0, 3).map((post) => (
-                  <BlogCard key={post._id} post={post} />
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-      );
-    } else {
-      // --- STANDARD DISCOVERY MODE ---
-      return (
-        <div className="-mt-32 md:-mt-40 relative z-10 space-y-8 md:space-y-12 pb-20">
-          <PremiumPromoBanner />
-          <ContinueWatchingRow />
-
-          {/* Featured Movies - Large Grid like lookmovie2 */}
-          <section className="px-4 md:px-8 lg:px-12">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-8 bg-accent-green rounded-full" />
-                <div className="flex items-center gap-2">
-                  <Film className="text-accent-green" size={28} />
-                  <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">Fanproj Play</h2>
-                </div>
-              </div>
-              <Link href="/movies" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                Dhamaan <ChevronRight size={16} />
-              </Link>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-              {featuredMovies && featuredMovies.length > 0 ? (
-                featuredMovies.slice(0, 8).map((movie) => (
-                  <MovieCard
-                    key={movie._id}
-                    id={movie._id}
-                    slug={movie.slug}
-                    title={movie.titleSomali || movie.title}
-                    posterUrl={movie.posterUrl}
-                    year={movie.releaseDate?.split("-")[0] || ""}
-                    rating={movie.rating}
-                    isPremium={movie.isPremium}
-                  />
-                ))
-              ) : (
-                movies.slice(0, 8).map((movie) => (
-                  <MovieCard
-                    key={movie._id}
-                    id={movie._id}
-                    slug={movie.slug}
-                    title={movie.titleSomali || movie.title}
-                    posterUrl={movie.posterUrl}
-                    year={movie.releaseDate?.split("-")[0] || ""}
-                    rating={movie.rating}
-                    isPremium={movie.isPremium}
-                  />
-                ))
+
+            {/* Right - Movie Poster */}
+            <div className="hidden md:block relative w-[200px] h-[300px] rounded-lg overflow-hidden shadow-2xl border-4 border-white/10">
+              <Image
+                src={currentHero.posterUrl}
+                alt={currentHero.title}
+                fill
+                className="object-cover"
+                priority
+              />
+              {currentHero.isPremium && (
+                <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                  <Crown size={10} /> VIP
+                </div>
               )}
             </div>
-          </section>
+          </div>
 
-          {/* Top 10 in Somalia - Netflix Style */}
-          {top10Movies && top10Movies.length > 0 && (
-            <Top10Row data={top10Movies} country={country || "Somalia"} />
-          )}
+          {/* Navigation */}
+          <button
+            onClick={() => setCurrentSlide((prev) => (prev - 1 + heroMovies.length) % heroMovies.length)}
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white z-20"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % heroMovies.length)}
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white z-20"
+          >
+            <ChevronRight size={24} />
+          </button>
 
-          {/* Trending - Grid Layout */}
-          {trending && trending.length > 0 && (
-            <section className="px-4 md:px-8 lg:px-12">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-orange-500 rounded-full" />
-                  <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">Trending in Somalia</h2>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-                {trending.slice(0, 8).map((item: any) => (
-                  <MovieCard
-                    key={item._id}
-                    id={item._id}
-                    slug={item.slug}
-                    title={item.titleSomali || item.title}
-                    posterUrl={item.posterUrl}
-                    year={item.releaseDate?.split("-")[0] || item.firstAirDate?.split("-")[0] || ""}
-                    rating={item.rating}
-                    isPremium={item.isPremium}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {heroMovies.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? "bg-[#f0ad4e] w-6" : "bg-white/40"}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
-          {/* Match Schedule */}
-          {upcoming.length > 0 && (
-            <section className="px-4 md:px-8 lg:px-12">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-green-500 rounded-full" />
-                  <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">{t("sections.upcoming_matches")}</h2>
-                </div>
-                <Link href="/ciyaar" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                  Dhamaan <ChevronRight size={16} />
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {upcoming.slice(0, 6).map((match) => (
-                  <MatchCardNew key={match._id} {...match} isLocked={match.isPremium && !isPremium} />
-                ))}
-              </div>
-            </section>
-          )}
+      {/* PREMIUM BANNER AD - Lookmovie Style */}
+      {/* PREMIUM BANNER AD - Lookmovie Style */}
+      <PremiumBannerNew />
 
-          {/* Series - Grid Layout */}
-          {series && series.length > 0 && (
-            <section className="px-4 md:px-8 lg:px-12">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-purple-500 rounded-full" />
-                  <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">Musalsalada Caanka ah</h2>
-                </div>
-                <Link href="/series" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                  Dhamaan <ChevronRight size={16} />
-                </Link>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-                {series.slice(0, 8).map((item: any) => (
-                  <Link
-                    key={item._id}
-                    href={`/series/${item.slug}`}
-                    className="group block relative rounded-lg overflow-hidden bg-[#0d1117] border border-white/5 hover:border-white/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-                  >
-                    <div className="aspect-[2/3] relative overflow-hidden bg-white/5">
-                      {item.posterUrl ? (
-                        <Image
-                          src={item.posterUrl}
-                          alt={item.title}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12vw"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-white/30">
-                          <Tv size={32} />
-                        </div>
-                      )}
-                      <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-purple-600 text-white text-[8px] md:text-[9px] font-bold uppercase rounded">
-                        <Tv size={8} />
-                        <span className="hidden sm:inline">MUSALSAL</span>
-                      </div>
-                      {item.isPremium && (
-                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-[8px] md:text-[9px] font-bold uppercase rounded">
-                          <Crown size={8} />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <div className="bg-white rounded-full p-3 md:p-4 transform scale-50 group-hover:scale-100 transition-all duration-300">
-                          <Play fill="black" size={20} className="text-black ml-0.5" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-2 md:p-3 bg-[#0d1117]">
-                      <h3 className="font-bold text-white text-xs md:text-sm truncate mb-0.5">{item.titleSomali || item.title}</h3>
-                      <div className="flex items-center gap-2 text-[10px] md:text-xs text-gray-400">
-                        <span>{item.firstAirDate?.split("-")[0]}</span>
-                        <span className="text-purple-400">{item.numberOfSeasons} Season</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Personalized */}
-          {personalized?.becauseYouWatched && personalized.becauseYouWatched.items.length > 0 && (
-            <section className="px-4 md:px-8 lg:px-12">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-1.5 h-8 bg-cyan-500 rounded-full" />
-                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">
-                  Maadaama aad daawatay {personalized.becauseYouWatched.title}
-                </h2>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
-                {personalized.becauseYouWatched.items.slice(0, 8).map((item: any) => (
-                  <MovieCard
-                    key={item._id}
-                    id={item._id}
-                    slug={item.slug}
-                    title={item.titleSomali || item.title}
-                    posterUrl={item.posterUrl}
-                    year={item.releaseDate?.split("-")[0] || item.firstAirDate?.split("-")[0] || ""}
-                    rating={item.rating}
-                    isPremium={item.isPremium}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* News/Blog */}
-          {posts.length > 0 && (
-            <section className="px-4 md:px-8 lg:px-12">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-blue-500 rounded-full" />
-                  <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">Wararka Ciyaaraha</h2>
-                </div>
-                <Link href="/blog" className="text-accent-green text-sm font-bold flex items-center gap-1 hover:underline">
-                  Dhamaan <ChevronRight size={16} />
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {posts.slice(0, 3).map((post) => (
-                  <BlogCard key={post._id} post={post} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* CTA */}
-          <section className="px-4 md:px-8 lg:px-12">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1a1a2e] to-[#16213e] border border-white/10">
-              <div className="absolute inset-0 opacity-10">
-                <Image src="/img/lm-bg.jpg" alt="" fill className="object-cover" />
-              </div>
-              <div className="relative z-10 p-8 md:p-12">
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div className="space-y-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full border border-yellow-500/30">
-                      <Crown className="text-yellow-400" size={20} />
-                      <span className="text-yellow-400 font-bold">PREMIUM</span>
-                    </div>
-                    <h2 className="text-3xl md:text-5xl font-black text-white leading-tight uppercase">
-                      Madadaalada<br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">Premium Somali</span>
-                    </h2>
-                    <p className="text-white/70 text-lg max-w-md">Ku raaxayso dhamaan filimada, musalsalada iyo ciyaaraha aan kala go' lahayn.</p>
-                    <Link href="/pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold rounded-lg text-lg transition-all shadow-lg shadow-orange-500/25">
-                      {t("common.start_now")} <ChevronRight size={20} />
-                    </Link>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FeatureCard icon={<Tv size={24} />} title="HD & 4K" description="Tayada ugu sareysa" />
-                    <FeatureCard icon={<Zap size={24} />} title="Xawaare Sare" description="Loading degdeg ah" />
-                    <FeatureCard icon={<Shield size={24} />} title="Ad-Free" description="Xayeysiis la'aan" />
-                    <FeatureCard icon={<Download size={24} />} title="Download" description="Daawo offline" />
-                  </div>
-                </div>
-              </div>
+      {/* SPORTS MATCHES - Live & Upcoming */}
+      {allMatches.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-white uppercase tracking-wide">Sports Up Coming & Live</h2>
+              {live.length > 0 && <LiveBadge text={`${live.length} LIVE`} />}
             </div>
-          </section>
+            <Link href="/ciyaar" className="text-[#f0ad4e] text-sm font-bold hover:underline flex items-center gap-1">
+              View All <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {allMatches.slice(0, 6).map((match) => (
+              <MatchCardNew key={match._id} {...match} isLocked={match.isPremium && !isPremium} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* MOVIES FILTER */}
+      <section className="max-w-7xl mx-auto px-4 py-6">
+        <div className="border-t border-b border-[#1a3a5c] py-4 mb-6">
+          <h2 className="text-center text-xl font-bold text-white uppercase tracking-widest mb-4">Movies Filter</h2>
+
+          <div className="flex flex-wrap justify-center gap-3">
+            <select
+              value={selectedGenre}
+              onChange={(e) => setSelectedGenre(e.target.value)}
+              className="bg-[#1a3a5c] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+            >
+              <option value="">Select Genres</option>
+              {genres.map((g: string) => <option key={g} value={g}>{g}</option>)}
+            </select>
+
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="bg-[#1a3a5c] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+            >
+              <option value="">Select Year</option>
+              {years.map((y: string) => <option key={y} value={y}>{y}</option>)}
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-[#1a3a5c] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+            >
+              <option value="newest">Newest First</option>
+              <option value="rating">Highest Rated</option>
+            </select>
+
+            {(selectedGenre || selectedYear) && (
+              <button
+                onClick={() => { setSelectedGenre(""); setSelectedYear(""); }}
+                className="px-4 py-2 bg-[#f0ad4e] text-black font-bold rounded text-sm hover:bg-[#e09d3e]"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
-      );
-    }
-  };
 
-  return (
-    <div className="relative min-h-screen bg-stadium-dark overflow-x-hidden max-w-[100vw]">
-      <div className="relative z-10 w-full overflow-hidden">
-        <h1 className="sr-only">Daawo Ciyaar Live & Filimo Af-Soomaali – Fanbroj</h1>
+        {/* Movies Grid - Lookmovie Style */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {filteredMovies.slice(0, 30).map((movie: any) => (
+            <Link
+              key={movie._id}
+              href={`/movies/${movie.slug}`}
+              className="group block"
+            >
+              <div className="relative aspect-[2/3] rounded overflow-hidden bg-[#1a3a5c] mb-2">
+                {movie.posterUrl ? (
+                  <Image
+                    src={movie.posterUrl}
+                    alt={movie.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                    <Tv size={40} />
+                  </div>
+                )}
 
-        {/* Smart Hero Component */}
-        <SmartHero liveMatches={live} movies={movies} upcomingMatches={upcoming} />
+                {/* Rating Badge */}
+                {movie.rating && (
+                  <div className="absolute top-2 left-2 bg-[#1a3a5c]/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <Star size={10} className="text-yellow-400" fill="currentColor" />
+                    {movie.rating.toFixed(1)}
+                  </div>
+                )}
 
-        {/* Dynamic Content Sections */}
-        {renderSections()}
-      </div>
-    </div>
-  );
-}
+                {/* Premium Badge */}
+                {movie.isPremium && (
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-1.5 py-0.5 rounded">
+                    VIP
+                  </div>
+                )}
 
-// Feature Card Component
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return (
-    <div className="p-4 bg-white/5 rounded-xl border border-white/10 hover:border-white/20 transition-colors">
-      <div className="text-accent-green mb-2">{icon}</div>
-      <h3 className="font-bold text-white">{title}</h3>
-      <p className="text-white/60 text-sm">{description}</p>
+                {/* HD Badge */}
+                <div className="absolute bottom-2 left-2 bg-[#1a3a5c] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  HD
+                </div>
+
+                {/* Hover - DAAWO NOW Button */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg">
+                    Daawo NOW
+                    <Play size={16} fill="currentColor" />
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-white text-sm font-medium truncate group-hover:text-[#f0ad4e] transition-colors">
+                {movie.titleSomali || movie.title}
+              </h3>
+              <p className="text-gray-500 text-xs">{movie.releaseDate?.split("-")[0]}</p>
+            </Link>
+          ))}
+        </div>
+
+        {filteredMovies.length === 0 && (
+          <p className="text-center text-gray-500 py-12">No movies found</p>
+        )}
+
+        {/* View All Movies */}
+        <div className="flex justify-center mt-8">
+          <Link
+            href="/movies"
+            className="px-8 py-3 bg-[#f0ad4e] hover:bg-[#e09d3e] text-black font-bold rounded-lg"
+          >
+            View All Movies
+          </Link>
+        </div>
+      </section>
+
+
+
     </div>
   );
 }

@@ -65,21 +65,15 @@ export default function MovieFormPage({ params }: Props) {
         isDubbed: false,
         isPremium: false,
         isPublished: false,
+        isFeatured: false,
         isTop10: false,
         top10Order: 0,
         trailerUrl: "",
         downloadUrl: "",
         tags: [] as string[],
+        category: "",
     });
-
-    // Handle Edit Mode Loading
-    if (id && existingMovie === undefined) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="animate-spin w-10 h-10 text-accent-green" />
-            </div>
-        );
-    }
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (existingMovie && "title" in existingMovie) {
@@ -104,14 +98,25 @@ export default function MovieFormPage({ params }: Props) {
                 isDubbed: existingMovie.isDubbed,
                 isPremium: existingMovie.isPremium,
                 isPublished: existingMovie.isPublished,
+                isFeatured: existingMovie.isFeatured || false,
                 isTop10: existingMovie.isTop10 || false,
                 top10Order: existingMovie.top10Order || 0,
                 trailerUrl: existingMovie.trailerUrl || "",
                 downloadUrl: existingMovie.downloadUrl || "",
                 tags: existingMovie.tags || [],
+                category: existingMovie.category || "",
             });
         }
     }, [existingMovie]);
+
+    // Handle Edit Mode Loading
+    if (id && existingMovie === undefined) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="animate-spin w-10 h-10 text-accent-green" />
+            </div>
+        );
+    }
 
     // Search TMDB
     const handleSearch = async () => {
@@ -161,6 +166,8 @@ export default function MovieFormPage({ params }: Props) {
 
     // Submit
     const handleSubmit = async () => {
+        if (saving) return; // Prevent double click
+
         if (!formData.tmdbId || !formData.title) {
             alert("First fetch movie data from TMDB");
             return;
@@ -170,6 +177,7 @@ export default function MovieFormPage({ params }: Props) {
             return;
         }
 
+        setSaving(true);
         try {
             if (id) {
                 await updateMovie({
@@ -183,6 +191,7 @@ export default function MovieFormPage({ params }: Props) {
                     isDubbed: formData.isDubbed,
                     isPremium: formData.isPremium,
                     isPublished: formData.isPublished,
+                    isFeatured: formData.isFeatured,
                     titleSomali: formData.titleSomali || undefined,
                     overviewSomali: formData.overviewSomali || undefined,
                     isTop10: formData.isTop10,
@@ -190,6 +199,7 @@ export default function MovieFormPage({ params }: Props) {
                     trailerUrl: formData.trailerUrl || undefined,
                     downloadUrl: formData.downloadUrl || undefined,
                     tags: formData.tags,
+                    category: formData.category || undefined,
                 });
             } else {
                 // Prepare embeds with proper typing
@@ -221,17 +231,21 @@ export default function MovieFormPage({ params }: Props) {
                     isDubbed: formData.isDubbed,
                     isPremium: formData.isPremium,
                     isPublished: formData.isPublished,
+                    isFeatured: formData.isFeatured,
                     isTop10: formData.isTop10 || undefined,
                     top10Order: formData.top10Order || undefined,
                     trailerUrl: formData.trailerUrl || undefined,
                     downloadUrl: formData.downloadUrl || undefined,
                     tags: formData.tags,
+                    category: formData.category || undefined,
                 });
             }
             router.push("/admin/movies");
         } catch (err) {
             console.error("Movie save error:", err);
-            alert("Failed to save movie: " + (err instanceof Error ? err.message : "Unknown error"));
+            alert("Khalad Farsamo: " + (err instanceof Error ? err.message : "Unknown error"));
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -270,10 +284,11 @@ export default function MovieFormPage({ params }: Props) {
                 </div>
                 <button
                     onClick={handleSubmit}
-                    className="px-6 py-3 bg-accent-green text-black rounded-xl font-bold flex items-center gap-2"
+                    disabled={saving}
+                    className="px-6 py-3 bg-accent-green text-black rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <Save size={20} />
-                    {id ? "Update" : "Publish"}
+                    {saving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+                    {saving ? "Saving..." : (id ? "Update" : "Publish")}
                 </button>
             </div>
 
@@ -411,11 +426,12 @@ export default function MovieFormPage({ params }: Props) {
                             <h3 className="font-bold border-b border-border-strong pb-3">Settings</h3>
 
                             {/* Toggles */}
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 {[
                                     { key: "isDubbed", label: "Af-Somali", color: "accent-green" },
                                     { key: "isPremium", label: "Premium", color: "accent-gold" },
                                     { key: "isPublished", label: "Published", color: "blue-500" },
+                                    { key: "isFeatured", label: "Fanproj Play", color: "purple-500" },
                                 ].map(({ key, label, color }) => (
                                     <div key={key} className="p-4 bg-stadium-dark rounded-xl">
                                         <div className="flex justify-between items-center">
@@ -438,12 +454,31 @@ export default function MovieFormPage({ params }: Props) {
                                 ))}
                             </div>
 
+                            {/* Category Dropdown */}
+                            <div className="p-4 bg-stadium-dark rounded-xl">
+                                <label className="font-medium block mb-2">Category</label>
+                                <select
+                                    value={formData.category || ""}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm"
+                                >
+                                    <option value="">Select Category</option>
+                                    <option value="hindi-af-somali">Hindi Af Somali</option>
+                                    <option value="american-af-somali">American Af Somali</option>
+                                    <option value="english-aflaam">English Aflaam</option>
+                                    <option value="hindi-qarami">Hindi Qarami</option>
+                                    <option value="old-is-gold">Old is Gold</option>
+                                    <option value="fanproj-play">Fanproj Play</option>
+                                    <option value="musalsal">Musalsal</option>
+                                </select>
+                            </div>
+
                             {/* Top 10 Section */}
                             <div className="p-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-xl">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         <span className="text-lg">🏆</span>
-                                        <span className="font-bold text-red-400">Top 10 in Somalia</span>
+                                        <span className="font-bold text-red-400">Top 10</span>
                                     </div>
                                     <button
                                         type="button"
@@ -502,13 +537,14 @@ export default function MovieFormPage({ params }: Props) {
                             </div>
                         </div>
 
-                        {/* Tags */}
+                        {/* Tags - Bulk add with comma */}
                         <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6">
-                            <h3 className="font-bold border-b border-border-strong pb-3 mb-4">Genre Tags (for Recommendations)</h3>
-                            <div className="flex flex-wrap gap-2 mb-4">
+                            <h3 className="font-bold border-b border-border-strong pb-3 mb-4">SEO Tags/Keywords</h3>
+                            <p className="text-xs text-text-muted mb-3">Add multiple tags separated by comma (e.g. fanproj, hindi af somali, 2025)</p>
+                            <div className="flex flex-wrap gap-2 mb-4 max-h-32 overflow-y-auto">
                                 {formData.tags.map((tag, i) => (
-                                    <span key={i} className="flex items-center gap-1 px-3 py-1 bg-accent-green/20 rounded-full text-accent-green text-xs font-bold">
-                                        {tag}
+                                    <span key={i} className="flex items-center gap-1 px-2 py-1 bg-accent-green/20 rounded text-accent-green text-xs font-bold">
+                                        #{tag}
                                         <button
                                             type="button"
                                             onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, idx) => idx !== i) })}
@@ -522,21 +558,52 @@ export default function MovieFormPage({ params }: Props) {
                             </div>
                             <div className="flex gap-2">
                                 <input
+                                    id="tagsInput"
                                     type="text"
-                                    placeholder="Add tag and press Enter..."
+                                    placeholder="fanproj, hindi af somali, 2025"
                                     className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm"
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                             e.preventDefault();
-                                            const val = (e.target as HTMLInputElement).value.trim();
-                                            if (val && !formData.tags.includes(val)) {
-                                                setFormData({ ...formData, tags: [...formData.tags, val] });
-                                                (e.target as HTMLInputElement).value = "";
+                                            const input = e.target as HTMLInputElement;
+                                            const val = input.value.trim();
+                                            if (val) {
+                                                const newTags = val.split(",").map(t => t.trim().toLowerCase()).filter(t => t && !formData.tags.includes(t));
+                                                if (newTags.length > 0) {
+                                                    setFormData({ ...formData, tags: [...formData.tags, ...newTags] });
+                                                }
+                                                input.value = "";
                                             }
                                         }
                                     }}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const input = document.getElementById("tagsInput") as HTMLInputElement;
+                                        const val = input?.value.trim();
+                                        if (val) {
+                                            const newTags = val.split(",").map(t => t.trim().toLowerCase()).filter(t => t && !formData.tags.includes(t));
+                                            if (newTags.length > 0) {
+                                                setFormData({ ...formData, tags: [...formData.tags, ...newTags] });
+                                            }
+                                            input.value = "";
+                                        }
+                                    }}
+                                    className="px-4 py-2 bg-accent-green text-black rounded-lg font-bold text-sm"
+                                >
+                                    Add
+                                </button>
                             </div>
+                            {formData.tags.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, tags: [] })}
+                                    className="text-xs text-red-400 mt-3 hover:underline"
+                                >
+                                    Clear all tags
+                                </button>
+                            )}
                         </div>
 
                         {/* Embed Links */}

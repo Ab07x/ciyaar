@@ -32,10 +32,8 @@ export default function LoginPage() {
 
     useEffect(() => {
         setDeviceId(getDeviceId());
-        if (isPremium) {
-            router.push("/subscription");
-        }
-    }, [isPremium, router]);
+        // Don't redirect - let users enter codes
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

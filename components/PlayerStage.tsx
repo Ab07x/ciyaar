@@ -33,6 +33,7 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [localUnlocked, setLocalUnlocked] = useState(false);
+    const [isTimerFinished, setIsTimerFinished] = useState(false);
 
     const isUnlocked = !match.isPremium || isPremium || localUnlocked;
 
@@ -73,8 +74,8 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
         return (
             <div className={cn("player-stage bg-stadium-elevated flex flex-col items-center justify-center p-8", className)}>
                 <Badge variant="upcoming" className="mb-4" />
-                <h3 className="text-xl font-bold mb-6">Ciyaartu weli ma bilaaban</h3>
-                <CountdownTimer kickoffAt={match.kickoffAt} />
+                {!isTimerFinished && <h3 className="text-xl font-bold mb-6">Ciyaartu weli ma bilaaban</h3>}
+                <CountdownTimer kickoffAt={match.kickoffAt} onComplete={() => setIsTimerFinished(true)} />
             </div>
         );
     }

@@ -28,6 +28,7 @@ export function CountdownTimer({ kickoffAt, onComplete }: CountdownTimerProps) {
             if (values.isStarted && onComplete && !hasCalledComplete.current) {
                 hasCalledComplete.current = true;
                 clearInterval(interval);
+                if (onComplete) onComplete();
                 // Don't auto-reload, just update UI
             }
         }, 1000);

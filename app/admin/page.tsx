@@ -20,6 +20,7 @@ import {
     BarChart3,
     Clock,
     Layers,
+    Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { StatsCard } from "@/components/admin/StatsCard";
@@ -214,7 +215,8 @@ export default function AdminDashboard() {
                 <SubscriptionChart data={subscriptionData} title="User Subscriptions" />
 
                 {/* Live Now Panel */}
-                <motion.div
+                {/* Live Now Panel - DISABLED */}
+                {/* <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
@@ -250,7 +252,7 @@ export default function AdminDashboard() {
                             </div>
                         )}
                     </div>
-                </motion.div>
+                </motion.div> */}
 
                 {/* Quick Actions */}
                 <motion.div
@@ -262,11 +264,11 @@ export default function AdminDashboard() {
                     <h3 className="font-bold mb-4">Quick Actions</h3>
                     <div className="grid grid-cols-2 gap-3">
                         {[
+                            { href: "/admin/hero", icon: ImageIcon, label: "Hero Slider", color: "accent-gold" },
                             { href: "/admin/matches/new", icon: PlayCircle, label: "Add Match", color: "accent-green" },
-                            { href: "/admin/channels/new", icon: Tv, label: "Add Channel", color: "accent-red" },
                             { href: "/admin/movies/new", icon: Film, label: "Add Movie", color: "accent-blue" },
                             { href: "/admin/series/new", icon: Tv, label: "Add Series", color: "purple-400" },
-                            { href: "/admin/shorts", icon: PlayCircle, label: "Shorts", color: "accent-gold" },
+                            { href: "/admin/shorts", icon: PlayCircle, label: "Shorts", color: "accent-red" },
                             { href: "/admin/codes", icon: Ticket, label: "Codes", color: "blue-400" },
                         ].map((action, i) => (
                             <motion.div

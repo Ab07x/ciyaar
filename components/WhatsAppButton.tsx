@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -12,6 +13,13 @@ interface WhatsAppButtonProps {
 
 export function WhatsAppButton({ className, showLabel = true }: WhatsAppButtonProps) {
     const settings = useQuery(api.settings.getSettings);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
 
     // Default valid phone if settings fail to load
     const phone = settings?.whatsappNumber?.replace(/[^0-9]/g, "") || "252618274188";

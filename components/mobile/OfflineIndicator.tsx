@@ -70,10 +70,18 @@ export function OnlineIndicator() {
 
 // Combined component
 export function ConnectionIndicator() {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
+
     return (
         <>
             <OfflineIndicator />
-            <OnlineIndicator />
+            {/* OnlineIndicator removed as per user request */}
         </>
     );
 }

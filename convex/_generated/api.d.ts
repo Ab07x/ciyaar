@@ -39,6 +39,8 @@ import type * as referrals from "../referrals.js";
 import type * as reminders from "../reminders.js";
 import type * as requests from "../requests.js";
 import type * as search from "../search.js";
+import type * as searchAnalytics from "../searchAnalytics.js";
+import type * as seedChannels from "../seedChannels.js";
 import type * as series from "../series.js";
 import type * as settings from "../settings.js";
 import type * as shorts from "../shorts.js";
@@ -86,6 +88,8 @@ declare const fullApi: ApiFromModules<{
   reminders: typeof reminders;
   requests: typeof requests;
   search: typeof search;
+  searchAnalytics: typeof searchAnalytics;
+  seedChannels: typeof seedChannels;
   series: typeof series;
   settings: typeof settings;
   shorts: typeof shorts;

@@ -7,6 +7,7 @@ import { MovieCard } from "./MovieCard";
 import { SeriesCard } from "./SeriesCard";
 import { MatchCard } from "./MatchCard";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/providers/UserProvider";
 
 interface ContentCarouselProps {
     title: string;
@@ -17,6 +18,7 @@ interface ContentCarouselProps {
 
 export function ContentCarousel({ title, link, data, type = "movie" }: ContentCarouselProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const { isPremium } = useUser();
 
     const scroll = (direction: "left" | "right") => {
         if (scrollRef.current) {
@@ -81,6 +83,7 @@ export function ContentCarousel({ title, link, data, type = "movie" }: ContentCa
                                         year={item.releaseDate?.split("-")[0] || ""}
                                         rating={item.rating}
                                         isPremium={item.isPremium}
+                                        isLocked={item.isPremium && !isPremium}
                                     />
                                 )}
                                 {itemType === "series" && (
@@ -93,10 +96,11 @@ export function ContentCarousel({ title, link, data, type = "movie" }: ContentCa
                                         episodes={item.numberOfEpisodes}
                                         year={item.firstAirDate?.split("-")[0] || ""}
                                         isPremium={item.isPremium}
+                                        isLocked={item.isPremium && !isPremium}
                                     />
                                 )}
                                 {itemType === "match" && (
-                                    <MatchCard {...item} />
+                                    <MatchCard {...item} isLocked={item.isPremium && !isPremium} />
                                 )}
                             </div>
                         );

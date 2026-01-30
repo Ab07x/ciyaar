@@ -22,7 +22,7 @@ import {
     ChevronDown,
 } from "lucide-react";
 import { MyListButton } from "@/components/MyListButton";
-import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
+import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { StreamPlayer } from "@/components/StreamPlayer";
 import { ContentCarousel } from "@/components/ContentCarousel";
@@ -303,7 +303,7 @@ function SeriesWatchContent() {
                         {/* Premium Promo Banner - Hidden for premium users */}
                         {activeEpisode && !isPremium && (
                             <div className="mb-6">
-                                <PremiumPromoBanner />
+                                <PremiumBannerNew />
                             </div>
                         )}
 

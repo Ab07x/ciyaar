@@ -24,7 +24,7 @@ import {
     Play,
 } from "lucide-react";
 import { MyListButton } from "@/components/MyListButton";
-import { PremiumPromoBanner } from "@/components/PremiumPromoBanner";
+import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { PremiumPopupBanner } from "@/components/PremiumPopupBanner";
 import { ContentCarousel } from "@/components/ContentCarousel";
@@ -281,27 +281,17 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
                             </button>
                         )}
 
-                        {/* Download */}
+                        {/* Download - Open for all users */}
                         {movie.downloadUrl && (
-                            isPremium ? (
-                                <a
-                                    href={movie.downloadUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border border-blue-500/50"
-                                >
-                                    <Download size={24} />
-                                    DOWNLOAD
-                                </a>
-                            ) : (
-                                <button
-                                    onClick={() => setShowPremiumPopup(true)}
-                                    className="h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border border-blue-500/50"
-                                >
-                                    <Download size={24} />
-                                    DOWNLOAD <Crown size={16} className="text-yellow-400" />
-                                </button>
-                            )
+                            <a
+                                href={movie.downloadUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border border-blue-500/50"
+                            >
+                                <Download size={24} />
+                                DOWNLOAD
+                            </a>
                         )}
 
                         {/* My List */}
@@ -317,7 +307,7 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
                     {/* Premium Promo Banner - Hidden for premium users */}
                     {!isPremium && (
                         <div className="mb-8">
-                            <PremiumPromoBanner />
+                            <PremiumBannerNew />
                         </div>
                     )}
 
@@ -404,6 +394,24 @@ export default function MovieClient({ slug, preloadedMovie, preloadedSettings }:
                                                 </span>
                                             ))}
                                         </div>
+
+                                        {/* SEO Tags/Keywords - for search visibility */}
+                                        {((movie.tags && movie.tags.length > 0) || (movie.seoKeywords && movie.seoKeywords.length > 0)) && (
+                                            <div className="flex flex-wrap justify-center md:justify-start gap-1.5 mb-6">
+                                                {/* Show tags */}
+                                                {movie.tags?.slice(0, 15).map((tag: string, i: number) => (
+                                                    <span key={`tag-${i}`} className="px-2 py-1 bg-blue-500/15 text-blue-400 text-xs rounded-full hover:bg-blue-500/25 transition-colors cursor-default">
+                                                        #{tag}
+                                                    </span>
+                                                ))}
+                                                {/* Show seoKeywords if different from tags */}
+                                                {movie.seoKeywords?.slice(0, 10).map((kw: string, i: number) => (
+                                                    <span key={`kw-${i}`} className="px-2 py-1 bg-green-500/15 text-green-400 text-xs rounded-full hover:bg-green-500/25 transition-colors cursor-default">
+                                                        #{kw}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
 
                                         {/* Description */}
                                         <p className="text-gray-300 leading-relaxed text-base md:text-lg">

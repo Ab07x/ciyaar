@@ -22,7 +22,7 @@ export default function MatchFormPage({ params }: Props) {
     const updateMatch = useMutation(api.matches.updateMatch);
 
     const [formData, setFormData] = useState({
-        title: "", slug: "", teamA: "", teamB: "", leagueId: "", leagueName: "",
+        title: "", slug: "", teamA: "", teamB: "", teamALogo: "", teamBLogo: "", leagueId: "", leagueName: "",
         kickoffAt: 0, status: "upcoming" as "upcoming" | "live" | "finished",
         isPremium: false, requiredPlan: undefined as "match" | "weekly" | "monthly" | "yearly" | undefined,
         thumbnailUrl: "", summary: "", embeds: [{ label: "Server 1", url: "", type: "iframe" as "m3u8" | "iframe" | "video" }],
@@ -43,6 +43,7 @@ export default function MatchFormPage({ params }: Props) {
         if (match && "title" in match) {
             setFormData({
                 title: match.title, slug: match.slug, teamA: match.teamA, teamB: match.teamB,
+                teamALogo: match.teamALogo || "", teamBLogo: match.teamBLogo || "",
                 leagueId: match.leagueId || "", leagueName: match.leagueName || "", kickoffAt: match.kickoffAt,
                 status: match.status, isPremium: match.isPremium, requiredPlan: match.requiredPlan,
                 thumbnailUrl: match.thumbnailUrl || "", summary: match.summary || "",
@@ -66,6 +67,8 @@ export default function MatchFormPage({ params }: Props) {
             ...formData,
             kickoffAt: kickoff,
             thumbnailUrl: formData.thumbnailUrl || undefined,
+            teamALogo: formData.teamALogo || undefined,
+            teamBLogo: formData.teamBLogo || undefined,
             summary: formData.summary || undefined,
             articleTitle: formData.articleTitle || undefined,
             articleContent: formData.articleContent || undefined
@@ -110,6 +113,10 @@ export default function MatchFormPage({ params }: Props) {
                     <div className="grid grid-cols-2 gap-3">
                         <div><label className="block text-xs text-text-secondary mb-1">Team A</label><input value={formData.teamA} onChange={e => setFormData({ ...formData, teamA: e.target.value })} required className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
                         <div><label className="block text-xs text-text-secondary mb-1">Team B</label><input value={formData.teamB} onChange={e => setFormData({ ...formData, teamB: e.target.value })} required className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div><label className="block text-xs text-text-secondary mb-1">Team A Logo (URL)</label><input value={formData.teamALogo} onChange={e => setFormData({ ...formData, teamALogo: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" placeholder="https://..." /></div>
+                        <div><label className="block text-xs text-text-secondary mb-1">Team B Logo (URL)</label><input value={formData.teamBLogo} onChange={e => setFormData({ ...formData, teamBLogo: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" placeholder="https://..." /></div>
                     </div>
                     <div><div className="flex justify-between mb-1"><label className="text-xs text-text-secondary">Slug</label><button type="button" onClick={generateSlug} className="text-xs text-accent-green">Auto</button></div><input value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} required className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
                     <div>

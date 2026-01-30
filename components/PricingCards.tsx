@@ -134,35 +134,26 @@ Waan bixiyay lacagta. Fadlan ii soo dir code-kayga.`;
   return (
     <section className={`py-8 ${className || ""}`}>
       <div className="px-4 max-w-7xl mx-auto">
-        {/* Current Plan/Trial Banner */}
-        {(subDetails?.subscription || subDetails?.trial) && (
-          <div className={`mb-10 p-4 border rounded-2xl flex items-center justify-between group overflow-hidden relative ${subDetails.subscription ? "bg-accent-green/10 border-accent-green/20" : "bg-blue-500/10 border-blue-500/20"
-            }`}>
-            <div className={`absolute inset-0 bg-gradient-to-r ${subDetails.subscription ? "from-accent-green/5" : "from-blue-500/5"} to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000`} />
+        {/* Current Plan Banner - Only show for active subscriptions */}
+        {subDetails?.subscription && (
+          <div className="mb-10 p-4 border rounded-2xl flex items-center justify-between group overflow-hidden relative bg-accent-green/10 border-accent-green/20">
+            <div className="absolute inset-0 bg-gradient-to-r from-accent-green/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             <div className="flex items-center gap-4 relative z-10">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${subDetails.subscription ? "bg-accent-green/20 text-accent-green" : "bg-blue-500/20 text-blue-400"}`}>
-                {subDetails.subscription ? <Crown size={24} /> : <Zap size={24} />}
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-accent-green/20 text-accent-green">
+                <Crown size={24} />
               </div>
               <div>
                 <h4 className="font-bold text-white">
-                  {subDetails.subscription ? (
-                    <>Adigu hadda waxaad leedahay: <span className="text-accent-green uppercase">{subDetails.subscription.plan}</span></>
-                  ) : (
-                    <>Waxaad hadda ku jirtaa: <span className="text-blue-400 uppercase">7-Day Free Trial</span></>
-                  )}
+                  Adigu hadda waxaad leedahay: <span className="text-accent-green uppercase">{subDetails.subscription.plan}</span>
                 </h4>
                 <p className="text-sm text-gray-400">
-                  {subDetails.subscription ? (
-                    <>Wuxuu dhacayaa: {new Date(subDetails.subscription.expiresAt).toLocaleDateString()} ({Math.ceil((subDetails.subscription.expiresAt - Date.now()) / (1000 * 60 * 60 * 24))} maalmood ayaa kuu haray)</>
-                  ) : (
-                    <>Wuxuu dhacayaa: {new Date(subDetails.trial!.expiresAt).toLocaleDateString()} ({Math.ceil((subDetails.trial!.expiresAt - Date.now()) / (1000 * 60 * 60 * 24))} maalmood ayaa kuu haray)</>
-                  )}
+                  Wuxuu dhacayaa: {new Date(subDetails.subscription.expiresAt).toLocaleDateString()} ({Math.ceil((subDetails.subscription.expiresAt - Date.now()) / (1000 * 60 * 60 * 24))} maalmood ayaa kuu haray)
                 </p>
               </div>
             </div>
             <div className="text-right hidden md:block relative z-10">
-              <span className={`text-xs uppercase tracking-widest font-bold ${subDetails.subscription ? "text-accent-green" : "text-blue-400"}`}>
-                {subDetails.subscription ? "Active" : "Trial"}
+              <span className="text-xs uppercase tracking-widest font-bold text-accent-green">
+                Active
               </span>
             </div>
           </div>

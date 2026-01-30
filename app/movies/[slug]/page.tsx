@@ -1,12 +1,11 @@
-
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-import MovieClient from "./MovieClient";
+import MovieViewClient from "./MovieViewClient";
 import type { Metadata } from "next";
 
 // Force dynamic rendering to ensure Admin sees updates instantly
 export const revalidate = 0;
-export const dynamicParams = true; // Allow new pages to be generated on demand
+export const dynamicParams = true;
 
 interface PageProps {
     params: Promise<{ slug: string }>;
@@ -22,9 +21,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     }
 
+    const keywords = [
+        movie.title,
+        movie.titleSomali,
+        ...(movie.tags || []),
+        ...(movie.genres || []),
+        "af somali",
+        "fanproj",
+        "hindi af somali",
+        movie.releaseDate?.split("-")[0],
+    ].filter(Boolean).join(", ");
+
     return {
-        title: movie.titleSomali || movie.title,
+        title: `${movie.titleSomali || movie.title} - Daawo Online | Fanbroj`,
         description: movie.overviewSomali || movie.overview,
+        keywords: keywords,
         openGraph: {
             images: [movie.posterUrl || ""],
             title: movie.titleSomali || movie.title,
@@ -34,8 +45,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export async function generateStaticParams() {
-    // Pre-build pages for the most popular/recent movies (e.g. top 20)
-    // fetching all might be too slow if thousands of movies
     try {
         const movies = await fetchQuery(api.movies.listMovies, { limit: 20 });
         return movies.map((movie) => ({
@@ -47,18 +56,9 @@ export async function generateStaticParams() {
     }
 }
 
-export default async function MoviePage({ params }: PageProps) {
+export default async function MovieViewPage({ params }: PageProps) {
     const { slug } = await params;
-
-    // Prefetch data on server
     const movie = await fetchQuery(api.movies.getMovieBySlug, { slug });
-    const settings = await fetchQuery(api.settings.getSettings);
 
-    return (
-        <MovieClient
-            slug={slug}
-            preloadedMovie={movie}
-            preloadedSettings={settings}
-        />
-    );
+    return <MovieViewClient slug={slug} preloadedMovie={movie} />;
 }

@@ -1,22 +1,30 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useQuery } from "convex/react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Search, Loader2, Trophy, Calendar, Film, Tv } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getDeviceId } from "@/lib/device";
+import { Id } from "@/convex/_generated/dataModel";
 
 export function SearchBox() {
     const [query, setQuery] = useState("");
     const [isOpen, setIsOpen] = useState(false);
+    const [lastTrackedQuery, setLastTrackedQuery] = useState("");
+    const [currentSearchId, setCurrentSearchId] = useState<Id<"search_analytics"> | null>(null);
     const searchRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
     // Use unified search query
     // @ts-ignore - api.search might not be generated yet in types
     const results = useQuery(api.search.searchAll, { query: query.length >= 2 ? query : "" });
+
+    // Analytics mutations
+    const trackSearch = useMutation(api.searchAnalytics.trackSearch);
+    const trackSearchClick = useMutation(api.searchAnalytics.trackSearchClick);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -28,16 +36,60 @@ export function SearchBox() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelect = (path: string) => {
+    // Debounced search tracking - track after user stops typing
+    useEffect(() => {
+        if (query.length < 2 || query === lastTrackedQuery) return;
+        if (results === undefined) return; // Wait for results
+
+        const timer = setTimeout(async () => {
+            const resultsCount =
+                (results?.matches?.length || 0) +
+                (results?.movies?.length || 0) +
+                (results?.series?.length || 0);
+
+            try {
+                const searchId = await trackSearch({
+                    query: query.trim(),
+                    resultsCount,
+                    deviceId: getDeviceId(),
+                    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+                });
+                if (searchId) {
+                    setCurrentSearchId(searchId);
+                }
+                setLastTrackedQuery(query);
+            } catch (e) {
+                console.error("Failed to track search:", e);
+            }
+        }, 1000); // Track 1 second after user stops typing
+
+        return () => clearTimeout(timer);
+    }, [query, results, lastTrackedQuery, trackSearch]);
+
+    const handleSelect = useCallback(async (path: string, itemType: "match" | "movie" | "series", slug: string) => {
+        // Track the click if we have a search ID
+        if (currentSearchId) {
+            try {
+                await trackSearchClick({
+                    searchId: currentSearchId,
+                    clickedItem: slug,
+                    clickedItemType: itemType,
+                });
+            } catch (e) {
+                console.error("Failed to track search click:", e);
+            }
+        }
+
         setIsOpen(false);
         setQuery("");
+        setCurrentSearchId(null);
         router.push(path);
-    };
+    }, [currentSearchId, trackSearchClick, router]);
 
     const hasResults = results && (results.matches.length > 0 || results.movies.length > 0 || results.series.length > 0);
 
     return (
-        <div className="relative w-full max-w-sm" ref={searchRef}>
+        <div className="relative w-full max-w-sm z-[100]" ref={searchRef}>
             <div className="relative group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-accent-green transition-colors" />
                 <input
@@ -72,7 +124,7 @@ export function SearchBox() {
                             {results.matches.map((match: any) => (
                                 <button
                                     key={match._id}
-                                    onClick={() => handleSelect(`/match/${match.slug}`)}
+                                    onClick={() => handleSelect(`/match/${match.slug}`, "match", match.slug)}
                                     className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:border-accent-green/30 transition-colors">
@@ -111,7 +163,7 @@ export function SearchBox() {
                             {results.movies.map((movie: any) => (
                                 <button
                                     key={movie._id}
-                                    onClick={() => handleSelect(`/movies/${movie.slug}`)}
+                                    onClick={() => handleSelect(`/movies/${movie.slug}`, "movie", movie.slug)}
                                     className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-accent-blue/30 transition-colors relative">
@@ -145,7 +197,7 @@ export function SearchBox() {
                             {results.series.map((show: any) => (
                                 <button
                                     key={show._id}
-                                    onClick={() => handleSelect(`/series/${show.slug}`)}
+                                    onClick={() => handleSelect(`/series/${show.slug}`, "series", show.slug)}
                                     className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-accent-green/30 transition-colors relative">

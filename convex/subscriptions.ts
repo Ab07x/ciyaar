@@ -79,10 +79,7 @@ export const getUserSubscriptionDetails = query({
                 createdAt: activeSub!.createdAt,
                 maxDevices: activeSub!.maxDevices,
             } : null,
-            trial: (user?.trialExpiresAt && user.trialExpiresAt > now) ? {
-                expiresAt: user.trialExpiresAt,
-                isTrial: true,
-            } : null,
+            trial: null, // Trial feature disabled
             devices: devices.map((d) => ({
                 deviceId: d.deviceId,
                 userAgent: d.userAgent,
@@ -112,18 +109,7 @@ export const checkPremiumAccess = query({
             return { hasAccess: false, reason: "no_user", isTrial: false };
         }
 
-        // 1. First check: Active trial
-        const user = await ctx.db.get(args.userId);
-        if (user?.trialExpiresAt && user.trialExpiresAt > now) {
-            const daysLeft = Math.ceil((user.trialExpiresAt - now) / (24 * 60 * 60 * 1000));
-            return {
-                hasAccess: true,
-                plan: "trial",
-                expiresAt: user.trialExpiresAt,
-                isTrial: true,
-                daysLeft,
-            };
-        }
+        // Trial feature completely disabled - users must have active subscription
 
         // 2. Second check: Active subscription
         const subs = await ctx.db

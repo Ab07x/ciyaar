@@ -10,6 +10,8 @@ export default defineSchema({
         title: v.string(),
         teamA: v.string(),
         teamB: v.string(),
+        teamALogo: v.optional(v.string()),
+        teamBLogo: v.optional(v.string()),
         articleTitle: v.optional(v.string()),
         articleContent: v.optional(v.string()),
         leagueId: v.optional(v.string()),
@@ -1026,4 +1028,30 @@ export default defineSchema({
         .index("by_type", ["type"])
         .index("by_created", ["createdAt"]),
 
+    // ============================================
+    // SEARCH ANALYTICS
+    // ============================================
+    search_analytics: defineTable({
+        query: v.string(),                              // The search query
+        queryLower: v.string(),                         // Lowercase for aggregation
+        resultsCount: v.number(),                       // Number of results shown
+        hasResults: v.boolean(),                        // Quick flag for zero-result searches
+        clickedItem: v.optional(v.string()),            // Slug of clicked result (if any)
+        clickedItemType: v.optional(v.union(            // Type of clicked result
+            v.literal("match"),
+            v.literal("movie"),
+            v.literal("series")
+        )),
+        deviceId: v.optional(v.string()),               // Device fingerprint
+        userId: v.optional(v.id("users")),              // User if logged in
+        userAgent: v.optional(v.string()),              // Browser/device info
+        sessionId: v.optional(v.string()),              // Session tracking
+        createdAt: v.number(),                          // Timestamp
+    })
+        .index("by_query", ["queryLower"])
+        .index("by_created", ["createdAt"])
+        .index("by_has_results", ["hasResults", "createdAt"])
+        .index("by_device", ["deviceId", "createdAt"]),
+
 });
+

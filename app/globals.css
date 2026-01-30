@@ -2,22 +2,24 @@
 
 @theme {
   /* =====================================================
-     STADIUM NOIR DESIGN SYSTEM
+     LOOKMOVIE2 DESIGN SYSTEM
      ===================================================== */
 
-  /* Backgrounds - True Black Cinema */
-  --bg-primary: #000000;
-  --bg-secondary: #0A0A0A;
-  --bg-card: #111111;
-  --bg-elevated: #1A1A1A;
+  /* Backgrounds - Dark Blue Cinema */
+  --bg-primary: #0d1b2a;
+  --bg-secondary: #1a3a5c;
+  --bg-card: #1b2838;
+  --bg-elevated: #2a4a6c;
 
-  /* Context-Aware Primary Colors - Unified Red Theme */
+  /* Context-Aware Primary Colors */
   --color-sports: #DC2626;
-  /* Red for live sports (Unified) */
-  --color-cinema: #DC2626;
-  /* Red for movies/series */
-  --color-premium: #EAB308;
+  /* Red for live sports */
+  --color-cinema: #f0ad4e;
+  /* Orange/Gold for movies */
+  --color-premium: #f0ad4e;
   /* Gold for premium */
+  --color-series: #DC2626;
+  /* Red for series/musalsal */
 
   /* Text Colors */
   --color-text-primary: #FFFFFF;
@@ -25,7 +27,7 @@
   --color-text-muted: #71717A;
 
   /* Glass Effect Variables */
-  --glass-bg: rgba(17, 17, 17, 0.8);
+  --glass-bg: rgba(13, 27, 42, 0.8);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-blur: 20px;
 
@@ -36,14 +38,17 @@
   --color-stadium-card: var(--bg-card);
   --color-stadium-surface: var(--bg-secondary);
 
-  --color-accent-green: var(--color-sports);
-  --color-accent-red: var(--color-cinema);
+  --color-accent-green: #9AE600;
+  /* Green for CTAs */
+  --color-accent-red: var(--color-sports);
   --color-accent-gold: var(--color-premium);
   --color-accent-blue: #3B82F6;
-  /* Keeping blue for miscellaneous */
+  /* Blue for misc */
+  --color-accent-orange: #f0ad4e;
+  /* Orange primary accent */
 
-  --color-border-subtle: #27272A;
-  --color-border-strong: #3F3F46;
+  --color-border-subtle: #1a3a5c;
+  --color-border-strong: #2a4a6c;
 
   /* Typography */
   --font-display: 'Outfit', 'Inter', system-ui, sans-serif;

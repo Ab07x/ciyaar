@@ -16,9 +16,7 @@ interface OfflineStatus {
  * @returns Online status and connection information
  */
 export function useOffline(): OfflineStatus {
-    const [isOnline, setIsOnline] = useState(
-        typeof navigator !== 'undefined' ? navigator.onLine : true
-    );
+    const [isOnline, setIsOnline] = useState(true);
     const [downlink, setDownlink] = useState<number | null>(null);
     const [effectiveType, setEffectiveType] = useState<string | null>(null);
     const [saveData, setSaveData] = useState(false);

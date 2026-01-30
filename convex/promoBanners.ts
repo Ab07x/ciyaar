@@ -21,7 +21,19 @@ export const getActiveBanner = query({
                 if (b.endDate && now > b.endDate) return false;
                 return true;
             })
-            .sort((a, b) => b.priority - a.priority);
+            .sort((a, b) => {
+                // 1. Priority (Higher is better)
+                if (b.priority !== a.priority) return b.priority - a.priority;
+
+                // 2. Deprioritize "Default" named banners
+                const aIsDefault = a.name.includes("Default");
+                const bIsDefault = b.name.includes("Default");
+                if (aIsDefault && !bIsDefault) return 1; // a is default, so b comes first
+                if (!aIsDefault && bIsDefault) return -1; // b is default, so a comes first
+
+                // 3. Newest first (tie-breaker)
+                return b.createdAt - a.createdAt;
+            });
 
         return validBanners[0] || null;
     },

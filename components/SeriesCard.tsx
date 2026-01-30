@@ -14,6 +14,7 @@ interface SeriesCardProps {
     year: string;
     isPremium?: boolean;
     className?: string;
+    isLocked?: boolean;
 }
 
 export function SeriesCard({
@@ -25,12 +26,17 @@ export function SeriesCard({
     episodes,
     year,
     isPremium,
-    className
+    className,
+    isLocked = false
 }: SeriesCardProps) {
     return (
         <Link
             href={`/series/${slug}`}
-            className={cn("group block relative rounded-xl overflow-hidden bg-stadium-elevated card-hover", className)}
+            className={cn(
+                "group block relative rounded-xl overflow-hidden bg-stadium-elevated card-hover",
+                isLocked && "opacity-90 grayscale-[0.3]",
+                className
+            )}
         >
             {/* Poster Container */}
             <div className="aspect-[2/3] relative overflow-hidden bg-white/5">
@@ -69,10 +75,17 @@ export function SeriesCard({
                 </div>
 
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-accent-green text-black rounded-full p-4 transform scale-50 group-hover:scale-100 transition-transform duration-300">
-                        <Play fill="currentColor" size={24} />
-                    </div>
+                <div className="absolute inset-0 bg-black/40 md:bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    {isLocked ? (
+                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/50">
+                            <Lock size={20} className="md:w-6 md:h-6 text-white" />
+                        </div>
+                    ) : (
+                        <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-2 py-1 md:px-4 md:py-2 rounded-full flex items-center gap-1 md:gap-2 text-[10px] md:text-sm shadow-lg transform scale-100 md:scale-90 md:group-hover:scale-100 transition-transform">
+                            Daawo NOW
+                            <Play size={12} className="md:w-4 md:h-4" fill="currentColor" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Bottom gradient */}

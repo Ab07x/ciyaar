@@ -65,14 +65,11 @@ export const getOrCreateUser = mutation({
             return existingDevice.userId;
         }
 
-        // Create new user with 7-day free trial
+        // Create new user
         const now = Date.now();
-        const trialDays = 7;
-        const trialExpiresAt = now + (trialDays * 24 * 60 * 60 * 1000);
 
         const userId = await ctx.db.insert("users", {
             createdAt: now,
-            trialExpiresAt,
             isTrialUsed: false,
         });
 

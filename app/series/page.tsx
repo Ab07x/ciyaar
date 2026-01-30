@@ -129,14 +129,17 @@ export default function SeriesPage() {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
                                     {/* Play button */}
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="w-14 h-14 rounded-full bg-accent-green/90 flex items-center justify-center">
-                                            {isLocked ? (
-                                                <Lock size={24} className="text-black" />
-                                            ) : (
-                                                <Play size={24} className="text-black ml-1" fill="black" />
-                                            )}
-                                        </div>
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {isLocked ? (
+                                            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/50">
+                                                <Lock size={24} className="text-white" />
+                                            </div>
+                                        ) : (
+                                            <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                                                Daawo NOW
+                                                <Play size={16} fill="currentColor" />
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Badges */}
