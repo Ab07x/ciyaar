@@ -53,6 +53,9 @@ const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 // Helper: Detect stream type from URL
 function detectStreamType(url: string): "m3u8" | "mpd" | "iframe" | "video" {
     const urlLower = url.toLowerCase();
+    // AWS IVS URLs
+    if (urlLower.includes("live-video.net")) return "m3u8";
+    // Standard HLS
     if (urlLower.includes(".m3u8") || urlLower.includes("m3u8")) return "m3u8";
     if (urlLower.includes(".mpd")) return "mpd";
     if (urlLower.includes(".mp4") || urlLower.includes(".webm") || urlLower.includes(".ogg")) return "video";
@@ -434,6 +437,7 @@ export function StreamPlayer({
 
                     hlsRef.current = hls;
 
+                    console.log("[HLS] Loading source:", resolvedUrl);
                     hls.loadSource(resolvedUrl);
                     hls.attachMedia(video);
 
@@ -462,18 +466,22 @@ export function StreamPlayer({
                     });
 
                     hls.on(Hls.Events.ERROR, (_: any, data: any) => {
+                        console.log("[HLS Error]", data.type, data.details, data);
                         if (data.fatal) {
                             switch (data.type) {
                                 case Hls.ErrorTypes.NETWORK_ERROR:
+                                    console.log("[HLS] Network error, attempting recovery...");
                                     setError("Network error - trying to recover...");
                                     hls.startLoad();
                                     break;
                                 case Hls.ErrorTypes.MEDIA_ERROR:
+                                    console.log("[HLS] Media error, attempting recovery...");
                                     setError("Media error - trying to recover...");
                                     hls.recoverMediaError();
                                     break;
                                 default:
-                                    setError("Stream unavailable");
+                                    console.log("[HLS] Fatal error:", data.details);
+                                    setError(`Stream error: ${data.details || "unavailable"}`);
                                     setIsLoading(false);
                                     onError?.("Fatal streaming error");
                                     hls.destroy();
