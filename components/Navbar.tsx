@@ -201,7 +201,8 @@ export function Navbar() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="md:hidden overflow-hidden"
+                        className="md:hidden"
+                        style={{ zIndex: 9999 }}
                     >
                         <div className="p-4 bg-stadium-elevated border-b border-border-subtle">
                             <SearchBox />

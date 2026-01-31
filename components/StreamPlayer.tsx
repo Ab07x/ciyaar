@@ -186,7 +186,7 @@ export function StreamPlayer({
         (trackParams && userId) ? { userId, contentType: trackParams.contentType, contentId: trackParams.contentId } : "skip"
     );
     const settings = useQuery(api.settings.getSettings);
-    const { isPremium, isTrial } = useUser();
+    const { isPremium } = useUser();
 
     const [showPaywall, setShowPaywall] = useState(false);
     // Explicitly cast settings to any to avoid TS errors with new schema fields not yet picked up
@@ -195,7 +195,7 @@ export function StreamPlayer({
     // Free Tier Enforcement
     useEffect(() => {
         if (trackParams?.contentType !== "match") return;
-        if (isPremium || isTrial) {
+        if (isPremium) {
             setShowPaywall(false); // Hide if they become premium
             return;
         }
@@ -212,7 +212,7 @@ export function StreamPlayer({
                 document.exitFullscreen().catch(() => { });
             }
         }
-    }, [currentTime, isPremium, isTrial, freePreviewLimit, trackParams?.contentType]);
+    }, [currentTime, isPremium, freePreviewLimit, trackParams?.contentType]);
 
     // Controls timeout
     const controlsTimeoutRef = useRef<any>(null);

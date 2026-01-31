@@ -89,7 +89,7 @@ export function SearchBox() {
     const hasResults = results && (results.matches.length > 0 || results.movies.length > 0 || results.series.length > 0);
 
     return (
-        <div className="relative w-full max-w-sm z-[100]" ref={searchRef}>
+        <div className="relative w-full max-w-sm" ref={searchRef}>
             <div className="relative group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-accent-green transition-colors" />
                 <input
@@ -101,16 +101,19 @@ export function SearchBox() {
                     }}
                     onFocus={() => setIsOpen(true)}
                     placeholder="Raadi Ciyaar, Filim ama Musalsal..."
-                    className="w-full bg-stadium-elevated border border-border-strong rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green/20 transition-all placeholder:text-text-muted/50"
+                    className="w-full bg-stadium-elevated border border-border-strong rounded-full py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green/20 transition-all placeholder:text-text-muted/50 text-white"
                 />
                 {query.length >= 2 && results === undefined && (
                     <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted animate-spin" />
                 )}
             </div>
 
-            {/* Results Dropdown */}
+            {/* Results Dropdown - Fixed position on mobile */}
             {isOpen && query.length >= 2 && hasResults && (
-                <div className="absolute top-full mt-2 w-full bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200 max-h-[80vh] overflow-y-auto ring-1 ring-black/50">
+                <div
+                    className="fixed inset-x-0 top-[120px] mx-4 md:absolute md:inset-auto md:top-full md:left-0 md:right-0 md:mx-0 md:mt-2 bg-[#0d1117] border border-[#30363d] rounded-xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto"
+                    style={{ zIndex: 999999 }}
+                >
 
                     {/* Matches */}
                     {results.matches.length > 0 && (
@@ -228,7 +231,10 @@ export function SearchBox() {
             )}
 
             {isOpen && query.length >= 2 && results && !hasResults && (
-                <div className="absolute top-full mt-2 w-full bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl p-6 text-center z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div
+                    className="fixed inset-x-0 top-[120px] mx-4 md:absolute md:inset-auto md:top-full md:left-0 md:right-0 md:mx-0 md:mt-2 bg-[#0d1117] border border-[#30363d] rounded-xl shadow-2xl p-6 text-center"
+                    style={{ zIndex: 999999 }}
+                >
                     <p className="text-sm text-text-muted">Lama helin wax ciyaar, filim ama musalsal ah oo la mid ah "{query}"</p>
                 </div>
             )}

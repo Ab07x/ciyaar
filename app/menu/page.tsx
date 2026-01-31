@@ -55,7 +55,7 @@ export default function MenuPage() {
     ];
 
     const settingsNav = [
-        { label: "Fariimaha (Notifications)", icon: Bell, href: "/admin/notifications" },
+        { label: "Fariimaha (Notifications)", icon: Bell, href: "/kism/notifications" },
         { label: "Gooni u Ahaanshaha", icon: Shield, href: "/privacy" },
         { label: "Websaydhka Booqo", icon: Globe, href: "https://fanbroj.net" },
     ];

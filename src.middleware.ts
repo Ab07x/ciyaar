@@ -4,12 +4,12 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Only protect /admin routes (except /admin/login)
-    if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    // Only protect /kism routes (except /kism/login)
+    if (pathname.startsWith("/kism") && pathname !== "/kism/login") {
         const adminSession = request.cookies.get("fanbroj_admin_session");
 
         if (!adminSession || adminSession.value !== "authenticated") {
-            const loginUrl = new URL("/admin/login", request.url);
+            const loginUrl = new URL("/kism/login", request.url);
             loginUrl.searchParams.set("from", pathname);
             return NextResponse.redirect(loginUrl);
         }
@@ -19,5 +19,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/admin/:path*"],
+    matcher: ["/kism/:path*"],
 };

@@ -125,6 +125,16 @@ export const createMatch = mutation({
         ),
         thumbnailUrl: v.optional(v.string()),
         summary: v.optional(v.string()),
+        // Scores
+        scoreA: v.optional(v.number()),
+        scoreB: v.optional(v.number()),
+        minute: v.optional(v.number()),
+        goals: v.optional(v.array(v.object({
+            team: v.union(v.literal("A"), v.literal("B")),
+            player: v.string(),
+            minute: v.number(),
+            type: v.optional(v.union(v.literal("goal"), v.literal("penalty"), v.literal("own_goal"))),
+        }))),
     },
     handler: async (ctx, args) => {
         const now = Date.now();
@@ -175,6 +185,43 @@ export const updateMatch = mutation({
         ),
         thumbnailUrl: v.optional(v.string()),
         summary: v.optional(v.string()),
+        // Scores
+        scoreA: v.optional(v.number()),
+        scoreB: v.optional(v.number()),
+        minute: v.optional(v.number()),
+        goals: v.optional(v.array(v.object({
+            team: v.union(v.literal("A"), v.literal("B")),
+            player: v.string(),
+            minute: v.number(),
+            type: v.optional(v.union(v.literal("goal"), v.literal("penalty"), v.literal("own_goal"))),
+        }))),
+        // Lineup data
+        lineup: v.optional(v.object({
+            home: v.object({
+                formation: v.string(),
+                players: v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                    position: v.object({ x: v.number(), y: v.number() }),
+                })),
+                substitutes: v.optional(v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                }))),
+            }),
+            away: v.object({
+                formation: v.string(),
+                players: v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                    position: v.object({ x: v.number(), y: v.number() }),
+                })),
+                substitutes: v.optional(v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                }))),
+            }),
+        })),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;

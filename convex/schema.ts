@@ -43,6 +43,44 @@ export default defineSchema({
         ),
         thumbnailUrl: v.optional(v.union(v.string(), v.null())),
         summary: v.optional(v.union(v.string(), v.null())),
+        // Scores
+        scoreA: v.optional(v.number()),
+        scoreB: v.optional(v.number()),
+        minute: v.optional(v.number()), // Current minute for live matches
+        // Goals details
+        goals: v.optional(v.array(v.object({
+            team: v.union(v.literal("A"), v.literal("B")),
+            player: v.string(),
+            minute: v.number(),
+            type: v.optional(v.union(v.literal("goal"), v.literal("penalty"), v.literal("own_goal"))),
+        }))),
+        // Lineup data
+        lineup: v.optional(v.object({
+            home: v.object({
+                formation: v.string(),
+                players: v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                    position: v.object({ x: v.number(), y: v.number() }),
+                })),
+                substitutes: v.optional(v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                }))),
+            }),
+            away: v.object({
+                formation: v.string(),
+                players: v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                    position: v.object({ x: v.number(), y: v.number() }),
+                })),
+                substitutes: v.optional(v.array(v.object({
+                    number: v.number(),
+                    name: v.string(),
+                }))),
+            }),
+        })),
         views: v.optional(v.number()),
         createdAt: v.number(),
         updatedAt: v.number(),
@@ -542,7 +580,6 @@ export default defineSchema({
         title: v.string(),
         titleSomali: v.optional(v.string()),
         overview: v.optional(v.string()),
-        overviewSomali: v.optional(v.string()),
         stillUrl: v.optional(v.string()),
         airDate: v.optional(v.string()),
         runtime: v.optional(v.number()),

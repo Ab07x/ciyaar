@@ -5,7 +5,7 @@ import { Volume2, Sun, FastForward, Rewind } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface MobileGesturesProps {
-    videoRef: React.RefObject<HTMLVideoElement>;
+    videoRef: React.RefObject<HTMLVideoElement | null>;
     onSeek: (time: number) => void;
     onVolumeChange: (volume: number) => void;
     currentTime: number;

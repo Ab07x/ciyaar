@@ -39,14 +39,21 @@ export function CountdownTimer({ kickoffAt, onComplete }: CountdownTimerProps) {
     if (countdown.isStarted) {
         return (
             <div className="text-center py-8">
-                <p className="text-2xl font-bold text-accent-green mb-2">
-                    ✅ Ciyaartu hadda way bilaabatay
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-full mb-4">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                    <span className="text-yellow-500 text-sm font-medium">SOO SOCDA</span>
+                </div>
+                <p className="text-xl font-bold text-text-secondary mb-2">
+                    Ciyaartu waa ay bilaaban lahayd
+                </p>
+                <p className="text-sm text-text-muted mb-4">
+                    Waxaan sugaynaa in la bilaabo ciyaarta...
                 </p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="mt-4 px-6 py-3 bg-accent-green text-black font-bold rounded-lg hover:bg-accent-green/90 transition-colors"
+                    className="px-6 py-3 bg-stadium-elevated border border-border-subtle text-white font-bold rounded-lg hover:bg-stadium-hover transition-colors"
                 >
-                    Riix si aad u daawato
+                    Refresh Page
                 </button>
             </div>
         );

@@ -21,7 +21,9 @@ interface PerformanceMetrics {
  * @returns Performance metrics and recommendations
  */
 export function useMobilePerformance(): PerformanceMetrics {
-    const { connectionType, isMobile } = useMobileDetection();
+    const mobileInfo = useMobileDetection();
+    const connectionType = mobileInfo.connectionType as 'slow' | 'fast' | 'unknown';
+    const isMobile = mobileInfo.isMobile;
     const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
     const [isCharging, setIsCharging] = useState<boolean | null>(null);
 
@@ -35,11 +37,15 @@ export function useMobilePerformance(): PerformanceMetrics {
         ? navigator.hardwareConcurrency || 2
         : 2;
 
+    // Check if connection is slow
+    const isSlowConnection = connectionType === 'slow';
+    const isFastConnection = connectionType === 'fast';
+
     // Determine if it's a low-end device
     const isLowEndDevice = (
         deviceMemory !== null && deviceMemory < 4 ||
         hardwareConcurrency < 4 ||
-        connectionType === 'slow'
+        isSlowConnection
     );
 
     // Battery API
@@ -67,11 +73,11 @@ export function useMobilePerformance(): PerformanceMetrics {
     }, []);
 
     // Performance recommendations
-    const enableAnimations = !isLowEndDevice && connectionType !== 'slow';
-    const enableAutoplay = connectionType === 'fast' && (isCharging || batteryLevel === null || batteryLevel > 0.2);
+    const enableAnimations = !isLowEndDevice && !isSlowConnection;
+    const enableAutoplay = isFastConnection && (isCharging || batteryLevel === null || batteryLevel > 0.2);
 
     let preferredImageQuality: 'low' | 'medium' | 'high' = 'high';
-    if (isLowEndDevice || connectionType === 'slow') {
+    if (isLowEndDevice || isSlowConnection) {
         preferredImageQuality = 'low';
     } else if (connectionType === 'unknown' && isMobile) {
         preferredImageQuality = 'medium';

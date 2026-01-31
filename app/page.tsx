@@ -24,6 +24,8 @@ export default function HomePage() {
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const moviesPerPage = 18;
 
   const hasTracked = useRef(false);
 
@@ -50,11 +52,16 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, [heroMovies.length]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedGenre, selectedYear, sortBy]);
+
   const isLoading = matchData === undefined && movies === undefined;
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0d1b2a]">
+      <div className="min-h-screen bg-[#020D18]">
         <Skeleton className="w-full h-[400px]" />
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-8">
           {[...Array(12)].map((_, j) => (
@@ -84,15 +91,19 @@ export default function HomePage() {
   const genres = [...new Set(moviesList.flatMap((m: any) => m.genres || []))].filter(Boolean).slice(0, 15);
   const years = [...new Set(moviesList.map((m: any) => m.releaseDate?.split("-")[0]).filter(Boolean))].sort().reverse().slice(0, 10);
 
+  // Pagination
+  const totalPages = Math.ceil(filteredMovies.length / moviesPerPage);
+  const paginatedMovies = filteredMovies.slice((currentPage - 1) * moviesPerPage, currentPage * moviesPerPage);
+
   const currentHero = heroMovies[currentSlide];
 
   return (
-    <div className="min-h-screen bg-[#0d1b2a]">
+    <div className="min-h-screen bg-[#020D18]">
       {/* HERO SLIDER - Lookmovie Style */}
       {currentHero && (
         <section className="relative w-full h-[400px] md:h-[450px] overflow-hidden">
           {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0d1b2a] via-[#1b2838] to-[#0d1b2a]">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020D18] via-[#1b2838] to-[#020D18]">
             <div
               className="absolute inset-0 opacity-30"
               style={{
@@ -102,8 +113,8 @@ export default function HomePage() {
                 filter: 'blur(2px)'
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0d1b2a] via-transparent to-[#0d1b2a]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2a] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#020D18] via-transparent to-[#020D18]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020D18] via-transparent to-transparent" />
           </div>
 
           <div className="relative z-10 h-full flex items-center justify-between px-4 md:px-16 max-w-7xl mx-auto">
@@ -116,12 +127,12 @@ export default function HomePage() {
 
               <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
                 {currentHero.rating && (
-                  <span className="bg-[#1a3a5c] text-white px-2 py-1 rounded flex items-center gap-1">
+                  <span className="bg-[#333333] text-white px-2 py-1 rounded flex items-center gap-1">
                     <Star size={10} className="text-yellow-400" fill="currentColor" />
                     {currentHero.rating.toFixed(1)}
                   </span>
                 )}
-                <span className="bg-[#1a3a5c] text-white px-2 py-1 rounded">HD</span>
+                <span className="bg-[#333333] text-white px-2 py-1 rounded">HD</span>
                 {currentHero.genres?.slice(0, 2).map((g: string) => (
                   <span key={g} className="bg-[#f0ad4e] text-black px-2 py-1 rounded font-bold">{g}</span>
                 ))}
@@ -211,14 +222,14 @@ export default function HomePage() {
 
       {/* MOVIES FILTER */}
       <section className="max-w-7xl mx-auto px-4 py-6">
-        <div className="border-t border-b border-[#1a3a5c] py-4 mb-6">
+        <div className="border-t border-b border-[#333333] py-4 mb-6">
           <h2 className="text-center text-xl font-bold text-white uppercase tracking-widest mb-4">Movies Filter</h2>
 
           <div className="flex flex-wrap justify-center gap-3">
             <select
               value={selectedGenre}
               onChange={(e) => setSelectedGenre(e.target.value)}
-              className="bg-[#1a3a5c] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
             >
               <option value="">Select Genres</option>
               {genres.map((g: string) => <option key={g} value={g}>{g}</option>)}
@@ -227,7 +238,7 @@ export default function HomePage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-[#1a3a5c] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
             >
               <option value="">Select Year</option>
               {years.map((y: string) => <option key={y} value={y}>{y}</option>)}
@@ -236,7 +247,7 @@ export default function HomePage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-[#1a3a5c] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
             >
               <option value="newest">Newest First</option>
               <option value="rating">Highest Rated</option>
@@ -255,13 +266,13 @@ export default function HomePage() {
 
         {/* Movies Grid - Lookmovie Style */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {filteredMovies.slice(0, 30).map((movie: any) => (
+          {paginatedMovies.map((movie: any) => (
             <Link
               key={movie._id}
               href={`/movies/${movie.slug}`}
               className="group block"
             >
-              <div className="relative aspect-[2/3] rounded overflow-hidden bg-[#1a3a5c] mb-2">
+              <div className="relative aspect-[2/3] rounded overflow-hidden bg-[#333333] mb-2">
                 {movie.posterUrl ? (
                   <Image
                     src={movie.posterUrl}
@@ -278,7 +289,7 @@ export default function HomePage() {
 
                 {/* Rating Badge */}
                 {movie.rating && (
-                  <div className="absolute top-2 left-2 bg-[#1a3a5c]/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                  <div className="absolute top-2 left-2 bg-[#333333]/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                     <Star size={10} className="text-yellow-400" fill="currentColor" />
                     {movie.rating.toFixed(1)}
                   </div>
@@ -292,7 +303,7 @@ export default function HomePage() {
                 )}
 
                 {/* HD Badge */}
-                <div className="absolute bottom-2 left-2 bg-[#1a3a5c] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                   HD
                 </div>
 
@@ -317,13 +328,83 @@ export default function HomePage() {
           <p className="text-center text-gray-500 py-12">No movies found</p>
         )}
 
-        {/* View All Movies */}
-        <div className="flex justify-center mt-8">
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
+            {/* Previous Button */}
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-2 rounded font-bold text-sm ${currentPage === 1 ? "bg-[#333333] text-gray-500 cursor-not-allowed" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {/* Page Numbers */}
+            {(() => {
+              const pages = [];
+              const showEllipsisStart = currentPage > 3;
+              const showEllipsisEnd = currentPage < totalPages - 2;
+
+              // Always show first page
+              pages.push(1);
+
+              if (showEllipsisStart) {
+                pages.push("...");
+              }
+
+              // Show pages around current
+              for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                if (!pages.includes(i)) pages.push(i);
+              }
+
+              if (showEllipsisEnd) {
+                pages.push("...");
+              }
+
+              // Always show last page
+              if (totalPages > 1 && !pages.includes(totalPages)) {
+                pages.push(totalPages);
+              }
+
+              return pages.map((page, idx) => (
+                page === "..." ? (
+                  <span key={`ellipsis-${idx}`} className="px-2 text-gray-500">...</span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page as number)}
+                    className={`min-w-[40px] px-3 py-2 rounded font-bold text-sm ${currentPage === page ? "bg-[#f0ad4e] text-black" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+                  >
+                    {page}
+                  </button>
+                )
+              ));
+            })()}
+
+            {/* Next Button */}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-2 rounded font-bold text-sm ${currentPage === totalPages ? "bg-[#333333] text-gray-500 cursor-not-allowed" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+            >
+              <ChevronRight size={18} />
+            </button>
+
+            {/* Page Info */}
+            <span className="text-gray-400 text-sm ml-4">
+              Page {currentPage} of {totalPages} ({filteredMovies.length} movies)
+            </span>
+          </div>
+        )}
+
+        {/* View All Movies Link */}
+        <div className="flex justify-center mt-6">
           <Link
             href="/movies"
-            className="px-8 py-3 bg-[#f0ad4e] hover:bg-[#e09d3e] text-black font-bold rounded-lg"
+            className="text-[#f0ad4e] text-sm font-bold hover:underline flex items-center gap-1"
           >
-            View All Movies
+            View All Movies <ChevronRight size={16} />
           </Link>
         </div>
       </section>

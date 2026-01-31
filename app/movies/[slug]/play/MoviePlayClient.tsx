@@ -59,7 +59,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
     if (!movie || !settings) {
         return (
-            <div className="flex items-center justify-center min-h-[400px] bg-[#0d1b2a]">
+            <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f0ad4e]"></div>
             </div>
         );
@@ -95,7 +95,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     }
 
     return (
-        <div className="min-h-screen bg-[#0d1b2a]">
+        <div className="min-h-screen bg-[#020D18]">
             {/* Ad Banner */}
             <PremiumBannerNew />
 
@@ -104,7 +104,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                 <div className="flex items-center gap-4">
                     <Link
                         href={`/movies/${slug}`}
-                        className="p-2 bg-[#1a3a5c] hover:bg-[#2a4a6c] rounded-lg transition-colors"
+                        className="p-2 bg-[#333333] hover:bg-[#2a4a6c] rounded-lg transition-colors"
                     >
                         <ChevronLeft size={20} className="text-white" />
                     </Link>
@@ -129,7 +129,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                         contentId={slug}
                         contentTitle={movie.titleSomali || movie.title}
                     >
-                        <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border-4 border-[#1a3a5c]">
+                        <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border-4 border-[#333333]">
                             {activeEmbed?.url ? (
                                 <StreamPlayer
                                     source={{
@@ -154,7 +154,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                     </PPVUnlockGate>
                 ) : movie.isPremium && !isUnlocked ? (
                     /* Premium Lock */
-                    <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden flex items-center justify-center border-4 border-[#1a3a5c]">
+                    <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden flex items-center justify-center border-4 border-[#333333]">
                         <div className="absolute inset-0">
                             <Image
                                 src={movie.backdropUrl || movie.posterUrl}
@@ -163,7 +163,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 className="object-cover opacity-20 blur-sm"
                             />
                         </div>
-                        <div className="relative z-10 bg-[#0d1b2a]/90 border-2 border-[#f0ad4e] rounded-xl p-6 max-w-md text-center">
+                        <div className="relative z-10 bg-[#020D18]/90 border-2 border-[#f0ad4e] rounded-xl p-6 max-w-md text-center">
                             <div className="w-14 h-14 bg-[#f0ad4e]/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <Crown size={28} className="text-[#f0ad4e]" />
                             </div>
@@ -176,7 +176,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                         value={code}
                                         onChange={(e) => setCode(e.target.value.toUpperCase())}
                                         placeholder="CODE"
-                                        className="flex-1 bg-[#1a3a5c] border border-[#2a4a6c] rounded-lg px-4 py-3 uppercase text-center tracking-wider"
+                                        className="flex-1 bg-[#333333] border border-[#2a4a6c] rounded-lg px-4 py-3 uppercase text-center tracking-wider"
                                     />
                                     <button
                                         onClick={handleRedeem}
@@ -206,7 +206,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                     </div>
                 ) : activeEmbed?.url ? (
                     /* Video Player */
-                    <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border-4 border-[#1a3a5c]">
+                    <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border-4 border-[#333333]">
                         <StreamPlayer
                             source={{
                                 url: activeEmbed.url,
@@ -224,7 +224,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                     </div>
                 ) : (
                     /* No Embed */
-                    <div className="relative w-full aspect-video bg-black rounded-2xl flex items-center justify-center border-4 border-[#1a3a5c]">
+                    <div className="relative w-full aspect-video bg-black rounded-2xl flex items-center justify-center border-4 border-[#333333]">
                         <div className="text-center">
                             <AlertCircle size={48} className="mx-auto text-gray-500 mb-2" />
                             <p className="text-gray-400">Lama hayo embed links</p>
@@ -241,7 +241,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 onClick={() => setActiveEmbedIndex(i)}
                                 className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all ${activeEmbedIndex === i
                                     ? "bg-[#9AE600] text-black border-[#9AE600]"
-                                    : "bg-[#1a3a5c] text-white border-[#2a4a6c] hover:border-[#f0ad4e]"
+                                    : "bg-[#333333] text-white border-[#2a4a6c] hover:border-[#f0ad4e]"
                                     }`}
                             >
                                 {embed.label} {embed.quality && `(${embed.quality})`}
@@ -294,8 +294,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                     <MyListButton
                         contentType="movie"
                         contentId={slug}
-                        className="h-12 bg-[#1a3a5c] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
-                        label="+ WATCH LATER"
+                        className="h-12 bg-[#333333] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
                     />
 
                     {/* Favourites */}
@@ -303,7 +302,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                         contentType="movie"
                         contentId={slug}
                         className="h-12 bg-[#9AE600] hover:bg-[#8AD500] text-black rounded-lg font-bold border-none"
-                        label="+ FAVOURITES"
+                        variant="icon"
                     />
                 </div>
             </div>
@@ -319,7 +318,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 href={`/movies/${item.slug}`}
                                 className="group block"
                             >
-                                <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#1a3a5c] mb-2">
+                                <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#333333] mb-2">
                                     {item.posterUrl ? (
                                         <Image
                                             src={item.posterUrl}
@@ -341,7 +340,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                         </div>
                                     )}
                                     {/* HD Badge */}
-                                    <div className="absolute bottom-2 left-2 bg-[#1a3a5c] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                    <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                                         HD
                                     </div>
                                     {/* Hover Play */}

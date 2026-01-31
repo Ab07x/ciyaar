@@ -68,7 +68,7 @@ function MatchesContent() {
         )}
 
         {/* Filter Tabs - Redesigned */}
-        <div className="flex items-center gap-2 p-1 bg-[#1a3a5c] rounded-xl border border-[#2a4a6c] w-full md:w-fit overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 p-1 bg-[#333333] rounded-xl border border-[#2a4a6c] w-full md:w-fit overflow-x-auto no-scrollbar">
           {(Object.keys(filterConfig) as FilterStatus[]).map((status) => {
             const config = filterConfig[status];
             const Icon = config.icon;
@@ -105,7 +105,7 @@ function MatchesContent() {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-[#1a3a5c] w-full" />
+      <div className="h-px bg-[#333333] w-full" />
 
       {/* Ad Slot */}
       <AdSlot slotKey="archive_sidebar" className="my-6" />
@@ -176,7 +176,7 @@ function MatchesContent() {
 
 export default function CiyaarArchivePage() {
   return (
-    <div className="relative min-h-screen bg-[#0d1b2a]">
+    <div className="relative min-h-screen bg-[#020D18]">
       {/* Subtle Background Pattern */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(154,230,0,0.03)_0%,transparent_50%)]" />

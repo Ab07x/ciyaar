@@ -53,7 +53,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
 
     if (!movie) {
         return (
-            <div className="flex items-center justify-center min-h-[400px] bg-[#0d1b2a]">
+            <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f0ad4e]"></div>
             </div>
         );
@@ -66,7 +66,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
     };
 
     return (
-        <div className="min-h-screen bg-[#0d1b2a]">
+        <div className="min-h-screen bg-[#020D18]">
             {/* Hero Section with Backdrop and Play Button */}
             <div className="relative">
                 {/* Backdrop Image */}
@@ -79,8 +79,8 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                             backgroundPosition: 'center top',
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2a] via-[#0d1b2a]/60 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0d1b2a]/80 via-transparent to-[#0d1b2a]/80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#020D18] via-[#020D18]/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#020D18]/80 via-transparent to-[#020D18]/80" />
 
                     {/* Play Button Overlay */}
                     <Link
@@ -146,7 +146,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                         <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
                             <span className="text-[#f0ad4e] font-bold">{movie.releaseDate?.split("-")[0]}</span>
                             {movie.genres?.map((g: string) => (
-                                <span key={g} className="px-2 py-1 bg-[#1a3a5c] text-white rounded">{g}</span>
+                                <span key={g} className="px-2 py-1 bg-[#333333] text-white rounded">{g}</span>
                             ))}
                             {movie.runtime && (
                                 <span className="text-gray-400 flex items-center gap-1">
@@ -179,7 +179,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                 <div className="flex flex-wrap gap-4">
                                     {movie.cast.slice(0, 5).map((c: any, i: number) => (
                                         <div key={i} className="flex flex-col items-center text-center w-16">
-                                            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#1a3a5c] mb-1">
+                                            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#333333] mb-1">
                                                 {c.profileUrl ? (
                                                     <Image
                                                         src={c.profileUrl}
@@ -188,7 +188,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                                         className="object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full bg-[#1a3a5c] flex items-center justify-center text-white font-bold">
+                                                    <div className="w-full h-full bg-[#333333] flex items-center justify-center text-white font-bold">
                                                         {c.name[0]}
                                                     </div>
                                                 )}
@@ -251,8 +251,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                     <MyListButton
                         contentType="movie"
                         contentId={slug}
-                        className="h-12 bg-[#1a3a5c] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
-                        label="+ WATCH LATER"
+                        className="h-12 bg-[#333333] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
                     />
 
                     {/* Play Button - Green */}
@@ -276,7 +275,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                     href={`/movies/${item.slug}`}
                                     className="group block"
                                 >
-                                    <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#1a3a5c] mb-2">
+                                    <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#333333] mb-2">
                                         {item.posterUrl ? (
                                             <Image
                                                 src={item.posterUrl}
@@ -298,7 +297,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                             </div>
                                         )}
                                         {/* HD Badge */}
-                                        <div className="absolute bottom-2 left-2 bg-[#1a3a5c] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                        <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                                             HD
                                         </div>
                                         {/* Hover Play */}

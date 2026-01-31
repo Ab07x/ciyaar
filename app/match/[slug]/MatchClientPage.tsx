@@ -15,13 +15,13 @@ import { SocialShare } from "@/components/SocialShare";
 import { LiveChat } from "@/components/LiveChat";
 import { RelatedNews } from "@/components/RelatedNews";
 import { MyListButton } from "@/components/MyListButton";
-import PremiumBannerNew from "@/components/PremiumBannerNew";
-import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { PPVUnlockGate } from "@/components/PPVUnlockGate";
 import { MatchReminderButton } from "@/components/MatchReminderButton";
 import { PredictionCard } from "@/components/PredictionCard";
+import { MatchStats } from "@/components/MatchStats";
+import { MatchLineup } from "@/components/MatchLineup";
 import { useUser } from "@/providers/UserProvider";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { formatKickoffTime } from "@/lib/date-utils";
@@ -34,24 +34,8 @@ interface MatchClientPageProps {
 type TabType = "chat" | "stats" | "lineup";
 
 export default function MatchClientPage({ slug }: MatchClientPageProps) {
-  const { isPremium, isLoading: userLoading, userId } = useUser();
-  const [mounted, setMounted] = useState(false);
-  const [adCompleted, setAdCompleted] = useState(false);
+  const { isPremium, userId } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>("chat");
-  const [showChat, setShowChat] = useState(true);
-
-  useEffect(() => {
-    setMounted(true);
-    const stored = sessionStorage.getItem(`ad_completed_${slug}`);
-    if (stored === "true") {
-      setAdCompleted(true);
-    }
-  }, [slug]);
-
-  const handleAdComplete = useCallback(() => {
-    setAdCompleted(true);
-    sessionStorage.setItem(`ad_completed_${slug}`, "true");
-  }, [slug]);
 
   const match = useQuery(api.matches.getMatchBySlug, { slug });
   const settings = useQuery(api.settings.getSettings);
@@ -95,17 +79,6 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
   const otherLiveMatches = matchesStatus.live.filter((m: any) => m._id !== match._id);
   const boostedViews = getBoostedViews(String(match._id), match.views || 0);
 
-  // Show interstitial ad for non-premium users before video
-  if (mounted && !userLoading && !isPremium && !adCompleted) {
-    return (
-      <PremiumAdInterstitial
-        movieTitle={`${match.teamA} vs ${match.teamB}`}
-        duration={10}
-        onComplete={handleAdComplete}
-      />
-    );
-  }
-
   // Team Logo Component
   const TeamLogo = ({ name, logo, className: logoClassName }: { name: string; logo?: string | null; className?: string }) => (
     <div className={cn("relative flex items-center justify-center", logoClassName)}>
@@ -122,9 +95,12 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-[#0d1b2a]">
+    <div className="min-h-screen bg-[#020D18]">
+      {/* View Counter - Tracks views on page load */}
+      <ViewCounter id={match._id} collection="matches" initialViews={match.views || 0} className="hidden" />
+
       {/* Top Navigation Bar */}
-      <div className="sticky top-0 z-50 bg-[#0d1b2a]/90 backdrop-blur-lg border-b border-[#1a3a5c]">
+      <div className="sticky top-0 z-50 bg-[#020D18]/90 backdrop-blur-lg border-b border-[#333333]">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/ciyaar" className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
             <ChevronLeft size={20} />
@@ -132,7 +108,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 bg-[#1a3a5c] rounded-lg text-sm border border-[#2a4a6c]">
+            <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 bg-[#333333] rounded-lg text-sm border border-[#2a4a6c]">
               <Trophy size={14} className="text-[#f0ad4e]" />
               <span className="text-white/70">{match.leagueName}</span>
             </span>
@@ -151,7 +127,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           {match.thumbnailUrl && (
             <Image src={match.thumbnailUrl} alt="" fill className="object-cover opacity-50" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0d1b2a] via-[#0d1b2a]/60 to-[#0d1b2a]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020D18] via-[#020D18]/60 to-[#020D18]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(220,38,38,0.1)_0%,transparent_50%)]" />
         </div>
 
@@ -160,7 +136,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           <div className="flex items-center justify-center gap-3 mb-6">
             <Link
               href={`/ciyaar?league=${match.leagueId}`}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1a3a5c] rounded-full border border-[#2a4a6c] hover:border-[#f0ad4e]/50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#333333] rounded-full border border-[#2a4a6c] hover:border-[#f0ad4e]/50 transition-colors"
             >
               <Trophy size={16} className="text-yellow-500" />
               <span className="text-sm font-medium text-white/70">{match.leagueName}</span>
@@ -189,32 +165,49 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
 
             {/* Score / Time */}
             <div className="flex flex-col items-center">
-              {match.status === "live" || match.status === "finished" ? (
-                <>
-                  <div className="flex items-center gap-4 md:gap-6 text-4xl md:text-6xl font-black text-white">
-                    <span>{(match as any).scoreA ?? 0}</span>
-                    <span className="text-white/20">-</span>
-                    <span>{(match as any).scoreB ?? 0}</span>
+              {/* Always show score */}
+              <div className="flex items-center gap-4 md:gap-6 text-4xl md:text-6xl font-black text-white">
+                <span>{(match as any).scoreA ?? 0}</span>
+                <span className="text-white/20">-</span>
+                <span>{(match as any).scoreB ?? 0}</span>
+              </div>
+
+              {/* Status indicator */}
+              {match.status === "live" && (match as any).minute && (
+                <div className="mt-3 px-4 py-2 bg-red-500/20 rounded-full">
+                  <span className="text-red-400 text-lg font-bold">{(match as any).minute}'</span>
+                </div>
+              )}
+              {match.status === "finished" && (
+                <span className="mt-3 text-white/40 text-sm font-medium uppercase">Full Time</span>
+              )}
+              {match.status === "upcoming" && (
+                <div className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-500/20 rounded-full">
+                  <Clock size={16} className="text-green-400" />
+                  <span className="text-green-400 text-sm font-bold">
+                    {formatKickoffTime(match.kickoffAt)}
+                  </span>
+                </div>
+              )}
+
+              {/* Goal scorers */}
+              {(match as any).goals && (match as any).goals.length > 0 && (
+                <div className="mt-4 flex gap-8 text-xs">
+                  <div className="text-right space-y-1">
+                    {(match as any).goals.filter((g: any) => g.team === "A").map((g: any, i: number) => (
+                      <div key={i} className="text-white/70">
+                        ⚽ {g.player} <span className="text-white/40">{g.minute}'</span>
+                      </div>
+                    ))}
                   </div>
-                  {match.status === "live" && (match as any).minute && (
-                    <div className="mt-3 px-4 py-2 bg-red-500/20 rounded-full">
-                      <span className="text-red-400 text-lg font-bold">{(match as any).minute}'</span>
-                    </div>
-                  )}
-                  {match.status === "finished" && (
-                    <span className="mt-3 text-white/40 text-sm font-medium uppercase">Full Time</span>
-                  )}
-                </>
-              ) : (
-                <>
-                  <span className="text-3xl md:text-5xl font-black text-white/20">VS</span>
-                  <div className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-500/20 rounded-full">
-                    <Clock size={16} className="text-green-400" />
-                    <span className="text-green-400 text-sm font-bold">
-                      {formatKickoffTime(match.kickoffAt)}
-                    </span>
+                  <div className="text-left space-y-1">
+                    {(match as any).goals.filter((g: any) => g.team === "B").map((g: any, i: number) => (
+                      <div key={i} className="text-white/70">
+                        ⚽ {g.player} <span className="text-white/40">{g.minute}'</span>
+                      </div>
+                    ))}
                   </div>
-                </>
+                </div>
               )}
             </div>
 
@@ -261,20 +254,10 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
               <PlayerStage match={match as any} settings={settings} />
             )}
 
-            {/* Premium Promo */}
-            {!isPremium && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6"
-              >
-                <PremiumBannerNew />
-              </motion.div>
-            )}
 
             {/* Article Content */}
             {match.articleTitle && match.articleContent && (
-              <article className="mt-8 bg-[#1a3a5c] rounded-2xl border border-[#2a4a6c] p-6 md:p-8">
+              <article className="mt-8 bg-[#333333] rounded-2xl border border-[#2a4a6c] p-6 md:p-8">
                 <AdSlot slotKey="match_article_top" className="mb-6" />
                 <h2 className="text-2xl md:text-3xl font-black mb-4">{match.articleTitle}</h2>
                 <div
@@ -289,7 +272,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             {/* Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-[#1a3a5c] rounded-xl border border-[#2a4a6c]">
+            <div className="flex items-center gap-1 p-1 bg-[#333333] rounded-xl border border-[#2a4a6c]">
               {[
                 { id: "chat" as TabType, label: "Chat", icon: MessageCircle },
                 { id: "stats" as TabType, label: "Stats", icon: BarChart3 },
@@ -345,10 +328,28 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="bg-[#1a3a5c] rounded-xl border border-[#2a4a6c] p-6 text-center"
                 >
-                  <Users size={40} className="mx-auto text-white/20 mb-4" />
-                  <p className="text-white/50">Lineup not available yet</p>
+                  {(match.status === "live" || match.status === "finished") && (match as any).lineup ? (
+                    <MatchLineup
+                      matchId={match._id}
+                      teamA={match.teamA}
+                      teamB={match.teamB}
+                      teamALogo={(match as any).teamALogo}
+                      teamBLogo={(match as any).teamBLogo}
+                    />
+                  ) : (
+                    <div className="bg-[#333333] rounded-xl border border-[#2a4a6c] p-6 text-center">
+                      <Users size={40} className="mx-auto text-white/20 mb-4" />
+                      <p className="text-white/50 mb-2">
+                        {match.status === "upcoming"
+                          ? "Lineup waxaa la shaacin doonaa ka hor ciyaarta"
+                          : "Lineup data lama hayo"}
+                      </p>
+                      <p className="text-white/30 text-xs">
+                        Official lineup will be announced closer to kickoff
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -381,26 +382,48 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           </section>
         )}
 
-        {/* Related Matches */}
-        {relatedMatches && relatedMatches.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold flex items-center gap-3">
-                <div className="w-1 h-6 bg-[#9AE600] rounded-full" />
-                Ciyaaro kale oo xiiso leh
-              </h2>
-              <Link href={`/ciyaar?league=${match.leagueId}`} className="text-[#f0ad4e] hover:underline text-sm font-medium">
-                Dhammaan →
-              </Link>
-            </div>
+        {/* All Matches - Ciyaaro kale oo xiiso leh */}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold flex items-center gap-3">
+              <div className="w-1 h-6 bg-[#9AE600] rounded-full" />
+              Ciyaaro kale oo xiiso leh
+            </h2>
+            <Link href="/ciyaar" className="text-[#f0ad4e] hover:underline text-sm font-medium">
+              Dhammaan →
+            </Link>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {relatedMatches.slice(0, 6).map((m: any) => (
-                <MatchCardNew key={m._id} {...m} isLocked={m.isPremium && !isPremium} />
-              ))}
+          {/* Upcoming Matches */}
+          {matchesStatus.upcoming.filter((m: any) => m._id !== match._id).length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold text-yellow-400 uppercase mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full" />
+                SOO SOCDA
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {matchesStatus.upcoming.filter((m: any) => m._id !== match._id).slice(0, 4).map((m: any) => (
+                  <MatchCardNew key={m._id} {...m} isLocked={m.isPremium && !isPremium} />
+                ))}
+              </div>
             </div>
-          </section>
-        )}
+          )}
+
+          {/* Finished Matches */}
+          {matchesStatus.finished.filter((m: any) => m._id !== match._id).length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-white/50 uppercase mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-white/50 rounded-full" />
+                DHAMMAADAY
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {matchesStatus.finished.filter((m: any) => m._id !== match._id).slice(0, 4).map((m: any) => (
+                  <MatchCardNew key={m._id} {...m} isLocked={m.isPremium && !isPremium} />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Related News */}
         <section className="mb-12">
