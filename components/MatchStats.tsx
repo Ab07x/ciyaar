@@ -47,7 +47,7 @@ function StatBar({ label, homeValue, awayValue, suffix = "" }: StatBarProps) {
 
 export function MatchStats({ matchId, teamA, teamB }: MatchStatsProps) {
     // Try to fetch stats from the match
-    const match = useQuery(api.matches.getMatch, { id: matchId });
+    const match = useQuery(api.matches.getMatchById, { id: matchId });
 
     if (match === undefined) {
         return (

@@ -56,7 +56,9 @@ export default function MatchFormPage({ params }: Props) {
                 status: match.status, isPremium: match.isPremium, requiredPlan: match.requiredPlan,
                 thumbnailUrl: match.thumbnailUrl || "", summary: match.summary || "",
                 embeds: match.embeds.length > 0 ? match.embeds.map(e => ({ ...e, type: (e as any).type || "iframe" })) : [{ label: "Server 1", url: "", type: "iframe" as const }],
-                articleTitle: match.articleTitle || "", articleContent: match.articleContent || ""
+                articleTitle: match.articleTitle || "", articleContent: match.articleContent || "",
+                scoreA: (match as any).scoreA || 0, scoreB: (match as any).scoreB || 0,
+                minute: (match as any).minute || 0, goals: (match as any).goals || []
             });
             const d = new Date(match.kickoffAt);
             setKickoffDate(d.toISOString().split("T")[0]);
