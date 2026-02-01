@@ -12,6 +12,8 @@ const nextConfig = {
       },
     ],
     unoptimized: process.env.NODE_ENV === "development",
+    minimumCacheTTL: 31536000, // 1 year - images are immutable once generated
+    formats: ["image/avif", "image/webp"],
   },
   typescript: {
     ignoreBuildErrors: true, // Temporarily ignore to pass build
@@ -41,6 +43,69 @@ const nextConfig = {
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
+          },
+        ],
+      },
+      {
+        source: "/ciyaar",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=600, stale-while-revalidate=3600",
+          },
+        ],
+      },
+      {
+        source: "/ciyaar/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=600, stale-while-revalidate=3600",
+          },
+        ],
+      },
+      {
+        source: "/match/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=1800",
+          },
+        ],
+      },
+      {
+        source: "/movies/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=900, stale-while-revalidate=3600",
+          },
+        ],
+      },
+      {
+        source: "/series/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=900, stale-while-revalidate=3600",
+          },
+        ],
+      },
+      {
+        source: "/_next/image/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, s-maxage=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, s-maxage=31536000, immutable",
           },
         ],
       },

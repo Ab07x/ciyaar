@@ -319,3 +319,22 @@ export const incrementViews = mutation({
         });
     },
 });
+
+// Update movie image URLs (for migration from TMDB to self-hosted)
+export const updateMovieImages = mutation({
+    args: {
+        id: v.id("movies"),
+        posterUrl: v.optional(v.string()),
+        backdropUrl: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const { id, ...updates } = args;
+        const filteredUpdates = Object.fromEntries(
+            Object.entries(updates).filter(([_, v]) => v !== undefined)
+        );
+        return await ctx.db.patch(id, {
+            ...filteredUpdates,
+            updatedAt: Date.now(),
+        });
+    },
+});

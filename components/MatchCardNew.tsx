@@ -263,30 +263,30 @@ export function MatchCardNew({
         {/* Main Content */}
         <div className="p-4">
           {/* Teams Row */}
-          <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-3 mb-4 overflow-hidden">
             {/* Team A */}
-            <div className="flex-1 flex items-center gap-3">
-              <TeamLogo name={teamA} logo={teamALogo} className="w-10 h-10 flex-shrink-0" />
-              <span className="text-white font-semibold text-sm truncate">{teamA}</span>
+            <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3">
+              <TeamLogo name={teamA} logo={teamALogo} className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+              <span className="text-white font-semibold text-xs sm:text-sm truncate">{teamA}</span>
             </div>
 
             {/* Score/VS */}
-            <div className="flex-shrink-0 px-3">
+            <div className="flex-shrink-0 px-2 sm:px-3">
               {status === "live" || status === "finished" ? (
-                <div className="flex items-center gap-2 text-xl font-black">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-xl font-black">
                   <span className="text-white">{scoreA ?? 0}</span>
                   <span className="text-white/30">-</span>
                   <span className="text-white">{scoreB ?? 0}</span>
                 </div>
               ) : (
-                <span className="text-white/30 font-bold">VS</span>
+                <span className="text-white/30 font-bold text-sm sm:text-base">VS</span>
               )}
             </div>
 
             {/* Team B */}
-            <div className="flex-1 flex items-center justify-end gap-3">
-              <span className="text-white font-semibold text-sm truncate text-right">{teamB}</span>
-              <TeamLogo name={teamB} logo={teamBLogo} className="w-10 h-10 flex-shrink-0" />
+            <div className="flex-1 min-w-0 flex items-center justify-end gap-2 sm:gap-3">
+              <span className="text-white font-semibold text-xs sm:text-sm truncate text-right">{teamB}</span>
+              <TeamLogo name={teamB} logo={teamBLogo} className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
             </div>
           </div>
 

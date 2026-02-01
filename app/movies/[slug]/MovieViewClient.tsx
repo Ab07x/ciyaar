@@ -6,6 +6,7 @@ import { useUser } from "@/providers/UserProvider";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { MoviePosterImage } from "@/components/MoviePosterImage";
 import {
     Play,
     Star,
@@ -71,13 +72,14 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
             <div className="relative">
                 {/* Backdrop Image */}
                 <div className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden">
-                    <div
-                        className="absolute inset-0"
-                        style={{
-                            backgroundImage: `url(${movie.backdropUrl || movie.posterUrl})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center top',
-                        }}
+                    <Image
+                        src={movie.backdropUrl || movie.posterUrl}
+                        alt={movie.title}
+                        fill
+                        priority
+                        quality={85}
+                        sizes="100vw"
+                        className="object-cover object-top"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#020D18] via-[#020D18]/60 to-transparent" />
                     <div className="absolute inset-0 bg-gradient-to-r from-[#020D18]/80 via-transparent to-[#020D18]/80" />
@@ -125,12 +127,12 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                     {/* Left - Poster */}
                     <div className="lg:w-[300px] flex-shrink-0">
                         <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border-4 border-white/10">
-                            <Image
+                            <MoviePosterImage
                                 src={movie.posterUrl}
                                 alt={movie.title}
-                                fill
-                                className="object-cover"
                                 priority
+                                quality={85}
+                                sizes="(max-width: 1024px) 50vw, 300px"
                             />
                             {movie.isPremium && (
                                 <div className="absolute top-3 right-3 bg-[#f0ad4e] text-black text-xs font-bold px-2 py-1 rounded">

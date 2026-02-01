@@ -7,6 +7,7 @@ import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { LiveBadge } from "@/components/ui/LiveBadge";
 import Link from "next/link";
 import Image from "next/image";
+import { MoviePosterImage } from "@/components/MoviePosterImage";
 import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
@@ -104,15 +105,16 @@ export default function HomePage() {
         <section className="relative w-full h-[400px] md:h-[450px] overflow-hidden">
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#020D18] via-[#1b2838] to-[#020D18]">
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{
-                backgroundImage: `url(${currentHero.backdropUrl || currentHero.posterUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(2px)'
-              }}
-            />
+            <div className="absolute inset-0 opacity-30 blur-sm">
+              <Image
+                src={currentHero.backdropUrl || currentHero.posterUrl}
+                alt=""
+                fill
+                quality={60}
+                sizes="100vw"
+                className="object-cover"
+              />
+            </div>
             <div className="absolute inset-0 bg-gradient-to-r from-[#020D18] via-transparent to-[#020D18]" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#020D18] via-transparent to-transparent" />
           </div>
@@ -154,12 +156,12 @@ export default function HomePage() {
 
             {/* Right - Movie Poster */}
             <div className="hidden md:block relative w-[200px] h-[300px] rounded-lg overflow-hidden shadow-2xl border-4 border-white/10">
-              <Image
+              <MoviePosterImage
                 src={currentHero.posterUrl}
                 alt={currentHero.title}
-                fill
-                className="object-cover"
                 priority
+                quality={85}
+                sizes="200px"
               />
               {currentHero.isPremium && (
                 <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded flex items-center gap-1">

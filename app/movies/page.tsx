@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { AdSlot } from "@/components/AdSlot";
+import { MoviePosterImage } from "@/components/MoviePosterImage";
 import { useUser } from "@/providers/UserProvider";
 import { useState, Suspense } from "react";
 import { Film, Crown, Star, Play, Lock, Filter, ChevronLeft, ChevronRight } from "lucide-react";
@@ -152,17 +153,11 @@ function MoviesContent() {
                                     className="group relative rounded-lg overflow-hidden bg-[#1a3a5c] border border-[#2a4a6c] hover:border-[#f0ad4e]/50 transition-all"
                                 >
                                     <div className="relative aspect-[2/3]">
-                                        {movie.posterUrl ? (
-                                            <img
-                                                src={movie.posterUrl}
-                                                alt={movie.title}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-[#0d1b2a] flex items-center justify-center">
-                                                <Film size={48} className="text-text-muted/30" />
-                                            </div>
-                                        )}
+                                        <MoviePosterImage
+                                            src={movie.posterUrl}
+                                            alt={movie.title}
+                                            className="group-hover:scale-105 transition-transform duration-500"
+                                        />
 
                                         {/* Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
