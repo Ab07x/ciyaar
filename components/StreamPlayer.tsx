@@ -25,6 +25,7 @@ export interface StreamSource {
 interface StreamPlayerProps {
     source: StreamSource | string;
     poster?: string;
+    loadingPoster?: string; // Background image while loading
     className?: string;
     onError?: (error: string) => void;
     onReady?: () => void;
@@ -33,6 +34,7 @@ interface StreamPlayerProps {
     showNextEpisode?: boolean;
     nextEpisodeTitle?: string;
     onNextEpisode?: () => void;
+    showRefreshMessage?: boolean; // Show bilingual refresh message
     trackParams?: {
         contentType: "movie" | "episode" | "match";
         contentId: string;
@@ -91,6 +93,7 @@ function formatTime(time: number): string {
 export function StreamPlayer({
     source,
     poster,
+    loadingPoster,
     className,
     onError,
     onReady,
@@ -99,6 +102,7 @@ export function StreamPlayer({
     showNextEpisode = false,
     nextEpisodeTitle,
     onNextEpisode,
+    showRefreshMessage = false,
     trackParams
 }: StreamPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -131,6 +135,7 @@ export function StreamPlayer({
     const [canShowNextEpisode, setCanShowNextEpisode] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [needsUserInteraction, setNeedsUserInteraction] = useState(false);
+    const [isReadyToPlay, setIsReadyToPlay] = useState(false); // Stream loaded and ready
 
     // Double-tap state
     const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(null);
@@ -443,6 +448,7 @@ export function StreamPlayer({
 
                     hls.on(Hls.Events.MANIFEST_PARSED, (_: any, data: any) => {
                         setIsLoading(false);
+                        setIsReadyToPlay(true); // Mark as ready
                         onReady?.();
 
                         const levels: QualityLevel[] = hls.levels.map((level: any, index: number) => ({
@@ -453,16 +459,9 @@ export function StreamPlayer({
                         }));
                         setQualities(levels);
 
-                        // On mobile, require user interaction to play
-                        if (isMobile) {
-                            setNeedsUserInteraction(true);
-                            setShowControls(true);
-                        } else {
-                            video.play().catch(() => {
-                                setNeedsUserInteraction(true);
-                                setShowControls(true);
-                            });
-                        }
+                        // Always require user interaction to play (show play button)
+                        setNeedsUserInteraction(true);
+                        setShowControls(true);
                     });
 
                     hls.on(Hls.Events.ERROR, (_: any, data: any) => {
@@ -498,17 +497,11 @@ export function StreamPlayer({
                     video.src = resolvedUrl;
                     video.addEventListener("loadedmetadata", () => {
                         setIsLoading(false);
+                        setIsReadyToPlay(true); // Mark as ready
                         onReady?.();
-                        // On mobile, require user interaction to play
-                        if (isMobile) {
-                            setNeedsUserInteraction(true);
-                            setShowControls(true);
-                        } else {
-                            video.play().catch(() => {
-                                setNeedsUserInteraction(true);
-                                setShowControls(true);
-                            });
-                        }
+                        // Always require user interaction to play (show play button)
+                        setNeedsUserInteraction(true);
+                        setShowControls(true);
                     });
                 } else {
                     setError("HLS not supported in this browser");
@@ -802,11 +795,14 @@ export function StreamPlayer({
             onClick={handleVideoAreaClick}
             onTouchStart={handleVideoAreaClick}
         >
-            {/* Video Element */}
+            {/* Video Element - No native controls, custom controls only */}
             <video
                 ref={videoRef}
                 poster={poster}
                 playsInline
+                controls={false}
+                controlsList="nodownload nofullscreen noremoteplayback"
+                disablePictureInPicture={false}
                 webkit-playsinline="true"
                 x5-playsinline="true"
                 x-webkit-airplay="allow"
@@ -814,8 +810,12 @@ export function StreamPlayer({
                 className="absolute inset-0 w-full h-full object-contain"
                 style={{
                     WebkitTapHighlightColor: 'transparent',
-                    touchAction: 'manipulation'
+                    touchAction: 'manipulation',
+                    // Force hide native controls
+                    // @ts-ignore
+                    '--webkit-media-controls': 'none',
                 }}
+                onContextMenu={(e) => e.preventDefault()}
             />
 
             {/* Buffer Indicator */}
@@ -851,10 +851,92 @@ export function StreamPlayer({
                 )}
             </AnimatePresence>
 
-            {/* Loading State */}
-            {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-                    <Loader2 className="w-12 h-12 text-accent-green animate-spin" />
+            {/* Bilingual Refresh Message */}
+            {showRefreshMessage && !error && (
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-700 via-green-600 to-green-700 z-30 overflow-hidden">
+                    <div className="animate-marquee whitespace-nowrap py-2 flex items-center gap-8">
+                        <span className="inline-flex items-center gap-2 text-white text-sm font-medium">
+                            <span className="text-lg">ℹ️</span>
+                            <span className="italic">Hadii Muqaalka Kaa Cuslaado Ama Cilad Ku Timaado, Fadlan Refresh</span>
+                            <span className="text-lg">🔄</span>
+                        </span>
+                        <span className="inline-flex items-center gap-2 text-white/90 text-sm font-medium">
+                            <span className="text-lg">ℹ️</span>
+                            <span>If the video freezes or has issues, please refresh the page</span>
+                            <span className="text-lg">🔄</span>
+                        </span>
+                        <span className="inline-flex items-center gap-2 text-white text-sm font-medium">
+                            <span className="text-lg">ℹ️</span>
+                            <span className="italic">Hadii Muqaalka Kaa Cuslaado Ama Cilad Ku Timaado, Fadlan Refresh</span>
+                            <span className="text-lg">🔄</span>
+                        </span>
+                        <span className="inline-flex items-center gap-2 text-white/90 text-sm font-medium">
+                            <span className="text-lg">ℹ️</span>
+                            <span>If the video freezes or has issues, please refresh the page</span>
+                            <span className="text-lg">🔄</span>
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            {/* Ready to Play Overlay with Background - Always shows when not playing */}
+            {!isPlaying && !error && (
+                <div className="absolute inset-0" style={{ zIndex: 50 }}>
+                    {/* Background Image */}
+                    <div
+                        className="absolute inset-0 bg-cover bg-center"
+                        style={{
+                            backgroundImage: loadingPoster
+                                ? `url(${loadingPoster})`
+                                : poster
+                                    ? `url(${poster})`
+                                    : 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%)'
+                        }}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+                    </div>
+
+                    {/* Center Content */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        {isLoading ? (
+                            /* Loading State - Spinning ring with play button */
+                            <>
+                                <div className="relative mb-6">
+                                    {/* Outer spinning ring */}
+                                    <div className="w-28 h-28 rounded-full border-4 border-white/20 border-t-green-500 animate-spin" />
+                                    {/* Inner play button - clickable */}
+                                    <button
+                                        onClick={togglePlay}
+                                        className="absolute inset-0 m-auto w-20 h-20 bg-green-500/90 hover:bg-green-500 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl"
+                                    >
+                                        <Play size={36} className="text-white ml-1" fill="white" />
+                                    </button>
+                                </div>
+
+                                {/* Loading Text - Bilingual */}
+                                <div className="text-center px-4">
+                                    <p className="text-white text-xl font-bold mb-2">Soo Dejinayaa Muuqaalka...</p>
+                                    <p className="text-white/70 text-sm">Loading Stream • Please Wait</p>
+                                </div>
+                            </>
+                        ) : (
+                            /* Ready to Play State - Big play button */
+                            <>
+                                <button
+                                    onClick={togglePlay}
+                                    className="w-24 h-24 md:w-28 md:h-28 bg-green-500 hover:bg-green-400 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl shadow-green-500/30"
+                                >
+                                    <Play size={48} className="text-white ml-2" fill="white" />
+                                </button>
+
+                                {/* Tap to Play Text */}
+                                <div className="mt-6 bg-black/70 backdrop-blur-sm px-6 py-3 rounded-xl text-center">
+                                    <p className="text-white font-bold text-lg">▶️ Riix si aad u Daawato</p>
+                                    <p className="text-white/70 text-sm mt-1">Tap to Play</p>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -1009,20 +1091,23 @@ export function StreamPlayer({
                             )}
                         </div>
 
-                        {/* Center play button */}
+                        {/* Center play button - Enhanced for ready state */}
                         {(!isPlaying || needsUserInteraction) && !isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-auto z-20">
-                                <button
-                                    onClick={togglePlay}
-                                    className="w-20 h-20 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
-                                >
-                                    <Play size={36} className="text-white ml-1" />
-                                </button>
-                                {needsUserInteraction && (
-                                    <div className="absolute top-full mt-4 bg-black/80 px-4 py-2 rounded-lg text-sm text-white">
-                                        Tap to play
-                                    </div>
-                                )}
+                                <div className="flex flex-col items-center">
+                                    <button
+                                        onClick={togglePlay}
+                                        className="w-24 h-24 bg-white/30 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation shadow-2xl border-4 border-white/50 group"
+                                    >
+                                        <Play size={44} className="text-white ml-2 group-hover:scale-110 transition-transform" fill="white" />
+                                    </button>
+                                    {needsUserInteraction && (
+                                        <div className="mt-6 bg-black/80 backdrop-blur px-6 py-3 rounded-xl text-center">
+                                            <p className="text-white font-bold text-lg">▶️ Riix si aad u Daawato</p>
+                                            <p className="text-white/80 text-sm mt-1">Tap to Play</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 

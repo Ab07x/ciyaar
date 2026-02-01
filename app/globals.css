@@ -196,6 +196,7 @@
   .player-stage {
     @apply relative w-full;
     aspect-ratio: 16 / 9;
+    min-height: 200px;
   }
 
   @media (min-width: 1024px) {
@@ -208,6 +209,85 @@
 
   .embed-iframe {
     @apply absolute inset-0 w-full h-full rounded-2xl;
+  }
+
+  /* Stream Player - Fixed sizing */
+  .stream-player {
+    aspect-ratio: 16 / 9;
+    min-height: 200px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Hide native video controls - Force custom controls only */
+  .stream-player video::-webkit-media-controls {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .stream-player video::-webkit-media-controls-enclosure {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .stream-player video::-webkit-media-controls-panel {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .stream-player video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .stream-player video::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .stream-player video::-webkit-media-controls-current-time-display,
+  .stream-player video::-webkit-media-controls-time-remaining-display {
+    display: none !important;
+  }
+
+  .stream-player video::-webkit-media-controls-timeline {
+    display: none !important;
+  }
+
+  .stream-player video::-webkit-media-controls-volume-slider {
+    display: none !important;
+  }
+
+  .stream-player video::-webkit-media-controls-mute-button {
+    display: none !important;
+  }
+
+  .stream-player video::-webkit-media-controls-fullscreen-button {
+    display: none !important;
+  }
+
+  .stream-player video::-moz-media-controls {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .stream-player video::-ms-media-controls {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  /* Disable all interactions on video that might trigger native controls */
+  .stream-player video {
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: none;
+  }
+
+  /* Re-enable pointer events on the container for custom controls */
+  .stream-player {
+    pointer-events: auto;
   }
 
   /* =====================================================
@@ -617,5 +697,26 @@
 
   .stagger-children>*:nth-child(6) {
     animation-delay: 0.25s;
+  }
+
+  /* =====================================================
+     MARQUEE ANIMATION - For scrolling text messages
+     ===================================================== */
+  @keyframes marquee {
+    0% {
+      transform: translateX(0%);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+
+  .animate-marquee:hover {
+    animation-play-state: paused;
   }
 }

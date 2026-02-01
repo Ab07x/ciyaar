@@ -6,7 +6,7 @@ import { CountdownTimer } from "./CountdownTimer";
 import { StreamPlayer } from "./StreamPlayer";
 import { useUser } from "@/providers/UserProvider";
 import { cn } from "@/lib/utils";
-import { MessageSquare, Crown } from "lucide-react";
+import { MessageSquare, Crown, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -21,10 +21,14 @@ interface PlayerStageProps {
         isPremium: boolean;
         requiredPlan?: "match" | "weekly" | "monthly" | "yearly" | null;
         summary?: string | null;
+        thumbnailUrl?: string | null;
     };
     settings: { whatsappNumber: string; };
     className?: string;
 }
+
+// Background image for loading state
+const LOADING_POSTER = "/img/Gemini_Generated_Image_w45vpxw45vpxw45v.png";
 
 export function PlayerStage({ match, settings, className }: PlayerStageProps) {
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
@@ -34,8 +38,13 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
     const [loading, setLoading] = useState(false);
     const [localUnlocked, setLocalUnlocked] = useState(false);
     const [isTimerFinished, setIsTimerFinished] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const isUnlocked = !match.isPremium || isPremium || localUnlocked;
+
+    const handleRefresh = () => {
+        setRefreshKey(prev => prev + 1);
+    };
 
     const handleRedeem = async () => {
         if (!code.trim()) return;
@@ -99,26 +108,66 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
             <div className="player-stage bg-black rounded-2xl overflow-hidden border border-border-subtle shadow-2xl">
                 {activeEmbed?.url ? (
                     <StreamPlayer
+                        key={`${activeEmbed.url}-${refreshKey}`}
                         source={{
                             url: activeEmbed.url,
                             label: activeEmbed.label,
                             type: activeEmbed.type || "auto",
                             isProtected: activeEmbed.isProtected
                         }}
+                        loadingPoster={match.thumbnailUrl || LOADING_POSTER}
+                        showRefreshMessage={true}
                         className="absolute inset-0"
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full text-text-muted">Lama hayo linkiyadii ciyaarta.</div>
                 )}
             </div>
-            {match.embeds.length > 1 && (
-                <div className="flex flex-wrap gap-2 items-center">
-                    <span className="text-xs text-text-muted uppercase font-bold tracking-wider mr-2">Haddii uusan shaqaynin → Bedel Link:</span>
-                    {match.embeds.map((embed, index) => (
-                        <button key={index} onClick={() => setActiveEmbedIndex(index)} className={cn("px-4 py-2 text-sm font-semibold rounded-md border transition-all", activeEmbedIndex === index ? "bg-accent-green text-black border-accent-green" : "bg-stadium-elevated text-text-secondary border-border-subtle hover:border-text-muted")}>{embed.label || `Link ${index + 1}`}</button>
-                    ))}
+
+            {/* Refresh Button & Server Switcher */}
+            <div className="flex flex-wrap gap-3 items-center justify-between">
+                {/* Refresh Button - Easy access - Reloads the page */}
+                <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-xl hover:from-green-500 hover:to-green-600 transition-all active:scale-95 shadow-lg"
+                >
+                    <RefreshCw size={18} />
+                    <span className="hidden sm:inline">Refresh / Cusboonaysii</span>
+                    <span className="sm:hidden">Refresh</span>
+                </button>
+
+                {/* Server Switcher */}
+                {match.embeds.length > 1 && (
+                    <div className="flex flex-wrap gap-2 items-center">
+                        <span className="text-xs text-text-muted uppercase font-bold tracking-wider">Bedel Link:</span>
+                        {match.embeds.map((embed, index) => (
+                            <button
+                                key={index}
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className={cn(
+                                    "px-4 py-2 text-sm font-semibold rounded-md border transition-all",
+                                    activeEmbedIndex === index
+                                        ? "bg-accent-green text-black border-accent-green"
+                                        : "bg-stadium-elevated text-text-secondary border-border-subtle hover:border-text-muted"
+                                )}
+                            >
+                                {embed.label || `Link ${index + 1}`}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Help Message */}
+            <div className="bg-gradient-to-r from-[#1a3a5c] to-[#0d1b2a] border border-[#2a4a6c] rounded-xl p-4 flex items-start gap-3">
+                <span className="text-2xl">💡</span>
+                <div className="text-sm">
+                    <p className="text-white/90 font-medium">Hadii Muqaalka Kaa Cuslaado Ama Cilad Ku Timaado, Fadlan Riix "Refresh" Batoonka 🔄</p>
+                    <p className="text-white/60 mt-1">If the video freezes or has issues, please click the "Refresh" button above</p>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
