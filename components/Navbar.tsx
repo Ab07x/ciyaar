@@ -38,10 +38,10 @@ export function Navbar() {
 
     const navItems = [
         { href: "/ciyaar", label: t("nav.matches"), icon: Trophy, color: "text-[#9AE600]" },
-        { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-[#f0ad4e]" },
+        { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-[#E50914]" },
         { href: "/series", label: t("nav.series"), icon: Tv, color: "text-[#DC2626]" },
         { href: "/requests", label: "Codso", icon: MessageSquare, color: "text-[#3B82F6]" },
-        { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[#f0ad4e]" },
+        { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[#E50914]" },
     ];
 
     return (
@@ -127,7 +127,7 @@ export function Navbar() {
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                             <Link
                                 href="/pricing"
-                                className="ml-2 bg-gradient-to-r from-accent-gold to-yellow-500 text-black px-4 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-lg shadow-accent-gold/20"
+                                className="ml-2 bg-gradient-to-r from-[#E50914] to-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20"
                             >
                                 <Crown size={16} />
                                 <span className="hidden lg:inline">PREMIUM</span>
@@ -257,7 +257,7 @@ export function Navbar() {
                                                 </span>
                                                 {item.label}
                                                 {isActive && (
-                                                    <Zap size={16} className="ml-auto text-[#f0ad4e]" />
+                                                    <Zap size={16} className="ml-auto text-[#E50914]" />
                                                 )}
                                             </Link>
                                         </motion.div>
@@ -275,7 +275,7 @@ export function Navbar() {
                                     >
                                         <Link
                                             href="/pricing"
-                                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold bg-gradient-to-r from-accent-gold to-yellow-500 text-black flex items-center gap-4 hover:brightness-110 transition-all shadow-lg"
+                                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold bg-gradient-to-r from-[#E50914] to-red-600 text-white flex items-center gap-4 hover:brightness-110 transition-all shadow-lg"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
                                             <Crown size={24} />

@@ -55,7 +55,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
     if (!movie) {
         return (
             <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f0ad4e]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914]"></div>
             </div>
         );
     }
@@ -98,11 +98,11 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                     <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                         <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">
                             {movie.titleSomali || movie.title}
-                            <span className="text-[#f0ad4e] ml-2">({movie.releaseDate?.split("-")[0]})</span>
+                            <span className="text-[#E50914] ml-2">({movie.releaseDate?.split("-")[0]})</span>
                         </h1>
                         {movie.rating && (
                             <div className="flex items-center gap-2">
-                                <Star size={18} className="text-[#f0ad4e]" fill="currentColor" />
+                                <Star size={18} className="text-[#E50914]" fill="currentColor" />
                                 <span className="text-white font-bold">{movie.rating.toFixed(1)}</span>
                                 <span className="text-gray-400">/ 10</span>
                                 {movie.runtime && (
@@ -135,7 +135,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                 sizes="(max-width: 1024px) 50vw, 300px"
                             />
                             {movie.isPremium && (
-                                <div className="absolute top-3 right-3 bg-[#f0ad4e] text-black text-xs font-bold px-2 py-1 rounded">
+                                <div className="absolute top-3 right-3 bg-[#E50914] text-white text-xs font-bold px-2 py-1 rounded">
                                     VIP
                                 </div>
                             )}
@@ -146,7 +146,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                     <div className="flex-1">
                         {/* Genres & Year & Runtime */}
                         <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
-                            <span className="text-[#f0ad4e] font-bold">{movie.releaseDate?.split("-")[0]}</span>
+                            <span className="text-[#E50914] font-bold">{movie.releaseDate?.split("-")[0]}</span>
                             {movie.genres?.map((g: string) => (
                                 <span key={g} className="px-2 py-1 bg-[#333333] text-white rounded">{g}</span>
                             ))}
@@ -166,7 +166,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                         {/* Tags */}
                         {((movie.tags && movie.tags.length > 0) || (movie.seoKeywords && movie.seoKeywords.length > 0)) && (
                             <div className="flex flex-wrap gap-1.5 mb-6">
-                                {movie.tags?.slice(0, 15).map((tag: string, i: number) => (
+                                {movie.tags?.map((tag: string, i: number) => (
                                     <span key={`tag-${i}`} className="px-2 py-1 bg-blue-500/15 text-blue-400 text-xs rounded-full">
                                         #{tag}
                                     </span>
@@ -294,7 +294,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                         {/* Rating Badge */}
                                         {item.rating && (
                                             <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                <Star size={10} className="text-[#f0ad4e]" fill="currentColor" />
+                                                <Star size={10} className="text-[#E50914]" fill="currentColor" />
                                                 {item.rating.toFixed(1)}
                                             </div>
                                         )}

@@ -943,6 +943,7 @@ export default defineSchema({
             p256dh: v.string(),
             auth: v.string(),
         }),
+        fcmToken: v.optional(v.string()), // Firebase Cloud Messaging token
         userAgent: v.optional(v.string()),
         isActive: v.boolean(),
         createdAt: v.number(),
@@ -951,6 +952,7 @@ export default defineSchema({
         .index("by_user", ["userId"])
         .index("by_device", ["deviceId"])
         .index("by_endpoint", ["endpoint"]),
+
 
     // ============================================
     // MATCH REMINDERS

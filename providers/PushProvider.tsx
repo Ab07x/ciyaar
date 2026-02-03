@@ -1,154 +1,195 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { useMutation } from "convex/react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "./UserProvider";
-import { getDeviceId } from "@/lib/device";
 
 interface PushContextType {
     isSupported: boolean;
     isSubscribed: boolean;
-    pushSubscription: PushSubscription | null;
-    permission: NotificationPermission;
+    fcmToken: string | null;
+    isLoading: boolean;
     subscribe: () => Promise<boolean>;
     unsubscribe: () => Promise<void>;
 }
 
-const PushContext = createContext<PushContextType | null>(null);
+const PushContext = createContext<PushContextType>({
+    isSupported: false,
+    isSubscribed: false,
+    fcmToken: null,
+    isLoading: true,
+    subscribe: async () => false,
+    unsubscribe: async () => { },
+});
+
+export const usePush = () => useContext(PushContext);
 
 export function PushProvider({ children }: { children: React.ReactNode }) {
-    const { userId } = useUser();
     const [isSupported, setIsSupported] = useState(false);
     const [isSubscribed, setIsSubscribed] = useState(false);
-    const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
-    const [permission, setPermission] = useState<NotificationPermission>("default");
-    const [deviceId, setDeviceId] = useState("");
+    const [fcmToken, setFcmToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const { userId } = useUser();
 
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            // Use the same device ID as the rest of the app
-            setDeviceId(getDeviceId());
-        }
-    }, []);
-
-    const saveSubscription = useMutation(api.push.saveSubscription);
-    const unsubscribeMutation = useMutation(api.push.unsubscribe);
+    const saveFcmToken = useMutation(api.push.saveFcmToken);
+    const removeFcmToken = useMutation(api.push.removeFcmToken);
 
     // Check if push is supported
     useEffect(() => {
-        if (typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window) {
-            setIsSupported(true);
-            setPermission(Notification.permission);
-        }
+        const checkSupport = async () => {
+            if (typeof window === "undefined") return;
+
+            const supported =
+                "Notification" in window &&
+                "serviceWorker" in navigator &&
+                "PushManager" in window;
+
+            setIsSupported(supported);
+
+            if (supported) {
+                // Check existing permission
+                if (Notification.permission === "granted") {
+                    // Try to get existing token
+                    await initializeFirebase();
+                }
+            }
+            setIsLoading(false);
+        };
+
+        // Delay initialization to avoid blocking hydration
+        const timer = setTimeout(() => {
+            checkSupport();
+        }, 2000);
+
+        return () => clearTimeout(timer);
     }, []);
 
-    // Register service worker
-    useEffect(() => {
-        if (!isSupported) return;
+    // Initialize Firebase and get token
+    const initializeFirebase = async (): Promise<string | null> => {
+        try {
+            // Register service worker first
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            console.log("Firebase SW registered:", registration);
 
-        navigator.serviceWorker
-            .register("/sw.js")
-            .then((registration) => {
-                console.log("Service Worker registered:", registration);
-            })
-            .catch((error) => {
-                console.error("Service Worker registration failed:", error);
+            // Dynamic import to avoid SSR issues
+            const { initializeApp, getApps } = await import("firebase/app");
+            const { getMessaging, getToken } = await import("firebase/messaging");
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyBkVkGdm-nP9LfNMzlFyDd9CxHWsdogfP0",
+                authDomain: "fanproj-push.firebaseapp.com",
+                projectId: "fanproj-push",
+                storageBucket: "fanproj-push.firebasestorage.app",
+                messagingSenderId: "1061582318142",
+                appId: "1:1061582318142:web:aaf8d78697ec9b465fbf6f",
+                measurementId: "G-1FM2LLEFNX"
+            };
+
+            const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+            const messaging = getMessaging(app);
+
+            // Get FCM token
+            const token = await getToken(messaging, {
+                vapidKey: "BJD2T_koPJSUI8rUgD12066OE1KRmVjcBUcIKeHR3N2deAiVCeHe-_0q5qwY3V6BQOFCxJk-6phhjEA1Lex8ss4",
+                serviceWorkerRegistration: registration,
             });
-    }, [isSupported]);
 
-    // Check existing subscription
-    useEffect(() => {
-        if (!isSupported) return;
+            if (token) {
+                console.log("FCM Token obtained:", token.substring(0, 20) + "...");
+                setFcmToken(token);
+                setIsSubscribed(true);
 
-        navigator.serviceWorker.ready.then((registration) => {
-            registration.pushManager.getSubscription().then((subscription) => {
-                setIsSubscribed(!!subscription);
-                setPushSubscription(subscription);
-            });
-        });
-    }, [isSupported]);
+                // Listen for foreground messages
+                const { onMessage } = await import("firebase/messaging");
+                onMessage(messaging, (payload) => {
+                    console.log("Foreground message:", payload);
+                    // Show notification manually for foreground
+                    if (payload.notification) {
+                        new Notification(payload.notification.title || "Fanbroj", {
+                            body: payload.notification.body,
+                            icon: "/icon-192.png",
+                        });
+                    }
+                });
 
+                return token;
+            }
+
+            return null;
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            return null;
+        }
+    };
+
+    // Subscribe to push notifications
     const subscribe = useCallback(async (): Promise<boolean> => {
         if (!isSupported) {
-            console.error("Push notifications not supported");
+            console.log("Push not supported");
             return false;
         }
 
         try {
-            // Request permission
-            const permissionResult = await Notification.requestPermission();
-            setPermission(permissionResult);
+            setIsLoading(true);
 
-            if (permissionResult !== "granted") {
+            // Request permission
+            const permission = await Notification.requestPermission();
+            if (permission !== "granted") {
+                console.log("Notification permission denied");
+                setIsLoading(false);
                 return false;
             }
 
-            // Get service worker registration
-            const registration = await navigator.serviceWorker.ready;
+            // Get FCM token
+            const token = await initializeFirebase();
+            if (!token) {
+                console.error("Failed to get FCM token");
+                setIsLoading(false);
+                return false;
+            }
 
-            // Subscribe to push
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(
-                    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-                ) as any,
-            });
-            setPushSubscription(subscription);
-
-            // Save subscription to backend
-            const subscriptionJSON = subscription.toJSON();
-            console.log("Saving subscription to Convex:", {
-                endpoint: subscription.endpoint,
-                userId: userId ?? "anonymous"
-            });
-
-            await saveSubscription({
-                userId: userId ?? undefined,
+            // Save token to Convex
+            const deviceId = getDeviceId();
+            await saveFcmToken({
+                token,
                 deviceId,
-                endpoint: subscription.endpoint,
-                keys: {
-                    p256dh: subscriptionJSON.keys!.p256dh!,
-                    auth: subscriptionJSON.keys!.auth!,
-                },
+                userId: userId?.toString() || undefined,
                 userAgent: navigator.userAgent,
             });
 
-            setIsSubscribed(true);
-            console.log("Subscription saved successfully");
+            console.log("Push subscription saved successfully");
+            setIsLoading(false);
             return true;
         } catch (error) {
-            console.error("Failed to subscribe to push:", error);
-            // alert("Push subscription failed: " + (error instanceof Error ? error.message : String(error)));
+            console.error("Subscribe error:", error);
+            setIsLoading(false);
             return false;
         }
-    }, [isSupported, userId, deviceId, saveSubscription]);
+    }, [isSupported, saveFcmToken, userId]);
 
+    // Unsubscribe from push notifications
     const unsubscribe = useCallback(async () => {
-        if (!isSupported) return;
+        if (!fcmToken) return;
 
         try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-
-            if (subscription) {
-                await subscription.unsubscribe();
-                await unsubscribeMutation({ endpoint: subscription.endpoint });
-                setIsSubscribed(false);
-                setPushSubscription(null);
-            }
+            const deviceId = getDeviceId();
+            await removeFcmToken({ deviceId });
+            setIsSubscribed(false);
+            setFcmToken(null);
+            console.log("Unsubscribed from push notifications");
         } catch (error) {
-            console.error("Failed to unsubscribe:", error);
+            console.error("Unsubscribe error:", error);
         }
-    }, [isSupported, unsubscribeMutation]);
+    }, [fcmToken, removeFcmToken]);
 
     return (
         <PushContext.Provider
             value={{
                 isSupported,
                 isSubscribed,
-                pushSubscription,
-                permission,
+                fcmToken,
+                isLoading,
                 subscribe,
                 unsubscribe,
             }}
@@ -158,22 +199,14 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
-export function usePush() {
-    const context = useContext(PushContext);
-    if (!context) {
-        throw new Error("usePush must be used within PushProvider");
-    }
-    return context;
-}
+// Generate a unique device ID
+function getDeviceId(): string {
+    if (typeof window === "undefined") return "";
 
-// Helper function to convert VAPID key
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
+    let deviceId = localStorage.getItem("fanbroj_device_id");
+    if (!deviceId) {
+        deviceId = "device_" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+        localStorage.setItem("fanbroj_device_id", deviceId);
     }
-    return outputArray;
+    return deviceId;
 }

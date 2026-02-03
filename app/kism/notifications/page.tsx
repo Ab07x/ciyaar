@@ -7,11 +7,11 @@ import { Bell, Send, Users, Loader2, CheckCircle, Image as ImageIcon, X, Upload,
 import { usePush } from "@/providers/PushProvider";
 
 function TestPushCard() {
-    const { isSubscribed, pushSubscription, subscribe } = usePush();
+    const { isSubscribed, fcmToken, subscribe } = usePush();
     const [testing, setTesting] = useState(false);
 
     const handleTestPush = async () => {
-        if (!pushSubscription) {
+        if (!fcmToken) {
             const ok = confirm("You are not subscribed on this device. Subscribe now?");
             if (ok) await subscribe();
             return;
@@ -23,14 +23,14 @@ function TestPushCard() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    title: "Test Notification",
-                    body: "This is a test notification sent directly to your device.",
-                    directSubscription: pushSubscription.toJSON(),
+                    title: "Test Notification 🔔",
+                    body: "This is a test notification sent directly to your device via Firebase.",
+                    fcmToken: fcmToken,
                 }),
             });
             const data = await res.json();
             if (res.ok) {
-                alert("Test notification sent! Check your system notifcations.");
+                alert("Test notification sent! Check your system notifications.");
             } else {
                 throw new Error(data.error || "Unknown error");
             }
@@ -65,6 +65,7 @@ function TestPushCard() {
         </div>
     );
 }
+
 
 interface NotificationForm {
     title: string;

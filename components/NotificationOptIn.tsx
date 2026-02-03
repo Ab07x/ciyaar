@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Check, X, AlertCircle } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { usePush } from "@/providers/PushProvider";
 
 export function NotificationOptIn() {
-    const { isSupported, isSubscribed, permission, subscribe } = usePush();
+    const { isSupported, isSubscribed, subscribe } = usePush();
     const [isLoading, setIsLoading] = useState(false);
     const [showBanner, setShowBanner] = useState(false);
     const [error, setError] = useState("");
@@ -13,15 +13,15 @@ export function NotificationOptIn() {
 
     useEffect(() => {
         setMounted(true);
-        // Check if user dismissed before
-        const dismissed = localStorage.getItem("push_banner_dismissed");
+        // Only check if already subscribed - show every time otherwise
         const subscribed = localStorage.getItem("push_subscribed");
-        if (!dismissed && !subscribed) {
-            setShowBanner(true);
+
+        if (!subscribed) {
+            // Show after 2 seconds on every page load until subscribed
+            setTimeout(() => setShowBanner(true), 2000);
         }
     }, []);
 
-    // Hide banner if subscribed
     useEffect(() => {
         if (isSubscribed) {
             localStorage.setItem("push_subscribed", "true");
@@ -29,7 +29,18 @@ export function NotificationOptIn() {
         }
     }, [isSubscribed]);
 
-    if (!mounted || !isSupported || isSubscribed || permission === "denied" || !showBanner) {
+    // When user closes without subscribing, show again after 10 seconds
+    const handleDismiss = () => {
+        setShowBanner(false);
+        // Show again after 10 seconds if not subscribed
+        setTimeout(() => {
+            if (!localStorage.getItem("push_subscribed")) {
+                setShowBanner(true);
+            }
+        }, 10000);
+    };
+
+    if (!mounted || !isSupported || isSubscribed || !showBanner) {
         return null;
     }
 
@@ -42,8 +53,7 @@ export function NotificationOptIn() {
                 localStorage.setItem("push_subscribed", "true");
                 setShowBanner(false);
             } else {
-                // User denied or something went wrong
-                if (Notification.permission === "denied") {
+                if (typeof Notification !== "undefined" && Notification.permission === "denied") {
                     setError("Fadlan u oggolow ogeysiisyada browser-kaaga settings");
                 } else {
                     setError("Wax qalad ah ayaa dhacay. Isku day markale.");
@@ -56,55 +66,107 @@ export function NotificationOptIn() {
         setIsLoading(false);
     };
 
-    const handleDismiss = () => {
-        localStorage.setItem("push_banner_dismissed", "true");
-        setShowBanner(false);
-    };
-
     return (
-        <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-40 animate-in slide-in-from-bottom duration-300">
-            <div className="bg-gradient-to-r from-accent-green/20 to-accent-gold/20 backdrop-blur-lg border border-accent-green/30 rounded-2xl p-4 shadow-2xl">
-                <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-accent-green rounded-full flex items-center justify-center flex-shrink-0">
-                        <Bell size={20} className="text-black" />
+        <>
+            {/* Backdrop */}
+            <div
+                className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 animate-in fade-in duration-300"
+                onClick={handleDismiss}
+            />
+
+            {/* Bottom Sheet Style Modal */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom duration-500 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-md md:w-[90%]">
+                <div className="bg-gradient-to-br from-[#1a1f2e] to-[#0d1117] md:rounded-2xl rounded-t-3xl overflow-hidden shadow-2xl border-t border-white/10 md:border">
+
+                    {/* Close Button */}
+                    <button
+                        onClick={handleDismiss}
+                        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+                    >
+                        <X size={18} className="text-white/70" />
+                    </button>
+
+                    {/* Animated Bell Icon */}
+                    <div className="pt-8 pb-4 flex justify-center">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-[#9AE600]/30 rounded-full blur-xl animate-pulse" />
+                            <div className="relative w-20 h-20 bg-gradient-to-br from-[#9AE600] to-[#7BC600] rounded-full flex items-center justify-center shadow-lg shadow-[#9AE600]/30">
+                                <Bell size={36} className="text-black animate-[wiggle_1s_ease-in-out_infinite]" />
+                            </div>
+                            {/* Notification Badge */}
+                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg animate-bounce">
+                                1
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <h3 className="font-bold text-white mb-1">Oggolow Ogeysiisyada</h3>
-                        <p className="text-sm text-white/80 mb-3">
-                            Hel ogeysiis markii ciyaaraha bilowdo iyo filimada cusub
+
+                    {/* Content */}
+                    <div className="px-6 pb-6 text-center">
+                        <h3 className="text-2xl font-black text-white mb-2">
+                            Hel <span className="text-[#9AE600]">Ogeysiisyo</span> Dhakhso ah! 🔔
+                        </h3>
+                        <p className="text-white/60 text-sm mb-6">
+                            Si aad u hesho warka ugu cusub ee ciyaaraha iyo filimada
                         </p>
+
+                        {/* Features - Horizontal Pills */}
+                        <div className="flex flex-wrap justify-center gap-2 mb-6">
+                            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-white/80">
+                                ⚽ Ciyaaraha Live
+                            </span>
+                            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-white/80">
+                                🎬 Filimada Cusub
+                            </span>
+                            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-white/80">
+                                🎁 Offers Gaar ah
+                            </span>
+                        </div>
+
+                        {/* Error */}
                         {error && (
-                            <div className="flex items-center gap-2 text-red-400 text-sm mb-3 bg-red-500/10 p-2 rounded-lg">
-                                <AlertCircle size={14} />
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
                                 {error}
                             </div>
                         )}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handleSubscribe}
-                                disabled={isLoading}
-                                className="flex-1 bg-accent-green text-black font-bold py-2 px-4 rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                {isLoading ? (
-                                    <span className="animate-pulse">Loading...</span>
-                                ) : (
-                                    <>
-                                        <Check size={16} />
-                                        Oggolow
-                                    </>
-                                )}
-                            </button>
-                            <button
-                                onClick={handleDismiss}
-                                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                                title="Xir"
-                            >
-                                <X size={16} />
-                            </button>
-                        </div>
+
+                        {/* CTA Button */}
+                        <button
+                            onClick={handleSubscribe}
+                            disabled={isLoading}
+                            className="w-full bg-gradient-to-r from-[#9AE600] to-[#7BC600] text-black font-bold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-[#9AE600]/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 text-lg"
+                        >
+                            {isLoading ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    <span>Loading...</span>
+                                </div>
+                            ) : (
+                                <>
+                                    <Bell size={20} />
+                                    Oggolow Ogeysiisyada
+                                </>
+                            )}
+                        </button>
+
+                        {/* Dismiss Link */}
+                        <button
+                            onClick={handleDismiss}
+                            className="mt-4 text-white/40 hover:text-white/60 text-sm transition-colors"
+                        >
+                            Hadda maya, kadib ayaan ogolaanahay
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Keyframe for bell wiggle animation */}
+            <style jsx>{`
+                @keyframes wiggle {
+                    0%, 100% { transform: rotate(0deg); }
+                    25% { transform: rotate(-10deg); }
+                    75% { transform: rotate(10deg); }
+                }
+            `}</style>
+        </>
     );
 }

@@ -126,18 +126,18 @@ export default function RootLayout({
                       <div className="container mx-auto px-4 text-center">
                         {/* Logo */}
                         <p className="text-3xl font-black tracking-tighter mb-6">
-                          FAN<span className="text-[#f0ad4e]">BROJ</span>
+                          FAN<span className="text-[#E50914]">BROJ</span>
                         </p>
 
                         {/* Navigation Links */}
                         <nav className="flex flex-wrap justify-center items-center gap-4 md:gap-8 mb-8 py-4 border-y border-[#333333]/50">
-                          <Link href="/" className="text-sm font-bold text-white hover:text-[#f0ad4e] transition-colors uppercase">Home</Link>
-                          <Link href="/about" className="text-sm font-bold text-white hover:text-[#f0ad4e] transition-colors uppercase">About</Link>
+                          <Link href="/" className="text-sm font-bold text-white hover:text-[#E50914] transition-colors uppercase">Home</Link>
+                          <Link href="/about" className="text-sm font-bold text-white hover:text-[#E50914] transition-colors uppercase">About</Link>
                           <Link href="/ciyaar" className="text-sm font-bold text-white hover:text-[#9AE600] transition-colors uppercase">Ciyaaraha</Link>
-                          <Link href="/movies" className="text-sm font-bold text-white hover:text-[#f0ad4e] transition-colors uppercase">Hindi AF Somali</Link>
+                          <Link href="/movies" className="text-sm font-bold text-white hover:text-[#E50914] transition-colors uppercase">Hindi AF Somali</Link>
                           <Link href="/series" className="text-sm font-bold text-white hover:text-[#DC2626] transition-colors uppercase">Musalsal</Link>
                           <Link href="/live" className="text-sm font-bold text-white hover:text-[#3B82F6] transition-colors uppercase">Fanbroj TV</Link>
-                          <Link href="/pricing" className="text-sm font-bold text-[#f0ad4e] hover:text-[#f0ad4e]/80 transition-colors uppercase">Premium</Link>
+                          <Link href="/pricing" className="text-sm font-bold text-[#E50914] hover:text-[#E50914]/80 transition-colors uppercase">Premium</Link>
                         </nav>
 
                         {/* Apps Section */}
@@ -151,8 +151,8 @@ export default function RootLayout({
                               <span className="text-[10px] font-bold text-gray-400 group-hover:text-white transition-colors">Android</span>
                             </Link>
                             <Link href="/apps/ios" aria-label="Download iOS App" className="group flex flex-col items-center gap-2">
-                              <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl group-hover:bg-[#f0ad4e]/20 group-hover:text-[#f0ad4e] transition-all border border-white/10 group-hover:border-[#f0ad4e]/30">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></svg>
+                              <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl group-hover:bg-[#E50914]/20 group-hover:text-[#E50914] transition-all border border-white/10 group-hover:border-[#E50914]/30">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z" /><path d="M10 2c1 .5 2 2 2 5" /></svg>
                               </div>
                               <span className="text-[10px] font-bold text-gray-400 group-hover:text-white transition-colors">iOS</span>
                             </Link>

@@ -29,7 +29,7 @@ function MoviesContent() {
     if (!movies) {
         return (
             <div className="flex items-center justify-center min-h-[400px] bg-[#0d1b2a]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f0ad4e]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914]"></div>
             </div>
         );
     }
@@ -76,16 +76,16 @@ function MoviesContent() {
             <main className="relative z-10">
                 {/* Hero */}
                 <section className="relative py-12 md:py-16 overflow-hidden border-b border-[#1a3a5c]">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#f0ad4e]/5 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#E50914]/5 via-transparent to-transparent" />
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="flex items-center gap-2 mb-4">
-                            <Film size={24} className="text-[#f0ad4e]" />
-                            <span className="text-[#f0ad4e] font-bold uppercase">
+                            <Film size={24} className="text-[#E50914]" />
+                            <span className="text-[#E50914] font-bold uppercase">
                                 {categoryParam ? categoryParam.replace(/-/g, " ") : "Filimada"}
                             </span>
                         </div>
                         <h1 className="text-3xl md:text-5xl font-black tracking-tighter mb-2">
-                            Daawo <span className="text-[#f0ad4e]">Filimada</span> Cusub
+                            Daawo <span className="text-[#E50914]">Filimada</span> Cusub
                         </h1>
                         <p className="text-text-secondary">
                             {totalItems} filim la helay
@@ -113,7 +113,7 @@ function MoviesContent() {
                                     className={cn(
                                         "px-4 py-2 rounded-lg font-semibold text-sm transition-all",
                                         filter === f.id
-                                            ? "bg-[#f0ad4e] text-black"
+                                            ? "bg-[#E50914] text-white"
                                             : "text-text-secondary hover:text-white"
                                     )}
                                 >
@@ -132,7 +132,7 @@ function MoviesContent() {
                                     className={cn(
                                         "px-3 py-1 rounded-full text-xs font-medium transition-all",
                                         genreFilter === genre
-                                            ? "bg-[#f0ad4e] text-black"
+                                            ? "bg-[#E50914] text-white"
                                             : "bg-[#1a3a5c] text-text-muted hover:text-white"
                                     )}
                                 >
@@ -150,7 +150,7 @@ function MoviesContent() {
                                 <Link
                                     key={movie._id}
                                     href={`/movies/${movie.slug}`}
-                                    className="group relative rounded-lg overflow-hidden bg-[#1a3a5c] border border-[#2a4a6c] hover:border-[#f0ad4e]/50 transition-all"
+                                    className="group relative rounded-lg overflow-hidden bg-[#1a3a5c] border border-[#2a4a6c] hover:border-[#E50914]/50 transition-all"
                                 >
                                     <div className="relative aspect-[2/3]">
                                         <MoviePosterImage
@@ -179,7 +179,7 @@ function MoviesContent() {
                                         {/* Badges */}
                                         <div className="absolute top-2 left-2 flex flex-col gap-1">
                                             {movie.isPremium && (
-                                                <div className="flex items-center gap-1 bg-yellow-500 px-1.5 py-0.5 rounded text-[10px] font-bold text-black">
+                                                <div className="flex items-center gap-1 bg-[#E50914] px-1.5 py-0.5 rounded text-[10px] font-bold text-white">
                                                     <Crown size={8} />
                                                     VIP
                                                 </div>
@@ -194,7 +194,7 @@ function MoviesContent() {
                                         {/* Rating */}
                                         {movie.rating && movie.rating > 0 && (
                                             <div className="absolute top-2 right-2 flex items-center gap-1 bg-[#1a3a5c]/90 px-1.5 py-0.5 rounded">
-                                                <Star size={10} className="text-yellow-400" fill="currentColor" />
+                                                <Star size={10} className="text-[#E50914]" fill="currentColor" />
                                                 <span className="text-[10px] font-bold">{movie.rating.toFixed(1)}</span>
                                             </div>
                                         )}
@@ -250,7 +250,7 @@ function MoviesContent() {
                                             key={page}
                                             onClick={() => setCurrentPage(page)}
                                             className={`px-3 py-1 rounded-lg text-sm ${currentPage === page
-                                                ? "bg-[#f0ad4e] text-black font-bold"
+                                                ? "bg-[#E50914] text-white font-bold"
                                                 : "bg-[#1a3a5c] border border-[#2a4a6c] hover:bg-[#2a4a6c]"
                                                 }`}
                                         >
@@ -303,7 +303,7 @@ export default function MoviesPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen bg-[#0d1b2a]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f0ad4e]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914]"></div>
             </div>
         }>
             <MoviesContent />

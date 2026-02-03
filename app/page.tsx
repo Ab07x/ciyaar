@@ -105,7 +105,7 @@ export default function HomePage() {
         <section className="relative w-full h-[400px] md:h-[450px] overflow-hidden">
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#020D18] via-[#1b2838] to-[#020D18]">
-            <div className="absolute inset-0 opacity-30 blur-sm">
+            <div className="absolute inset-0 opacity-100">
               <Image
                 src={currentHero.backdropUrl || currentHero.posterUrl}
                 alt=""
@@ -124,19 +124,19 @@ export default function HomePage() {
             <div className="flex-1 max-w-lg">
               <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 uppercase">
                 {currentHero.titleSomali || currentHero.title}
-                <span className="text-[#f0ad4e] ml-2">({currentHero.releaseDate?.split("-")[0]})</span>
+                <span className="text-[#E50914] ml-2">({currentHero.releaseDate?.split("-")[0]})</span>
               </h1>
 
               <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
                 {currentHero.rating && (
                   <span className="bg-[#333333] text-white px-2 py-1 rounded flex items-center gap-1">
-                    <Star size={10} className="text-yellow-400" fill="currentColor" />
+                    <Star size={10} className="text-[#E50914]" fill="currentColor" />
                     {currentHero.rating.toFixed(1)}
                   </span>
                 )}
                 <span className="bg-[#333333] text-white px-2 py-1 rounded">HD</span>
                 {currentHero.genres?.slice(0, 2).map((g: string) => (
-                  <span key={g} className="bg-[#f0ad4e] text-black px-2 py-1 rounded font-bold">{g}</span>
+                  <span key={g} className="bg-[#E50914] text-white px-2 py-1 rounded font-bold">{g}</span>
                 ))}
               </div>
 
@@ -147,9 +147,9 @@ export default function HomePage() {
               <div className="flex gap-3">
                 <Link
                   href={`/movies/${currentHero.slug}`}
-                  className="px-6 py-2 bg-[#f0ad4e] hover:bg-[#e09d3e] text-black font-bold rounded transition-colors flex items-center gap-2"
+                  className="px-6 py-2 bg-[#E50914] hover:bg-[#B20710] text-white font-bold rounded transition-colors flex items-center gap-2"
                 >
-                  <Play size={16} fill="black" /> DAAWO
+                  <Play size={16} fill="white" /> DAAWO
                 </Link>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default function HomePage() {
                 sizes="200px"
               />
               {currentHero.isPremium && (
-                <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                <div className="absolute top-2 right-2 bg-[#E50914] text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
                   <Crown size={10} /> VIP
                 </div>
               )}
@@ -191,7 +191,7 @@ export default function HomePage() {
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? "bg-[#f0ad4e] w-6" : "bg-white/40"}`}
+                className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? "bg-[#E50914] w-6" : "bg-white/40"}`}
               />
             ))}
           </div>
@@ -210,7 +210,7 @@ export default function HomePage() {
               <h2 className="text-xl font-bold text-white uppercase tracking-wide">Sports Up Coming & Live</h2>
               {live.length > 0 && <LiveBadge text={`${live.length} LIVE`} />}
             </div>
-            <Link href="/ciyaar" className="text-[#f0ad4e] text-sm font-bold hover:underline flex items-center gap-1">
+            <Link href="/ciyaar" className="text-[#E50914] text-sm font-bold hover:underline flex items-center gap-1">
               View All <ChevronRight size={16} />
             </Link>
           </div>
@@ -231,7 +231,7 @@ export default function HomePage() {
             <select
               value={selectedGenre}
               onChange={(e) => setSelectedGenre(e.target.value)}
-              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#E50914] outline-none min-w-[140px]"
             >
               <option value="">Select Genres</option>
               {genres.map((g: string) => <option key={g} value={g}>{g}</option>)}
@@ -240,7 +240,7 @@ export default function HomePage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#E50914] outline-none min-w-[140px]"
             >
               <option value="">Select Year</option>
               {years.map((y: string) => <option key={y} value={y}>{y}</option>)}
@@ -249,7 +249,7 @@ export default function HomePage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#f0ad4e] outline-none min-w-[140px]"
+              className="bg-[#333333] text-white px-4 py-2 rounded text-sm border border-[#2a4a6c] focus:border-[#E50914] outline-none min-w-[140px]"
             >
               <option value="newest">Newest First</option>
               <option value="rating">Highest Rated</option>
@@ -258,7 +258,7 @@ export default function HomePage() {
             {(selectedGenre || selectedYear) && (
               <button
                 onClick={() => { setSelectedGenre(""); setSelectedYear(""); }}
-                className="px-4 py-2 bg-[#f0ad4e] text-black font-bold rounded text-sm hover:bg-[#e09d3e]"
+                className="px-4 py-2 bg-[#E50914] text-white font-bold rounded text-sm hover:bg-[#B20710]"
               >
                 Clear
               </button>
@@ -292,14 +292,14 @@ export default function HomePage() {
                 {/* Rating Badge */}
                 {movie.rating && (
                   <div className="absolute top-2 left-2 bg-[#333333]/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
-                    <Star size={10} className="text-yellow-400" fill="currentColor" />
+                    <Star size={10} className="text-[#E50914]" fill="currentColor" />
                     {movie.rating.toFixed(1)}
                   </div>
                 )}
 
                 {/* Premium Badge */}
                 {movie.isPremium && (
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-1.5 py-0.5 rounded">
+                  <div className="absolute top-2 right-2 bg-[#E50914] text-white text-xs font-bold px-1.5 py-0.5 rounded">
                     VIP
                   </div>
                 )}
@@ -318,7 +318,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <h3 className="text-white text-sm font-medium truncate group-hover:text-[#f0ad4e] transition-colors">
+              <h3 className="text-white text-sm font-medium truncate group-hover:text-[#E50914] transition-colors">
                 {movie.titleSomali || movie.title}
               </h3>
               <p className="text-gray-500 text-xs">{movie.releaseDate?.split("-")[0]}</p>
@@ -376,7 +376,7 @@ export default function HomePage() {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page as number)}
-                    className={`min-w-[40px] px-3 py-2 rounded font-bold text-sm ${currentPage === page ? "bg-[#f0ad4e] text-black" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+                    className={`min-w-[40px] px-3 py-2 rounded font-bold text-sm ${currentPage === page ? "bg-[#E50914] text-white" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
                   >
                     {page}
                   </button>
@@ -404,7 +404,7 @@ export default function HomePage() {
         <div className="flex justify-center mt-6">
           <Link
             href="/movies"
-            className="text-[#f0ad4e] text-sm font-bold hover:underline flex items-center gap-1"
+            className="text-[#E50914] text-sm font-bold hover:underline flex items-center gap-1"
           >
             View All Movies <ChevronRight size={16} />
           </Link>

@@ -466,9 +466,13 @@ export default function MovieFormPage({ params }: Props) {
                                     <option value="hindi-af-somali">Hindi Af Somali</option>
                                     <option value="american-af-somali">American Af Somali</option>
                                     <option value="english-aflaam">English Aflaam</option>
-                                    <option value="hindi-qarami">Hindi Qarami</option>
+                                    <option value="hindi-qaraami">Hindi Qaraami</option>
                                     <option value="old-is-gold">Old is Gold</option>
+                                    <option value="fanproj">Fanproj</option>
                                     <option value="fanproj-play">Fanproj Play</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
                                     <option value="musalsal">Musalsal</option>
                                 </select>
                             </div>
@@ -541,7 +545,7 @@ export default function MovieFormPage({ params }: Props) {
                         <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6">
                             <h3 className="font-bold border-b border-border-strong pb-3 mb-4">SEO Tags/Keywords</h3>
                             <p className="text-xs text-text-muted mb-3">Add multiple tags separated by comma (e.g. fanproj, hindi af somali, 2025)</p>
-                            <div className="flex flex-wrap gap-2 mb-4 max-h-32 overflow-y-auto">
+                            <div className="flex flex-wrap gap-2 mb-4">
                                 {formData.tags.map((tag, i) => (
                                     <span key={i} className="flex items-center gap-1 px-2 py-1 bg-accent-green/20 rounded text-accent-green text-xs font-bold">
                                         #{tag}

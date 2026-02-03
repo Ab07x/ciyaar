@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:defaultwidgetversion='2' b:layoutsVersion='3' b:responsive='true' b:templateUrl='indie.xml' b:templateVersion='1.3.0' expr:dir='data:blog.languageDirection' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+    <meta content='width=device-width, initial-scale=1' name='viewport'/>
+    <b:include data='blog' name='all-head-content'/>
+    <title><data:blog.pageTitle/></title>
+    
+    <!-- Yacine TV Meta -->
+    <meta content='#ff0000' name='theme-color'/>
+    
+    <!-- Fonts & Icons -->
+    <link href='https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;display=swap' rel='stylesheet'/>
+    <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css' rel='stylesheet'/>
+    <link href='https://cdn.plyr.io/3.7.8/plyr.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/hls.js@latest'></script>
+    <script src='https://cdn.plyr.io/3.7.8/plyr.polyfilled.js'></script>
+
+    <b:skin><![CDATA[
+    /* 
+    -----------------------------------------------
+    Theme: Yacine TV Clone v8.0 (Pixel Perfect Match Page)
+    -----------------------------------------------
+    */
+    :root{--main_color:#ff0000;--secondary_color:#cc0000;--font_color:#333333;--font_type:'Cairo',sans-serif;--font_size:16px;--body_bg:#f5f7fa;--header_bg:#ff0000;--header_color:#ffffff;--logo_bd:#000000;--logo_color:#fff;--title_bg:#333333;--yrsdaybg:#3498db;--todaybg:#ff0000;--tomorobg:#f39c12;--footer_bd:#ffffff;--footer_color:#333333;--footer_border:#e0e0e0;--cop_bd:#ffffff;--cop_color:#333333;--bk-hd-bg:#f8f9fa;--bk-ttl-bg:#ff0000;--btn-bg:#ff0000;--match-bg:#ffffff;--Gray1:#f8f9fa;--Gray2:#e0e0e0;--Gray3:#eceff1;--LightColor:#fff;--DarkColor:#333333;--LightColor2:#fafafa;--bk-shadow:rgba(0, 0, 0, 0.08)}
+    .Night,.Night body{--body_bg:#1c2733;--header_bg:#ff0000;--Gray2:#2b3b4d;--Gray3:#1c2733;--logo_color:#fff;--footer_border:#1c2733;--Gray1:#1c2733;--LightColor:#263545;--footer_bd:#ff0000;--cop_bd:#ff0000;--DarkColor:var(--Gray1);--LightColor2:var(--Gray1);--match-bg:var(--Gray1);--bk-hd-bg:#121a23;--font_color:#fff;}
+
+    /* Reset & Base */
+    *,::after,::before{box-sizing:border-box}*{margin:0;padding:0;outline:0;list-style:none}
+    body{--yall-padding:12px;--rounded:8px;font-family:var(--font_type);line-height:1.5;background:var(--body_bg);color:var(--font_color);font-size:var(--font_size);font-weight:500;direction:rtl}
+    a{color:var(--font_color);text-decoration:none;transition:.3s}
+    .container{max-width:1024px;margin:0 auto;padding:0 var(--yall-padding)}
+
+    /* Header */
+    #AYaHeader{position:relative;margin-bottom:15px}
+    #AYaHeader .HdrInner{width:100%;background:var(--header_bg);box-shadow:0 1px 3px var(--bk-shadow);position:sticky;top:0;z-index:999}
+    #AYaHeader .HdrInner > .container{min-height:60px;display:flex;align-items:center;justify-content:space-between}
+    
+    .AYaLogo{font-size:24px;font-weight:900;color:#fff;}
+    .AYaMainNav ul{display:flex;gap:15px}
+    .AYaMainNav a{color:#fff;font-size:15px;font-weight:600;padding:5px 10px;border-radius:4px}
+    .AYaMainNav a:hover{background:rgba(255,255,255,0.1)}
+
+    /* Dark Mode Toggle */
+    .hed-btn{background:transparent;border:none;color:#fff;cursor:pointer;font-size:18px;margin-right:10px}
+
+    /* Blocks */
+    .AY_Block{margin-bottom:20px;box-shadow:0 1px 3px var(--bk-shadow);background:var(--LightColor);overflow:hidden;border:1px solid var(--Gray2);border-radius:var(--rounded); padding:0 !important;}
+    .AYb_Head{padding:12px;border-bottom:1px solid var(--Gray2);background:var(--bk-hd-bg);display:flex;justify-content:space-between;align-items:center}
+    .aya-btn{background:var(--btn-bg);color:#fff!important;padding:5px 15px;border-radius:var(--rounded);font-size:14px;font-weight:bold;display:inline-block}
+
+    /* === MATCH PAGE STYLES (Yacine TV Clone) === */
+    .MtCard {
+        position: relative; margin-bottom: 15px; border-radius: 8px;
+        background: var(--LightColor); box-shadow: 0 1px 3px var(--bk-shadow); border: 1px solid var(--Gray2);
+    }
+    .backMatch { overflow: hidden; border-radius: 8px 8px 0 0; background-color:#ff0000; position:relative; }
+    .McInner { overflow: hidden; background: rgba(204, 0, 0, 0.85); padding: 30px 0; display:flex; justify-content:center; align-items:center; }
+    .McTeam { width: 40%; text-align: center; color: #fff; }
+    .TmFlag {
+        width: 80px; height: 80px; margin: 0 auto 15px; background-repeat: no-repeat; background-position: center; background-size: contain;
+        background-color: #fff; border-radius: 50%; padding: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center;
+    }
+    .TmFlag img { width: 100%; height: 100%; object-fit: contain; }
+    .TmName { font-size: 18px; font-weight: 700; margin-top: 10px; }
+    .McTeam.ce { width: 20%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .matchvs { font-size: 50px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 10px; }
+    
+    h1.post-title { font-size:20px; font-weight:700; text-align:center; padding:15px; margin:0; border-bottom:1px solid var(--Gray2); line-height:1.4; }
+    
+    .live-badge-bar { background: #ff0000; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px; margin: 20px 0; }
+
+    /* Match Info Table */
+    .table-bordered { width: 100%; border-collapse: collapse; background-color: var(--LightColor); border-radius: 8px; overflow: hidden; border: 1px solid var(--Gray2); margin-top:20px; }
+    .table-bordered tr { border-bottom: 1px solid var(--Gray2); }
+    .table-bordered tr:last-child { border: 0; }
+    .table-bordered td, .table-bordered th { font-weight: 500; padding: 12px; line-height: 25px; color: var(--font_color); text-align: start; }
+    .table-bordered th { background: var(--Gray1); font-weight: 700; width: 30%; }
+    .table-bordered td { border-right: 1px solid var(--Gray2); }
+
+    /* Matches Grid (Home) */
+    .AY_Match {
+        display:flex; align-items:center; background:var(--match-bg); border-bottom:1px solid var(--Gray2);
+        padding:15px; position:relative; overflow:hidden;
+    }
+    .AY_Match:last-child { border-bottom:none; }
+    .AY_Inner { display:flex; width:100%; align-items:center; }
+    
+    .MT_Team { flex:1; display:flex; align-items:center; gap:10px; }
+    .MT_Team.TM1 { justify-content:flex-end; }
+    .MT_Team.TM2 { justify-content:flex-start; flex-direction:row-reverse; }
+    
+    .TM_Logo_Sm img { width:40px; height:40px; object-fit:contain; }
+    .TM_Name_Sm { font-weight:700; font-size:14px; }
+    
+    .MT_Data { width:120px; text-align:center; display:flex; flex-direction:column; gap:5px; align-items:center; }
+    .MT_Time { font-size:16px; font-weight:700; color:var(--font_color); background:var(--Gray2); padding:2px 10px; border-radius:4px; }
+    .MT_Stat { font-size:12px; background:var(--Gray2); padding:2px 8px; border-radius:4px; }
+    .MT_Stat.live { background:#dc2626; color:#fff; animation:pulse 1.5s infinite; }
+    
+    .MT_Mask { position:absolute; inset:0; z-index:2; }
+
+    /* Player Section */
+    .video-section { position:relative; background:#000; border-radius:8px; overflow:hidden; margin-bottom:20px; }
+    .player-overlay-top { display:flex; gap:10px; padding:10px; background:#111; border-bottom:1px solid #333; }
+    .p-btn { flex:1; background:#333; color:#fff; text-align:center; padding:8px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .p-btn.active, .p-btn:hover { background:var(--main_color); }
+    
+    /* Posts Grid */
+    .AYaGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px; padding:15px; }
+    .gr-item { border:1px solid var(--Gray2); border-radius:var(--rounded); overflow:hidden; background:var(--LightColor); }
+    .gr-img { height:120px; background-size:cover; background-position:center; }
+    .gr-info { padding:10px; }
+    .gr-title { font-size:14px; font-weight:700; margin:0; color:var(--font_color); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+    a:hover .gr-title { color: var(--main_color); }
+
+    .footer { text-align:center; padding:30px; background:var(--LightColor); border-top:1px solid var(--Gray2); margin-top:30px; }
+    
+    @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.6; } 100% { opacity:1; } }
+    @media(max-width:600px){ .MT_Team { flex-direction:column; justify-content:center!important; gap:5px; text-align:center; } .TM_Logo_Sm img { width:35px; height:35px; } .TM_Name_Sm { font-size:12px; } .matchvs { font-size:30px; } .TmFlag { width:60px; height:60px; } }
+    ]]></b:skin>
+</head>
+
+<body class='rtl yalla-style-1'>
+<div class='item'>
+    
+    <header id="AYaHeader">
+        <div class="HdrInner">
+            <div class="container">
+                <a href='/' class="AYaLogo">Yacine TV</a>
+                <nav class="AYaMainNav">
+                    <ul>
+                        <li><a href='/'>الرئيسية</a></li>
+                        <li><a href='/'>بث مباشر</a></li>
+                        <li><a href='/'>أخبار</a></li>
+                    </ul>
+                </nav>
+                <button class="hed-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <div class='container'>
+        
+        <!-- === MATCH POST PAGE === -->
+        <b:if cond='data:view.isPost'>
+            <b:section id='post-body' showaddelement='true'>
+                <b:widget id='Blog1' locked='false' title='Post' type='Blog'>
+                 <b:includable id='main'>
+                    <b:loop values='data:posts' var='post'>
+                         
+                         <!-- Match Header (Red Banner) -->
+                         <div class="MtCard">
+                            <div class="backMatch">
+                                <div class="McInner">
+                                    <!-- Team 1 -->
+                                    <div class="McTeam">
+                                        <div class="TmFlag"><img id="team1-logo" src="https://cdn.kora-api.top/uploads/team/1565008227.png" alt="Team 1"/></div>
+                                        <div class="TmName" id="team1-name">الفريق الأول</div>
+                                    </div>
+                                    
+                                    <!-- VS -->
+                                    <div class="McTeam ce">
+                                        <div class="matchvs">VS</div>
+                                    </div>
+
+                                    <!-- Team 2 -->
+                                    <div class="McTeam">
+                                        <div class="TmFlag"><img id="team2-logo" src="https://cdn.kora-api.top/uploads/team/1565008227.png" alt="Team 2"/></div>
+                                        <div class="TmName" id="team2-name">الفريق الثاني</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Post Title -->
+                            <h1 class="post-title"><data:post.title/></h1>
+
+                            <div style="padding:20px;">
+                                <!-- Live Stream Badge -->
+                                <div class="live-badge-bar">مشاهدة البث المباشر - Live Stream</div>
+
+                                <!-- Player -->
+                                <div class='video-section'>
+                                    <div class='player-overlay-top'>
+                                        <div class='p-btn active'>Live</div>
+                                        <div class='p-btn'>SD</div>
+                                        <div class='p-btn'>HD</div>
+                                        <div class='p-btn' onclick='location.reload()'><i class="fas fa-sync"></i></div>
+                                    </div>
+                                    <div id="player-container"></div>
+                                    <div id="raw-post-content" style="display:none"><data:post.body/></div>
+                                </div>
+
+                                <!-- Match Info Table -->
+                                <table class="table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>البطولة</th>
+                                            <td id="match-league">غير محدد</td>
+                                        </tr>
+                                        <tr>
+                                            <th>المعلق</th>
+                                            <td>غير محدد</td>
+                                        </tr>
+                                        <tr>
+                                            <th>القناة الناقلة</th>
+                                            <td>Yacine TV Live</td>
+                                        </tr>
+                                        <tr>
+                                            <th>التوقيت</th>
+                                            <td id="match-time">--:--</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                         </div>
+                         
+                         <script>
+                        //<![CDATA[
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const rawContent = document.getElementById('raw-post-content');
+                            const container = document.getElementById('player-container');
+                            
+                            // 1. Try to Parse Team Names from Title "Team A vs Team B"
+                            const pageTitle = document.querySelector('h1.post-title').innerText;
+                            if(pageTitle.includes('vs')) {
+                                const parts = pageTitle.split('vs');
+                                if(parts.length === 2) {
+                                    document.getElementById('team1-name').innerText = parts[0].trim();
+                                    document.getElementById('team2-name').innerText = parts[1].trim();
+                                }
+                            } else if (pageTitle.includes('ضد')) {
+                                const parts = pageTitle.split('ضد');
+                                if(parts.length === 2) {
+                                    document.getElementById('team1-name').innerText = parts[0].trim();
+                                    document.getElementById('team2-name').innerText = parts[1].trim();
+                                }
+                            }
+
+                            // 2. Player Logic
+                            if (!rawContent || !container) return;
+                            
+                            let content = rawContent.innerHTML.trim();
+                            const txt = document.createElement("textarea"); txt.innerHTML = content; content = txt.value.trim();
+
+                            if (content.includes('<iframe')) { container.innerHTML = content; return; }
+                            
+                            const urlRegex = /(https?:\/\/[^\s]+)/g;
+                            const match = content.match(urlRegex);
+                            let streamUrl = match ? match[0].replace(/['"]+/g, '') : null;
+
+                            if (streamUrl && (streamUrl.includes('.m3u8') || streamUrl.includes('.mp4'))) {
+                                const video = document.createElement('video');
+                                video.style.width = '100%'; 
+                                video.controls = true;
+                                container.appendChild(video);
+
+                                if (Hls.isSupported() && streamUrl.includes('.m3u8')) {
+                                    const hls = new Hls(); hls.loadSource(streamUrl); hls.attachMedia(video);
+                                } else { video.src = streamUrl; }
+                                new Plyr(video, { controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen', 'settings', 'pip'] });
+                            } else { container.innerHTML = content; }
+                        });
+                        //]]>
+                        </script>
+
+                    </b:loop>
+                 </b:includable>
+                </b:widget>
+            </b:section>
+        
+        <b:else/>
+            <!-- === HOME PAGE === -->
+            <div class="AY_Block">
+                <div class="AYb_Head">
+                    <span class="aya-btn">مباريات اليوم</span>
+                    <span style="font-size:12px; color:var(--font_color);">توقيت جهازك: <span id="local-time">--:--</span></span>
+                </div>
+                
+                <!-- AUTOMATIC MATCHES CONTAINER -->
+                <div id="api-matches-container" style="min-height:200px; display:flex; flex-direction:column; justify-content:center; text-align:center;">
+                    <div style="padding:20px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:30px; color:var(--main_color);"></i>
+                        <p style="margin-top:10px;">جاري جلب المباريات...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Standard Blog Posts Below -->
+            <div class="AY_Block">
+                <div class="AYb_Head"><span class="aya-btn">آخر الأخبار</span></div>
+                <div class="AYaGrid">
+                    <b:section id='posts-grid' showaddelement='true'>
+                        <b:widget id='BlogPosts' locked='false' title='Posts' type='Blog'>
+                             <b:includable id='main'>
+                                <b:loop values='data:posts' var='post'>
+                                    <div class='gr-item'>
+                                        <b:if cond='data:post.firstImageUrl'>
+                                            <a expr:href='data:post.url'><div class="gr-img" expr:style='"background-image:url(" + data:post.firstImageUrl + ");"'></div></a>
+                                        </b:if>
+                                        <div class='gr-info'>
+                                            <a expr:href='data:post.url'><h3 class='gr-title'><data:post.title/></h3></a>
+                                        </div>
+                                    </div>
+                                </b:loop>
+                             </b:includable>
+                        </b:widget>
+                    </b:section>
+                </div>
+            </div>
+
+        </b:if> <!-- End If Post -->
+
+    </div>
+
+    <div class='footer'>
+        <div>© Yacine TV 2026 - yacintv.net</div>
+        <div style="font-size:12px; margin-top:10px; opacity:0.7;">جميع الحقوق محفوظة</div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+//<![CDATA[
+// Dark Mode
+function toggleTheme(){
+    document.documentElement.classList.toggle("Night");
+    localStorage.setItem("theme", document.documentElement.classList.contains("Night") ? "dark" : "light");
+}
+if(localStorage.getItem("theme") === "dark") document.documentElement.classList.add("Night");
+
+// Update Local Time Display
+setInterval(() => {
+    const now = new Date();
+    document.getElementById('local-time').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}, 1000);
+
+// API MATCHES FETCH (Home Page)
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("api-matches-container");
+    if(!container) return;
+
+    // Get today's date YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    const apiUrl = `https://ws.kora-api.top/api/matches/${today}/1`;
+
+    fetch(apiUrl)
+    .then(res => res.json())
+    .then(data => {
+        if(data && data.DATA && data.DATA.length > 0) {
+            container.innerHTML = ""; // Clear loader
+            
+            data.DATA.forEach(match => {
+                // Determine Status
+                let statusTxt = "لم تبدأ";
+                let statusClass = "";
+                if(match.status == 1) { statusTxt = "مباشر"; statusClass = "live"; }
+                else if(match.status == 2) { statusTxt = "انتهت"; }
+
+                // Search Link Logic: Link to a search query for the team name to find the post
+                const searchLink = `/search?q=${encodeURIComponent(match.team_home_name)}`;
+
+                const html = `
+                <div class="AY_Match">
+                    <div class="AY_Inner">
+                        <div class="MT_Team TM1">
+                            <div class="TM_Name_Sm">${match.team_home_name || "Team 1"}</div>
+                            <div class="TM_Logo_Sm"><img src="${match.team_home_logo || ''}" /></div>
+                        </div>
+                        <div class="MT_Data">
+                            <span class="MT_Time">${match.time?.substring(0,5) || '--:--'}</span>
+                            <span class="MT_Stat ${statusClass}">${statusTxt}</span>
+                             ${match.status != 0 ? `<div style="font-weight:bold; margin-top:4px;">${match.score || "0 - 0"}</div>` : ''}
+                        </div>
+                        <div class="MT_Team TM2">
+                            <div class="TM_Logo_Sm"><img src="${match.team_away_logo || ''}" /></div>
+                            <div class="TM_Name_Sm">${match.team_away_name || "Team 2"}</div>
+                        </div>
+                    </div>
+                    <a href="${searchLink}" class="MT_Mask" title="Watch Match"></a>
+                </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        } else {
+            container.innerHTML = "<div style='padding:20px;'>لا توجد مباريات اليوم</div>";
+        }
+    })
+    .catch(err => {
+        console.error("API Error", err);
+        container.innerHTML = "<div style='padding:20px;'>فشل تحميل المباريات. يرجى التحديث.</div>";
+    });
+});
+//]]>
+</script>
+
+<!-- Histats Tracking -->
+<script type="text/javascript">
+//<![CDATA[
+var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,5006235,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();
+//]]>
+</script>
+<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?5006235&amp;101" alt="counter" border="0"/></a></noscript>
+
+</body>
+</html>

@@ -60,7 +60,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     if (!movie || !settings) {
         return (
             <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f0ad4e]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914]"></div>
             </div>
         );
     }
@@ -111,7 +111,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                     <div>
                         <h1 className="text-xl md:text-2xl font-bold text-white">
                             {movie.titleSomali || movie.title}
-                            <span className="text-[#f0ad4e] ml-2">({movie.releaseDate?.split("-")[0]})</span>
+                            <span className="text-[#E50914] ml-2">({movie.releaseDate?.split("-")[0]})</span>
                         </h1>
                         {movie.titleSomali && (
                             <p className="text-gray-400 text-sm">{movie.title}</p>
@@ -163,11 +163,11 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 className="object-cover opacity-20 blur-sm"
                             />
                         </div>
-                        <div className="relative z-10 bg-[#020D18]/90 border-2 border-[#f0ad4e] rounded-xl p-6 max-w-md text-center">
-                            <div className="w-14 h-14 bg-[#f0ad4e]/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <Crown size={28} className="text-[#f0ad4e]" />
+                        <div className="relative z-10 bg-[#020D18]/90 border-2 border-[#E50914] rounded-xl p-6 max-w-md text-center">
+                            <div className="w-14 h-14 bg-[#E50914]/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Crown size={28} className="text-[#E50914]" />
                             </div>
-                            <h3 className="text-xl font-bold text-[#f0ad4e] mb-2">PREMIUM FILM</h3>
+                            <h3 className="text-xl font-bold text-[#E50914] mb-2">PREMIUM FILM</h3>
                             <p className="text-gray-400 mb-4">Film-kan waxaa u baahan subscription</p>
                             <div className="space-y-3">
                                 <div className="flex gap-2">
@@ -188,7 +188,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 </div>
                                 {error && <p className="text-red-400 text-sm">{error}</p>}
                                 <div className="flex gap-3">
-                                    <Link href="/pricing" className="flex-1 px-4 py-3 bg-[#f0ad4e] text-black font-bold rounded-lg text-center">
+                                    <Link href="/pricing" className="flex-1 px-4 py-3 bg-[#E50914] text-white font-bold rounded-lg text-center">
                                         Iibso
                                     </Link>
                                     <a
@@ -241,7 +241,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 onClick={() => setActiveEmbedIndex(i)}
                                 className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all ${activeEmbedIndex === i
                                     ? "bg-[#9AE600] text-black border-[#9AE600]"
-                                    : "bg-[#333333] text-white border-[#2a4a6c] hover:border-[#f0ad4e]"
+                                    : "bg-[#333333] text-white border-[#2a4a6c] hover:border-[#E50914]"
                                     }`}
                             >
                                 {embed.label} {embed.quality && `(${embed.quality})`}
@@ -335,7 +335,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                     {/* Rating Badge */}
                                     {item.rating && (
                                         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
-                                            <Star size={10} className="text-[#f0ad4e]" fill="currentColor" />
+                                            <Star size={10} className="text-[#E50914]" fill="currentColor" />
                                             {item.rating.toFixed(1)}
                                         </div>
                                     )}
@@ -363,7 +363,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
             {/* Report Issue */}
             <div className="max-w-7xl mx-auto px-4 pb-8">
                 <p className="text-center text-gray-500 text-sm">
-                    <a href="#" className="hover:text-[#f0ad4e] transition-colors">REPORT AN ISSUE</a>
+                    <a href="#" className="hover:text-[#E50914] transition-colors">REPORT AN ISSUE</a>
                 </p>
             </div>
         </div>

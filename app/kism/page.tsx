@@ -26,6 +26,118 @@ import Link from "next/link";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { ViewsChart, TopContentChart, SubscriptionChart } from "@/components/admin/ViewsChart";
 
+// Top Movies Section Component
+function TopMoviesSection() {
+    const topMovies = useQuery(api.movies.getMoviesByViews, { limit: 10 });
+
+    if (!topMovies) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-stadium-elevated border border-border-strong rounded-xl p-6"
+            >
+                <div className="flex items-center gap-2 mb-4">
+                    <Film size={18} className="text-accent-gold" />
+                    <h3 className="font-bold">Top Movies By Views</h3>
+                </div>
+                <div className="flex items-center justify-center py-8">
+                    <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="h-8 w-8 border-4 border-text-muted border-t-accent-green rounded-full"
+                    />
+                </div>
+            </motion.div>
+        );
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-stadium-elevated border border-border-strong rounded-xl p-6"
+        >
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <Film size={18} className="text-accent-gold" />
+                    <h3 className="font-bold">Top Movies By Views</h3>
+                </div>
+                <Link
+                    href="/kism/movies"
+                    className="text-sm text-accent-green hover:underline"
+                >
+                    View All
+                </Link>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full">
+                    <thead>
+                        <tr className="text-left text-text-muted text-xs uppercase border-b border-border-subtle">
+                            <th className="pb-3 font-semibold">Rank</th>
+                            <th className="pb-3 font-semibold">Movie</th>
+                            <th className="pb-3 font-semibold">Views</th>
+                            <th className="pb-3 font-semibold">Category</th>
+                            <th className="pb-3 font-semibold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-subtle">
+                        {topMovies.map((movie: any, index: number) => (
+                            <tr key={movie._id} className="hover:bg-white/5">
+                                <td className="py-3">
+                                    <span className={`font-bold ${index < 3 ? 'text-accent-gold' : 'text-text-muted'}`}>
+                                        #{index + 1}
+                                    </span>
+                                </td>
+                                <td className="py-3">
+                                    <Link href={`/kism/movies/${movie._id}`} className="flex items-center gap-3 hover:text-accent-green transition-colors">
+                                        {movie.posterUrl && (
+                                            <img
+                                                src={movie.posterUrl}
+                                                alt={movie.title}
+                                                className="w-10 h-14 object-cover rounded"
+                                            />
+                                        )}
+                                        <div>
+                                            <div className="font-semibold line-clamp-1">{movie.title}</div>
+                                            <div className="text-xs text-text-muted">{movie.releaseDate?.split("-")[0]}</div>
+                                        </div>
+                                    </Link>
+                                </td>
+                                <td className="py-3">
+                                    <span className="flex items-center gap-1 text-accent-green font-bold">
+                                        <Eye size={14} />
+                                        {(movie.views || 0).toLocaleString()}
+                                    </span>
+                                </td>
+                                <td className="py-3">
+                                    <span className="text-xs text-text-secondary capitalize">
+                                        {movie.category?.replace(/-/g, ' ') || 'Uncategorized'}
+                                    </span>
+                                </td>
+                                <td className="py-3">
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${movie.isPublished ? "bg-accent-green/20 text-accent-green" : "bg-text-muted/20 text-text-muted"}`}>
+                                        {movie.isPublished ? "Published" : "Draft"}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {topMovies.length === 0 && (
+                    <div className="text-center py-8 text-text-muted">
+                        <Film size={40} className="mx-auto mb-2 opacity-50" />
+                        <p>No movies yet</p>
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+}
+
+
 export default function AdminDashboard() {
     const matches = useQuery(api.matches.listMatches, {});
     const posts = useQuery(api.posts.listPosts, {});
@@ -214,46 +326,6 @@ export default function AdminDashboard() {
                 {/* Subscription Stats */}
                 <SubscriptionChart data={subscriptionData} title="User Subscriptions" />
 
-                {/* Live Now Panel */}
-                {/* Live Now Panel - DISABLED */}
-                {/* <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-stadium-elevated border border-border-strong rounded-xl p-6"
-                >
-                    <h3 className="font-bold mb-4 flex items-center gap-2">
-                        <PlayCircle size={18} className="text-accent-red" />
-                        Live Now
-                    </h3>
-                    <div className="space-y-3">
-                        {matches.filter(m => m.status === "live").length > 0 ? (
-                            matches.filter(m => m.status === "live").slice(0, 5).map((m: any) => (
-                                <motion.div
-                                    key={m._id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="flex items-center justify-between p-3 bg-stadium-hover rounded-xl hover:bg-white/5 transition-colors"
-                                >
-                                    <div>
-                                        <div className="font-bold text-sm">{m.title}</div>
-                                        <div className="text-xs text-text-muted">{m.leagueName}</div>
-                                    </div>
-                                    <span className="px-2 py-1 bg-accent-red/20 text-accent-red text-xs font-bold rounded flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 bg-accent-red rounded-full animate-pulse" />
-                                        LIVE
-                                    </span>
-                                </motion.div>
-                            ))
-                        ) : (
-                            <div className="text-center py-8">
-                                <PlayCircle size={40} className="mx-auto text-text-muted mb-2" />
-                                <p className="text-text-muted text-sm">Ma jiraan ciyaaro live ah</p>
-                            </div>
-                        )}
-                    </div>
-                </motion.div> */}
-
                 {/* Quick Actions */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -297,6 +369,9 @@ export default function AdminDashboard() {
                     )}
                 </motion.div>
             </div>
+
+            {/* Top Movies By Views */}
+            <TopMoviesSection />
 
             {/* Recent Blog Posts */}
             <motion.div

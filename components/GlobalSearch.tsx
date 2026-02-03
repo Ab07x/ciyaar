@@ -186,7 +186,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                 {/* Loading */}
                                 {isLoading && (
                                     <div className="flex items-center justify-center py-12">
-                                        <Loader2 className="w-6 h-6 animate-spin text-[#f0ad4e]" />
+                                        <Loader2 className="w-6 h-6 animate-spin text-[#E50914]" />
                                     </div>
                                 )}
 
@@ -247,7 +247,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                         {results.matches.length > 0 && (
                                             <div className="mb-4">
                                                 <h3 className="px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                                    <Trophy className="w-3 h-3 text-[#f0ad4e]" />
+                                                    <Trophy className="w-3 h-3 text-[#E50914]" />
                                                     CIYAARO ({results.matches.length})
                                                 </h3>
                                                 {results.matches.slice(0, 5).map((match: any) => (
@@ -257,10 +257,10 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#333333] transition-colors group"
                                                     >
                                                         <div className="w-10 h-10 rounded-lg bg-[#333333] flex items-center justify-center">
-                                                            <Trophy className="w-5 h-5 text-[#f0ad4e]" />
+                                                            <Trophy className="w-5 h-5 text-[#E50914]" />
                                                         </div>
                                                         <div className="flex-1 text-left">
-                                                            <p className="font-medium text-white group-hover:text-[#f0ad4e] transition-colors">
+                                                            <p className="font-medium text-white group-hover:text-[#E50914] transition-colors">
                                                                 {match.teamA} vs {match.teamB}
                                                             </p>
                                                             <p className="text-xs text-gray-500">{match.leagueName}</p>
@@ -305,7 +305,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                                             <div className="flex items-center gap-2 text-xs text-gray-500">
                                                                 <span>{movie.releaseDate?.split("-")[0]}</span>
                                                                 {movie.rating && (
-                                                                    <span className="flex items-center gap-1 text-yellow-500">
+                                                                    <span className="flex items-center gap-1 text-[#E50914]">
                                                                         <Star className="w-3 h-3 fill-current" />
                                                                         {movie.rating.toFixed(1)}
                                                                     </span>
@@ -313,7 +313,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                                             </div>
                                                         </div>
                                                         {movie.isPremium && (
-                                                            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded">
+                                                            <span className="px-2 py-1 bg-[#E50914]/20 text-[#E50914] text-xs font-bold rounded">
                                                                 VIP
                                                             </span>
                                                         )}

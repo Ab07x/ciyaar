@@ -109,7 +109,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
 
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 bg-[#333333] rounded-lg text-sm border border-[#2a4a6c]">
-              <Trophy size={14} className="text-[#f0ad4e]" />
+              <Trophy size={14} className="text-[#E50914]" />
               <span className="text-white/70">{match.leagueName}</span>
             </span>
           </div>
@@ -136,14 +136,14 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           <div className="flex items-center justify-center gap-3 mb-6">
             <Link
               href={`/ciyaar?league=${match.leagueId}`}
-              className="flex items-center gap-2 px-4 py-2 bg-[#333333] rounded-full border border-[#2a4a6c] hover:border-[#f0ad4e]/50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#333333] rounded-full border border-[#2a4a6c] hover:border-[#E50914]/50 transition-colors"
             >
-              <Trophy size={16} className="text-yellow-500" />
+              <Trophy size={16} className="text-[#E50914]" />
               <span className="text-sm font-medium text-white/70">{match.leagueName}</span>
             </Link>
             {match.status === "live" && <LiveBadge text="LIVE HADDA" size="lg" />}
             {match.isPremium && (
-              <span className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold rounded-full">
+              <span className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-[#E50914] text-white text-xs font-bold rounded-full">
                 PREMIUM
               </span>
             )}
@@ -284,7 +284,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                     activeTab === tab.id
-                      ? "bg-[#f0ad4e] text-black"
+                      ? "bg-[#E50914] text-white"
                       : "text-white/60 hover:text-white hover:bg-[#2a4a6c]"
                   )}
                 >
@@ -389,7 +389,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
               <div className="w-1 h-6 bg-[#9AE600] rounded-full" />
               Ciyaaro kale oo xiiso leh
             </h2>
-            <Link href="/ciyaar" className="text-[#f0ad4e] hover:underline text-sm font-medium">
+            <Link href="/ciyaar" className="text-[#E50914] hover:underline text-sm font-medium">
               Dhammaan →
             </Link>
           </div>
@@ -397,8 +397,8 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           {/* Upcoming Matches */}
           {matchesStatus.upcoming.filter((m: any) => m._id !== match._id).length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-bold text-yellow-400 uppercase mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full" />
+              <h3 className="text-sm font-bold text-[#E50914] uppercase mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-[#E50914] rounded-full" />
                 SOO SOCDA
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -432,7 +432,7 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
               <Newspaper className="text-[#3B82F6]" size={24} />
               Wararka Kubadda Cagta
             </h2>
-            <Link href="/blog" className="text-[#f0ad4e] hover:underline text-sm font-medium">
+            <Link href="/blog" className="text-[#E50914] hover:underline text-sm font-medium">
               Dhamaan Wararka →
             </Link>
           </div>

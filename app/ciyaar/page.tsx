@@ -60,7 +60,7 @@ function MatchesContent() {
         {leagueIdParam && (
           <button
             onClick={() => router.push('/ciyaar')}
-            className="flex items-center gap-2 text-[#f0ad4e] hover:text-[#f0ad4e]/80 transition-colors font-bold"
+            className="flex items-center gap-2 text-[#E50914] hover:text-[#E50914]/80 transition-colors font-bold"
           >
             <ChevronLeft size={20} />
             View All Leagues
@@ -84,11 +84,11 @@ function MatchesContent() {
                 className={cn(
                   "relative flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap",
                   isActive
-                    ? "bg-[#f0ad4e] text-black"
+                    ? "bg-[#E50914] text-white"
                     : "text-white/60 hover:text-white hover:bg-[#2a4a6c]"
                 )}
               >
-                <Icon size={16} className={cn(isActive ? "text-black" : config.color)} />
+                <Icon size={16} className={cn(isActive ? "text-white" : config.color)} />
                 <span>{config.labelSo}</span>
                 {count > 0 && status === "live" && (
                   <span className={cn(

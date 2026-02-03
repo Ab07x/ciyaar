@@ -14,9 +14,9 @@
   /* Context-Aware Primary Colors */
   --color-sports: #DC2626;
   /* Red for live sports */
-  --color-cinema: #f0ad4e;
+  --color-cinema: #E50914;
   /* Orange/Gold for movies */
-  --color-premium: #f0ad4e;
+  --color-premium: #E50914;
   /* Gold for premium */
   --color-series: #DC2626;
   /* Red for series/musalsal */
@@ -44,7 +44,7 @@
   --color-accent-gold: var(--color-premium);
   --color-accent-blue: #3B82F6;
   /* Blue for misc */
-  --color-accent-orange: #f0ad4e;
+  --color-accent-orange: #E50914;
   /* Orange primary accent */
 
   --color-border-subtle: #1a3a5c;

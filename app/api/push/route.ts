@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import webpush from "web-push";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-
-// Configure web-push with VAPID keys - Wrap in a check for build environments
-if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-    webpush.setVapidDetails(
-        process.env.VAPID_SUBJECT || "mailto:admin@fanbroj.net",
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        process.env.VAPID_PRIVATE_KEY
-    );
-}
+import { sendMulticastNotification, sendNotification } from "@/lib/firebase-admin";
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { title, body: message, icon, image, url, subscriptionId, broadcast, directSubscription } = body;
+        const {
+            title,
+            body: message,
+            icon,
+            image,
+            url,
+            broadcast,
+            fcmToken,
+        } = body;
 
-        console.log("Push Request:", { title, message, hasSubscriptionId: !!subscriptionId, broadcast, directSubscription: !!directSubscription });
+        console.log("Push Request:", {
+            title,
+            message,
+            broadcast,
+            hasFcmToken: !!fcmToken,
+        });
 
         if (!title || !message) {
             return NextResponse.json(
@@ -26,137 +30,81 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const payload = JSON.stringify({
-            title,
-            body: message,
-            icon: icon || "/icon-192.png",
-            image: image || null,
-            badge: "/badge-72.png",
+        const data = {
             url: url || "/",
-        });
+            icon: icon || "/icon-192.png",
+        };
 
-        // Test Direct Subscription (Bypasses Admin DB Lookup)
-        if (directSubscription) {
-            const sub = directSubscription;
-            if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) {
-                return NextResponse.json({ error: "Invalid direct subscription object" }, { status: 400 });
-            }
+        // Send to single FCM token (for testing)
+        if (fcmToken) {
+            const result = await sendNotification(
+                fcmToken,
+                title,
+                message,
+                data,
+                image
+            );
 
-            try {
-                await webpush.sendNotification(
-                    {
-                        endpoint: sub.endpoint,
-                        keys: {
-                            p256dh: sub.keys.p256dh,
-                            auth: sub.keys.auth,
-                        },
-                    },
-                    payload
-                );
-                return NextResponse.json({ success: true, sent: 1, message: "Direct test notification sent" });
-            } catch (error: any) {
-                console.error("Direct push failed:", error);
-                return NextResponse.json({ error: "Direct push failed: " + error.message, details: error }, { status: 500 });
-            }
-        }
-
-        // Single subscription send via ID
-        if (subscriptionId) {
-            const subscription = await fetchQuery(api.push.getSubscriptionById, {
-                id: subscriptionId,
-            });
-
-            if (!subscription || !subscription.isActive) {
-                return NextResponse.json(
-                    { error: "Subscription not found or inactive" },
-                    { status: 404 }
-                );
-            }
-
-            try {
-                await webpush.sendNotification(
-                    {
-                        endpoint: subscription.endpoint,
-                        keys: {
-                            p256dh: subscription.keys.p256dh,
-                            auth: subscription.keys.auth,
-                        },
-                    },
-                    payload
-                );
-
+            if (result.success) {
                 return NextResponse.json({ success: true, sent: 1 });
-            } catch (error: any) {
-                console.error("Single push failed:", error);
-                // If subscription is invalid (410 Gone), mark as inactive
-                if (error.statusCode === 410) {
-                    await fetchMutation(api.push.markInactive, {
-                        id: subscriptionId,
-                    });
-                }
+            } else {
                 return NextResponse.json(
-                    { error: error.message },
+                    { error: result.error },
                     { status: 500 }
                 );
             }
         }
 
-        // Broadcast to all subscribers
+        // Broadcast to all FCM subscribers
         if (broadcast) {
-            const subscriptions = await fetchQuery(api.push.getAllSubscriptions);
-            console.log(`Broadcasting to ${subscriptions.length} subscribers...`);
+            console.log("Fetching FCM tokens from Convex...");
+            console.log("CONVEX URL:", process.env.NEXT_PUBLIC_CONVEX_URL);
 
-            let sent = 0;
-            let failed = 0;
+            const subscriptions = await fetchQuery(api.push.getAllFcmTokens);
+            console.log(`Got ${subscriptions?.length || 0} subscriptions:`, JSON.stringify(subscriptions, null, 2));
 
-            for (const sub of subscriptions) {
-                try {
-                    await webpush.sendNotification(
-                        {
-                            endpoint: sub.endpoint,
-                            keys: {
-                                p256dh: sub.keys.p256dh,
-                                auth: sub.keys.auth,
-                            },
-                        },
-                        payload
-                    );
-                    sent++;
-                } catch (error: any) {
-                    console.error("Push failed for subscription:", sub._id, error.message);
-                    failed++;
+            if (!subscriptions || subscriptions.length === 0) {
+                return NextResponse.json({
+                    success: true,
+                    sent: 0,
+                    failed: 0,
+                    total: 0,
+                    message: "No active subscribers found"
+                });
+            }
 
-                    // Mark invalid subscriptions as inactive
-                    if (error.statusCode === 410) {
-                        await fetchMutation(api.push.markInactive, { id: sub._id });
-                    }
+            const tokens = subscriptions.map((s: any) => s.token);
+
+            const result = await sendMulticastNotification(
+                tokens,
+                title,
+                message,
+                data,
+                image
+            );
+
+            // Mark failed tokens as inactive
+            if (result.failedTokens && result.failedTokens.length > 0) {
+                for (const token of result.failedTokens) {
+                    await fetchMutation(api.push.markFcmTokenInvalid, { token });
                 }
             }
 
-            console.log(`Broadcast complete. Sent: ${sent}, Failed: ${failed}`);
+            console.log(`Broadcast complete. Sent: ${result.sent}, Failed: ${result.failed}`);
             return NextResponse.json({
                 success: true,
-                sent,
-                failed,
+                sent: result.sent,
+                failed: result.failed,
                 total: subscriptions.length,
             });
         }
 
         return NextResponse.json(
-            { error: "Specify subscriptionId, directSubscription, or set broadcast: true" },
+            { error: "Specify fcmToken or set broadcast: true" },
             { status: 400 }
         );
     } catch (error: any) {
         console.error("Push notification error:", error);
-
-        // Handle missing VAPID keys specifically
-        if (error.message?.includes("publicKey") || error.message?.includes("privateKey")) {
-            return NextResponse.json(
-                { error: "VAPID keys are missing. Please configure them in Vercel environment variables." },
-                { status: 500 }
-            );
-        }
-
         return NextResponse.json(
             { error: error.message || "Failed to send notification" },
             { status: 500 }

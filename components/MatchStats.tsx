@@ -52,7 +52,7 @@ export function MatchStats({ matchId, teamA, teamB }: MatchStatsProps) {
     if (match === undefined) {
         return (
             <div className="bg-[#333333] rounded-xl border border-[#2a4a6c] p-6 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-[#f0ad4e]" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#E50914]" />
             </div>
         );
     }
@@ -65,7 +65,7 @@ export function MatchStats({ matchId, teamA, teamB }: MatchStatsProps) {
         return (
             <div className="bg-[#333333] rounded-xl border border-[#2a4a6c] p-6">
                 <div className="flex items-center gap-2 mb-6">
-                    <BarChart3 className="w-5 h-5 text-[#f0ad4e]" />
+                    <BarChart3 className="w-5 h-5 text-[#E50914]" />
                     <h3 className="text-lg font-bold text-white">Match Statistics</h3>
                 </div>
 
@@ -115,7 +115,7 @@ export function MatchStats({ matchId, teamA, teamB }: MatchStatsProps) {
     return (
         <div className="bg-[#333333] rounded-xl border border-[#2a4a6c] p-6">
             <div className="flex items-center gap-2 mb-6">
-                <BarChart3 className="w-5 h-5 text-[#f0ad4e]" />
+                <BarChart3 className="w-5 h-5 text-[#E50914]" />
                 <h3 className="text-lg font-bold text-white">Match Statistics</h3>
             </div>
 

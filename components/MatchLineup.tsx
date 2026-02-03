@@ -46,7 +46,7 @@ export function MatchLineup({ matchId, teamA, teamB, teamALogo, teamBLogo }: Mat
     if (match === undefined) {
         return (
             <div className="bg-[#333333] rounded-xl border border-[#2a4a6c] p-6 flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-6 h-6 animate-spin text-[#f0ad4e]" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#E50914]" />
             </div>
         );
     }
@@ -64,7 +64,7 @@ export function MatchLineup({ matchId, teamA, teamB, teamALogo, teamBLogo }: Mat
             {/* Header */}
             <div className="p-4 border-b border-[#2a4a6c]">
                 <div className="flex items-center gap-2 mb-4">
-                    <Users className="w-5 h-5 text-[#f0ad4e]" />
+                    <Users className="w-5 h-5 text-[#E50914]" />
                     <h3 className="text-lg font-bold text-white">Lineup</h3>
                 </div>
 
@@ -103,7 +103,7 @@ export function MatchLineup({ matchId, teamA, teamB, teamALogo, teamBLogo }: Mat
 
             {/* Formation Display */}
             <div className="p-4 border-b border-[#2a4a6c] text-center bg-[#2a4a6c]/30">
-                <span className="text-2xl font-black text-[#f0ad4e]">
+                <span className="text-2xl font-black text-[#E50914]">
                     {currentLineup.formation}
                 </span>
                 <p className="text-xs text-gray-400 mt-1">{currentTeamName} Formation</p>

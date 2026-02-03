@@ -187,6 +187,20 @@ export const getMoviesByCategory = query({
     },
 });
 
+// Get movies sorted by view count (for admin dashboard)
+export const getMoviesByViews = query({
+    args: { limit: v.optional(v.number()) },
+    handler: async (ctx, args) => {
+        const movies = await ctx.db.query("movies").collect();
+
+        // Sort by views descending
+        const sorted = movies.sort((a, b) => (b.views || 0) - (a.views || 0));
+
+        const limit = args.limit || 10;
+        return sorted.slice(0, limit);
+    },
+});
+
 // ============================================
 // MUTATIONS
 // ============================================
