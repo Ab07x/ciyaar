@@ -194,8 +194,8 @@ export function MatchCardNew({
                   isLocked
                     ? "bg-gradient-to-r from-yellow-500 to-amber-500 text-black"
                     : status === "live"
-                    ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30"
-                    : "bg-white text-black"
+                      ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30"
+                      : "bg-white text-black"
                 )}
               >
                 {isLocked ? (
@@ -323,8 +323,8 @@ export function MatchCardNew({
               isLocked
                 ? "bg-gradient-to-r from-yellow-500 to-amber-500 text-black"
                 : status === "live"
-                ? "bg-gradient-to-r from-red-600 to-red-500 text-white"
-                : "bg-white/10 text-white hover:bg-white/20"
+                  ? "bg-gradient-to-r from-red-600 to-red-500 text-white"
+                  : "bg-white/10 text-white hover:bg-white/20"
             )}
           >
             {isLocked ? (

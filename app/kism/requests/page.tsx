@@ -51,8 +51,8 @@ export default function AdminRequests() {
                                 <h3 className="font-bold text-white">{req.title}</h3>
                                 <div className="text-sm text-gray-400 capitalize">{req.type} • {req.votes} Votes</div>
                                 <div className={`text-xs mt-1 font-bold ${req.status === 'pending' ? 'text-yellow-500' :
-                                        req.status === 'fulfilled' ? 'text-green-500' :
-                                            req.status === 'rejected' ? 'text-red-500' : 'text-blue-500'
+                                    req.status === 'fulfilled' ? 'text-green-500' :
+                                        req.status === 'rejected' ? 'text-red-500' : 'text-blue-500'
                                     }`}>
                                     {req.status?.toUpperCase() || "PENDING"}
                                 </div>

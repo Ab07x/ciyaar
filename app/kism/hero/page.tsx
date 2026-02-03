@@ -32,7 +32,7 @@ export default function HeroAdminPage() {
     const availableMovies = (allMovies || []).filter((m: any) =>
         !m.isFeatured &&
         (m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         m.titleSomali?.toLowerCase().includes(searchQuery.toLowerCase()))
+            m.titleSomali?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     // Add movie to hero

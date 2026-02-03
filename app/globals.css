@@ -38,7 +38,7 @@
   --color-stadium-card: var(--bg-card);
   --color-stadium-surface: var(--bg-secondary);
 
-  --color-accent-green: #9AE600;
+  --color-accent-green: #E50914;
   /* Green for CTAs */
   --color-accent-red: var(--color-sports);
   --color-accent-gold: var(--color-premium);
@@ -157,7 +157,7 @@
      CTA BUTTONS - 44px+ touch targets for mobile
      ===================================================== */
   .cta-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-accent-green text-black font-bold rounded-xl transition-all duration-200 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-accent-green text-white font-bold rounded-xl transition-all duration-200 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] cursor-pointer;
   }
 
   .cta-secondary {
