@@ -86,7 +86,7 @@ export default function IOSAppPage() {
             <section className="container mx-auto px-4 mb-20">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                        <Star className="text-yellow-400 mb-4" size={32} />
+                        <Star className="text-[#E50914] mb-4" size={32} />
                         <h3 className="text-xl font-bold mb-2">Native Design</h3>
                         <p className="text-text-secondary">Si buuxda ugu raaxeyso naqshad u gaar ah Apple ecosystem, oo leh animations siman.</p>
                     </div>

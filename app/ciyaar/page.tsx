@@ -45,7 +45,7 @@ function MatchesContent() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <Trophy className="text-yellow-500" size={28} />
+              <Trophy className="text-[#E50914]" size={28} />
               {liveCount > 0 && <LiveBadge text={`${liveCount} LIVE`} />}
             </div>
             <h1 className="text-3xl md:text-5xl font-black mb-2 uppercase tracking-tight">
