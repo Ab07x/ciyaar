@@ -33,8 +33,8 @@ async function downloadAndConvertToLocal(
             fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        // SEO-friendly filename with WebP extension
-        const filename = `${slug}-${type}.webp`;
+        // SEO-friendly filename with WebP extension and Af-somali suffix
+        const filename = `${slug}-${type}-af-somali.webp`;
         const filePath = path.join(uploadDir, filename);
 
         // Get image buffer
