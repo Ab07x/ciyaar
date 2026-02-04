@@ -22,6 +22,7 @@ import {
 import { MyListButton } from "@/components/MyListButton";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
+import { generateMovieSchema } from "@/lib/seo/schema";
 
 interface MovieViewClientProps {
     slug: string;
@@ -320,26 +321,11 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                 )}
             </div>
 
-            {/* JSON-LD Schema */}
+            {/* JSON-LD Schema for Rich Snippets */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
-                        "@context": "https://schema.org",
-                        "@type": "Movie",
-                        name: movie.title,
-                        alternateName: movie.titleSomali,
-                        description: movie.overviewSomali || movie.overview,
-                        image: movie.posterUrl,
-                        datePublished: movie.releaseDate,
-                        duration: movie.runtime ? `PT${movie.runtime}M` : undefined,
-                        aggregateRating: movie.rating ? {
-                            "@type": "AggregateRating",
-                            ratingValue: movie.rating,
-                            bestRating: "10",
-                        } : undefined,
-                        genre: movie.genres,
-                    })
+                    __html: JSON.stringify(generateMovieSchema(movie))
                 }}
             />
         </div>

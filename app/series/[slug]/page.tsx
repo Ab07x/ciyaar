@@ -26,6 +26,7 @@ import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { StreamPlayer } from "@/components/StreamPlayer";
 import { ContentCarousel } from "@/components/ContentCarousel";
+import { generateTVSchema } from "@/lib/seo/schema";
 import type { Id } from "@/convex/_generated/dataModel";
 
 function SeriesWatchContent() {
@@ -496,38 +497,11 @@ function SeriesWatchContent() {
                     </div>
                 </div>
             </div>
-            {/* JSON-LD Schema for TVSeries */}
+            {/* JSON-LD Schema for Rich Snippets */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
-                        "@context": "https://schema.org",
-                        "@type": "TVSeries",
-                        name: series.title,
-                        alternateName: series.titleSomali,
-                        description: series.overviewSomali || series.overview,
-                        image: series.posterUrl,
-                        datePublished: series.firstAirDate,
-                        numberOfSeasons: series.numberOfSeasons,
-                        numberOfEpisodes: series.numberOfEpisodes,
-                        aggregateRating: series.rating ? {
-                            "@type": "AggregateRating",
-                            ratingValue: series.rating,
-                            bestRating: "10",
-                            ratingCount: "100" // Placeholder
-                        } : undefined,
-                        actor: series.cast?.map((c: any) => ({
-                            "@type": "Person",
-                            name: c.name
-                        })),
-                        genre: series.genres,
-                        offers: {
-                            "@type": "Offer",
-                            price: series.isPremium ? "5.00" : "0",
-                            priceCurrency: "USD",
-                            availability: "https://schema.org/OnlineOnly"
-                        }
-                    })
+                    __html: JSON.stringify(generateTVSchema(series))
                 }}
             />
         </div>
