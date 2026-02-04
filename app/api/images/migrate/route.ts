@@ -41,9 +41,12 @@ async function downloadAndConvertToLocal(
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Convert to WebP with optimal quality
-        const quality = type === "poster" ? 85 : 80;
+        // Resize and convert to WebP for fast loading
+        const width = type === "poster" ? 500 : 1280; // Poster: 500px, Backdrop: 1280px
+        const quality = type === "poster" ? 80 : 75;
+
         await sharp(buffer)
+            .resize(width, null, { withoutEnlargement: true })
             .webp({ quality, effort: 6 })
             .toFile(filePath);
 
