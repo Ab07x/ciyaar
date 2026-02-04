@@ -28,7 +28,7 @@ async function downloadAndConvertToLocal(
             return null;
         }
 
-        const uploadDir = path.join(process.cwd(), "public", "movies");
+        const uploadDir = path.join(process.cwd(), "public", "posters");
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -47,8 +47,8 @@ async function downloadAndConvertToLocal(
             .webp({ quality, effort: 6 })
             .toFile(filePath);
 
-        console.log(`✓ Saved: /movies/${filename}`);
-        return `/movies/${filename}`;
+        console.log(`✓ Saved: /posters/${filename}`);
+        return `/posters/${filename}`;
     } catch (error) {
         console.error(`Error processing ${type}:`, error);
         return null;
@@ -189,7 +189,7 @@ export async function GET() {
         ).length;
 
         const withLocalImages = allMovies.filter((m) =>
-            m.posterUrl?.startsWith("/movies/")
+            m.posterUrl?.startsWith("/posters/") || m.posterUrl?.startsWith("/movies/")
         ).length;
 
         const fullyMigrated = allMovies.filter(

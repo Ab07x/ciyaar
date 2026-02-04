@@ -352,3 +352,29 @@ export const updateMovieImages = mutation({
         });
     },
 });
+
+// Fix image URLs: replace /movies/ with /posters/ to avoid route conflict
+export const fixImageUrls = mutation({
+    handler: async (ctx) => {
+        const movies = await ctx.db.query("movies").collect();
+        let fixed = 0;
+
+        for (const movie of movies) {
+            const updates: { posterUrl?: string; backdropUrl?: string } = {};
+
+            if (movie.posterUrl?.startsWith("/movies/")) {
+                updates.posterUrl = movie.posterUrl.replace("/movies/", "/posters/");
+            }
+            if (movie.backdropUrl?.startsWith("/movies/")) {
+                updates.backdropUrl = movie.backdropUrl.replace("/movies/", "/posters/");
+            }
+
+            if (Object.keys(updates).length > 0) {
+                await ctx.db.patch(movie._id, updates);
+                fixed++;
+            }
+        }
+
+        return { fixed, total: movies.length };
+    },
+});

@@ -12,7 +12,7 @@ async function downloadAndConvertImage(url: string, slug: string, type: "poster"
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Failed to fetch ${url}`);
 
-        const uploadDir = path.join(process.cwd(), "public", "movies");
+        const uploadDir = path.join(process.cwd(), "public", "posters");
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -31,8 +31,8 @@ async function downloadAndConvertImage(url: string, slug: string, type: "poster"
             .webp({ quality, effort: 6 })
             .toFile(filePath);
 
-        console.log(`✓ Saved ${type}: /movies/${filename}`);
-        return `/movies/${filename}`;
+        console.log(`✓ Saved ${type}: /posters/${filename}`);
+        return `/posters/${filename}`;
     } catch (error) {
         console.error(`Error processing ${type} image:`, error);
         return null;
