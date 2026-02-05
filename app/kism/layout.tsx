@@ -67,19 +67,23 @@ export default function AdminLayout({
             return;
         }
 
-        // Check if admin session exists
+        // Check if admin session exists with small delay to ensure cookie is available
         const checkAuth = () => {
-            const cookies = document.cookie.split(";");
-            const sessionCookie = cookies.find(c => c.trim().startsWith("fanbroj_admin_session="));
-            if (sessionCookie && sessionCookie.includes("authenticated")) {
+            const cookies = document.cookie;
+            console.log("[Auth] Checking cookies:", cookies);
+            if (cookies.includes("fanbroj_admin_session=authenticated")) {
+                console.log("[Auth] Authenticated!");
                 setIsAuthenticated(true);
             } else {
+                console.log("[Auth] Not authenticated, redirecting...");
                 setIsAuthenticated(false);
                 router.push("/kism/login");
             }
         };
 
-        checkAuth();
+        // Small delay to ensure cookie is processed
+        const timer = setTimeout(checkAuth, 100);
+        return () => clearTimeout(timer);
     }, [pathname, router]);
 
     // Login page - no layout
