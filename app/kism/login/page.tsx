@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, ArrowRight, AlertCircle } from "lucide-react";
+import { Lock, ArrowRight, AlertCircle, User } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,8 @@ function LoginContent() {
     const searchParams = useSearchParams();
     const from = searchParams.get("from") || "/kism";
 
-    const [token, setToken] = useState("");
+    const [username, setUsername] = useState("admin");
+    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -24,7 +25,7 @@ function LoginContent() {
             const res = await fetch("/api/kism/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token }),
+                body: JSON.stringify({ username, password }),
             });
 
             const data = await res.json();
@@ -60,22 +61,42 @@ function LoginContent() {
 
                 <h2 className="text-xl font-bold text-center mb-2">Admin Login</h2>
                 <p className="text-text-muted text-center text-sm mb-8">
-                    Gali admin token-ka si aad u gasho
+                    Gali username iyo password-ka
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label className="block text-xs font-bold text-text-secondary uppercase mb-2">
-                            Admin Token
+                            Username
                         </label>
-                        <input
-                            type="password"
-                            value={token}
-                            onChange={(e) => setToken(e.target.value)}
-                            placeholder="••••••••••••"
-                            required
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-green transition-colors"
-                        />
+                        <div className="relative">
+                            <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="admin"
+                                required
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-accent-green transition-colors"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-text-secondary uppercase mb-2">
+                            Password
+                        </label>
+                        <div className="relative">
+                            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••••••"
+                                required
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-accent-green transition-colors"
+                            />
+                        </div>
                     </div>
 
                     {error && (

@@ -1,61 +1,75 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+// Admin credentials - set these in environment variables
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.ADMIN_TOKEN;
+
+export async function POST(request: NextRequest) {
     try {
-        const { token } = await request.json();
-        const inputToken = token?.trim();
+        const body = await request.json();
+        const { username, password } = body;
 
-        if (!inputToken) {
+        // Support legacy token-only login
+        const inputUsername = username?.trim() || "admin";
+        const inputPassword = password?.trim() || body.token?.trim();
+
+        if (!inputPassword) {
             return NextResponse.json(
                 { error: "Password waa loo baahan yahay (Password required)" },
                 { status: 400 }
             );
         }
 
-        // 1. Check DB for custom Admin Password
+        // Check DB for custom admin credentials
+        let dbAdminUsername: string | undefined;
         let dbAdminPassword: string | undefined;
         try {
             const settings = await fetchQuery(api.settings.getSettings);
+            dbAdminUsername = (settings as any)?.adminUsername;
             dbAdminPassword = (settings as any)?.adminPassword;
         } catch (err) {
             console.error("Failed to fetch settings from Convex:", err);
-            // Continue to fallback
         }
 
         let isAuthenticated = false;
 
-        // Environment Variable - always available as primary
-        const envAdminToken = process.env.ADMIN_TOKEN;
-
-        // Check against DB password if set, or env token
+        // Check against DB credentials first (if set)
         if (dbAdminPassword && dbAdminPassword.trim()) {
-            // DB Password has priority
-            if (inputToken === dbAdminPassword.trim()) {
+            const validUsername = dbAdminUsername?.trim() || "admin";
+            if (inputUsername === validUsername && inputPassword === dbAdminPassword.trim()) {
                 isAuthenticated = true;
             }
         }
 
-        // Also check env token (either as fallback or additional valid token)
-        if (!isAuthenticated && envAdminToken && inputToken === envAdminToken.trim()) {
-            isAuthenticated = true;
+        // Fallback to environment variables
+        if (!isAuthenticated && ADMIN_PASSWORD) {
+            if (inputUsername === ADMIN_USERNAME && inputPassword === ADMIN_PASSWORD.trim()) {
+                isAuthenticated = true;
+            }
         }
 
         if (!isAuthenticated) {
-            console.log("[Admin Login] Failed attempt");
+            console.log("[Admin Login] Failed attempt for username:", inputUsername);
             return NextResponse.json(
-                { error: "Token qaldan (Invalid Password)" },
+                { error: "Username ama password qaldan (Invalid credentials)" },
                 { status: 401 }
             );
         }
 
+        console.log("[Admin Login] Success for:", inputUsername);
         const response = NextResponse.json({ success: true });
 
-        // Set cookie - NOT httpOnly so client can check it
+        // Check if request is from direct IP (HTTP) or domain (HTTPS)
+        const host = request.headers.get("host") || "";
+        const isDirectIP = /^\d+\.\d+\.\d+\.\d+/.test(host);
+        const isSecure = !isDirectIP && process.env.NODE_ENV === "production";
+
+        // Set session cookie
         response.cookies.set("fanbroj_admin_session", "authenticated", {
-            httpOnly: false, // Allow client-side check
-            secure: process.env.NODE_ENV === "production",
+            httpOnly: false,
+            secure: isSecure,
             sameSite: "lax",
             maxAge: 60 * 60 * 24 * 7, // 7 days
             path: "/",
