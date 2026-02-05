@@ -31,8 +31,9 @@ function LoginContent() {
             const data = await res.json();
 
             if (res.ok) {
-                router.push(from);
-                router.refresh();
+                // Small delay to ensure cookie is set before navigation
+                await new Promise(resolve => setTimeout(resolve, 100));
+                window.location.href = from;
             } else {
                 setError(data.error || "Login failed");
             }
