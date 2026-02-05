@@ -1,13 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useAction } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Bell, Send, Users, Loader2, CheckCircle, Image as ImageIcon, X, Upload, Smartphone } from "lucide-react";
+import { Bell, Send, Users, Loader2, CheckCircle, X, Upload, Smartphone, ImageIcon } from "lucide-react";
 import { usePush } from "@/providers/PushProvider";
 
-// Use relative URLs - admin should be accessed directly via server IP to bypass CloudFront
-// Access admin at: http://16.170.141.191:3000/kism/notifications
+// Default icons available for notifications
+const ICON_OPTIONS = [
+    { label: "Default (Fanbroj)", value: "/icon-192.png" },
+    { label: "Bell", value: "/icons/bell.png" },
+    { label: "Match", value: "/icons/match.png" },
+    { label: "Movie", value: "/icons/movie.png" },
+    { label: "Custom", value: "custom" },
+];
 
 function TestPushCard() {
     const { isSubscribed, fcmToken, subscribe } = usePush();
@@ -69,12 +75,13 @@ function TestPushCard() {
     );
 }
 
-
 interface NotificationForm {
     title: string;
     body: string;
     url: string;
     image: string;
+    icon: string;
+    customIcon: string;
     targetAudience: "all" | "premium" | "trial" | "free";
 }
 
@@ -86,43 +93,78 @@ export default function AdminNotificationsPage() {
         body: "",
         url: "/",
         image: "",
+        icon: "/icon-192.png",
+        customIcon: "",
         targetAudience: "all",
     });
     const [sending, setSending] = useState(false);
-    const [uploading, setUploading] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingIcon, setUploadingIcon] = useState(false);
     const [triggering, setTriggering] = useState(false);
-    const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
 
-    const generateUploadUrl = useMutation(api.media.generateUploadUrl);
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Upload image to local server
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        setUploading(true);
+        setUploadingImage(true);
         try {
-            // Use Convex storage (bypasses CloudFront)
-            const uploadUrl = await generateUploadUrl();
+            const formDataUpload = new FormData();
+            formDataUpload.append("file", file);
 
-            const res = await fetch(uploadUrl, {
+            const res = await fetch("/api/upload/notification-image", {
                 method: "POST",
-                headers: { "Content-Type": file.type },
-                body: file,
+                body: formDataUpload,
             });
 
-            if (!res.ok) throw new Error("Upload failed");
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Upload failed");
+            }
 
-            const { storageId } = await res.json();
-
-            // Get the public URL from Convex
-            const publicUrl = `https://valuable-toad-308.convex.cloud/api/storage/${storageId}`;
-
-            setFormData((prev: NotificationForm) => ({ ...prev, image: publicUrl }));
+            const data = await res.json();
+            setFormData((prev) => ({ ...prev, image: data.url }));
         } catch (error: any) {
             alert("Upload failed: " + error.message);
         } finally {
-            setUploading(false);
+            setUploadingImage(false);
         }
+    };
+
+    // Upload custom icon
+    const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingIcon(true);
+        try {
+            const formDataUpload = new FormData();
+            formDataUpload.append("file", file);
+
+            const res = await fetch("/api/upload/notification-image", {
+                method: "POST",
+                body: formDataUpload,
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Upload failed");
+            }
+
+            const data = await res.json();
+            setFormData((prev) => ({ ...prev, customIcon: data.url, icon: "custom" }));
+        } catch (error: any) {
+            alert("Icon upload failed: " + error.message);
+        } finally {
+            setUploadingIcon(false);
+        }
+    };
+
+    const getIconUrl = () => {
+        if (formData.icon === "custom" && formData.customIcon) {
+            return formData.customIcon;
+        }
+        return formData.icon || "/icon-192.png";
     };
 
     const handleSend = async () => {
@@ -132,10 +174,8 @@ export default function AdminNotificationsPage() {
         }
 
         setSending(true);
-        setResult(null);
 
         try {
-            console.log("Sending push notification broadcast...", formData);
             const res = await fetch("/api/push", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -143,8 +183,8 @@ export default function AdminNotificationsPage() {
                     title: formData.title,
                     body: formData.body,
                     url: formData.url || "/",
-                    image: formData.image,
-                    icon: "/icon-192.png",
+                    image: formData.image || undefined,
+                    icon: getIconUrl(),
                     broadcast: true,
                 }),
             });
@@ -155,9 +195,6 @@ export default function AdminNotificationsPage() {
                 throw new Error(data.error || `Server error: ${res.status}`);
             }
 
-            console.log("Broadcast result:", data);
-            setResult(data);
-
             if (data.sent > 0) {
                 alert(`Si guul leh ayaa loo diray ${data.sent} ogeysiis!`);
                 setFormData({
@@ -165,14 +202,15 @@ export default function AdminNotificationsPage() {
                     body: "",
                     url: "/",
                     image: "",
+                    icon: "/icon-192.png",
+                    customIcon: "",
                     targetAudience: "all",
                 });
             } else {
                 alert("Lama helin macaamiil loo diro (Active subscribers: 0).");
             }
         } catch (error: any) {
-            console.error("Failed to send notification:", error);
-            alert("Khalad ayaa dhacay markii la dirayay ogeysiiska: " + error.message);
+            alert("Khalad ayaa dhacay: " + error.message);
         } finally {
             setSending(false);
         }
@@ -208,7 +246,7 @@ export default function AdminNotificationsPage() {
                         Push notifications won't work through CloudFront. Access admin directly:
                     </p>
                     <a
-                        href="http://16.170.141.191:3000/kism/notifications"
+                        href="http://16.170.141.191/kism/notifications"
                         className="inline-block mt-2 px-4 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600"
                     >
                         Go to Direct Admin Panel
@@ -236,7 +274,6 @@ export default function AdminNotificationsPage() {
                     </div>
                 </div>
 
-                {/* Test Push Section */}
                 <TestPushCard />
             </div>
 
@@ -272,16 +309,78 @@ export default function AdminNotificationsPage() {
                         />
                     </div>
 
-                    {/* Image Upload Section */}
+                    {/* Notification Icon */}
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Notification Icon</label>
+                        <div className="flex flex-wrap gap-3">
+                            {ICON_OPTIONS.map((opt) => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, icon: opt.value })}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                                        formData.icon === opt.value
+                                            ? "border-accent-green bg-accent-green/20 text-accent-green"
+                                            : "border-border-subtle bg-stadium-dark hover:border-border-strong"
+                                    }`}
+                                >
+                                    {opt.value !== "custom" && (
+                                        <img src={opt.value} alt={opt.label} className="w-6 h-6 rounded" />
+                                    )}
+                                    {opt.value === "custom" && <ImageIcon size={18} />}
+                                    <span className="text-sm">{opt.label}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Custom Icon Upload */}
+                        {formData.icon === "custom" && (
+                            <div className="mt-3 p-4 border border-dashed border-border-subtle rounded-lg bg-stadium-dark/50">
+                                {formData.customIcon ? (
+                                    <div className="flex items-center gap-4">
+                                        <img src={formData.customIcon} alt="Custom Icon" className="w-16 h-16 rounded-lg object-cover" />
+                                        <div>
+                                            <p className="text-sm font-medium">Custom Icon Uploaded</p>
+                                            <button
+                                                onClick={() => setFormData({ ...formData, customIcon: "" })}
+                                                className="text-xs text-red-400 hover:text-red-300 mt-1"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <label className="flex flex-col items-center justify-center py-4 cursor-pointer hover:bg-white/5 transition-colors rounded-lg">
+                                        {uploadingIcon ? (
+                                            <Loader2 className="animate-spin text-accent-green mb-2" />
+                                        ) : (
+                                            <Upload className="text-accent-green mb-2" />
+                                        )}
+                                        <p className="text-sm font-medium">Upload Custom Icon</p>
+                                        <p className="text-xs text-text-muted">Recommended: 192x192 PNG</p>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleIconUpload}
+                                            disabled={uploadingIcon}
+                                        />
+                                    </label>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Large Image Upload */}
                     <div>
                         <label className="block text-sm font-medium mb-2">Large Image (optional)</label>
-                        <div className="flex flex-col gap-4 p-4 border-2 border-dashed border-border-subtle rounded-xl bg-stadium-dark/50">
+                        <div className="p-4 border-2 border-dashed border-border-subtle rounded-xl bg-stadium-dark/50">
                             {formData.image ? (
                                 <div className="relative aspect-video rounded-lg overflow-hidden border border-border-strong group">
-                                    <img src={formData.image} alt="Upload" className="w-full h-full object-cover" />
+                                    <img src={formData.image} alt="Notification Image" className="w-full h-full object-cover" />
                                     <button
-                                        onClick={() => setFormData((prev: NotificationForm) => ({ ...prev, image: "" }))}
-                                        className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => setFormData({ ...formData, image: "" })}
+                                        className="absolute top-2 right-2 p-2 bg-black/70 text-white rounded-full hover:bg-black transition-colors"
                                     >
                                         <X size={16} />
                                     </button>
@@ -289,11 +388,21 @@ export default function AdminNotificationsPage() {
                             ) : (
                                 <label className="flex flex-col items-center justify-center py-8 cursor-pointer hover:bg-white/5 transition-colors rounded-lg">
                                     <div className="w-12 h-12 bg-accent-green/10 rounded-full flex items-center justify-center mb-3">
-                                        {uploading ? <Loader2 className="animate-spin text-accent-green" /> : <Upload className="text-accent-green" />}
+                                        {uploadingImage ? (
+                                            <Loader2 className="animate-spin text-accent-green" />
+                                        ) : (
+                                            <Upload className="text-accent-green" />
+                                        )}
                                     </div>
-                                    <p className="font-bold">Upload Image (AWS Lightsail)</p>
-                                    <p className="text-xs text-text-muted mt-1">Recommended size: 720x360 or similar</p>
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
+                                    <p className="font-bold">Upload Image</p>
+                                    <p className="text-xs text-text-muted mt-1">Recommended: 720x360 or similar</p>
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        disabled={uploadingImage}
+                                    />
                                 </label>
                             )}
                         </div>
@@ -316,7 +425,7 @@ export default function AdminNotificationsPage() {
                     <div>
                         <label className="block text-sm font-medium mb-2">Target Audience</label>
                         <select
-                            value={formData.targetAudience || "all"}
+                            value={formData.targetAudience}
                             onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value as any })}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         >
@@ -331,7 +440,7 @@ export default function AdminNotificationsPage() {
                 {/* Send Button */}
                 <button
                     onClick={handleSend}
-                    disabled={sending || !formData.title || !formData.body || uploading}
+                    disabled={sending || !formData.title || !formData.body || uploadingImage || uploadingIcon}
                     className="w-full bg-accent-green text-black font-bold py-4 rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {sending ? (
@@ -348,8 +457,8 @@ export default function AdminNotificationsPage() {
                 </button>
             </div>
 
-            {/* Match Reminders Section */}
-            <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-6">
+            {/* Match Reminders */}
+            <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-bold flex items-center gap-2">
@@ -357,7 +466,7 @@ export default function AdminNotificationsPage() {
                             Match Reminders
                         </h2>
                         <p className="text-sm text-text-muted mt-1">
-                            Trigger notifications for users who opted in for upcoming matches (starting within 45m).
+                            Trigger notifications for users who opted in for upcoming matches.
                         </p>
                     </div>
                     <button
@@ -365,11 +474,7 @@ export default function AdminNotificationsPage() {
                         disabled={triggering}
                         className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-all flex items-center gap-2 disabled:opacity-50"
                     >
-                        {triggering ? (
-                            <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                            <Bell size={18} />
-                        )}
+                        {triggering ? <Loader2 size={18} className="animate-spin" /> : <Bell size={18} />}
                         Trigger Reminders
                     </button>
                 </div>
@@ -380,14 +485,24 @@ export default function AdminNotificationsPage() {
                 <h3 className="font-bold mb-4">Preview</h3>
                 <div className="bg-white text-black rounded-lg p-4 max-w-sm">
                     <div className="flex items-start gap-3">
-                        <img src="/icon-192.png" alt="Icon" className="w-10 h-10 rounded shadow-sm" />
+                        <img
+                            src={getIconUrl()}
+                            alt="Icon"
+                            className="w-10 h-10 rounded shadow-sm bg-gray-100"
+                            onError={(e) => { (e.target as HTMLImageElement).src = "/icon-192.png"; }}
+                        />
                         <div className="flex-1">
                             <p className="font-bold text-sm leading-tight">{formData.title || "Notification Title"}</p>
                             <p className="text-[13px] text-gray-600 mt-1 leading-snug">{formData.body || "Notification message will appear here"}</p>
 
                             {formData.image && (
                                 <div className="mt-2 rounded-md overflow-hidden border border-gray-100">
-                                    <img src={formData.image} alt="Big Image" className="w-full aspect-[2/1] object-cover" />
+                                    <img
+                                        src={formData.image}
+                                        alt="Big Image"
+                                        className="w-full aspect-[2/1] object-cover bg-gray-100"
+                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
                                 </div>
                             )}
 
@@ -399,4 +514,3 @@ export default function AdminNotificationsPage() {
         </div>
     );
 }
-
