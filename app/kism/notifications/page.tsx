@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Bell, Send, Users, Loader2, CheckCircle, Image as ImageIcon, X, Upload, Smartphone } from "lucide-react";
 import { usePush } from "@/providers/PushProvider";
+
+// Direct server URL to bypass CloudFront for admin operations
+const DIRECT_API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? '' // Use relative URL in development
+    : 'http://16.170.141.191:3000'; // Direct to server in production
 
 function TestPushCard() {
     const { isSubscribed, fcmToken, subscribe } = usePush();
@@ -19,7 +24,7 @@ function TestPushCard() {
 
         setTesting(true);
         try {
-            const res = await fetch("/api/push", {
+            const res = await fetch(`${DIRECT_API_URL}/api/push`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -90,26 +95,31 @@ export default function AdminNotificationsPage() {
     const [triggering, setTriggering] = useState(false);
     const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
 
+    const generateUploadUrl = useMutation(api.media.generateUploadUrl);
+
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setUploading(true);
         try {
-            const data = new FormData();
-            data.append("file", file);
+            // Use Convex storage (bypasses CloudFront)
+            const uploadUrl = await generateUploadUrl();
 
-            const res = await fetch("/api/upload", {
+            const res = await fetch(uploadUrl, {
                 method: "POST",
-                body: data,
+                headers: { "Content-Type": file.type },
+                body: file,
             });
 
-            const result = await res.json();
-            if (result.success) {
-                setFormData((prev: NotificationForm) => ({ ...prev, image: result.url }));
-            } else {
-                throw new Error(result.error);
-            }
+            if (!res.ok) throw new Error("Upload failed");
+
+            const { storageId } = await res.json();
+
+            // Get the public URL from Convex
+            const publicUrl = `https://valuable-toad-308.convex.cloud/api/storage/${storageId}`;
+
+            setFormData((prev: NotificationForm) => ({ ...prev, image: publicUrl }));
         } catch (error: any) {
             alert("Upload failed: " + error.message);
         } finally {
@@ -128,7 +138,7 @@ export default function AdminNotificationsPage() {
 
         try {
             console.log("Sending push notification broadcast...", formData);
-            const res = await fetch("/api/push", {
+            const res = await fetch(`${DIRECT_API_URL}/api/push`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -173,7 +183,7 @@ export default function AdminNotificationsPage() {
     const handleTriggerReminders = async () => {
         setTriggering(true);
         try {
-            const res = await fetch("/api/push/reminders", { method: "POST" });
+            const res = await fetch(`${DIRECT_API_URL}/api/push/reminders`, { method: "POST" });
             const data = await res.json();
             if (res.ok) {
                 alert(`Processed ${data.remindersProcessed} reminders. Sent: ${data.sent}, Failed: ${data.failed}`);
