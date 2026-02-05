@@ -6,10 +6,8 @@ import { api } from "@/convex/_generated/api";
 import { Bell, Send, Users, Loader2, CheckCircle, Image as ImageIcon, X, Upload, Smartphone } from "lucide-react";
 import { usePush } from "@/providers/PushProvider";
 
-// Direct server URL to bypass CloudFront for admin operations
-const DIRECT_API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? '' // Use relative URL in development
-    : 'http://16.170.141.191:3000'; // Direct to server in production
+// Use relative URLs - admin should be accessed directly via server IP to bypass CloudFront
+// Access admin at: http://16.170.141.191:3000/kism/notifications
 
 function TestPushCard() {
     const { isSubscribed, fcmToken, subscribe } = usePush();
@@ -24,7 +22,7 @@ function TestPushCard() {
 
         setTesting(true);
         try {
-            const res = await fetch(`${DIRECT_API_URL}/api/push`, {
+            const res = await fetch("/api/push", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -138,7 +136,7 @@ export default function AdminNotificationsPage() {
 
         try {
             console.log("Sending push notification broadcast...", formData);
-            const res = await fetch(`${DIRECT_API_URL}/api/push`, {
+            const res = await fetch("/api/push", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -183,7 +181,7 @@ export default function AdminNotificationsPage() {
     const handleTriggerReminders = async () => {
         setTriggering(true);
         try {
-            const res = await fetch(`${DIRECT_API_URL}/api/push/reminders`, { method: "POST" });
+            const res = await fetch("/api/push/reminders", { method: "POST" });
             const data = await res.json();
             if (res.ok) {
                 alert(`Processed ${data.remindersProcessed} reminders. Sent: ${data.sent}, Failed: ${data.failed}`);
@@ -197,8 +195,27 @@ export default function AdminNotificationsPage() {
         }
     };
 
+    const isCloudFront = typeof window !== 'undefined' &&
+        (window.location.hostname === 'fanbroj.net' || window.location.hostname === 'www.fanbroj.net');
+
     return (
         <div className="max-w-4xl mx-auto space-y-8">
+            {/* CloudFront Warning */}
+            {isCloudFront && (
+                <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4">
+                    <p className="font-bold text-red-400">CloudFront Blocks POST Requests</p>
+                    <p className="text-sm text-red-300 mt-1">
+                        Push notifications won't work through CloudFront. Access admin directly:
+                    </p>
+                    <a
+                        href="http://16.170.141.191:3000/kism/notifications"
+                        className="inline-block mt-2 px-4 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600"
+                    >
+                        Go to Direct Admin Panel
+                    </a>
+                </div>
+            )}
+
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-black mb-2">Push Notifications</h1>
