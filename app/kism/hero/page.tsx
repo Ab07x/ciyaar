@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -20,23 +20,42 @@ import {
 } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 
+const MAX_HERO_SLIDES = 12;
+
 export default function HeroAdminPage() {
-    const allMovies = useQuery(api.movies.listMovies, { isPublished: true, limit: 100 });
+    const allMovies = useQuery(api.movies.listMovies, { isPublished: true, limit: 1000 });
     const featuredMovies = useQuery(api.movies.getFeaturedMovies);
     const updateMovie = useMutation(api.movies.updateMovie);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [saving, setSaving] = useState<string | null>(null);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-    // Filter movies for search
-    const availableMovies = (allMovies || []).filter((m: any) =>
-        !m.isFeatured &&
-        (m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            m.titleSomali?.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    // Filter movies for search - show searched ones at top
+    const availableMovies = (allMovies || [])
+        .filter((m: any) =>
+            !m.isFeatured &&
+            (m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                m.titleSomali?.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+        .sort((a: any, b: any) => {
+            // If searching, prioritize exact matches
+            if (searchQuery) {
+                const aMatch = a.title.toLowerCase().startsWith(searchQuery.toLowerCase()) ||
+                    a.titleSomali?.toLowerCase().startsWith(searchQuery.toLowerCase());
+                const bMatch = b.title.toLowerCase().startsWith(searchQuery.toLowerCase()) ||
+                    b.titleSomali?.toLowerCase().startsWith(searchQuery.toLowerCase());
+                if (aMatch && !bMatch) return -1;
+                if (!aMatch && bMatch) return 1;
+            }
+            // Then by rating
+            return (b.rating || 0) - (a.rating || 0);
+        });
 
     // Add movie to hero
     const addToHero = async (movie: any) => {
+        if (sortedFeatured.length >= MAX_HERO_SLIDES) return;
         setSaving(movie._id);
         try {
             const maxOrder = Math.max(0, ...(featuredMovies || []).map((m: any) => m.featuredOrder || 0));
@@ -68,10 +87,58 @@ export default function HeroAdminPage() {
         setSaving(null);
     };
 
+    // Drag and drop handlers
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        setDragOverIndex(index);
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = async (targetIndex: number) => {
+        if (draggedIndex === null || draggedIndex === targetIndex) {
+            setDraggedIndex(null);
+            setDragOverIndex(null);
+            return;
+        }
+
+        const sorted = [...sortedFeatured];
+        const [draggedItem] = sorted.splice(draggedIndex, 1);
+        sorted.splice(targetIndex, 0, draggedItem);
+
+        // Update all orders
+        setSaving("reordering");
+        try {
+            for (let i = 0; i < sorted.length; i++) {
+                await updateMovie({
+                    id: sorted[i]._id as Id<"movies">,
+                    featuredOrder: i + 1,
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to reorder");
+        }
+        setSaving(null);
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
     // Move movie up in order
     const moveUp = async (movie: any, index: number) => {
         if (index === 0) return;
-        const sorted = [...(featuredMovies || [])].sort((a: any, b: any) => (a.featuredOrder || 0) - (b.featuredOrder || 0));
+        const sorted = [...sortedFeatured];
         const prevMovie = sorted[index - 1];
 
         setSaving(movie._id);
@@ -92,7 +159,7 @@ export default function HeroAdminPage() {
 
     // Move movie down in order
     const moveDown = async (movie: any, index: number) => {
-        const sorted = [...(featuredMovies || [])].sort((a: any, b: any) => (a.featuredOrder || 0) - (b.featuredOrder || 0));
+        const sorted = [...sortedFeatured];
         if (index === sorted.length - 1) return;
         const nextMovie = sorted[index + 1];
 
@@ -126,7 +193,7 @@ export default function HeroAdminPage() {
                     </Link>
                     <div>
                         <h1 className="text-3xl font-black">HERO SLIDER</h1>
-                        <p className="text-text-muted text-sm">Manage homepage featured movies (max 8 slides)</p>
+                        <p className="text-text-muted text-sm">Manage homepage featured movies (max {MAX_HERO_SLIDES} slides)</p>
                     </div>
                 </div>
                 <Link
@@ -143,11 +210,18 @@ export default function HeroAdminPage() {
                 {/* Current Hero Slides */}
                 <div className="bg-stadium-elevated border border-border-strong rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="font-bold text-lg">Current Hero Slides ({sortedFeatured.length}/8)</h2>
-                        {sortedFeatured.length >= 8 && (
+                        <h2 className="font-bold text-lg">Current Hero Slides ({sortedFeatured.length}/{MAX_HERO_SLIDES})</h2>
+                        {sortedFeatured.length >= MAX_HERO_SLIDES && (
                             <span className="text-xs text-yellow-500">Max reached</span>
                         )}
                     </div>
+
+                    {saving === "reordering" && (
+                        <div className="mb-4 p-2 bg-accent-green/20 rounded-lg text-sm text-accent-green flex items-center gap-2">
+                            <Loader2 size={14} className="animate-spin" />
+                            Saving new order...
+                        </div>
+                    )}
 
                     {sortedFeatured.length === 0 ? (
                         <div className="text-center py-12 text-text-muted">
@@ -156,37 +230,52 @@ export default function HeroAdminPage() {
                             <p className="text-sm">Add movies from the right panel</p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {sortedFeatured.map((movie: any, index: number) => (
                                 <div
                                     key={movie._id}
-                                    className="flex items-center gap-3 p-3 bg-stadium-dark rounded-xl border border-border-subtle group"
+                                    draggable
+                                    onDragStart={() => handleDragStart(index)}
+                                    onDragOver={(e) => handleDragOver(e, index)}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={() => handleDrop(index)}
+                                    onDragEnd={handleDragEnd}
+                                    className={`flex items-center gap-3 p-3 bg-stadium-dark rounded-xl border transition-all group cursor-grab active:cursor-grabbing ${
+                                        dragOverIndex === index
+                                            ? "border-accent-green bg-accent-green/10"
+                                            : draggedIndex === index
+                                            ? "border-accent-green/50 opacity-50"
+                                            : "border-border-subtle"
+                                    }`}
                                 >
+                                    {/* Drag Handle */}
+                                    <GripVertical size={18} className="text-text-muted" />
+
                                     {/* Order Controls */}
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-0.5">
                                         <button
                                             onClick={() => moveUp(movie, index)}
                                             disabled={index === 0 || saving === movie._id}
-                                            className="p-1 hover:bg-stadium-hover rounded disabled:opacity-30"
+                                            className="p-0.5 hover:bg-stadium-hover rounded disabled:opacity-30"
                                         >
-                                            <ArrowUp size={14} />
+                                            <ArrowUp size={12} />
                                         </button>
                                         <button
                                             onClick={() => moveDown(movie, index)}
                                             disabled={index === sortedFeatured.length - 1 || saving === movie._id}
-                                            className="p-1 hover:bg-stadium-hover rounded disabled:opacity-30"
+                                            className="p-0.5 hover:bg-stadium-hover rounded disabled:opacity-30"
                                         >
-                                            <ArrowDown size={14} />
+                                            <ArrowDown size={12} />
                                         </button>
                                     </div>
 
                                     {/* Position Number */}
-                                    <div className="w-8 h-8 bg-accent-green text-black rounded-lg flex items-center justify-center font-bold text-sm">
+                                    <div className="w-7 h-7 bg-accent-green text-black rounded-lg flex items-center justify-center font-bold text-sm">
                                         {index + 1}
                                     </div>
 
                                     {/* Poster */}
-                                    <div className="relative w-12 h-16 rounded overflow-hidden flex-shrink-0">
+                                    <div className="relative w-10 h-14 rounded overflow-hidden flex-shrink-0">
                                         {movie.posterUrl ? (
                                             <Image
                                                 src={movie.posterUrl}
@@ -196,7 +285,7 @@ export default function HeroAdminPage() {
                                             />
                                         ) : (
                                             <div className="w-full h-full bg-stadium-hover flex items-center justify-center">
-                                                <Film size={16} className="text-text-muted" />
+                                                <Film size={14} className="text-text-muted" />
                                             </div>
                                         )}
                                     </div>
@@ -223,6 +312,10 @@ export default function HeroAdminPage() {
                             ))}
                         </div>
                     )}
+
+                    <p className="text-xs text-text-muted mt-4">
+                        Drag and drop to reorder, or use arrow buttons
+                    </p>
                 </div>
 
                 {/* Add Movies */}
@@ -236,23 +329,39 @@ export default function HeroAdminPage() {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search movies..."
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg pl-10 pr-4 py-2 text-sm"
+                            placeholder="Search movies by title..."
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg pl-10 pr-4 py-2 text-sm focus:border-accent-green focus:outline-none"
                         />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
 
+                    {/* Results count */}
+                    <p className="text-xs text-text-muted mb-3">
+                        {availableMovies.length} movies available
+                        {searchQuery && ` matching "${searchQuery}"`}
+                    </p>
+
                     {/* Movie List */}
-                    <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                    <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
                         {availableMovies.length === 0 ? (
                             <p className="text-center text-text-muted py-8 text-sm">
                                 {searchQuery ? "No movies found" : "All published movies are in hero"}
                             </p>
                         ) : (
-                            availableMovies.slice(0, 20).map((movie: any) => (
+                            availableMovies.map((movie: any) => (
                                 <div
                                     key={movie._id}
-                                    className="flex items-center gap-3 p-3 bg-stadium-dark hover:bg-stadium-hover rounded-xl border border-border-subtle cursor-pointer transition-colors"
-                                    onClick={() => sortedFeatured.length < 8 && addToHero(movie)}
+                                    className={`flex items-center gap-3 p-3 bg-stadium-dark hover:bg-stadium-hover rounded-xl border border-border-subtle transition-colors ${
+                                        sortedFeatured.length >= MAX_HERO_SLIDES ? "opacity-50" : "cursor-pointer"
+                                    }`}
+                                    onClick={() => addToHero(movie)}
                                 >
                                     {/* Poster */}
                                     <div className="relative w-10 h-14 rounded overflow-hidden flex-shrink-0">
@@ -285,7 +394,7 @@ export default function HeroAdminPage() {
                                     </div>
 
                                     {/* Add Button */}
-                                    {sortedFeatured.length < 8 && (
+                                    {sortedFeatured.length < MAX_HERO_SLIDES && (
                                         <button
                                             disabled={saving === movie._id}
                                             className="p-2 bg-accent-green/20 hover:bg-accent-green/30 text-accent-green rounded-lg"
@@ -308,11 +417,11 @@ export default function HeroAdminPage() {
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
                 <h3 className="font-bold text-blue-400 mb-2">How Hero Slider Works</h3>
                 <ul className="text-sm text-text-secondary space-y-1">
-                    <li>• Movies added here will appear in the homepage hero slider</li>
-                    <li>• Maximum 8 slides for optimal performance</li>
-                    <li>• Use arrows to reorder slides (first = most prominent)</li>
+                    <li>• Movies added here appear in the homepage hero slider</li>
+                    <li>• Maximum {MAX_HERO_SLIDES} slides for optimal performance</li>
+                    <li>• Drag and drop or use arrows to reorder (first = most prominent)</li>
                     <li>• Movies need poster and backdrop images for best display</li>
-                    <li>• Slider auto-advances every 6 seconds</li>
+                    <li>• Search to quickly find and add specific movies</li>
                 </ul>
             </div>
         </div>
