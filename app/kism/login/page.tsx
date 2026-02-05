@@ -11,7 +11,7 @@ function LoginContent() {
     const searchParams = useSearchParams();
     const from = searchParams.get("from") || "/kism";
 
-    const [username, setUsername] = useState("admin");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -75,7 +75,7 @@ function LoginContent() {
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                placeholder="admin"
+                                placeholder="Enter username"
                                 required
                                 className="w-full bg-stadium-dark border border-border-subtle rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-accent-green transition-colors"
                             />

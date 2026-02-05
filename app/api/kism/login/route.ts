@@ -61,10 +61,9 @@ export async function POST(request: NextRequest) {
         console.log("[Admin Login] Success for:", inputUsername);
         const response = NextResponse.json({ success: true });
 
-        // Check if request is from direct IP (HTTP) or domain (HTTPS)
-        const host = request.headers.get("host") || "";
-        const isDirectIP = /^\d+\.\d+\.\d+\.\d+/.test(host);
-        const isSecure = !isDirectIP && process.env.NODE_ENV === "production";
+        // Check if request is via HTTPS or HTTP
+        const protocol = request.headers.get("x-forwarded-proto") || "http";
+        const isSecure = protocol === "https";
 
         // Set session cookie
         response.cookies.set("fanbroj_admin_session", "authenticated", {
