@@ -9,9 +9,6 @@ import { usePush } from "@/providers/PushProvider";
 // Default icons available for notifications
 const ICON_OPTIONS = [
     { label: "Default (Fanbroj)", value: "/icon-192.png" },
-    { label: "Bell", value: "/icons/bell.png" },
-    { label: "Match", value: "/icons/match.png" },
-    { label: "Movie", value: "/icons/movie.png" },
     { label: "Custom", value: "custom" },
 ];
 
