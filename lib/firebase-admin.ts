@@ -1,6 +1,16 @@
 // Firebase Admin SDK (Server-Side Only)
 import admin from "firebase-admin";
 
+// Base URL for converting relative paths to absolute URLs
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://fanbroj.net";
+
+// Convert relative URL to absolute URL
+function toAbsoluteUrl(url: string | undefined): string | undefined {
+    if (!url) return undefined;
+    if (url.startsWith("http")) return url;
+    return `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 // Initialize Firebase Admin with service account
 function initializeFirebaseAdmin() {
     if (admin.apps.length > 0) {
@@ -42,27 +52,35 @@ export async function sendNotification(
     title: string,
     body: string,
     data?: Record<string, string>,
-    imageUrl?: string
+    imageUrl?: string,
+    iconUrl?: string
 ) {
     const messaging = getAdminMessaging();
 
-    // Only include imageUrl if it's a valid URL
-    const hasImage = imageUrl && imageUrl.length > 0 && imageUrl.startsWith('http');
+    // Convert to absolute URLs
+    const absoluteImageUrl = toAbsoluteUrl(imageUrl);
+    const absoluteIconUrl = toAbsoluteUrl(iconUrl) || toAbsoluteUrl("/icon-192.png");
+    const absoluteBadgeUrl = toAbsoluteUrl("/badge-72.png");
+
+    // Only include image if it's a valid absolute URL
+    const hasImage = absoluteImageUrl && absoluteImageUrl.startsWith('http');
+
+    console.log("Sending notification with icon:", absoluteIconUrl, "image:", absoluteImageUrl);
 
     const message: admin.messaging.Message = {
         token,
         notification: {
             title,
             body,
-            ...(hasImage && { imageUrl }),
+            ...(hasImage && { imageUrl: absoluteImageUrl }),
         },
         webpush: {
             notification: {
                 title,
                 body,
-                icon: "/icon-192.png",
-                badge: "/badge-72.png",
-                ...(hasImage && { image: imageUrl }),
+                icon: absoluteIconUrl,
+                badge: absoluteBadgeUrl,
+                ...(hasImage && { image: absoluteImageUrl }),
                 requireInteraction: true,
             },
             fcmOptions: {
@@ -88,7 +106,8 @@ export async function sendMulticastNotification(
     title: string,
     body: string,
     data?: Record<string, string>,
-    imageUrl?: string
+    imageUrl?: string,
+    iconUrl?: string
 ) {
     if (tokens.length === 0) {
         return { success: true, sent: 0, failed: 0 };
@@ -96,23 +115,30 @@ export async function sendMulticastNotification(
 
     const messaging = getAdminMessaging();
 
-    // Only include imageUrl if it's a valid URL
-    const hasImage = imageUrl && imageUrl.length > 0 && imageUrl.startsWith('http');
+    // Convert to absolute URLs
+    const absoluteImageUrl = toAbsoluteUrl(imageUrl);
+    const absoluteIconUrl = toAbsoluteUrl(iconUrl) || toAbsoluteUrl("/icon-192.png");
+    const absoluteBadgeUrl = toAbsoluteUrl("/badge-72.png");
+
+    // Only include image if it's a valid absolute URL
+    const hasImage = absoluteImageUrl && absoluteImageUrl.startsWith('http');
+
+    console.log("Multicast notification with icon:", absoluteIconUrl, "image:", absoluteImageUrl);
 
     const message: admin.messaging.MulticastMessage = {
         tokens,
         notification: {
             title,
             body,
-            ...(hasImage && { imageUrl }),
+            ...(hasImage && { imageUrl: absoluteImageUrl }),
         },
         webpush: {
             notification: {
                 title,
                 body,
-                icon: "/icon-192.png",
-                badge: "/badge-72.png",
-                ...(hasImage && { image: imageUrl }),
+                icon: absoluteIconUrl,
+                badge: absoluteBadgeUrl,
+                ...(hasImage && { image: absoluteImageUrl }),
                 requireInteraction: true,
             },
             fcmOptions: {
@@ -132,8 +158,6 @@ export async function sendMulticastNotification(
             if (!resp.success && resp.error) {
                 const errorCode = resp.error.code;
                 // Only mark as invalid for permanent errors
-                // messaging/registration-token-not-registered = token is no longer valid
-                // messaging/invalid-registration-token = token format is wrong
                 if (
                     errorCode === "messaging/registration-token-not-registered" ||
                     errorCode === "messaging/invalid-registration-token" ||
@@ -142,7 +166,6 @@ export async function sendMulticastNotification(
                     failedTokens.push(tokens[idx]);
                     console.error(`Token ${idx} permanently invalid:`, errorCode);
                 } else {
-                    // Temporary error - don't mark as invalid
                     console.warn(`Token ${idx} temporary failure:`, resp.error?.message);
                 }
             }
@@ -166,24 +189,30 @@ export async function sendToTopic(
     title: string,
     body: string,
     data?: Record<string, string>,
-    imageUrl?: string
+    imageUrl?: string,
+    iconUrl?: string
 ) {
     const messaging = getAdminMessaging();
+
+    // Convert to absolute URLs
+    const absoluteImageUrl = toAbsoluteUrl(imageUrl);
+    const absoluteIconUrl = toAbsoluteUrl(iconUrl) || toAbsoluteUrl("/icon-192.png");
+    const absoluteBadgeUrl = toAbsoluteUrl("/badge-72.png");
 
     const message: admin.messaging.Message = {
         topic,
         notification: {
             title,
             body,
-            imageUrl,
+            imageUrl: absoluteImageUrl,
         },
         webpush: {
             notification: {
                 title,
                 body,
-                icon: "/icon-192.png",
-                badge: "/badge-72.png",
-                image: imageUrl,
+                icon: absoluteIconUrl,
+                badge: absoluteBadgeUrl,
+                image: absoluteImageUrl,
             },
             fcmOptions: {
                 link: data?.url || "/",

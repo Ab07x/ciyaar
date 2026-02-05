@@ -44,8 +44,9 @@ export async function POST(request: NextRequest) {
 
         const data = {
             url: url || "/",
-            icon: icon || "/icon-192.png",
         };
+
+        const notificationIcon = icon || "/icon-192.png";
 
         // Send to single FCM token (for testing)
         if (fcmToken) {
@@ -54,7 +55,8 @@ export async function POST(request: NextRequest) {
                 title,
                 message,
                 data,
-                image
+                image,
+                notificationIcon
             );
 
             if (result.success) {
@@ -92,7 +94,8 @@ export async function POST(request: NextRequest) {
                 title,
                 message,
                 data,
-                image
+                image,
+                notificationIcon
             );
 
             // Mark failed tokens as inactive
