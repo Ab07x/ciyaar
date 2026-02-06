@@ -208,6 +208,126 @@ export const getRecentSearches = query({
 });
 
 /**
+ * Get most searched/clicked content for "Trending Now" section
+ * Falls back to most-viewed movies if not enough search data
+ */
+export const getMostSearchedContent = query({
+    args: { limit: v.optional(v.number()) },
+    handler: async (ctx, args) => {
+        const limit = args.limit || 10;
+        const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+        const recentSearches = await ctx.db
+            .query("search_analytics")
+            .withIndex("by_created")
+            .filter((q) => q.gte(q.field("createdAt"), cutoff))
+            .collect();
+
+        // 1. Count clicks per slug+type (strongest signal)
+        const clickCounts = new Map<string, { slug: string; type: "movie" | "series"; count: number }>();
+        for (const search of recentSearches) {
+            if (search.clickedItem && search.clickedItemType && search.clickedItemType !== "match") {
+                const key = `${search.clickedItemType}:${search.clickedItem}`;
+                const existing = clickCounts.get(key);
+                if (existing) {
+                    existing.count++;
+                } else {
+                    clickCounts.set(key, {
+                        slug: search.clickedItem,
+                        type: search.clickedItemType as "movie" | "series",
+                        count: 1,
+                    });
+                }
+            }
+        }
+
+        // Sort by click frequency
+        const topClicked = Array.from(clickCounts.values()).sort((a, b) => b.count - a.count);
+
+        // 2. Fetch actual documents for top clicked slugs
+        const results: any[] = [];
+        const seenSlugs = new Set<string>();
+
+        for (const item of topClicked) {
+            if (results.length >= limit) break;
+            if (seenSlugs.has(item.slug)) continue;
+
+            let doc = null;
+            if (item.type === "movie") {
+                doc = await ctx.db.query("movies").withIndex("by_slug", (q) => q.eq("slug", item.slug)).first();
+            } else {
+                doc = await ctx.db.query("series").withIndex("by_slug", (q) => q.eq("slug", item.slug)).first();
+            }
+            if (doc && (doc as any).isPublished) {
+                seenSlugs.add(item.slug);
+                results.push({ ...doc, type: item.type });
+            }
+        }
+
+        // 3. If not enough, supplement with top query string matches against titles
+        if (results.length < limit) {
+            // Get top search queries by frequency
+            const queryMap = new Map<string, number>();
+            for (const search of recentSearches) {
+                if (search.hasResults) {
+                    queryMap.set(search.queryLower, (queryMap.get(search.queryLower) || 0) + 1);
+                }
+            }
+            const topQueries = Array.from(queryMap.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 20)
+                .map(([q]) => q);
+
+            // Fetch all published movies/series once, then match against top queries
+            const allMovies = await ctx.db.query("movies").withIndex("by_published", (qb) => qb.eq("isPublished", true)).collect();
+            const allSeries = await ctx.db.query("series").withIndex("by_published", (qb) => qb.eq("isPublished", true)).collect();
+
+            for (const q of topQueries) {
+                if (results.length >= limit) break;
+
+                for (const movie of allMovies) {
+                    if (results.length >= limit) break;
+                    if (seenSlugs.has(movie.slug)) continue;
+                    if (movie.title.toLowerCase().includes(q) || movie.titleSomali?.toLowerCase().includes(q)) {
+                        seenSlugs.add(movie.slug);
+                        results.push({ ...movie, type: "movie" as const });
+                    }
+                }
+
+                for (const s of allSeries) {
+                    if (results.length >= limit) break;
+                    if (seenSlugs.has(s.slug)) continue;
+                    if (s.title.toLowerCase().includes(q) || s.titleSomali?.toLowerCase().includes(q)) {
+                        seenSlugs.add(s.slug);
+                        results.push({ ...s, type: "series" as const });
+                    }
+                }
+            }
+        }
+
+        // 4. Fallback: most-viewed movies if still not enough
+        if (results.length < limit) {
+            const allMovies = await ctx.db
+                .query("movies")
+                .withIndex("by_published", (q) => q.eq("isPublished", true))
+                .collect();
+
+            const sorted = allMovies
+                .filter((m) => !seenSlugs.has(m.slug))
+                .sort((a, b) => (b.views || 0) - (a.views || 0) || b.createdAt - a.createdAt);
+
+            for (const movie of sorted) {
+                if (results.length >= limit) break;
+                seenSlugs.add(movie.slug);
+                results.push({ ...movie, type: "movie" as const });
+            }
+        }
+
+        return results.slice(0, limit);
+    },
+});
+
+/**
  * Get search trend data (for charts)
  */
 export const getSearchTrend = query({

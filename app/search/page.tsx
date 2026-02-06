@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useQuery } from "convex/react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { Search, Loader2, Trophy, Film, Tv, ArrowLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -13,6 +14,12 @@ export default function SearchPage() {
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
+    const trackSearch = useMutation(api.searchAnalytics.trackSearch);
+    const trackSearchClick = useMutation(api.searchAnalytics.trackSearchClick);
+    const lastSearchIdRef = useRef<Id<"search_analytics"> | null>(null);
+    const trackedQueriesRef = useRef(new Set<string>());
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     // @ts-ignore
     const results = useQuery(api.search.searchAll, { query: query.length >= 2 ? query : "" }) as any;
 
@@ -20,6 +27,53 @@ export default function SearchPage() {
         // Auto-focus input on mount
         inputRef.current?.focus();
     }, []);
+
+    // Debounced search tracking - fires 1s after typing stops
+    useEffect(() => {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+        if (query.length < 2 || results === undefined) return;
+
+        const q = query.toLowerCase().trim();
+        if (trackedQueriesRef.current.has(q)) return;
+
+        debounceTimerRef.current = setTimeout(async () => {
+            const resultsCount =
+                (results?.matches?.length || 0) +
+                (results?.movies?.length || 0) +
+                (results?.series?.length || 0);
+
+            const deviceId = typeof window !== "undefined"
+                ? localStorage.getItem("fanbroj_device_id") || undefined
+                : undefined;
+
+            try {
+                const searchId = await trackSearch({
+                    query,
+                    resultsCount,
+                    deviceId,
+                });
+                if (searchId) lastSearchIdRef.current = searchId;
+                trackedQueriesRef.current.add(q);
+            } catch {
+                // Silently fail - analytics shouldn't break the app
+            }
+        }, 1000);
+
+        return () => {
+            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        };
+    }, [query, results, trackSearch]);
+
+    const handleResultClick = useCallback((slug: string, type: "match" | "movie" | "series") => {
+        if (lastSearchIdRef.current) {
+            trackSearchClick({
+                searchId: lastSearchIdRef.current,
+                clickedItem: slug,
+                clickedItemType: type,
+            }).catch(() => {});
+        }
+    }, [trackSearchClick]);
 
     const hasResults = results && (
         (results.matches?.length || 0) > 0 ||
@@ -86,6 +140,7 @@ export default function SearchPage() {
                                 <Link
                                     key={match._id}
                                     href={`/match/${match.slug}`}
+                                    onClick={() => handleResultClick(match.slug, "match")}
                                     className="block bg-stadium-elevated border border-white/5 rounded-xl p-4 active:scale-[0.98] transition-all"
                                 >
                                     <div className="flex items-center gap-4">
@@ -119,6 +174,7 @@ export default function SearchPage() {
                                 <Link
                                     key={movie._id}
                                     href={`/movies/${movie.slug}`}
+                                    onClick={() => handleResultClick(movie.slug, "movie")}
                                     className="bg-stadium-elevated border border-white/5 rounded-xl overflow-hidden active:scale-[0.98] transition-all"
                                 >
                                     <div className="aspect-[2/3] relative">
@@ -146,6 +202,7 @@ export default function SearchPage() {
                                 <Link
                                     key={show._id}
                                     href={`/series/${show.slug}`}
+                                    onClick={() => handleResultClick(show.slug, "series")}
                                     className="bg-stadium-elevated border border-white/5 rounded-xl overflow-hidden active:scale-[0.98] transition-all"
                                 >
                                     <div className="aspect-[2/3] relative">

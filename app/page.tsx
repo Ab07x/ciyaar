@@ -8,6 +8,7 @@ import { LiveBadge } from "@/components/ui/LiveBadge";
 import Link from "next/link";
 import Image from "next/image";
 import { MoviePosterImage } from "@/components/MoviePosterImage";
+import { ContentCarousel } from "@/components/ContentCarousel";
 import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
@@ -17,6 +18,7 @@ export default function HomePage() {
   const matchData = useQuery(api.matches.getMatchesByStatus);
   const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 50 });
   const featuredMovies = useQuery(api.movies.getFeaturedMovies);
+  const trendingContent = useQuery(api.searchAnalytics.getMostSearchedContent, { limit: 10 });
 
   const { isPremium } = useUser();
   const trackPageView = useMutation(api.analytics.trackPageView);
@@ -201,6 +203,17 @@ export default function HomePage() {
       {/* PREMIUM BANNER AD - Lookmovie Style */}
       {/* PREMIUM BANNER AD - Lookmovie Style */}
       <PremiumBannerNew />
+
+      {/* TRENDING NOW - Search-based + fallback to most viewed */}
+      {trendingContent && trendingContent.length > 0 && (
+        <div className="max-w-7xl mx-auto pt-6">
+          <ContentCarousel
+            title="Trending Now"
+            data={trendingContent}
+            type="mixed"
+          />
+        </div>
+      )}
 
       {/* SPORTS MATCHES - Live & Upcoming */}
       {allMatches.length > 0 && (
