@@ -153,55 +153,86 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                         </div>
                     </PPVUnlockGate>
                 ) : movie.isPremium && !isUnlocked ? (
-                    /* Premium Lock */
-                    <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden flex items-center justify-center border-4 border-[#333333]">
+                    /* Premium Lock - Mobile Optimized */
+                    <div className="relative w-full aspect-video md:aspect-video bg-black rounded-2xl overflow-hidden border-4 border-[#E50914]">
+                        {/* Background blur image */}
                         <div className="absolute inset-0">
                             <Image
                                 src={movie.backdropUrl || movie.posterUrl}
                                 alt=""
                                 fill
-                                className="object-cover opacity-20 blur-sm"
+                                className="object-cover opacity-30 blur-md scale-105"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/50" />
                         </div>
-                        <div className="relative z-10 bg-[#020D18]/90 border-2 border-[#E50914] rounded-xl p-6 max-w-md text-center">
-                            <div className="w-14 h-14 bg-[#E50914]/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <Crown size={28} className="text-[#E50914]" />
+
+                        {/* Content - Scrollable on mobile */}
+                        <div className="absolute inset-0 flex flex-col justify-center items-center p-4 md:p-8 overflow-y-auto">
+                            {/* Crown Icon */}
+                            <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#E50914] to-[#ff6b6b] rounded-full flex items-center justify-center mb-3 md:mb-4 shadow-lg shadow-red-500/30 animate-pulse">
+                                <Crown size={32} className="text-white md:w-10 md:h-10" />
                             </div>
-                            <h3 className="text-xl font-bold text-[#E50914] mb-2">PREMIUM FILM</h3>
-                            <p className="text-gray-400 mb-4">Film-kan waxaa u baahan subscription</p>
-                            <div className="space-y-3">
+
+                            {/* Title */}
+                            <h3 className="text-xl md:text-3xl font-black text-white mb-1 md:mb-2 text-center">
+                                🔒 PREMIUM FILM
+                            </h3>
+                            <p className="text-gray-300 text-sm md:text-base mb-4 md:mb-6 text-center max-w-md">
+                                Film-kani wuxuu u baahan yahay subscription si aad u daawato
+                            </p>
+
+                            {/* Code Input Section */}
+                            <div className="w-full max-w-sm space-y-3 mb-4">
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
                                         value={code}
                                         onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                        placeholder="CODE"
-                                        className="flex-1 bg-[#333333] border border-[#2a4a6c] rounded-lg px-4 py-3 uppercase text-center tracking-wider"
+                                        placeholder="GELI CODE-KAAGA"
+                                        className="flex-1 bg-white/10 border-2 border-white/20 focus:border-[#9AE600] rounded-xl px-4 py-3 md:py-4 uppercase text-center tracking-widest text-white placeholder-white/40 font-bold text-base"
                                     />
                                     <button
                                         onClick={handleRedeem}
-                                        disabled={loading}
-                                        className="px-6 py-3 bg-[#9AE600] text-black font-bold rounded-lg"
+                                        disabled={loading || !code.trim()}
+                                        className="px-6 md:px-8 py-3 md:py-4 bg-[#9AE600] hover:bg-[#8AD500] text-black font-black rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base"
                                     >
-                                        {loading ? "..." : "Fur"}
+                                        {loading ? "..." : "FUR"}
                                     </button>
                                 </div>
-                                {error && <p className="text-red-400 text-sm">{error}</p>}
-                                <div className="flex gap-3">
-                                    <Link href="/pricing" className="flex-1 px-4 py-3 bg-[#E50914] text-white font-bold rounded-lg text-center">
-                                        Iibso
-                                    </Link>
-                                    <a
-                                        href={whatsappLink}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-2"
-                                    >
-                                        <MessageSquare size={18} />
-                                        WhatsApp
-                                    </a>
-                                </div>
+                                {error && (
+                                    <p className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg">
+                                        ⚠️ {error}
+                                    </p>
+                                )}
                             </div>
+
+                            {/* CTA Buttons - Full width on mobile */}
+                            <div className="w-full max-w-sm space-y-3">
+                                {/* Primary CTA - Buy Premium */}
+                                <Link
+                                    href="/pricing"
+                                    className="w-full py-4 md:py-5 bg-gradient-to-r from-[#E50914] to-[#ff3d47] hover:from-[#ff3d47] hover:to-[#E50914] text-white font-black rounded-xl text-center text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    <Crown size={22} />
+                                    IIBSO PREMIUM HADDA
+                                </Link>
+
+                                {/* Secondary CTA - WhatsApp */}
+                                <a
+                                    href={whatsappLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full py-4 md:py-5 bg-[#25D366] hover:bg-[#1fb855] text-white font-black rounded-xl flex items-center justify-center gap-2 text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    <MessageSquare size={22} />
+                                    LA XIRIIR WHATSAPP
+                                </a>
+                            </div>
+
+                            {/* Price hint */}
+                            <p className="text-white/50 text-xs md:text-sm mt-4 text-center">
+                                ✨ Bilow $1 oo kaliya - Hal ciyaar ama bil oo dhan!
+                            </p>
                         </div>
                     </div>
                 ) : activeEmbed?.url ? (
