@@ -51,8 +51,8 @@ export function Navbar() {
             className={cn(
                 "sticky top-0 z-50 transition-all duration-300",
                 isScrolled
-                    ? "bg-[rgba(13,27,42,0.95)] backdrop-blur-xl border-b border-[#1a3a5c] shadow-lg"
-                    : "bg-transparent border-b border-transparent bg-gradient-to-b from-[#0d1b2a]/90 to-transparent"
+                    ? "bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm"
+                    : "bg-white border-b border-gray-100"
             )}
         >
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -60,7 +60,7 @@ export function Navbar() {
                 {/* Mobile Menu Button */}
                 <motion.button
                     whileTap={{ scale: 0.95 }}
-                    className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors"
+                    className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     aria-label="Toggle menu"
                 >
@@ -102,9 +102,8 @@ export function Navbar() {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    "relative flex items-center gap-2 px-3 py-2 text-sm font-bold uppercase tracking-wide transition-all rounded-lg group",
-                                    item.color,
-                                    isActive ? "bg-white/5" : "hover:bg-white/5"
+                                    "relative flex items-center gap-2 px-3 py-2 text-sm font-semibold tracking-wide transition-all rounded-lg group",
+                                    isActive ? "text-[#E50914] bg-red-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                                 )}
                             >
                                 <span className="relative">
@@ -116,7 +115,7 @@ export function Navbar() {
                                 {isActive && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-current rounded-full"
+                                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#E50914] rounded-full"
                                         transition={{ type: "spring", duration: 0.3 }}
                                     />
                                 )}
@@ -146,7 +145,7 @@ export function Navbar() {
                     {/* Mobile Search Toggle */}
                     <motion.button
                         whileTap={{ scale: 0.95 }}
-                        className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors"
+                        className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                         onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                         aria-label="Toggle search"
                     >
@@ -164,27 +163,24 @@ export function Navbar() {
                             <motion.div
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                className="h-5 w-5 border-2 border-text-muted border-t-accent-green rounded-full"
+                                className="h-5 w-5 border-2 border-gray-300 border-t-[#E50914] rounded-full"
                             />
                         </div>
                     ) : isPremium ? (
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Link
                                 href="/subscription"
-                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-accent-gold hover:bg-stadium-hover rounded-lg transition-colors hidden md:flex border border-accent-gold/20 relative group"
+                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#E50914] hover:bg-red-50 rounded-lg transition-colors hidden md:flex border border-red-200 relative group"
                                 aria-label="My Subscription"
                             >
                                 <Crown size={22} />
-                                <motion.div
-                                    className="absolute inset-0 rounded-lg bg-accent-gold/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                                />
                             </Link>
                         </motion.div>
                     ) : (
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Link
                                 href="/login"
-                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary hover:bg-stadium-hover rounded-lg transition-colors hidden md:flex"
+                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg transition-colors hidden md:flex"
                                 aria-label="Account"
                             >
                                 <User size={22} />
@@ -204,7 +200,7 @@ export function Navbar() {
                         className="md:hidden"
                         style={{ zIndex: 9999 }}
                     >
-                        <div className="p-4 bg-stadium-elevated border-b border-border-subtle">
+                        <div className="p-4 bg-gray-50 border-b border-gray-200">
                             <SearchBox />
                         </div>
                     </motion.div>
@@ -230,7 +226,7 @@ export function Navbar() {
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="md:hidden fixed inset-y-0 left-0 top-16 w-[280px] bg-[#0d1b2a] z-50 p-4 border-r border-[#1a3a5c] overflow-y-auto pb-safe"
+                            className="md:hidden fixed inset-y-0 left-0 top-16 w-[280px] bg-white z-50 p-4 border-r border-gray-200 overflow-y-auto pb-safe"
                         >
                             <nav className="flex flex-col space-y-1">
                                 {navItems.map((item, index) => {
@@ -246,14 +242,13 @@ export function Navbar() {
                                             <Link
                                                 href={item.href}
                                                 className={cn(
-                                                    "p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 transition-all",
-                                                    item.color,
-                                                    isActive ? "bg-[#1a3a5c]" : "hover:bg-[#1a3a5c]"
+                                                    "p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 transition-all",
+                                                    isActive ? "text-[#E50914] bg-red-50" : "text-gray-700 hover:bg-gray-50"
                                                 )}
                                                 onClick={() => setMobileMenuOpen(false)}
                                             >
                                                 <span className="relative">
-                                                    <Icon size={24} />
+                                                    <Icon size={22} />
                                                 </span>
                                                 {item.label}
                                                 {isActive && (
@@ -265,7 +260,7 @@ export function Navbar() {
                                 })}
 
                                 {/* Divider */}
-                                <div className="h-px bg-[#1a3a5c] my-4" />
+                                <div className="h-px bg-gray-200 my-4" />
 
                                 {!isPremium && (
                                     <motion.div
@@ -293,19 +288,19 @@ export function Navbar() {
                                     {isPremium ? (
                                         <Link
                                             href="/subscription"
-                                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-accent-gold hover:bg-stadium-elevated transition-colors border border-accent-gold/20"
+                                            className="p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 text-[#E50914] hover:bg-red-50 transition-colors border border-red-200"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
-                                            <CreditCard size={24} />
+                                            <CreditCard size={22} />
                                             My Plan
                                         </Link>
                                     ) : (
                                         <Link
                                             href="/login"
-                                            className="p-4 min-h-[48px] rounded-xl text-lg font-bold flex items-center gap-4 text-text-secondary hover:bg-stadium-elevated transition-colors"
+                                            className="p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 text-gray-600 hover:bg-gray-50 transition-colors"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
-                                            <User size={24} />
+                                            <User size={22} />
                                             Akoon
                                         </Link>
                                     )}

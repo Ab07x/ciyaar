@@ -68,9 +68,19 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
     // Initialize Firebase and get token
     const initializeFirebase = async (): Promise<string | null> => {
         try {
-            // Register service worker first
-            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            console.log("Firebase SW registered:", registration);
+            // Register service worker - use existing if available
+            let registration: ServiceWorkerRegistration;
+            const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+            if (existing) {
+                registration = existing;
+                // Ensure it's up to date
+                existing.update().catch(() => {});
+            } else {
+                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            }
+
+            // Wait for the service worker to be ready
+            await navigator.serviceWorker.ready;
 
             // Dynamic import to avoid SSR issues
             const { initializeApp, getApps } = await import("firebase/app");
@@ -89,11 +99,20 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
             const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
             const messaging = getMessaging(app);
 
-            // Get FCM token
-            const token = await getToken(messaging, {
-                vapidKey: "BJD2T_koPJSUI8rUgD12066OE1KRmVjcBUcIKeHR3N2deAiVCeHe-_0q5qwY3V6BQOFCxJk-6phhjEA1Lex8ss4",
-                serviceWorkerRegistration: registration,
-            });
+            // Get FCM token with retry
+            let token: string | null = null;
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    token = await getToken(messaging, {
+                        vapidKey: "BJD2T_koPJSUI8rUgD12066OE1KRmVjcBUcIKeHR3N2deAiVCeHe-_0q5qwY3V6BQOFCxJk-6phhjEA1Lex8ss4",
+                        serviceWorkerRegistration: registration,
+                    });
+                    if (token) break;
+                } catch (tokenErr) {
+                    console.warn(`FCM token attempt ${attempt + 1} failed:`, tokenErr);
+                    if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
+                }
+            }
 
             if (token) {
                 console.log("FCM Token obtained:", token.substring(0, 20) + "...");
@@ -116,6 +135,7 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
                 return token;
             }
 
+            console.error("Failed to get FCM token after retries");
             return null;
         } catch (error) {
             console.error("Firebase initialization error:", error);

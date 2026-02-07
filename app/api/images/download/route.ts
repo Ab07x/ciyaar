@@ -4,30 +4,45 @@ import { api } from "@/convex/_generated/api";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-// Download TMDB image and upload to Convex storage
+// Allowed image domains for downloading
+const ALLOWED_DOMAINS = [
+  "image.tmdb.org",         // TMDB
+  "m.media-amazon.com",     // IMDB primary
+  "ia.media-imdb.com",      // IMDB alternate
+  "images-na.ssl-images-amazon.com", // Amazon/IMDB
+];
+
+// Download TMDB/IMDB image and upload to Convex storage
 export async function POST(request: NextRequest) {
   try {
-    const { tmdbUrl, type = "poster" } = await request.json();
+    const { tmdbUrl, imageUrl, type = "poster" } = await request.json();
 
-    if (!tmdbUrl) {
-      return NextResponse.json({ error: "tmdbUrl required" }, { status: 400 });
+    // Support both tmdbUrl (legacy) and imageUrl (new)
+    const sourceUrl = imageUrl || tmdbUrl;
+
+    if (!sourceUrl) {
+      return NextResponse.json({ error: "imageUrl or tmdbUrl required" }, { status: 400 });
     }
 
-    // Validate it's a TMDB URL
-    if (!tmdbUrl.includes("image.tmdb.org")) {
-      return NextResponse.json({ error: "Only TMDB URLs allowed" }, { status: 400 });
+    // Validate the URL is from an allowed domain
+    const url = new URL(sourceUrl);
+    const isAllowed = ALLOWED_DOMAINS.some(domain => url.hostname.includes(domain));
+    if (!isAllowed) {
+      return NextResponse.json({ error: "Only TMDB and IMDB URLs allowed" }, { status: 400 });
     }
 
-    // Upgrade to original quality if using lower quality
-    let highQualityUrl = tmdbUrl;
-    if (tmdbUrl.includes("/w500/") || tmdbUrl.includes("/w780/")) {
-      highQualityUrl = tmdbUrl.replace(/\/w\d+\//, "/original/");
+    // Upgrade to original quality if using lower quality (TMDB only)
+    let highQualityUrl = sourceUrl;
+    if (sourceUrl.includes("image.tmdb.org")) {
+      if (sourceUrl.includes("/w500/") || sourceUrl.includes("/w780/")) {
+        highQualityUrl = sourceUrl.replace(/\/w\d+\//, "/original/");
+      }
     }
 
-    // Fetch the image from TMDB
+    // Fetch the image
     const imageResponse = await fetch(highQualityUrl);
     if (!imageResponse.ok) {
-      return NextResponse.json({ error: "Failed to fetch image from TMDB" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to fetch image" }, { status: 500 });
     }
 
     const imageBuffer = await imageResponse.arrayBuffer();
@@ -66,7 +81,7 @@ export async function POST(request: NextRequest) {
       success: true,
       url: publicUrl,
       storageId,
-      originalUrl: tmdbUrl,
+      originalUrl: sourceUrl,
     });
   } catch (error) {
     console.error("Image download error:", error);
@@ -76,3 +91,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

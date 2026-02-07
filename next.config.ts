@@ -11,8 +11,9 @@ const nextConfig = {
         hostname: "image.tmdb.org",
       },
     ],
-    unoptimized: process.env.NODE_ENV === "development",
+    unoptimized: false,
     minimumCacheTTL: 31536000, // 1 year - images are immutable once generated
+    qualities: [25, 50, 75, 80, 85, 100],
     formats: ["image/avif", "image/webp"],
   },
   typescript: {

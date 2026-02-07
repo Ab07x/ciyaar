@@ -5,6 +5,7 @@ import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { UserProvider } from "@/providers/UserProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import Link from "next/link";
+import Image from "next/image";
 import { SearchBox } from "@/components/SearchBox";
 import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
@@ -125,9 +126,22 @@ export default function RootLayout({
                     <div className="relative z-10 py-16">
                       <div className="container mx-auto px-4 text-center">
                         {/* Logo */}
-                        <p className="text-3xl font-black tracking-tighter mb-6">
-                          FAN<span className="text-[#E50914]">BROJ</span>
-                        </p>
+                        <div className="flex items-center justify-center gap-3 mb-6">
+                          <Image
+                            src="/img/logo/icon-fanbroj.png"
+                            alt="Fanbroj"
+                            width={40}
+                            height={40}
+                            className="object-contain"
+                          />
+                          <Image
+                            src="/img/logo/fanproj-logo.png"
+                            alt="Fanbroj TV"
+                            width={140}
+                            height={40}
+                            className="object-contain"
+                          />
+                        </div>
 
                         {/* Navigation Links */}
                         <nav className="flex flex-wrap justify-center items-center gap-4 md:gap-8 mb-8 py-4 border-y border-[#333333]/50">

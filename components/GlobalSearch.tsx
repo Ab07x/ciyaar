@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Search, X, Trophy, Film, Tv, Loader2, Command, ArrowRight, Clock, Star, Users } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -291,7 +292,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                                     >
                                                         <div className="w-10 h-14 rounded overflow-hidden bg-[#333333] flex-shrink-0">
                                                             {movie.posterUrl ? (
-                                                                <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
+                                                                <Image src={movie.posterUrl} alt={movie.title} fill sizes="40px" className="object-cover" />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center">
                                                                     <Film className="w-5 h-5 text-gray-500" />
@@ -337,7 +338,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                                     >
                                                         <div className="w-10 h-14 rounded overflow-hidden bg-[#333333] flex-shrink-0">
                                                             {show.posterUrl ? (
-                                                                <img src={show.posterUrl} alt={show.title} className="w-full h-full object-cover" />
+                                                                <Image src={show.posterUrl} alt={show.title} fill sizes="40px" className="object-cover" />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center">
                                                                     <Tv className="w-5 h-5 text-gray-500" />

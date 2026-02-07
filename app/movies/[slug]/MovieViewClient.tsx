@@ -29,7 +29,11 @@ interface MovieViewClientProps {
     preloadedMovie?: any;
 }
 
+import { useState } from "react";
+import { TrailerModal } from "@/components/TrailerModal";
+
 export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClientProps) {
+    const [isTrailerOpen, setIsTrailerOpen] = useState(false);
     const movieResult = useQuery(api.movies.getMovieBySlug, { slug });
     const movie = movieResult || preloadedMovie;
 
@@ -69,6 +73,13 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
 
     return (
         <div className="min-h-screen bg-[#020D18]">
+            {/* Trailer Modal */}
+            <TrailerModal
+                isOpen={isTrailerOpen}
+                onClose={() => setIsTrailerOpen(false)}
+                trailerUrl={movie.trailerUrl || ""}
+            />
+
             {/* Hero Section with Backdrop and Play Button */}
             <div className="relative">
                 {/* Backdrop Image */}
@@ -216,15 +227,13 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
                     {/* Trailer */}
                     {movie.trailerUrl ? (
-                        <a
-                            href={movie.trailerUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+                        <button
+                            onClick={() => setIsTrailerOpen(true)}
+                            className="h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors w-full"
                         >
                             <Play size={18} fill="currentColor" />
                             TRAILER
-                        </a>
+                        </button>
                     ) : (
                         <div className="h-12 bg-red-600/50 text-white/50 rounded-lg font-bold flex items-center justify-center gap-2 cursor-not-allowed">
                             <Play size={18} fill="currentColor" />

@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Search, Loader2, Trophy, Calendar, Film, Tv } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getDeviceId } from "@/lib/device";
@@ -170,7 +171,7 @@ export function SearchBox() {
                                     className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-accent-blue/30 transition-colors relative">
-                                        <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
+                                        <Image src={movie.posterUrl} alt={movie.title} fill sizes="40px" className="object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-bold text-white truncate group-hover:text-accent-blue transition-colors">
@@ -204,7 +205,7 @@ export function SearchBox() {
                                     className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0 group bg-[#1a1a2e]"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-stadium-dark border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-accent-green/30 transition-colors relative">
-                                        <img src={show.posterUrl} alt={show.title} className="w-full h-full object-cover" />
+                                        <Image src={show.posterUrl} alt={show.title} fill sizes="40px" className="object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-bold text-white truncate group-hover:text-accent-green transition-colors">

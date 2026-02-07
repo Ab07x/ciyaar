@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Crown, Radio, Tv, Lock, Play } from "lucide-react";
 
@@ -47,10 +48,12 @@ export function ChannelCard({
             {/* Thumbnail */}
             <div className="relative aspect-video bg-stadium-dark overflow-hidden">
                 {thumbnailUrl ? (
-                    <img
+                    <Image
                         src={thumbnailUrl}
                         alt={name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stadium-elevated to-stadium-dark">

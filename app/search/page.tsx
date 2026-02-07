@@ -7,6 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Search, Loader2, Trophy, Film, Tv, ArrowLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export default function SearchPage() {
@@ -71,7 +72,7 @@ export default function SearchPage() {
                 searchId: lastSearchIdRef.current,
                 clickedItem: slug,
                 clickedItemType: type,
-            }).catch(() => {});
+            }).catch(() => { });
         }
     }, [trackSearchClick]);
 
@@ -178,7 +179,7 @@ export default function SearchPage() {
                                     className="bg-stadium-elevated border border-white/5 rounded-xl overflow-hidden active:scale-[0.98] transition-all"
                                 >
                                     <div className="aspect-[2/3] relative">
-                                        <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
+                                        <Image src={movie.posterUrl} alt={movie.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
                                         {movie.isPremium && <span className="absolute top-2 right-2 bg-accent-gold text-black text-[10px] font-bold px-1.5 py-0.5 rounded">PRO</span>}
                                     </div>
                                     <div className="p-3">
@@ -206,7 +207,7 @@ export default function SearchPage() {
                                     className="bg-stadium-elevated border border-white/5 rounded-xl overflow-hidden active:scale-[0.98] transition-all"
                                 >
                                     <div className="aspect-[2/3] relative">
-                                        <img src={show.posterUrl} alt={show.title} className="w-full h-full object-cover" />
+                                        <Image src={show.posterUrl} alt={show.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
                                     </div>
                                     <div className="p-3">
                                         <h3 className="text-sm font-bold text-white truncate">{show.title}</h3>

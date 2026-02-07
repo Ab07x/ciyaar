@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Play, Lock, Layers, Tv } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,11 +42,12 @@ export function SeriesCard({
             {/* Poster Container */}
             <div className="aspect-[2/3] relative overflow-hidden bg-white/5">
                 {posterUrl ? (
-                    <img
+                    <Image
                         src={posterUrl}
                         alt={title}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-white/20 gap-2">

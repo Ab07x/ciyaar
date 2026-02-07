@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
+import Image from "next/image";
 import { AdSlot } from "@/components/AdSlot";
 import { useUser } from "@/providers/UserProvider";
 import { useState } from "react";
@@ -114,10 +115,12 @@ export default function SeriesPage() {
                             >
                                 <div className="relative aspect-[2/3]">
                                     {s.posterUrl ? (
-                                        <img
+                                        <Image
                                             src={s.posterUrl}
                                             alt={s.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            fill
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-stadium-dark flex items-center justify-center">
