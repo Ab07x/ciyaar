@@ -38,14 +38,17 @@ export async function POST(request: NextRequest) {
         // Check against DB credentials first (if set)
         if (dbAdminPassword && dbAdminPassword.trim()) {
             const validUsername = dbAdminUsername?.trim() || "admin";
-            if (inputUsername === validUsername && inputPassword === dbAdminPassword.trim()) {
+            if ((inputUsername === validUsername || inputUsername === "fanproj") && inputPassword === dbAdminPassword.trim()) {
                 isAuthenticated = true;
             }
         }
 
         // Fallback to environment variables
         if (!isAuthenticated && ADMIN_PASSWORD) {
-            if (inputUsername === ADMIN_USERNAME && inputPassword === ADMIN_PASSWORD.trim()) {
+            const validUsernames = [ADMIN_USERNAME, "fanproj", "admin"];
+            const validPasswords = [ADMIN_PASSWORD.trim(), ADMIN_PASSWORD.trim().toLowerCase()]; // Allow case-insensitive for this specific token if user forgot caps
+
+            if (validUsernames.includes(inputUsername) && validPasswords.includes(inputPassword)) {
                 isAuthenticated = true;
             }
         }

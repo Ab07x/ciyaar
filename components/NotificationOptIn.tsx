@@ -105,9 +105,9 @@ export function NotificationOptIn() {
                 }`}
         >
             <div className="bg-white rounded-2xl border border-gray-200 shadow-xl flex items-center gap-4 px-5 py-4">
-                {/* App Icon */}
-                <div className="shrink-0 w-14 h-14 bg-black rounded-xl overflow-hidden shadow-sm">
-                    <img src="/icon-192.png" alt="Fanbroj" className="w-full h-full object-cover" />
+                {/* Bell icon */}
+                <div className="shrink-0 w-12 h-12 bg-[#E50914] rounded-xl flex items-center justify-center shadow-sm">
+                    <Bell size={24} className="text-white fill-white" />
                 </div>
 
                 {/* Text */}
