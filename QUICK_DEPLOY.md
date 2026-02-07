@@ -65,7 +65,7 @@ vercel --prod
    - Mobile: Open same URL on phone
 
 4. **Check CDN:**
-   - https://cdn.fanbroj.net/hls/sky-action/index.m3u8
+   - https://cd.fanbroj.net/hls/sky-action/index.m3u8
 
 ## 🔍 Quick Troubleshooting
 

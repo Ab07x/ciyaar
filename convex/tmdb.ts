@@ -9,6 +9,9 @@ const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p";
 // ============================================
 // FETCH MOVIE FROM TMDB
 // ============================================
+// ============================================
+// FETCH MOVIE FROM TMDB
+// ============================================
 export const fetchMovieFromTMDB = action({
     args: { tmdbId: v.number() },
     handler: async (ctx, args) => {
@@ -16,7 +19,7 @@ export const fetchMovieFromTMDB = action({
         if (!apiKey) throw new Error("TMDB_API_KEY not configured");
 
         const response = await fetch(
-            `${TMDB_BASE_URL}/movie/${args.tmdbId}?api_key=${apiKey}&append_to_response=credits,videos`
+            `${TMDB_BASE_URL}/movie/${args.tmdbId}?api_key=${apiKey}&append_to_response=credits,videos,keywords,release_dates`
         );
 
         if (!response.ok) {
@@ -39,17 +42,28 @@ export const fetchMovieFromTMDB = action({
                 : undefined,
         }));
 
-        // Generate slug from title
-        const slug = (data.title || "untitled")
+        // Generate slug from title (SEO Friendly)
+        const year = data.release_date ? data.release_date.split("-")[0] : "";
+        const rawSlug = (data.title || "untitled")
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "");
+
+        // Append year to slug for better SEO uniqueness
+        const slug = `${rawSlug}${year ? `-${year}` : ""}`;
 
         // Extract YouTube trailer
         const trailer = (data.videos?.results || []).find(
             (v: any) => v.type === "Trailer" && v.site === "YouTube"
         );
         const trailerUrl = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined;
+
+        // Extract Keywords for SEO
+        const seoKeywords = (data.keywords?.keywords || []).map((k: any) => k.name);
+
+        // Extract MPAA Rating (US Certification)
+        const usRelease = (data.release_dates?.results || []).find((r: any) => r.iso_3166_1 === "US");
+        const mpaa = usRelease?.release_dates?.[0]?.certification || "";
 
         return {
             tmdbId: data.id,
@@ -71,6 +85,11 @@ export const fetchMovieFromTMDB = action({
             director,
             slug,
             trailerUrl,
+            // SEO Meta Fields Populated
+            seoKeywords: seoKeywords,
+            seoTitle: `${data.title} (${year}) - Watch Online`,
+            seoDescription: data.overview ? data.overview.substring(0, 155) + "..." : "",
+            ratingMpaa: mpaa,
         };
     },
 });

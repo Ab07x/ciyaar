@@ -485,6 +485,9 @@ export default defineSchema({
         seoDescription: v.optional(v.string()),
         seoKeywords: v.optional(v.array(v.string())), // SEO tags/keywords
 
+        // MPAA Rating (e.g. "PG-13")
+        ratingMpaa: v.optional(v.string()),
+
         // Stats
         views: v.optional(v.number()),
 

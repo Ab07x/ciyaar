@@ -183,13 +183,6 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
             return true;
         } catch (error) {
             console.error("Subscribe error:", error);
-            if (error instanceof Error) {
-                if (error.message.includes("permission")) {
-                    console.log("Permission denied or dismissed");
-                } else if (error.message.includes("service worker")) {
-                    console.error("Service worker issue. Validate HTTPS/SW functionality.");
-                }
-            }
             setIsLoading(false);
             return false;
         }

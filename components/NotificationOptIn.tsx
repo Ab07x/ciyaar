@@ -113,7 +113,7 @@ export function NotificationOptIn() {
                 {/* Text */}
                 <div className="flex-1 min-w-0">
                     <p className="text-gray-900 text-xs font-semibold leading-tight">
-                        Ogeysiisyo cusub - Fanbroj.net
+                        Ogeysiisyo cusub
                     </p>
                     {error && (
                         <p className="text-red-500 text-[10px] mt-0.5">{error}</p>

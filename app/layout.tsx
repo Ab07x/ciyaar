@@ -52,9 +52,9 @@ export function generateMetadata(): Metadata {
       ],
     },
     icons: {
-      icon: "/favicon.ico",
-      shortcut: "/favicon.ico",
-      apple: "/apple-touch-icon.png",
+      icon: "/img/logo/icon-fanbroj.png",
+      shortcut: "/img/logo/icon-fanbroj.png",
+      apple: "/img/logo/icon-fanbroj.png",
     },
     manifest: "/manifest.json",
     robots: {

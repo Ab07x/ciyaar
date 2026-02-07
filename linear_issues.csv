@@ -1,0 +1,8 @@
+Title,Description,Priority,Team,Labels
+"Upgrade Image Codec to WebP","Currently serving standard JPGs. Implement logic to convert images to WebP on upload (or via Next.js Image Optimization) to reduce payload size by ~40%.",High,Ciyaar,"Performance, SEO"
+"Implement JSON-LD Schema for Movies","The current site uses deprecated Microdata. Implement dynamic JSON-LD injection for `Movie` and `TVSeries` schemas, including AggregateRating, Director, and Cast fields to capture Google Rich Snippets.",High,Ciyaar,"SEO"
+"Fix Image Filename SEO","Current images use random TMDB hash filenames (e.g., `fRNg3...jpg`). Update the import pipeline to rename files to `{movie-slug}-poster.jpg` for Image SEO.",Medium,Ciyaar,"SEO"
+"Server-Side TMDB Fetcher","Move TMDB fetching from client-side (jQuery) to server-side (Next.js API/Convex Action) to hide API usage and enable proper image processing before saving.",High,Ciyaar,"Backend"
+"Configure Cloudflare Page Rules","Refine Cloudflare rules: 1. Bypass Cache for `/wp-admin*` and `/wp-login.php*`. 2. Cache Everything for content pages. 3. Enable Edge Cache TTL.",High,Ciyaar,"DevOps"
+"Implement Push Notifications","Re-implement the Push Notification system (Firebase) from the old site into the new Ciyaar app, ensuring explicit opt-in UX.",Medium,Ciyaar,"Feature"
+"Install Redis Object Cache","The site database is heavy. Install Redis on the server (`sudo apt install redis`) and use the `Redis Object Cache` plugin to reduce database queries by 90%.",High,Ciyaar,"Performance"
