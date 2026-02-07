@@ -52,8 +52,8 @@ export function Navbar() {
             className={cn(
                 "sticky top-0 z-50 transition-all duration-300",
                 isScrolled
-                    ? "bg-[#020D18]/98 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20"
-                    : "bg-[#0a192f] border-b border-white/5"
+                    ? "bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm"
+                    : "bg-white border-b border-gray-100"
             )}
         >
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -61,7 +61,7 @@ export function Navbar() {
                 {/* Mobile Menu Button */}
                 <motion.button
                     whileTap={{ scale: 0.95 }}
-                    className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     aria-label="Toggle menu"
                 >
@@ -104,7 +104,7 @@ export function Navbar() {
                                 href={item.href}
                                 className={cn(
                                     "relative flex items-center gap-2 px-3 py-2 text-sm font-semibold tracking-wide transition-all rounded-lg group",
-                                    isActive ? "text-[#E50914] bg-red-500/10" : "text-white/80 hover:text-white hover:bg-white/10"
+                                    isActive ? "text-[#E50914] bg-red-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                                 )}
                             >
                                 <span className="relative">
@@ -146,7 +146,7 @@ export function Navbar() {
                     {/* Mobile Search Toggle */}
                     <motion.button
                         whileTap={{ scale: 0.95 }}
-                        className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white hover:bg-white/10 rounded-lg transition-colors"
+                        className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                         onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                         aria-label="Toggle search"
                     >
@@ -169,14 +169,14 @@ export function Navbar() {
                             <motion.div
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                className="h-5 w-5 border-2 border-white/30 border-t-[#E50914] rounded-full"
+                                className="h-5 w-5 border-2 border-gray-300 border-t-[#E50914] rounded-full"
                             />
                         </div>
                     ) : isPremium ? (
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Link
                                 href="/subscription"
-                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#E50914] hover:bg-red-500/10 rounded-lg transition-colors hidden md:flex border border-red-500/30 relative group"
+                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#E50914] hover:bg-red-50 rounded-lg transition-colors hidden md:flex border border-red-200 relative group"
                                 aria-label="My Subscription"
                             >
                                 <Crown size={22} />
@@ -186,7 +186,7 @@ export function Navbar() {
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Link
                                 href="/login"
-                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white/70 hover:bg-white/10 rounded-lg transition-colors hidden md:flex"
+                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg transition-colors hidden md:flex"
                                 aria-label="Account"
                             >
                                 <User size={22} />
@@ -206,7 +206,7 @@ export function Navbar() {
                         className="md:hidden"
                         style={{ zIndex: 9999 }}
                     >
-                        <div className="p-4 bg-[#0a192f] border-b border-white/10">
+                        <div className="p-4 bg-gray-50 border-b border-gray-200">
                             <SearchBox />
                         </div>
                     </motion.div>
