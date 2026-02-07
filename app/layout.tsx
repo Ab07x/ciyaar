@@ -130,19 +130,12 @@ export default function RootLayout({
                     <div className="relative z-10 py-16">
                       <div className="container mx-auto px-4 text-center">
                         {/* Logo */}
-                        <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className="flex items-center justify-center mb-6">
                           <Image
-                            src="/favicon.ico"
-                            alt="Fanbroj"
-                            width={40}
-                            height={40}
-                            className="object-contain"
-                          />
-                          <Image
-                            src="/img/logo/fanproj-logo.png"
+                            src="/img/logo/FANPROJ LOGO- footor.png"
                             alt="Fanbroj TV"
-                            width={140}
-                            height={40}
+                            width={200}
+                            height={60}
                             className="object-contain"
                           />
                         </div>

@@ -11,6 +11,7 @@ import { Film, Crown, Star, Play, Lock, Filter, ChevronLeft, ChevronRight } from
 import { cn } from "@/lib/utils";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { useSearchParams } from "next/navigation";
+import { SectionLoader } from "@/components/ui/LoadingSpinner";
 
 const ITEMS_PER_PAGE = 35; // 7x5
 
@@ -27,11 +28,7 @@ function MoviesContent() {
     const categoryParam = searchParams.get("category");
 
     if (!movies) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] bg-[#0d1b2a]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914]"></div>
-            </div>
-        );
+        return <SectionLoader />;
     }
 
     // Get unique genres
@@ -301,11 +298,7 @@ function MoviesContent() {
 
 export default function MoviesPage() {
     return (
-        <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen bg-[#0d1b2a]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914]"></div>
-            </div>
-        }>
+        <Suspense fallback={<SectionLoader minHeight="100vh" />}>
             <MoviesContent />
         </Suspense>
     );
