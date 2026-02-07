@@ -28,6 +28,7 @@ import { StreamPlayer } from "@/components/StreamPlayer";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import { generateTVSchema } from "@/lib/seo/schema";
 import type { Id } from "@/convex/_generated/dataModel";
+import { ShareableWidget } from "@/components/ShareableWidget";
 
 function SeriesWatchContent() {
     const params = useParams();
@@ -503,6 +504,13 @@ function SeriesWatchContent() {
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify(generateTVSchema(series))
                 }}
+            />
+
+            {/* Shareable Widget - Floating */}
+            <ShareableWidget
+                title={series.titleSomali || series.title}
+                type="series"
+                url={`https://fanbroj.net/series/${slug}`}
             />
         </div>
     );

@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { formatKickoffTime } from "@/lib/date-utils";
 import { getBoostedViews } from "@/lib/analytics";
+import { ShareableWidget } from "@/components/ShareableWidget";
 
 interface MatchClientPageProps {
   slug: string;
@@ -439,6 +440,13 @@ export default function MatchClientPage({ slug }: MatchClientPageProps) {
           <RelatedNews limit={3} />
         </section>
       </div>
+
+      {/* Shareable Widget - Floating */}
+      <ShareableWidget
+        title={`${match.teamA} vs ${match.teamB}`}
+        type="match"
+        url={`https://fanbroj.net/match/${slug}`}
+      />
     </div>
   );
 }

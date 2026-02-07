@@ -31,6 +31,7 @@ interface MovieViewClientProps {
 
 import { useState } from "react";
 import { TrailerModal } from "@/components/TrailerModal";
+import { ShareableWidget } from "@/components/ShareableWidget";
 
 export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClientProps) {
     const [isTrailerOpen, setIsTrailerOpen] = useState(false);
@@ -336,6 +337,13 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify(generateMovieSchema(movie))
                 }}
+            />
+
+            {/* Shareable Widget - Floating */}
+            <ShareableWidget
+                title={movie.titleSomali || movie.title}
+                type="movie"
+                url={`https://fanbroj.net/movies/${slug}`}
             />
         </div>
     );
