@@ -99,46 +99,48 @@ export function NotificationOptIn() {
 
     return (
         <div
-            className={`fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 z-50 md:max-w-[320px] transition-all duration-300 ${exiting
+            className={`fixed bottom-20 md:bottom-6 left-4 right-4 md:right-auto md:left-6 z-50 w-full md:max-w-[420px] transition-all duration-300 ${exiting
                 ? "translate-y-2 opacity-0"
                 : "translate-y-0 opacity-100 animate-in slide-in-from-bottom-2"
                 }`}
         >
-            <div className="bg-white rounded-xl border border-gray-200 shadow-lg flex items-center gap-3 px-3 py-2.5">
-                {/* Bell icon */}
-                <div className="shrink-0 w-8 h-8 bg-[#E50914] rounded-lg flex items-center justify-center">
-                    <Bell size={14} className="text-white" />
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-xl flex items-center gap-4 px-5 py-4">
+                {/* App Icon */}
+                <div className="shrink-0 w-14 h-14 bg-black rounded-xl overflow-hidden shadow-sm">
+                    <img src="/icon-192.png" alt="Fanbroj" className="w-full h-full object-cover" />
                 </div>
 
                 {/* Text */}
                 <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 text-xs font-semibold leading-tight">
+                    <p className="text-gray-900 text-base font-bold leading-tight mb-1">
                         Ogeysiisyo cusub
                     </p>
+                    <p className="text-gray-500 text-xs line-clamp-2 leading-snug">
+                        La soco filimada iyo ciyaaraha cusub ee tooska ah. Iska qor hadda!
+                    </p>
                     {error && (
-                        <p className="text-red-500 text-[10px] mt-0.5">{error}</p>
+                        <p className="text-red-500 text-[10px] mt-1 font-medium bg-red-50 px-2 py-0.5 rounded-md inline-block">{error}</p>
                     )}
                 </div>
 
                 {/* Buttons */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex flex-col gap-2 shrink-0">
                     <button
                         onClick={handleSubscribe}
                         disabled={isLoading}
-                        className="px-3 py-1.5 bg-[#E50914] hover:bg-[#b8070f] text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-50"
+                        className="px-4 py-2 bg-[#E50914] hover:bg-[#b8070f] text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50 shadow-sm"
                     >
                         {isLoading ? (
-                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             "Oggolow"
                         )}
                     </button>
                     <button
                         onClick={handleDismiss}
-                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label="Close"
+                        className="text-xs text-gray-400 hover:text-gray-600 font-medium underline decoration-gray-300 underline-offset-2"
                     >
-                        <X size={14} />
+                        May, mahadsanid
                     </button>
                 </div>
             </div>
