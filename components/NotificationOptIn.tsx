@@ -6,6 +6,7 @@ import { usePush } from "@/providers/PushProvider";
 
 const STORAGE_KEY = "push_prompt_state";
 const INITIAL_DELAY_MS = 3000;
+const UNSUBSCRIBE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface PromptState {
     showCount: number;
@@ -15,10 +16,33 @@ interface PromptState {
 
 function getPromptState(): PromptState {
     try {
+        // Check if user recently unsubscribed - don't show prompt for 24 hours
+        const unsubscribedAt = localStorage.getItem("fanbroj_push_unsubscribed");
+        if (unsubscribedAt) {
+            const unsubscribedTime = parseInt(unsubscribedAt);
+            if (Date.now() - unsubscribedTime < UNSUBSCRIBE_COOLDOWN_MS) {
+                // User unsubscribed recently, treat as "subscribed" to hide prompt
+                return { showCount: 0, lastDismissed: 0, subscribed: true };
+            }
+        }
+
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            // Check if local storage says subscribed but also check unsubscribe flag
+            if (parsed.subscribed && unsubscribedAt) {
+                // User was subscribed but then unsubscribed
+                return { ...parsed, subscribed: false };
+            }
+            return parsed;
+        }
     } catch { }
     if (localStorage.getItem("push_subscribed") === "true") {
+        // Double check against unsubscribe flag
+        const unsubscribedAt = localStorage.getItem("fanbroj_push_unsubscribed");
+        if (unsubscribedAt) {
+            return { showCount: 0, lastDismissed: 0, subscribed: false };
+        }
         return { showCount: 0, lastDismissed: 0, subscribed: true };
     }
     return { showCount: 0, lastDismissed: 0, subscribed: false };
@@ -28,6 +52,8 @@ function savePromptState(state: PromptState) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     if (state.subscribed) {
         localStorage.setItem("push_subscribed", "true");
+        // Clear unsubscribe flag when subscribing
+        localStorage.removeItem("fanbroj_push_unsubscribed");
     }
 }
 

@@ -11,6 +11,7 @@ import { useUser } from "@/providers/UserProvider";
 import { Logo } from "./Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useLanguage } from "@/providers/LanguageProvider";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -155,6 +156,11 @@ export function Navbar() {
                     {/* Language Switcher */}
                     <div className="hidden md:block">
                         <LanguageSwitcher />
+                    </div>
+
+                    {/* Notification Bell */}
+                    <div className="hidden md:block">
+                        <NotificationBell />
                     </div>
 
                     {/* Account Icon */}

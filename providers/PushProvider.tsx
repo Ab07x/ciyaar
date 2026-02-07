@@ -68,19 +68,41 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
     // Initialize Firebase and get token
     const initializeFirebase = async (): Promise<string | null> => {
         try {
+            console.log("[Push] Starting Firebase initialization...");
+
             // Register service worker - use existing if available
             let registration: ServiceWorkerRegistration;
-            const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
-            if (existing) {
-                registration = existing;
-                // Ensure it's up to date
-                existing.update().catch(() => { });
-            } else {
-                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            try {
+                const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+                if (existing) {
+                    registration = existing;
+                    console.log("[Push] Using existing service worker");
+                    // Ensure it's up to date
+                    existing.update().catch(() => { });
+                } else {
+                    console.log("[Push] Registering new service worker...");
+                    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    console.log("[Push] Service worker registered successfully");
+                }
+            } catch (swError) {
+                console.error("[Push] Service worker registration failed:", swError);
+                return null;
             }
 
-            // Wait for the service worker to be ready
-            await navigator.serviceWorker.ready;
+            // Wait for the service worker to be ready with timeout
+            console.log("[Push] Waiting for service worker to be ready...");
+            const swReady = await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise<null>((_, reject) =>
+                    setTimeout(() => reject(new Error("Service worker ready timeout")), 10000)
+                )
+            ]);
+
+            if (!swReady) {
+                console.error("[Push] Service worker not ready after timeout");
+                return null;
+            }
+            console.log("[Push] Service worker is ready");
 
             // Dynamic import to avoid SSR issues
             const { initializeApp, getApps } = await import("firebase/app");
@@ -97,32 +119,53 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
             };
 
             const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-            const messaging = getMessaging(app);
+            console.log("[Push] Firebase app initialized");
 
-            // Get FCM token with retry
+            const messaging = getMessaging(app);
+            console.log("[Push] Firebase messaging initialized");
+
+            // Get FCM token with more retries and longer delays
             let token: string | null = null;
-            for (let attempt = 0; attempt < 2; attempt++) {
+            const maxAttempts = 3;
+
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
                 try {
+                    console.log(`[Push] Attempting to get FCM token (attempt ${attempt + 1}/${maxAttempts})...`);
                     token = await getToken(messaging, {
                         vapidKey: "BJD2T_koPJSUI8rUgD12066OE1KRmVjcBUcIKeHR3N2deAiVCeHe-_0q5qwY3V6BQOFCxJk-6phhjEA1Lex8ss4",
                         serviceWorkerRegistration: registration,
                     });
-                    if (token) break;
-                } catch (tokenErr) {
-                    console.warn(`FCM token attempt ${attempt + 1} failed:`, tokenErr);
-                    if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
+                    if (token) {
+                        console.log("[Push] FCM token obtained successfully!");
+                        break;
+                    } else {
+                        console.warn(`[Push] getToken returned null on attempt ${attempt + 1}`);
+                    }
+                } catch (tokenErr: any) {
+                    console.error(`[Push] FCM token attempt ${attempt + 1} failed:`, tokenErr?.message || tokenErr);
+                    if (attempt < maxAttempts - 1) {
+                        const delay = (attempt + 1) * 1500; // 1.5s, 3s, 4.5s
+                        console.log(`[Push] Retrying in ${delay}ms...`);
+                        await new Promise(r => setTimeout(r, delay));
+                    }
                 }
             }
 
             if (token) {
-                console.log("FCM Token obtained:", token.substring(0, 20) + "...");
+                console.log("[Push] FCM Token:", token.substring(0, 30) + "...");
                 setFcmToken(token);
                 setIsSubscribed(true);
+
+                // Mark as subscribed in localStorage
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("fanbroj_push_subscribed", "true");
+                    localStorage.removeItem("fanbroj_push_unsubscribed");
+                }
 
                 // Listen for foreground messages
                 const { onMessage } = await import("firebase/messaging");
                 onMessage(messaging, (payload) => {
-                    console.log("Foreground message:", payload);
+                    console.log("[Push] Foreground message:", payload);
                     // Show notification manually for foreground
                     if (payload.notification) {
                         new Notification(payload.notification.title || "Fanbroj", {
@@ -135,10 +178,10 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
                 return token;
             }
 
-            console.error("Failed to get FCM token after retries");
+            console.error("[Push] Failed to get FCM token after all retries");
             return null;
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
+        } catch (error: any) {
+            console.error("[Push] Firebase initialization error:", error?.message || error);
             return null;
         }
     };
@@ -190,16 +233,47 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
 
     // Unsubscribe from push notifications
     const unsubscribe = useCallback(async () => {
-        if (!fcmToken) return;
-
         try {
             const deviceId = getDeviceId();
-            await removeFcmToken({ deviceId });
+
+            // Remove token from Convex database
+            if (fcmToken || deviceId) {
+                await removeFcmToken({ deviceId });
+            }
+
+            // Clear local subscription state
             setIsSubscribed(false);
             setFcmToken(null);
-            console.log("Unsubscribed from push notifications");
+
+            // Clear localStorage flags used by NotificationOptIn
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("fanbroj_push_subscribed");
+                localStorage.removeItem("notificationPromptState");
+
+                // Store unsubscribed timestamp to prevent re-prompting immediately
+                localStorage.setItem("fanbroj_push_unsubscribed", Date.now().toString());
+            }
+
+            // Try to delete the FCM token from Firebase
+            try {
+                const { getApps } = await import("firebase/app");
+                if (getApps().length > 0) {
+                    const { getMessaging, deleteToken } = await import("firebase/messaging");
+                    const app = getApps()[0];
+                    const messaging = getMessaging(app);
+                    await deleteToken(messaging);
+                    console.log("FCM token deleted from Firebase");
+                }
+            } catch (firebaseErr) {
+                console.warn("Could not delete FCM token from Firebase:", firebaseErr);
+            }
+
+            console.log("Unsubscribed from push notifications successfully");
         } catch (error) {
             console.error("Unsubscribe error:", error);
+            // Still clear local state even if server fails
+            setIsSubscribed(false);
+            setFcmToken(null);
         }
     }, [fcmToken, removeFcmToken]);
 
