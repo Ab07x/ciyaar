@@ -15,7 +15,7 @@ const nextConfig = {
         hostname: "cd.fanbroj.net",
       },
     ],
-    unoptimized: false,
+    unoptimized: true,
     minimumCacheTTL: 31536000, // 1 year - images are immutable once generated
     qualities: [25, 50, 75, 80, 85, 100],
     formats: ["image/avif", "image/webp"],
