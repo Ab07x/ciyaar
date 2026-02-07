@@ -17,6 +17,7 @@ import { api } from "@/convex/_generated/api";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { ConnectionIndicator } from "@/components/mobile/OfflineIndicator";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
+import { AggressivePushBanner } from "@/components/AggressivePushBanner";
 
 // Use static metadata to prevent build hangs
 // Dynamic settings loaded client-side via Convex provider
@@ -190,7 +191,7 @@ export default function RootLayout({
                   </footer>
 
                   <BottomNav />
-                  <NotificationOptIn />
+                  <AggressivePushBanner />
                   <FreeTrialBanner />
                   <ConnectionIndicator />
                   <div className="fixed bottom-24 md:bottom-8 right-4 z-40">
