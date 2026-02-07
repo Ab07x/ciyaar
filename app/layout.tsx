@@ -16,6 +16,7 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { ConnectionIndicator } from "@/components/mobile/OfflineIndicator";
+import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 
 // Use static metadata to prevent build hangs
 // Dynamic settings loaded client-side via Convex provider
@@ -52,9 +53,12 @@ export function generateMetadata(): Metadata {
       ],
     },
     icons: {
-      icon: "/img/logo/icon-fanbroj.png",
-      shortcut: "/img/logo/icon-fanbroj.png",
-      apple: "/img/logo/icon-fanbroj.png",
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/img/logo/favicon.ico", type: "image/x-icon" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/icon-192.png",
     },
     manifest: "/manifest.json",
     robots: {
@@ -128,7 +132,7 @@ export default function RootLayout({
                         {/* Logo */}
                         <div className="flex items-center justify-center gap-3 mb-6">
                           <Image
-                            src="/img/logo/icon-fanbroj.png"
+                            src="/favicon.ico"
                             alt="Fanbroj"
                             width={40}
                             height={40}
@@ -194,6 +198,7 @@ export default function RootLayout({
 
                   <BottomNav />
                   <NotificationOptIn />
+                  <FreeTrialBanner />
                   <ConnectionIndicator />
                   <div className="fixed bottom-24 md:bottom-8 right-4 z-40">
                     <WhatsAppButton showLabel={false} className="w-14 h-14 p-0 flex items-center justify-center rounded-full" />

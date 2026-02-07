@@ -68,13 +68,15 @@ export async function POST(request: NextRequest) {
         const protocol = request.headers.get("x-forwarded-proto") || "http";
         const isSecure = protocol === "https";
 
-        // Set session cookie
+        // Set session cookie - works across subdomains
+        // For cd.fanbroj.net, we need to ensure cookie is accessible
         response.cookies.set("fanbroj_admin_session", "authenticated", {
-            httpOnly: false,
+            httpOnly: false, // Must be false so client JS can check auth
             secure: isSecure,
             sameSite: "lax",
             maxAge: 60 * 60 * 24 * 7, // 7 days
             path: "/",
+            // Don't set domain - let browser handle it for current domain
         });
 
         return response;
