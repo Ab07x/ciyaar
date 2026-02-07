@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "image.tmdb.org",
       },
+      {
+        protocol: "https",
+        hostname: "cd.fanbroj.net",
+      },
     ],
     unoptimized: false,
     minimumCacheTTL: 31536000, // 1 year - images are immutable once generated
