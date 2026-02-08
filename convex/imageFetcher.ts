@@ -1,8 +1,8 @@
 "use node";
 
-import { action, mutation, query } from "./_generated/server";
+import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { api, internal } from "./_generated/api";
+import { api } from "./_generated/api";
 
 // ============================================
 // FETCH MISSING POSTER FROM TMDB/OMDB
@@ -128,8 +128,8 @@ export const batchFetchMissingPosters = action({
         const source = args.source || "auto";
 
         // Get movies with missing/empty/placeholder posters
-        const movies = await ctx.runQuery(
-            internal.imageFetcher.getMoviesWithMissingPosters,
+        const movies = await ctx.runAction(
+            api.imageFetcher.getMoviesWithMissingPosters,
             { limit }
         );
 
@@ -180,18 +180,19 @@ export const batchFetchMissingPosters = action({
 });
 
 // ============================================
-// INTERNAL QUERY: GET MOVIES WITH MISSING POSTERS
+// INTERNAL ACTION: GET MOVIES WITH MISSING POSTERS
+// (Must be action in "use node" file)
 // ============================================
-export const getMoviesWithMissingPosters = query({
+export const getMoviesWithMissingPosters = action({
     args: { limit: v.optional(v.number()) },
     handler: async (ctx, args) => {
-        const allMovies = await ctx.db
-            .query("movies")
-            .withIndex("by_published", (q) => q.eq("isPublished", true))
-            .collect();
+        // Fetch all published movies via query
+        const allMovies = await ctx.runQuery(api.movies.listMovies, {
+            isPublished: true,
+        });
 
         // Filter for movies with missing/invalid posters
-        const missingPosterMovies = allMovies.filter((movie) => {
+        const missingPosterMovies = allMovies.filter((movie: any) => {
             if (!movie.posterUrl) return true;
             if (movie.posterUrl === "") return true;
             if (movie.posterUrl.includes("placeholder")) return true;
