@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Save, ChevronLeft, Plus, X, Goal } from "lucide-react";
 import Link from "next/link";
@@ -36,9 +36,13 @@ export default function EditMatchPage({ params }: Props) {
     });
     const [kickoffDate, setKickoffDate] = useState("");
     const [kickoffTime, setKickoffTime] = useState("");
+    const hasInitialized = useRef(false);
 
     useEffect(() => {
-        if (match) {
+        // Only initialize form data once when match is first loaded
+        // This prevents real-time Convex updates from overwriting user edits
+        if (match && !hasInitialized.current) {
+            hasInitialized.current = true;
             setFormData({
                 title: match.title, slug: match.slug, teamA: match.teamA, teamB: match.teamB,
                 teamALogo: match.teamALogo || "", teamBLogo: match.teamBLogo || "",

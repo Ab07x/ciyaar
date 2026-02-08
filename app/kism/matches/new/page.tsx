@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Save, ChevronLeft, Plus, X, Goal } from "lucide-react";
 import Link from "next/link";
@@ -38,6 +38,7 @@ export default function MatchFormPage({ params }: Props) {
     });
     const [kickoffDate, setKickoffDate] = useState("");
     const [kickoffTime, setKickoffTime] = useState("");
+    const hasInitialized = useRef(false);
 
     if (id && match === undefined) {
         return (
@@ -48,7 +49,10 @@ export default function MatchFormPage({ params }: Props) {
     }
 
     useEffect(() => {
-        if (match && "title" in match) {
+        // Only initialize form data once when match is first loaded
+        // This prevents real-time Convex updates from overwriting user edits
+        if (match && "title" in match && !hasInitialized.current) {
+            hasInitialized.current = true;
             setFormData({
                 title: match.title, slug: match.slug, teamA: match.teamA, teamB: match.teamB,
                 teamALogo: match.teamALogo || "", teamBLogo: match.teamBLogo || "",
@@ -63,7 +67,8 @@ export default function MatchFormPage({ params }: Props) {
             const d = new Date(match.kickoffAt);
             setKickoffDate(d.toISOString().split("T")[0]);
             setKickoffTime(d.toTimeString().split(" ")[0].substring(0, 5));
-        } else if (!id) {
+        } else if (!id && !hasInitialized.current) {
+            hasInitialized.current = true;
             const d = new Date();
             setKickoffDate(d.toISOString().split("T")[0]);
             setKickoffTime(d.toTimeString().split(" ")[0].substring(0, 5));
