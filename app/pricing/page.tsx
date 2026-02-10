@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
-import { Check, X, MessageSquare, Sparkles, Shield, Zap, Crown } from "lucide-react";
+import { Check, X, Sparkles, Shield, Zap, Crown, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { PricingCards } from "@/components/PricingCards";
@@ -47,18 +47,17 @@ const plans = [
 ];
 
 const freeVsPremium = [
-    { feature: "Ads", free: "Aad u badan", premium: "Maya" },
+    { feature: "Xayeysiis (Ads)", free: "Aad u badan", premium: "Maya" },
     { feature: "Ciyaaraha Premium", free: "Maya", premium: "Haa" },
-    { feature: "HD Quality", free: "720p", premium: "1080p/4K" },
-    { feature: "Buffer time", free: "Dheer", premium: "Gaaban" },
-    { feature: "Support", free: "Basic", premium: "Priority" },
+    { feature: "Sawirka (Quality)", free: "720p", premium: "1080p/4K" },
+    { feature: "Sugitaan (Buffer)", free: "Dheer", premium: "Gaaban" },
+    { feature: "Taageero", free: "Caadi", premium: "Degdeg" },
 ];
 
 export default function PricingPage() {
     const settings = useQuery(api.settings.getSettings);
     const trackPageView = useMutation(api.analytics.trackPageView);
     const { deviceId, redeemCode } = useUser();
-    const [selectedPlan, setSelectedPlan] = useState<string>("monthly");
     const [code, setCode] = useState("");
     const [redemptionResult, setRedemptionResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
@@ -83,12 +82,7 @@ export default function PricingPage() {
         }
     };
 
-    const getWhatsAppLink = () => {
-        if (!settings) return "#";
-        const plan = plans.find(p => p.id === selectedPlan);
-        const message = `Waxaan rabaa inaan iibsado ${plan?.name} (${getPriceDisplay(selectedPlan)}). Device ID: ${deviceId}`;
-        return `https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
-    };
+
 
     const handleRedeem = async () => {
         if (!code.trim()) return;
@@ -145,45 +139,20 @@ export default function PricingPage() {
             <section className="py-16 bg-black/60 backdrop-blur-sm border-y border-white/10">
                 <div className="container mx-auto px-4">
                     <div className="max-w-2xl mx-auto">
-                        {/* WhatsApp CTA */}
-                        <div className="bg-green-600/20 border border-green-600/30 rounded-2xl p-8 text-center mb-8 backdrop-blur-sm">
-                            <MessageSquare size={48} className="text-green-500 mx-auto mb-4" />
-                            <h3 className="text-2xl font-bold mb-2">Iibso WhatsApp-ka</h3>
-                            <p className="text-text-secondary mb-6">
-                                Nala soo xiriir si aad u hesho code-kaaga premium
+                        {/* Secure Payment Badge */}
+                        <div className="bg-green-600/10 border border-green-600/20 rounded-2xl p-8 text-center mb-8 backdrop-blur-sm">
+                            <ShieldCheck size={48} className="text-green-500 mx-auto mb-4" />
+                            <h3 className="text-2xl font-bold mb-2">Lacag bixin ammaan ah</h3>
+                            <p className="text-text-secondary mb-4">
+                                Ku bixi EVC Plus, eDahab, Zaad, Sahal, Card, ama Apple Pay
                             </p>
-                            <a
-                                href={getWhatsAppLink()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition-colors"
-                            >
-                                <MessageSquare size={24} />
-                                WhatsApp
-                            </a>
-                        </div>
-
-                        {/* EVC Instructions */}
-                        <div className="bg-black/60 border border-white/10 rounded-2xl p-8 mb-8 backdrop-blur-sm">
-                            <h3 className="text-xl font-bold mb-4">Sida loo bixiyo EVC</h3>
-                            <ol className="space-y-3 text-text-secondary">
-                                <li className="flex gap-3">
-                                    <span className="flex-shrink-0 w-6 h-6 bg-accent-green text-black rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                                    <span>Fur EVC Plus app-kaaga</span>
-                                </li>
-                                <li className="flex gap-3">
-                                    <span className="flex-shrink-0 w-6 h-6 bg-accent-green text-black rounded-full flex items-center justify-center text-sm font-bold">2</span>
-                                    <span>Dooro &ldquo;Send Money&rdquo;</span>
-                                </li>
-                                <li className="flex gap-3">
-                                    <span className="flex-shrink-0 w-6 h-6 bg-accent-green text-black rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                                    <span>Gali lambarka: <strong className="text-accent-green">{settings?.whatsappNumber || "..."}</strong></span>
-                                </li>
-                                <li className="flex gap-3">
-                                    <span className="flex-shrink-0 w-6 h-6 bg-accent-green text-black rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                                    <span>Noo soo dir screenshot-ka WhatsApp</span>
-                                </li>
-                            </ol>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {["EVC Plus", "Zaad", "Sahal", "eDahab", "Card", "Apple Pay"].map((m) => (
+                                    <span key={m} className="text-xs bg-white/10 text-gray-300 px-3 py-1.5 rounded-full">
+                                        {m}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Redeem Code */}
@@ -202,7 +171,7 @@ export default function PricingPage() {
                                     disabled={loading || !code.trim()}
                                     className="bg-accent-green text-black px-6 py-3 rounded-xl font-bold hover:bg-accent-green/90 transition-colors disabled:opacity-50"
                                 >
-                                    {loading ? "..." : "Redeem"}
+                                    {loading ? "..." : "Isticmaal"}
                                 </button>
                             </div>
 
@@ -226,8 +195,8 @@ export default function PricingPage() {
 
                     <div className="max-w-2xl mx-auto overflow-hidden rounded-2xl border border-white/10 bg-black/60 backdrop-blur-sm">
                         <div className="grid grid-cols-3 bg-black/80 border-b border-white/10">
-                            <div className="p-4 font-bold">Feature</div>
-                            <div className="p-4 font-bold text-center border-x border-white/10">Free</div>
+                            <div className="p-4 font-bold">Wax</div>
+                            <div className="p-4 font-bold text-center border-x border-white/10">Bilaash</div>
                             <div className="p-4 font-bold text-center text-accent-gold">Premium</div>
                         </div>
 
@@ -258,15 +227,15 @@ export default function PricingPage() {
             <section className="py-16 text-center">
                 <div className="container mx-auto px-4 max-w-4xl">
                     <h2 className="text-2xl md:text-4xl font-bold text-white mb-6">
-                        Prepare yourself for the ultimate entertainment experience.
+                        Isu diyaari waayo-aragnimada madadaalada ugu fiican.
                     </h2>
                     <p className="text-lg md:text-xl text-gray-300 mb-4">
-                        With <span className="text-accent-green font-bold italic">500+ movies</span> and{" "}
-                        <span className="text-accent-green font-bold italic">1,000+ episodes</span>, you&apos;re not just getting content, you&apos;re
-                        unlocking the realm of <span className="italic">endless adventure, passion, and imagination.</span>
+                        <span className="text-accent-green font-bold italic">500+ filim</span> iyo{" "}
+                        <span className="text-accent-green font-bold italic">1,000+ taxane</span> — ma ahan oo kaliya
+                        muuqaallo aad daawanayso, waxaad furanaysaa <span className="italic">riyo, xiiso, iyo khiyaali aan dhammaad lahayn.</span>
                     </p>
                     <p className="text-xl md:text-2xl text-white font-medium mt-8">
-                        Thank you for powering our journey.
+                        Waa ku mahadsan tahay taageeradaada. 💚
                     </p>
                 </div>
             </section>

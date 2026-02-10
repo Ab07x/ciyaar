@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@/providers/UserProvider";
@@ -9,11 +10,14 @@ import {
   CalendarDays,
   Crown,
   Check,
-  MessageCircle,
+  Wallet,
   Sparkles,
   Smartphone,
   Tv,
-  Monitor
+  Monitor,
+  Loader2,
+  CreditCard,
+  ShieldCheck
 } from "lucide-react";
 
 interface PricingPlan {
@@ -44,7 +48,7 @@ const plans: PricingPlan[] = [
     duration: "1 match",
     durationSomali: "Ciyaar 1",
     icon: Zap,
-    features: ["1 live match", "HD quality", "No ads during match", "1 device"],
+    features: ["1 ciyaar toos ah", "HD sawir wanaagsan", "Xayeysiis la'aan", "1 qalab"],
     color: "text-blue-400",
     bgGradient: "from-blue-500/20 to-blue-600/5",
     maxDevices: 1,
@@ -58,7 +62,7 @@ const plans: PricingPlan[] = [
     duration: "7 days",
     durationSomali: "7 maalmood",
     icon: Calendar,
-    features: ["All matches", "All movies", "HD quality", "2 devices"],
+    features: ["Dhammaan ciyaaraha", "Dhammaan filimada", "HD sawir wanaagsan", "2 qalab"],
     color: "text-orange-400",
     bgGradient: "from-orange-500/20 to-orange-600/5",
     maxDevices: 2,
@@ -72,7 +76,7 @@ const plans: PricingPlan[] = [
     duration: "30 days",
     durationSomali: "30 maalmood",
     icon: CalendarDays,
-    features: ["All matches", "All movies", "HD/4K quality", "3 devices", "Priority support"],
+    features: ["Dhammaan ciyaaraha", "Dhammaan filimada", "HD/4K sawir heer sare", "3 qalab", "Taageero degdeg ah"],
     popular: true,
     color: "text-green-400",
     bgGradient: "from-green-500/20 to-green-600/5",
@@ -87,9 +91,9 @@ const plans: PricingPlan[] = [
     duration: "365 days",
     durationSomali: "Sanad buuxa",
     icon: Crown,
-    features: ["All matches", "All movies", "4K quality", "5 devices", "Priority support", "Early access"],
+    features: ["Dhammaan ciyaaraha", "Dhammaan filimada", "4K sawir heer sare", "5 qalab", "Taageero degdeg ah", "Waxyaabo cusub marka hore"],
     bestValue: true,
-    savings: "Save 45%",
+    savings: "Qiimo dhimis 45%",
     color: "text-yellow-400",
     bgGradient: "from-yellow-500/20 to-yellow-600/5",
     maxDevices: 5,
@@ -117,18 +121,34 @@ export function PricingCards({ className }: { className?: string }) {
     return price ?? plan.defaultPrice;
   };
 
-  const getWhatsAppLink = (plan: PricingPlan) => {
-    const phone = settings?.whatsappNumber?.replace(/\D/g, "") || "252615000000";
-    const price = getPrice(plan);
-    const message = `Salaam! Waxaan rabaa:
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-📱 Plan: ${plan.name} ($${price.toFixed(2)})
-⏱️ Duration: ${plan.duration}
-🆔 Device: ${deviceId?.slice(0, 8) || "new"}
+  const handlePayment = async (plan: PricingPlan) => {
+    if (loadingPlan) return;
+    setLoadingPlan(plan.id);
 
-Waan bixiyay lacagta. Fadlan ii soo dir code-kayga.`;
+    try {
+      const res = await fetch("/api/pay/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: plan.id,
+          deviceId: deviceId || "unknown",
+        }),
+      });
 
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      const data = await res.json();
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        alert(data.error || "Khalad ayaa dhacay. Fadlan isku day mar kale.");
+      }
+    } catch (err) {
+      alert("Khalad ayaa dhacay. Fadlan hubso internetkaaga.");
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   return (
@@ -257,13 +277,12 @@ Waan bixiyay lacagta. Fadlan ii soo dir code-kayga.`;
                     ))}
                   </ul>
 
-                  {/* WhatsApp Button */}
-                  <a
-                    href={getWhatsAppLink(plan)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all transform hover:scale-[1.02] active:scale-[0.98] ${isCurrent
-                      ? "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                  {/* Pay Button */}
+                  <button
+                    onClick={() => handlePayment(plan)}
+                    disabled={isCurrent || loadingPlan === plan.id}
+                    className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed ${isCurrent
+                      ? "bg-white/10 text-white border border-white/20"
                       : isUpgrade
                         ? "bg-accent-gold hover:bg-yellow-400 text-black shadow-lg shadow-yellow-900/50"
                         : plan.popular
@@ -271,43 +290,58 @@ Waan bixiyay lacagta. Fadlan ii soo dir code-kayga.`;
                           : "bg-white text-black hover:bg-gray-200"
                       }`}
                   >
-                    <MessageCircle size={18} />
+                    {loadingPlan === plan.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Wallet size={18} />
+                    )}
                     <span>
-                      {isCurrent ? "Qorshahaaga" : isUpgrade ? "Kor u qaad (Upgrade)" : "Iibso Hadda"}
+                      {isCurrent ? "Qorshahaaga" : loadingPlan === plan.id ? "Sugayo..." : isUpgrade ? "Kor u qaad (Upgrade)" : "Iibso Hadda"}
                     </span>
-                  </a>
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Payment Instructions */}
+        {/* Sida Loo Bixiyo - Tilmaamaha */}
         <div className="mt-12 p-6 bg-gradient-to-r from-gray-900 to-gray-800 border border-white/10 rounded-2xl max-w-3xl mx-auto shadow-2xl">
           <h4 className="font-bold text-white text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
-            <MessageCircle className="text-green-500" size={20} />
-            Sida loo bixiyo (How to Pay):
+            <ShieldCheck className="text-green-500" size={20} />
+            Sida Loo Bixiyo Lacagta
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div className="flex gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">1</span>
-                <p className="text-gray-300 text-sm">Dooro plan-kaaga oo riix batoonka WhatsApp.</p>
+                <p className="text-gray-300 text-sm">Dooro plan-ka aad rabto oo riix <strong className="text-white">&quot;Iibso Hadda&quot;</strong></p>
               </div>
               <div className="flex gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">2</span>
-                <p className="text-gray-300 text-sm">Waxaad si toos ah u aadi doontaa WhatsApp-ka maamulka.</p>
+                <p className="text-gray-300 text-sm">Waxaad aadi doontaa bogga lacag bixinta — ku bixi <strong className="text-white">EVC, eDahab, Zaad, ama Card</strong></p>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">3</span>
-                <p className="text-gray-300 text-sm">Ku bixi lacagta EVC Plus ama Zaad Service.</p>
+                <p className="text-gray-300 text-sm">Marka lacagta la bixiyo, Premium-kaaga <strong className="text-green-400">wuu kuu shaqeyn doonaa isla markiiba!</strong> ✅</p>
               </div>
-              <div className="flex gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">4</span>
-                <p className="text-gray-300 text-sm">Hel code-kaaga daawashada isla markiiba! ✅</p>
+              <div className="flex gap-3 items-start">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex-shrink-0">💡</span>
+                <p className="text-gray-400 text-xs">Ma u baahnid inaad code sugto — lacagta markay tagto wax walba way kuu furmayaan automatic ahaan.</p>
               </div>
+            </div>
+          </div>
+          {/* Habab Lacag Bixinta */}
+          <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center gap-3">
+            <span className="text-xs text-gray-500">Habab la aqbalayo:</span>
+            <div className="flex flex-wrap gap-2">
+              {["EVC Plus", "Zaad", "Sahal", "eDahab", "Card", "Apple Pay"].map((m) => (
+                <span key={m} className="text-xs bg-white/5 text-gray-400 px-2.5 py-1 rounded-full border border-white/10">
+                  {m}
+                </span>
+              ))}
             </div>
           </div>
         </div>

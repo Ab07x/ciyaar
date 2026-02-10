@@ -1096,5 +1096,40 @@ export default defineSchema({
         .index("by_has_results", ["hasResults", "createdAt"])
         .index("by_device", ["deviceId", "createdAt"]),
 
+    // ============================================
+    // PAYMENTS (Sifalo Pay Transactions)
+    // ============================================
+    payments: defineTable({
+        deviceId: v.string(),
+        userId: v.optional(v.id("users")),
+        plan: v.union(
+            v.literal("match"),
+            v.literal("weekly"),
+            v.literal("monthly"),
+            v.literal("yearly")
+        ),
+        amount: v.number(),
+        currency: v.string(),
+        orderId: v.string(),
+        gateway: v.string(),
+        sifaloKey: v.optional(v.string()),
+        sifaloToken: v.optional(v.string()),
+        sifaloSid: v.optional(v.string()),
+        status: v.union(
+            v.literal("pending"),
+            v.literal("success"),
+            v.literal("failed"),
+            v.literal("expired")
+        ),
+        paymentType: v.optional(v.string()),
+        subscriptionId: v.optional(v.id("subscriptions")),
+        createdAt: v.number(),
+        verifiedAt: v.optional(v.number()),
+    })
+        .index("by_order", ["orderId"])
+        .index("by_sid", ["sifaloSid"])
+        .index("by_device", ["deviceId"])
+        .index("by_status", ["status"]),
+
 });
 

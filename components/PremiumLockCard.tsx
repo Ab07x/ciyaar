@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Crown, Lock, Unlock } from "lucide-react";
+import { Crown, Lock, Unlock, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -9,7 +9,7 @@ interface PremiumLockCardProps {
     matchId: string;
     correctPassword: string;
     priceText: string;
-    whatsappNumber: string;
+    whatsappNumber?: string; // kept for backward compat but unused
     cookieDays: number;
     onUnlock: () => void;
     className?: string;
@@ -19,7 +19,6 @@ export function PremiumLockCard({
     matchId,
     correctPassword,
     priceText,
-    whatsappNumber,
     cookieDays,
     onUnlock,
     className,
@@ -36,8 +35,6 @@ export function PremiumLockCard({
             setError("Password qaldan. Fadlan isku day mar kale.");
         }
     };
-
-    const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo ciyaarta premium`;
 
     return (
         <div
@@ -88,15 +85,13 @@ export function PremiumLockCard({
                 <Link href="/pricing" className="cta-gold flex-1 text-sm">
                     Iibso
                 </Link>
-                <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors text-sm"
+                <Link
+                    href="/pricing"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] bg-accent-green text-black font-bold rounded-xl hover:brightness-110 transition-colors text-sm"
                 >
-                    <MessageSquare size={16} />
-                    WhatsApp
-                </a>
+                    <Wallet size={16} />
+                    Bixi Hadda
+                </Link>
             </div>
         </div>
     );

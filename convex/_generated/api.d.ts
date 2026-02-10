@@ -28,6 +28,7 @@ import type * as movies from "../movies.js";
 import type * as mylist from "../mylist.js";
 import type * as notifications from "../notifications.js";
 import type * as omdb from "../omdb.js";
+import type * as payments from "../payments.js";
 import type * as posterFix from "../posterFix.js";
 import type * as posts from "../posts.js";
 import type * as ppv from "../ppv.js";
@@ -80,6 +81,7 @@ declare const fullApi: ApiFromModules<{
   mylist: typeof mylist;
   notifications: typeof notifications;
   omdb: typeof omdb;
+  payments: typeof payments;
   posterFix: typeof posterFix;
   posts: typeof posts;
   ppv: typeof ppv;
