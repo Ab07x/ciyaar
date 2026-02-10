@@ -16,7 +16,7 @@ import { useUser } from "@/providers/UserProvider";
 
 export default function HomePage() {
   const matchData = useQuery(api.matches.getMatchesByStatus);
-  const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 50 });
+  const movies = useQuery(api.movies.listMovies, { isPublished: true });
   const featuredMovies = useQuery(api.movies.getFeaturedMovies);
   const trendingContent = useQuery(api.searchAnalytics.getMostSearchedContent, { limit: 10 });
 
@@ -28,7 +28,7 @@ export default function HomePage() {
   const [selectedYear, setSelectedYear] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
-  const moviesPerPage = 18;
+  const moviesPerPage = 24;
 
   const hasTracked = useRef(false);
 
@@ -335,73 +335,44 @@ export default function HomePage() {
           <p className="text-center text-gray-500 py-12">No movies found</p>
         )}
 
-        {/* Pagination */}
+        {/* Pagination - Show ALL page numbers */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
-            {/* Previous Button */}
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className={`px-3 py-2 rounded font-bold text-sm ${currentPage === 1 ? "bg-[#333333] text-gray-500 cursor-not-allowed" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
-            >
-              <ChevronLeft size={18} />
-            </button>
+          <div className="mt-8">
+            <div className="flex justify-center items-center gap-1.5 flex-wrap">
+              {/* Previous Button */}
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded font-bold text-sm ${currentPage === 1 ? "bg-[#333333] text-gray-500 cursor-not-allowed" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+              >
+                <ChevronLeft size={18} />
+              </button>
 
-            {/* Page Numbers */}
-            {(() => {
-              const pages = [];
-              const showEllipsisStart = currentPage > 3;
-              const showEllipsisEnd = currentPage < totalPages - 2;
+              {/* ALL Page Numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`min-w-[36px] px-2.5 py-2 rounded font-bold text-sm transition-colors ${currentPage === page ? "bg-[#E50914] text-white scale-110" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+                >
+                  {page}
+                </button>
+              ))}
 
-              // Always show first page
-              pages.push(1);
-
-              if (showEllipsisStart) {
-                pages.push("...");
-              }
-
-              // Show pages around current
-              for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-                if (!pages.includes(i)) pages.push(i);
-              }
-
-              if (showEllipsisEnd) {
-                pages.push("...");
-              }
-
-              // Always show last page
-              if (totalPages > 1 && !pages.includes(totalPages)) {
-                pages.push(totalPages);
-              }
-
-              return pages.map((page, idx) => (
-                page === "..." ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 text-gray-500">...</span>
-                ) : (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page as number)}
-                    className={`min-w-[40px] px-3 py-2 rounded font-bold text-sm ${currentPage === page ? "bg-[#E50914] text-white" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
-                  >
-                    {page}
-                  </button>
-                )
-              ));
-            })()}
-
-            {/* Next Button */}
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-2 rounded font-bold text-sm ${currentPage === totalPages ? "bg-[#333333] text-gray-500 cursor-not-allowed" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
-            >
-              <ChevronRight size={18} />
-            </button>
+              {/* Next Button */}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded font-bold text-sm ${currentPage === totalPages ? "bg-[#333333] text-gray-500 cursor-not-allowed" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
 
             {/* Page Info */}
-            <span className="text-gray-400 text-sm ml-4">
-              Page {currentPage} of {totalPages} ({filteredMovies.length} movies)
-            </span>
+            <p className="text-center text-gray-400 text-sm mt-3">
+              Page {currentPage} of {totalPages} ({filteredMovies.length} filimad)
+            </p>
           </div>
         )}
 
