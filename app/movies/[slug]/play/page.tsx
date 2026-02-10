@@ -1,7 +1,7 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import MoviePlayClient from "./MoviePlayClient";
 
 export const revalidate = 0;
@@ -37,7 +37,7 @@ export default async function MoviePlayPage({ params }: PageProps) {
 
     // Redirect old URLs to new af-somali URLs
     if (!slug.endsWith("-af-somali")) {
-        redirect(`/movies/${dbSlug}-af-somali/play`);
+        permanentRedirect(`/movies/${dbSlug}-af-somali/play`);
     }
 
     const movie = await fetchQuery(api.movies.getMovieBySlug, { slug: dbSlug });
