@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useUser } from "@/providers/UserProvider";
 import { cn } from "@/lib/utils";
 
 interface WhatsAppButtonProps {
@@ -13,6 +14,7 @@ interface WhatsAppButtonProps {
 
 export function WhatsAppButton({ className, showLabel = true }: WhatsAppButtonProps) {
     const settings = useQuery(api.settings.getSettings);
+    const { isPremium } = useUser();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -21,9 +23,12 @@ export function WhatsAppButton({ className, showLabel = true }: WhatsAppButtonPr
 
     if (!mounted) return null;
 
+    // Only show WhatsApp support button to paid/premium users
+    if (!isPremium) return null;
+
     // Default valid phone if settings fail to load
     const phone = settings?.whatsappNumber?.replace(/[^0-9]/g, "") || "252618274188";
-    const message = encodeURIComponent("Asc, waxaan u baahanahay caawinaad ku saabsan Fanbroj.");
+    const message = encodeURIComponent("Asc, waxaan rabaa caawinaad – waxaan ahay macmiil Premium ✅");
     const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
 
     return (
@@ -35,7 +40,7 @@ export function WhatsAppButton({ className, showLabel = true }: WhatsAppButtonPr
                 "inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2 px-4 rounded-full transition-all shadow-lg hover:shadow-xl transform hover:scale-105",
                 className
             )}
-            aria-label="Contact Support on WhatsApp"
+            aria-label="Contact Premium Support on WhatsApp"
         >
             <MessageCircle size={24} fill="white" className="text-[#25D366]" />
             {showLabel && <span>WhatsApp Support</span>}

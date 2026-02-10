@@ -148,7 +148,7 @@ export default function HomePage() {
 
               <div className="flex gap-3">
                 <Link
-                  href={`/movies/${currentHero.slug}`}
+                  href={`/movies/${currentHero.slug}-af-somali`}
                   className="px-6 py-2 bg-[#E50914] hover:bg-[#B20710] text-white font-bold rounded transition-colors flex items-center gap-2"
                 >
                   <Play size={16} fill="white" /> DAAWO
@@ -284,23 +284,16 @@ export default function HomePage() {
           {paginatedMovies.map((movie: any) => (
             <Link
               key={movie._id}
-              href={`/movies/${movie.slug}`}
+              href={`/movies/${movie.slug}-af-somali`}
               className="group block"
             >
               <div className="relative aspect-[2/3] rounded overflow-hidden bg-[#333333] mb-2">
-                {movie.posterUrl ? (
-                  <Image
-                    src={movie.posterUrl}
-                    alt={movie.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500">
-                    <Tv size={40} />
-                  </div>
-                )}
+                <MoviePosterImage
+                  src={movie.posterUrl}
+                  alt={`${movie.titleSomali || movie.title} Af Somali`}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                  className="group-hover:scale-105 transition-transform duration-300"
+                />
 
                 {/* Rating Badge */}
                 {movie.rating && (

@@ -84,7 +84,7 @@ export async function sendNotification(
                 requireInteraction: true,
             },
             fcmOptions: {
-                link: data?.url || "/",
+                link: toAbsoluteUrl(data?.url || "/") || `${BASE_URL}/`,
             },
         },
         data: data || {},
@@ -142,7 +142,7 @@ export async function sendMulticastNotification(
                 requireInteraction: true,
             },
             fcmOptions: {
-                link: data?.url || "/",
+                link: toAbsoluteUrl(data?.url || "/") || `${BASE_URL}/`,
             },
         },
         data: data || {},
@@ -215,7 +215,7 @@ export async function sendToTopic(
                 image: absoluteImageUrl,
             },
             fcmOptions: {
-                link: data?.url || "/",
+                link: toAbsoluteUrl(data?.url || "/") || `${BASE_URL}/`,
             },
         },
         data: data || {},
