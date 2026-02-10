@@ -146,7 +146,7 @@ function MoviesContent() {
                             return (
                                 <Link
                                     key={movie._id}
-                                    href={`/movies/${movie.slug}`}
+                                    href={`/movies/${movie.slug}-af-somali`}
                                     className="group relative rounded-lg overflow-hidden bg-[#1a3a5c] border border-[#2a4a6c] hover:border-[#E50914]/50 transition-all"
                                 >
                                     <div className="relative aspect-[2/3]">

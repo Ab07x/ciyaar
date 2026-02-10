@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import { Film, ImageOff } from "lucide-react";
+import { Film } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MoviePosterImageProps {
@@ -18,7 +17,6 @@ interface MoviePosterImageProps {
   fallbackClassName?: string;
 }
 
-// Generate a deterministic color based on string
 function stringToColor(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -40,18 +38,13 @@ export function MoviePosterImage({
   src,
   alt,
   fill = true,
-  width,
-  height,
-  priority = false,
-  quality = 80,
-  sizes = "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 14vw",
   className,
   fallbackClassName,
+  priority = false,
 }: MoviePosterImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get initials from alt text
   const initials = alt
     .split(" ")
     .slice(0, 2)
@@ -71,11 +64,9 @@ export function MoviePosterImage({
           fallbackClassName
         )}
       >
-        {/* Movie icon placeholder */}
         <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
           <Film size={32} className="text-white/40" />
         </div>
-        {/* Show initials */}
         <span className="text-white/60 font-bold text-lg tracking-wider">
           {initials || "?"}
         </span>
@@ -83,39 +74,35 @@ export function MoviePosterImage({
     );
   }
 
+  // Use plain <img> for local images (already optimized, no need for Next.js processing)
+  // This fixes the "received null" errors and makes images load instantly
   return (
     <>
-      {/* Loading skeleton */}
       {isLoading && (
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a5c] to-[#0d1b2a]">
-          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent"
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
             style={{
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 1.5s infinite'
+              backgroundSize: "200% 100%",
+              animation: "shimmer 1.5s infinite",
             }}
           />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Film size={32} className="text-white/20 animate-pulse" />
-          </div>
         </div>
       )}
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={src}
         alt={alt}
-        fill={fill}
-        width={!fill ? width : undefined}
-        height={!fill ? height : undefined}
-        priority={priority}
-        quality={quality}
-        sizes={sizes}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
         className={cn(
-          "object-cover transition-opacity duration-500",
+          fill ? "absolute inset-0 w-full h-full object-cover" : "object-cover",
+          "transition-opacity duration-300",
           isLoading ? "opacity-0" : "opacity-100",
           className
         )}
         onLoad={() => setIsLoading(false)}
         onError={() => {
-          console.warn(`[MoviePosterImage] Failed to load: ${src}`);
           setHasError(true);
           setIsLoading(false);
         }}

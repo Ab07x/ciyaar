@@ -6,7 +6,7 @@ import { MatchCardNew } from "@/components/MatchCardNew";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { LiveBadge } from "@/components/ui/LiveBadge";
 import Link from "next/link";
-import Image from "next/image";
+
 import { MoviePosterImage } from "@/components/MoviePosterImage";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv } from "lucide-react";
@@ -108,13 +108,12 @@ export default function HomePage() {
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#020D18] via-[#1b2838] to-[#020D18]">
             <div className="absolute inset-0 opacity-100">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={currentHero.backdropUrl || currentHero.posterUrl}
                 alt=""
-                fill
-                quality={60}
-                sizes="100vw"
-                className="object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="eager"
               />
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-[#020D18] via-transparent to-[#020D18]" />
