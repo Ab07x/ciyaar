@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // 3. Dynamic Routes (Movies)
     const movieRoutes = movies.map((movie) => ({
-        url: `${BASE_URL}/movies/${movie.slug}`,
+        url: `${BASE_URL}/movies/${movie.slug}-af-somali`,
         lastModified: new Date(movie.updatedAt || Date.now()).toISOString(),
         changeFrequency: "weekly" as const,
         priority: 0.7,
