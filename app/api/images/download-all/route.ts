@@ -3,53 +3,39 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import fs from "fs";
 import path from "path";
-import https from "https";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-// Download an image from URL and save to local filesystem
-async function downloadImage(imageUrl: string, savePath: string): Promise<boolean> {
-    return new Promise((resolve) => {
-        try {
-            const file = fs.createWriteStream(savePath);
-            https.get(imageUrl, (response) => {
-                if (response.statusCode === 301 || response.statusCode === 302) {
-                    // Follow redirect
-                    const redirectUrl = response.headers.location;
-                    if (redirectUrl) {
-                        https.get(redirectUrl, (res2) => {
-                            res2.pipe(file);
-                            file.on("finish", () => { file.close(); resolve(true); });
-                        }).on("error", () => resolve(false));
-                    } else {
-                        resolve(false);
-                    }
-                    return;
-                }
-                if (response.statusCode !== 200) {
-                    file.close();
-                    fs.unlinkSync(savePath);
-                    resolve(false);
-                    return;
-                }
-                response.pipe(file);
-                file.on("finish", () => { file.close(); resolve(true); });
-            }).on("error", () => resolve(false));
-        } catch {
-            resolve(false);
-        }
-    });
-}
-
 // Generate SEO-friendly filename from movie slug
 function slugToFilename(slug: string, type: "poster" | "backdrop"): string {
-    // e.g. "ruslaan-2024" → "ruslaan-2024-af-somali-poster.jpg"
     return `${slug}-af-somali-${type}.jpg`;
+}
+
+// Download image using fetch (handles redirects properly)
+async function downloadImage(url: string, savePath: string): Promise<boolean> {
+    try {
+        const res = await fetch(url, {
+            redirect: "follow",
+            signal: AbortSignal.timeout(15000), // 15s timeout per image
+        });
+        if (!res.ok) return false;
+
+        const buffer = Buffer.from(await res.arrayBuffer());
+        if (buffer.length < 1000) return false; // Skip tiny/empty files
+
+        fs.writeFileSync(savePath, buffer);
+        return true;
+    } catch (e) {
+        console.error(`Download failed for ${url}:`, e);
+        return false;
+    }
 }
 
 export async function POST(request: NextRequest) {
     try {
-        const { limit = 50, offset = 0 } = await request.json().catch(() => ({}));
+        const body = await request.json().catch(() => ({}));
+        const limit = body.limit || 50;
+        const offset = body.offset || 0;
 
         // Get all movies from Convex
         const movies = await convex.query(api.movies.listMovies, {
@@ -61,7 +47,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "No movies found" }, { status: 404 });
         }
 
-        // Create posters directory
+        // Create directories
         const postersDir = path.join(process.cwd(), "public", "posters");
         const backdropsDir = path.join(process.cwd(), "public", "backdrops");
         fs.mkdirSync(postersDir, { recursive: true });
@@ -72,34 +58,38 @@ export async function POST(request: NextRequest) {
 
         for (const movie of moviesToProcess) {
             const result: any = {
-                id: movie._id,
                 slug: movie.slug,
                 title: movie.title,
-                posterDownloaded: false,
-                backdropDownloaded: false,
-                localPosterUrl: null,
-                localBackdropUrl: null,
+                posterOk: false,
+                backdropOk: false,
             };
 
-            // Download poster
+            // Download poster if it's a TMDB URL
             if (movie.posterUrl && movie.posterUrl.includes("image.tmdb.org")) {
                 const posterFilename = slugToFilename(movie.slug, "poster");
                 const posterPath = path.join(postersDir, posterFilename);
 
-                // Skip if already downloaded
-                if (fs.existsSync(posterPath)) {
-                    result.posterDownloaded = true;
-                    result.localPosterUrl = `/posters/${posterFilename}`;
-                    result.skipped = true;
+                if (fs.existsSync(posterPath) && fs.statSync(posterPath).size > 1000) {
+                    result.posterOk = true;
+                    result.posterSkipped = true;
                 } else {
-                    // Upgrade to original quality
-                    const highQualityUrl = movie.posterUrl.replace(/\/w\d+\//, "/original/");
-                    const success = await downloadImage(highQualityUrl, posterPath);
+                    // Use original quality
+                    const highQUrl = movie.posterUrl.replace(/\/w\d+\//, "/w500/");
+                    const success = await downloadImage(highQUrl, posterPath);
+                    result.posterOk = success;
                     if (success) {
-                        result.posterDownloaded = true;
-                        result.localPosterUrl = `/posters/${posterFilename}`;
+                        result.posterSize = fs.statSync(posterPath).size;
                     }
                 }
+
+                // Update DB with local URL
+                if (result.posterOk) {
+                    result.localPoster = `/posters/${posterFilename}`;
+                }
+            } else if (movie.posterUrl && movie.posterUrl.startsWith("/posters/")) {
+                // Already local
+                result.posterOk = true;
+                result.alreadyLocal = true;
             }
 
             // Download backdrop
@@ -107,27 +97,27 @@ export async function POST(request: NextRequest) {
                 const backdropFilename = slugToFilename(movie.slug, "backdrop");
                 const backdropPath = path.join(backdropsDir, backdropFilename);
 
-                if (fs.existsSync(backdropPath)) {
-                    result.backdropDownloaded = true;
-                    result.localBackdropUrl = `/backdrops/${backdropFilename}`;
-                    result.skippedBackdrop = true;
+                if (fs.existsSync(backdropPath) && fs.statSync(backdropPath).size > 1000) {
+                    result.backdropOk = true;
+                    result.backdropSkipped = true;
                 } else {
-                    const highQualityUrl = movie.backdropUrl.replace(/\/w\d+\//, "/original/");
-                    const success = await downloadImage(highQualityUrl, backdropPath);
-                    if (success) {
-                        result.backdropDownloaded = true;
-                        result.localBackdropUrl = `/backdrops/${backdropFilename}`;
-                    }
+                    const highQUrl = movie.backdropUrl.replace(/\/w\d+\//, "/w780/");
+                    const success = await downloadImage(highQUrl, backdropPath);
+                    result.backdropOk = success;
+                }
+
+                if (result.backdropOk) {
+                    result.localBackdrop = `/backdrops/${backdropFilename}`;
                 }
             }
 
-            // Update movie in Convex with local URL
-            if (result.localPosterUrl || result.localBackdropUrl) {
+            // Update Convex with local paths
+            if (result.localPoster || result.localBackdrop) {
                 try {
                     await convex.mutation(api.movies.updateMovieImages, {
                         id: movie._id,
-                        ...(result.localPosterUrl && { posterUrl: result.localPosterUrl }),
-                        ...(result.localBackdropUrl && { backdropUrl: result.localBackdropUrl }),
+                        ...(result.localPoster && { posterUrl: result.localPoster }),
+                        ...(result.localBackdrop && { backdropUrl: result.localBackdrop }),
                     });
                     result.dbUpdated = true;
                 } catch (e: any) {
@@ -138,15 +128,17 @@ export async function POST(request: NextRequest) {
             results.push(result);
         }
 
-        const downloaded = results.filter(r => r.posterDownloaded).length;
-        const failed = results.filter(r => !r.posterDownloaded && !r.skipped).length;
+        const postersOk = results.filter(r => r.posterOk).length;
+        const postersFailed = results.filter(r => !r.posterOk && !r.alreadyLocal).length;
 
         return NextResponse.json({
             success: true,
             total: movies.length,
             processed: moviesToProcess.length,
-            downloaded,
-            failed,
+            postersDownloaded: postersOk,
+            postersFailed,
+            nextOffset: offset + limit,
+            hasMore: offset + limit < movies.length,
             results,
         });
     } catch (error: any) {
