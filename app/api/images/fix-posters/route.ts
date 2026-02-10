@@ -31,9 +31,9 @@ export async function POST(request: NextRequest) {
         const limit = body.limit || 50;
         const offset = body.offset || 0;
 
+        // Fetch ALL movies - no limit
         const movies = await convex.query(api.movies.listMovies, {
             isPublished: true,
-            limit: 250,
         });
 
         if (!movies?.length) {
