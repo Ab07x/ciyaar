@@ -139,8 +139,8 @@ function MoviesContent() {
                         </div>
                     </div>
 
-                    {/* Movies Grid - 7 columns */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+                    {/* Movies Grid - Denser for laptops */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-4">
                         {paginatedMovies.map((movie) => {
                             const isLocked = movie.isPremium && !isPremium;
                             return (
@@ -218,67 +218,41 @@ function MoviesContent() {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-8 pt-8 border-t border-[#1a3a5c]">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                                className="p-2 rounded-lg bg-[#1a3a5c] border border-[#2a4a6c] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a4a6c]"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
+                        <div className="mt-12">
+                            <div className="flex justify-center items-center gap-1.5 flex-wrap">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 rounded-lg bg-[#1a3a5c] border border-[#2a4a6c] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a4a6c]"
+                                >
+                                    <ChevronLeft size={18} />
+                                </button>
 
-                            <div className="flex gap-1">
-                                {currentPage > 3 && (
-                                    <>
-                                        <button
-                                            onClick={() => setCurrentPage(1)}
-                                            className="px-3 py-1 rounded-lg bg-[#1a3a5c] border border-[#2a4a6c] hover:bg-[#2a4a6c] text-sm"
-                                        >
-                                            1
-                                        </button>
-                                        {currentPage > 4 && <span className="px-2 text-text-muted">...</span>}
-                                    </>
-                                )}
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`min-w-[36px] px-2.5 py-1.5 rounded-lg text-sm font-bold transition-all ${currentPage === page
+                                            ? "bg-[#E50914] text-white scale-110 shadow-lg"
+                                            : "bg-[#1a3a5c] border border-[#2a4a6c] hover:bg-[#2a4a6c] text-gray-300"
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
 
-                                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                    .filter(page => page >= currentPage - 2 && page <= currentPage + 2)
-                                    .map(page => (
-                                        <button
-                                            key={page}
-                                            onClick={() => setCurrentPage(page)}
-                                            className={`px-3 py-1 rounded-lg text-sm ${currentPage === page
-                                                ? "bg-[#E50914] text-white font-bold"
-                                                : "bg-[#1a3a5c] border border-[#2a4a6c] hover:bg-[#2a4a6c]"
-                                                }`}
-                                        >
-                                            {page}
-                                        </button>
-                                    ))}
-
-                                {currentPage < totalPages - 2 && (
-                                    <>
-                                        {currentPage < totalPages - 3 && <span className="px-2 text-text-muted">...</span>}
-                                        <button
-                                            onClick={() => setCurrentPage(totalPages)}
-                                            className="px-3 py-1 rounded-lg bg-[#1a3a5c] border border-[#2a4a6c] hover:bg-[#2a4a6c] text-sm"
-                                        >
-                                            {totalPages}
-                                        </button>
-                                    </>
-                                )}
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 rounded-lg bg-[#1a3a5c] border border-[#2a4a6c] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a4a6c]"
+                                >
+                                    <ChevronRight size={18} />
+                                </button>
                             </div>
 
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                                className="p-2 rounded-lg bg-[#1a3a5c] border border-[#2a4a6c] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#2a4a6c]"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-
-                            <span className="ml-4 text-sm text-text-muted">
-                                Page {currentPage} / {totalPages}
-                            </span>
+                            <p className="text-center text-text-muted text-sm mt-4">
+                                Page {currentPage} of {totalPages}
+                            </p>
                         </div>
                     )}
 
