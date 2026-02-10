@@ -123,7 +123,8 @@ export async function POST(request: NextRequest) {
         });
 
         // Build checkout URL
-        const checkoutUrl = `https://pay.sifalo.com/checkout/?key=${encodeURIComponent(key)}&token=${encodeURIComponent(token)}`;
+        // Don't re-encode — Sifalo API returns key/token already URL-safe
+        const checkoutUrl = `https://pay.sifalo.com/checkout/?key=${key}&token=${token}`;
 
         return NextResponse.json({
             checkoutUrl,

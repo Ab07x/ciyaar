@@ -296,7 +296,7 @@ export function PricingCards({ className }: { className?: string }) {
                       <Wallet size={18} />
                     )}
                     <span>
-                      {isCurrent ? "Qorshahaaga" : loadingPlan === plan.id ? "Sugayo..." : isUpgrade ? "Kor u qaad (Upgrade)" : "Iibso Hadda"}
+                      {isCurrent ? "✓ Qorshahaaga" : loadingPlan === plan.id ? "Sugayo..." : "💳 Iibso Hadda"}
                     </span>
                   </button>
                 </div>
