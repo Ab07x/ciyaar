@@ -120,21 +120,23 @@ export default function SeriesFormPage({ params }: Props) {
         if (!tmdbInput.trim()) return;
         setSearching(true);
         try {
-            const res = await fetch(`/api/admin/import-movie?query=${encodeURIComponent(tmdbInput)}&type=tv`);
-            const results = await res.json();
-            setSearchResults(Array.isArray(results) ? results : []);
+            const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(tmdbInput)}&type=tv`);
+            const data = await res.json();
+            setSearchResults(data.results || []);
             setShowSearch(true);
         } catch (err) {
             console.error(err);
+            setSearchResults([]);
+        } finally {
+            setSearching(false);
         }
-        setSearching(false);
     };
 
     const handleFetchTMDB = async (tmdbId: number) => {
         setFetching(true);
         setShowSearch(false);
         try {
-            const res = await fetch(`/api/admin/import-movie?tmdbId=${tmdbId}&type=tv`);
+            const res = await fetch(`/api/tmdb/fetch?tmdbId=${tmdbId}&type=tv`);
             const data = await res.json();
             setFormData({
                 ...formData,

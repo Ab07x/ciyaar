@@ -100,8 +100,8 @@ export default function HomePage() {
     return 0;
   });
 
-  const genres = [...new Set(moviesList.flatMap((m: any) => m.genres || []))].filter(Boolean).slice(0, 15);
-  const years = [...new Set(moviesList.map((m: any) => m.releaseDate?.split("-")[0]).filter(Boolean))].sort().reverse().slice(0, 10);
+  const genres = ([...new Set(moviesList.flatMap((m: any) => m.genres || []))] as string[]).filter(Boolean).slice(0, 15);
+  const years = ([...new Set(moviesList.map((m: any) => m.releaseDate?.split("-")[0]).filter(Boolean))] as string[]).sort().reverse().slice(0, 10);
 
   // Pagination
   const totalPages = Math.ceil(filteredMovies.length / moviesPerPage);

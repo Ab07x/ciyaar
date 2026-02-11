@@ -23,7 +23,7 @@ export default function MatchFormPage({ params }: Props) {
     const idParams = params ? use(params) : null;
     const id = idParams?.id;
 
-    const { data: match } = useSWR(id ? `/api/matches/${id}` : null, fetcher);
+    const { data: match } = useSWR(id ? `/api/matches?id=${id}` : null, fetcher);
     const { data: leagueData } = useSWR("/api/leagues", fetcher);
     const leagues = Array.isArray(leagueData) ? leagueData : leagueData?.leagues || [];
 
@@ -90,7 +90,7 @@ export default function MatchFormPage({ params }: Props) {
             goals: formData.goals.length > 0 ? formData.goals : undefined
         };
         if (id) {
-            await fetch(`/api/matches/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+            await fetch(`/api/matches`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...data }) });
         } else {
             await fetch("/api/matches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
         }

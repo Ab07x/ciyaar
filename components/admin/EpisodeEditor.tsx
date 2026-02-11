@@ -31,7 +31,13 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
             await fetch("/api/episodes", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: episode._id, ...formData }),
+                body: JSON.stringify({
+                    id: episode._id,
+                    seriesId: episode.seriesId,
+                    seasonNumber: episode.seasonNumber,
+                    episodeNumber: episode.episodeNumber,
+                    ...formData
+                }),
             });
             onSave();
             onClose();

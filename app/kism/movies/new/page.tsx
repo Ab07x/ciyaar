@@ -28,7 +28,7 @@ export default function MovieFormPage({ params }: Props) {
     const idParams = params ? use(params) : null;
     const id = idParams?.id;
 
-    const { data: existingMovie } = useSWR(id ? `/api/movies/by-id/${id}` : null, fetcher);
+    const { data: existingMovie } = useSWR(id ? `/api/movies?id=${id}&full=true` : null, fetcher);
 
     const [tmdbInput, setTmdbInput] = useState("");
     const [searching, setSearching] = useState(false);
@@ -174,22 +174,37 @@ export default function MovieFormPage({ params }: Props) {
         setSaving(true);
         try {
             if (id) {
-                await fetch(`/api/movies/by-id/${id}`, {
+                await fetch(`/api/movies`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
+                        id,
                         embeds: formData.embeds.map(e => ({
                             label: e.label,
                             url: e.url,
                             quality: e.quality || undefined,
                             type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
                         })),
+                        slug: formData.slug,
+                        tmdbId: formData.tmdbId,
+                        imdbId: formData.imdbId || undefined,
+                        title: formData.title,
+                        titleSomali: formData.titleSomali || undefined,
+                        overview: formData.overview,
+                        overviewSomali: formData.overviewSomali || undefined,
+                        posterUrl: formData.posterUrl,
+                        backdropUrl: formData.backdropUrl || undefined,
+                        releaseDate: formData.releaseDate,
+                        runtime: formData.runtime || undefined,
+                        rating: formData.rating || undefined,
+                        voteCount: formData.voteCount || undefined,
+                        genres: formData.genres,
+                        cast: formData.cast,
+                        director: formData.director || undefined,
                         isDubbed: formData.isDubbed,
                         isPremium: formData.isPremium,
                         isPublished: formData.isPublished,
                         isFeatured: formData.isFeatured,
-                        titleSomali: formData.titleSomali || undefined,
-                        overviewSomali: formData.overviewSomali || undefined,
                         isTop10: formData.isTop10,
                         top10Order: formData.top10Order || undefined,
                         trailerUrl: formData.trailerUrl || undefined,
