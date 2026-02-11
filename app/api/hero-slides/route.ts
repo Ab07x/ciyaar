@@ -61,6 +61,30 @@ export async function PUT(req: NextRequest) {
     }
 }
 
+export async function PATCH(req: NextRequest) {
+    try {
+        await connectDB();
+        const body = await req.json();
+
+        // Bulk reorder: expects { slides: [{id, order}, ...] }
+        if (Array.isArray(body.slides)) {
+            const ops = body.slides.map((s: { id: string; order: number }) => ({
+                updateOne: {
+                    filter: { _id: s.id },
+                    update: { $set: { order: s.order, updatedAt: Date.now() } },
+                },
+            }));
+            await HeroSlide.bulkWrite(ops);
+            return NextResponse.json({ success: true });
+        }
+
+        return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    } catch (error) {
+        console.error("PATCH /api/hero-slides error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
 export async function DELETE(req: NextRequest) {
     try {
         await connectDB();

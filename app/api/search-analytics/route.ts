@@ -97,3 +97,32 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
+
+export async function POST(req: NextRequest) {
+    try {
+        await connectDB();
+        const body = await req.json();
+        const { query, resultsCount, deviceId, userId, userAgent, sessionId } = body;
+
+        if (!query || typeof query !== "string") {
+            return NextResponse.json({ error: "query is required" }, { status: 400 });
+        }
+
+        const doc = await SearchAnalytics.create({
+            query: query.trim(),
+            queryLower: query.trim().toLowerCase(),
+            resultsCount: resultsCount ?? 0,
+            hasResults: (resultsCount ?? 0) > 0,
+            deviceId,
+            userId,
+            userAgent: userAgent || (req.headers.get("user-agent") ?? undefined),
+            sessionId,
+            createdAt: Date.now(),
+        });
+
+        return NextResponse.json({ searchId: doc._id }, { status: 201 });
+    } catch (error) {
+        console.error("POST /api/search-analytics error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}

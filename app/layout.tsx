@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
-import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
+import { SWRProvider } from "@/providers/SWRProvider";
 import { UserProvider } from "@/providers/UserProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import Link from "next/link";
@@ -19,7 +19,7 @@ import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { AggressivePushBanner } from "@/components/AggressivePushBanner";
 
 // Use static metadata to prevent build hangs
-// Dynamic settings loaded client-side via Convex provider
+// Dynamic settings loaded client-side via SWR provider
 export function generateMetadata(): Metadata {
   const siteName = "Fanbroj";
   const title = `${siteName} - Daawo Ciyaar Live & Filimaan`;
@@ -104,7 +104,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className="antialiased bg-[var(--bg-primary)] text-[var(--color-text-primary)] min-h-screen overflow-x-hidden max-w-[100vw]"
       >
-        <ConvexClientProvider>
+        <SWRProvider>
           <LanguageProvider>
             <UserProvider>
               <PushProvider>
@@ -200,7 +200,7 @@ export default function RootLayout({
               </PushProvider>
             </UserProvider>
           </LanguageProvider>
-        </ConvexClientProvider>
+        </SWRProvider>
 
         {/* Histats.com  START  (aync)*/}
         <Script id="histats" strategy="afterInteractive">

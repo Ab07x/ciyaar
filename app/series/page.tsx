@@ -8,6 +8,7 @@ import { useUser } from "@/providers/UserProvider";
 import { useState } from "react";
 import { Tv, Crown, Star, Play, Lock, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RamadanBanner } from "@/components/RamadanBanner";
 
 export default function SeriesPage() {
     const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -40,6 +41,7 @@ export default function SeriesPage() {
 
     return (
         <div className="min-h-screen">
+            <RamadanBanner variant="slim" />
             {/* Hero */}
             <section className="relative py-12 md:py-20 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-900/10 via-stadium-dark to-stadium-dark" />

@@ -8,6 +8,7 @@ import { useUser } from "@/providers/UserProvider";
 import { useState } from "react";
 import { Radio, Tv, Crown, Sparkles, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RamadanBanner } from "@/components/RamadanBanner";
 
 const categories = [
     { id: "all", label: "Dhammaan", icon: Tv },
@@ -48,6 +49,7 @@ export default function LivePage() {
 
     return (
         <div className="relative min-h-screen">
+            <RamadanBanner variant="slim" />
             {/* Background Image */}
             <div
                 className="fixed inset-0 z-0 pointer-events-none"

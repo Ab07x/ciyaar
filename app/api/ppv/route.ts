@@ -7,12 +7,19 @@ export async function GET(req: NextRequest) {
         await connectDB();
         const { searchParams } = new URL(req.url);
         const stats = searchParams.get("stats");
+        const contentId = searchParams.get("contentId");
 
         if (stats === "true") {
             const totalPurchases = await PPVPurchase.countDocuments();
             const activePurchases = await PPVPurchase.countDocuments({ expiresAt: { $gt: Date.now() } });
             const adSupportedPurchases = await PPVPurchase.countDocuments({ isAdSupported: true });
             return NextResponse.json({ totalPurchases, activePurchases, adSupportedPurchases });
+        }
+
+        // Check if specific content has PPV config
+        if (contentId) {
+            const ppv = await PPVContent.findOne({ contentId, isActive: true }).lean();
+            return NextResponse.json(ppv);
         }
 
         const content = await PPVContent.find().sort({ createdAt: -1 }).lean();
@@ -31,7 +38,7 @@ export async function POST(req: NextRequest) {
         const now = Date.now();
 
         if (id) {
-            // Upsert (update existing)
+            // Update existing
             const ppv = await PPVContent.findByIdAndUpdate(id, { ...data, updatedAt: now }, { new: true }).lean();
             return NextResponse.json(ppv);
         }
@@ -40,6 +47,25 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(ppv, { status: 201 });
     } catch (error) {
         console.error("POST /api/ppv error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
+export async function PUT(req: NextRequest) {
+    try {
+        await connectDB();
+        const body = await req.json();
+        const { id, ...updates } = body;
+        if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+        const ppv = await PPVContent.findByIdAndUpdate(
+            id,
+            { ...updates, updatedAt: Date.now() },
+            { new: true }
+        ).lean();
+        return NextResponse.json(ppv);
+    } catch (error) {
+        console.error("PUT /api/ppv error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

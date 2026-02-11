@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import useSWR from "swr";
 import { motion } from "framer-motion";
 import {
@@ -20,12 +21,42 @@ import {
     Clock,
     Layers,
     Image as ImageIcon,
+    RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { ViewsChart, TopContentChart, SubscriptionChart } from "@/components/admin/ViewsChart";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+function SkeletonCard() {
+    return (
+        <div className="bg-stadium-elevated border border-border-strong rounded-xl p-4 animate-pulse">
+            <div className="flex items-center justify-between mb-2">
+                <div className="h-4 w-16 bg-stadium-hover rounded" />
+                <div className="h-4 w-4 bg-stadium-hover rounded" />
+            </div>
+            <div className="h-8 w-20 bg-stadium-hover rounded" />
+        </div>
+    );
+}
+
+function SkeletonTable() {
+    return (
+        <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 animate-pulse">
+            <div className="h-5 w-40 bg-stadium-hover rounded mb-4" />
+            <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-3 items-center">
+                        <div className="h-4 w-8 bg-stadium-hover rounded" />
+                        <div className="h-4 flex-1 bg-stadium-hover rounded" />
+                        <div className="h-4 w-16 bg-stadium-hover rounded" />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 // Top Movies Section Component
 function TopMoviesSection() {
@@ -142,40 +173,49 @@ function TopMoviesSection() {
 
 
 export default function AdminDashboard() {
-    const { data: matchData } = useSWR("/api/matches", fetcher);
-    const { data: postData } = useSWR("/api/posts", fetcher);
-    const { data: codeStats } = useSWR("/api/redemptions?stats=true", fetcher);
+    const { data: matchData, mutate: mutateMatches } = useSWR("/api/matches", fetcher);
+    const { data: postData, mutate: mutatePosts } = useSWR("/api/posts", fetcher);
+    const { data: codeStats, mutate: mutateCodes } = useSWR("/api/redemptions?stats=true", fetcher);
     const { data: settings } = useSWR("/api/settings", fetcher);
-    const { data: analyticsStats } = useSWR("/api/analytics/dashboard", fetcher);
+    const { data: analyticsStats, mutate: mutateAnalytics } = useSWR("/api/analytics/dashboard", fetcher);
+    const { data: moviesData, mutate: mutateMovies } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher);
 
+    const [refreshing, setRefreshing] = useState(false);
+
+    const isLoading = !matchData && !postData && !codeStats;
     const matches = matchData || [];
     const posts = Array.isArray(postData) ? postData : postData?.posts || [];
+    const moviesList = moviesData?.movies || moviesData || [];
 
-    if (!matchData || !postData || !codeStats) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="h-12 w-12 border-4 border-text-muted border-t-accent-green rounded-full"
-                />
-            </div>
-        );
-    }
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await Promise.all([
+            mutateMatches(),
+            mutatePosts(),
+            mutateCodes(),
+            mutateAnalytics(),
+            mutateMovies(),
+        ]);
+        setRefreshing(false);
+    };
 
-    const totalViews = matches.reduce((acc: number, m: any) => acc + (m.views || 0), 0) + posts.reduce((acc: number, p: any) => acc + (p.views || 0), 0);
+    // Include movie views in total
+    const matchViews = matches.reduce((acc: number, m: any) => acc + (m.views || 0), 0);
+    const postViews = posts.reduce((acc: number, p: any) => acc + (p.views || 0), 0);
+    const movieViews = moviesList.reduce((acc: number, m: any) => acc + (m.views || 0), 0);
+    const totalViews = matchViews + postViews + movieViews;
 
     const stats = [
-        { label: "Total Matches", value: matches.length, icon: PlayCircle, color: "text-accent-blue" },
-        { label: "Live Now", value: matches.filter((m: any) => m.status === "live").length, icon: PlayCircle, color: "text-accent-red", trend: { value: 12, isPositive: true } },
-        { label: "Upcoming", value: matches.filter((m: any) => m.status === "upcoming").length, icon: Calendar, color: "text-accent-green" },
-        { label: "Premium", value: matches.filter((m: any) => m.isPremium).length, icon: Lock, color: "text-accent-gold" },
-        { label: "Total Views", value: totalViews, icon: Eye, color: "text-accent-green", trend: { value: 23, isPositive: true } },
-        { label: "Blog Posts", value: posts.length, icon: FileText, color: "text-purple-400" },
-        { label: "Active Codes", value: codeStats?.available || 0, icon: Ticket, color: "text-accent-blue" },
+        { label: "Total Matches", value: matchData ? matches.length : "-", icon: PlayCircle, color: "text-accent-blue" },
+        { label: "Live Now", value: matchData ? matches.filter((m: any) => m.status === "live").length : "-", icon: PlayCircle, color: "text-accent-red" },
+        { label: "Upcoming", value: matchData ? matches.filter((m: any) => m.status === "upcoming").length : "-", icon: Calendar, color: "text-accent-green" },
+        { label: "Movies", value: moviesData ? moviesList.length : "-", icon: Film, color: "text-accent-gold" },
+        { label: "Total Views", value: (matchData || moviesData) ? totalViews : "-", icon: Eye, color: "text-accent-green" },
+        { label: "Blog Posts", value: postData ? posts.length : "-", icon: FileText, color: "text-purple-400" },
+        { label: "Active Codes", value: codeStats ? (codeStats?.available || 0) : "-", icon: Ticket, color: "text-accent-blue" },
     ];
 
-    // Use real analytics data or fallback to mock
+    // Use real analytics data or fallback to zeros (not fake data)
     const viewsData = analyticsStats?.dailyBreakdown?.map((d: any) => {
         const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         const date = new Date(d.date);
@@ -185,30 +225,30 @@ export default function AdminDashboard() {
             users: Math.floor(d.views * 0.15),
         };
     }) || [
-            { date: "Mon", views: 2400, users: 400 },
-            { date: "Tue", views: 1398, users: 300 },
-            { date: "Wed", views: 9800, users: 800 },
-            { date: "Thu", views: 3908, users: 500 },
-            { date: "Fri", views: 4800, users: 600 },
-            { date: "Sat", views: 8800, users: 1200 },
-            { date: "Sun", views: 4300, users: 700 },
+            { date: "Mon", views: 0, users: 0 },
+            { date: "Tue", views: 0, users: 0 },
+            { date: "Wed", views: 0, users: 0 },
+            { date: "Thu", views: 0, users: 0 },
+            { date: "Fri", views: 0, users: 0 },
+            { date: "Sat", views: 0, users: 0 },
+            { date: "Sun", views: 0, users: 0 },
         ];
 
     const topContent = analyticsStats?.topPageTypes?.map((p: any) => ({
         name: p.type.charAt(0).toUpperCase() + p.type.slice(1),
         views: p.views,
     })) || [
-            { name: "Home", views: 45000 },
-            { name: "Movie", views: 38000 },
-            { name: "Series", views: 32000 },
-            { name: "Match", views: 28000 },
-            { name: "Live", views: 22000 },
+            { name: "Home", views: 0 },
+            { name: "Movie", views: movieViews },
+            { name: "Series", views: 0 },
+            { name: "Match", views: matchViews },
+            { name: "Live", views: 0 },
         ];
 
     const subscriptionData = [
         { name: "Premium", value: codeStats?.used || 0, color: "#F59E0B" },
-        { name: "Free", value: 1200, color: "#6B7280" },
-        { name: "Trial", value: 89, color: "#22C55E" },
+        { name: "Free", value: codeStats ? 1200 : 0, color: "#6B7280" },
+        { name: "Trial", value: codeStats ? 89 : 0, color: "#22C55E" },
     ];
 
     // Calculate percentage change
@@ -229,100 +269,122 @@ export default function AdminDashboard() {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between"
             >
-                <h1 className="text-3xl font-black text-white">DASHBOARD</h1>
-                <p className="text-text-muted">Aragtida guud ee Fanbroj</p>
+                <div>
+                    <h1 className="text-3xl font-black text-white">DASHBOARD</h1>
+                    <p className="text-text-muted">Aragtida guud ee Fanbroj</p>
+                </div>
+                <button
+                    onClick={handleRefresh}
+                    className="flex items-center gap-2 px-4 py-2 bg-stadium-elevated border border-border-strong rounded-lg text-sm font-semibold hover:bg-stadium-hover transition-colors"
+                >
+                    <RefreshCw size={16} />
+                    Refresh
+                </button>
             </motion.div>
 
             {/* Page Views Analytics Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-text-muted text-sm">Today</span>
-                        <Clock size={16} className="text-accent-green" />
-                    </div>
-                    <div className="text-2xl font-black text-white">
-                        {(analyticsStats?.today || 0).toLocaleString()}
-                    </div>
-                    {todayVsYesterday !== 0 && (
-                        <div className={`flex items-center gap-1 text-xs mt-1 ${todayVsYesterday >= 0 ? "text-accent-green" : "text-accent-red"}`}>
-                            {todayVsYesterday >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-                            {Math.abs(todayVsYesterday)}% vs yesterday
+            {!analyticsStats ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-text-muted text-sm">Today</span>
+                            <Clock size={16} className="text-accent-green" />
                         </div>
-                    )}
-                </motion.div>
+                        <div className="text-2xl font-black text-white">
+                            {(analyticsStats.today || 0).toLocaleString()}
+                        </div>
+                        {todayVsYesterday !== 0 && (
+                            <div className={`flex items-center gap-1 text-xs mt-1 ${todayVsYesterday >= 0 ? "text-accent-green" : "text-accent-red"}`}>
+                                {todayVsYesterday >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+                                {Math.abs(todayVsYesterday)}% vs yesterday
+                            </div>
+                        )}
+                    </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-text-muted text-sm">Yesterday</span>
-                        <Calendar size={16} className="text-accent-blue" />
-                    </div>
-                    <div className="text-2xl font-black text-white">
-                        {(analyticsStats?.yesterday || 0).toLocaleString()}
-                    </div>
-                </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-text-muted text-sm">Yesterday</span>
+                            <Calendar size={16} className="text-accent-blue" />
+                        </div>
+                        <div className="text-2xl font-black text-white">
+                            {(analyticsStats.yesterday || 0).toLocaleString()}
+                        </div>
+                    </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-text-muted text-sm">Last 7 Days</span>
-                        <BarChart3 size={16} className="text-purple-400" />
-                    </div>
-                    <div className="text-2xl font-black text-white">
-                        {(analyticsStats?.lastWeek || 0).toLocaleString()}
-                    </div>
-                </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-text-muted text-sm">Last 7 Days</span>
+                            <BarChart3 size={16} className="text-purple-400" />
+                        </div>
+                        <div className="text-2xl font-black text-white">
+                            {(analyticsStats.lastWeek || 0).toLocaleString()}
+                        </div>
+                    </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-text-muted text-sm">This Month</span>
-                        <TrendingUp size={16} className="text-accent-gold" />
-                    </div>
-                    <div className="text-2xl font-black text-white">
-                        {(analyticsStats?.thisMonth || 0).toLocaleString()}
-                    </div>
-                </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-text-muted text-sm">This Month</span>
+                            <TrendingUp size={16} className="text-accent-gold" />
+                        </div>
+                        <div className="text-2xl font-black text-white">
+                            {(analyticsStats.thisMonth || 0).toLocaleString()}
+                        </div>
+                    </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-text-muted text-sm">Last Month</span>
-                        <Layers size={16} className="text-accent-red" />
-                    </div>
-                    <div className="text-2xl font-black text-white">
-                        {(analyticsStats?.lastMonth || 0).toLocaleString()}
-                    </div>
-                </motion.div>
-            </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="bg-stadium-elevated border border-border-strong rounded-xl p-4"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-text-muted text-sm">Last Month</span>
+                            <Layers size={16} className="text-accent-red" />
+                        </div>
+                        <div className="text-2xl font-black text-white">
+                            {(analyticsStats.lastMonth || 0).toLocaleString()}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
-                {stats.map((stat, i) => (
-                    <StatsCard key={i} {...stat} index={i} />
-                ))}
-            </div>
+            {isLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+                    {[1, 2, 3, 4, 5, 6, 7].map((i) => <SkeletonCard key={i} />)}
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+                    {stats.map((stat, i) => (
+                        <StatsCard key={i} {...stat} index={i} />
+                    ))}
+                </div>
+            )}
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -383,53 +445,57 @@ export default function AdminDashboard() {
             <TopMoviesSection />
 
             {/* Recent Blog Posts */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-stadium-elevated border border-border-strong rounded-xl p-6"
-            >
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold flex items-center gap-2">
-                        <FileText size={18} className="text-purple-400" />
-                        Recent Posts
-                    </h3>
-                    <Link
-                        href="/kism/blog"
-                        className="text-sm text-accent-green hover:underline"
-                    >
-                        View All
-                    </Link>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="text-left text-text-muted text-xs uppercase border-b border-border-subtle">
-                                <th className="pb-3 font-semibold">Title</th>
-                                <th className="pb-3 font-semibold">Views</th>
-                                <th className="pb-3 font-semibold">Status</th>
-                                <th className="pb-3 font-semibold">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border-subtle">
-                            {posts.slice(0, 5).map((post: any) => (
-                                <tr key={post._id} className="hover:bg-white/5">
-                                    <td className="py-3 font-semibold">{post.title}</td>
-                                    <td className="py-3 text-text-secondary">{(post.views || 0).toLocaleString()}</td>
-                                    <td className="py-3">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${post.isPublished ? "bg-accent-green/20 text-accent-green" : "bg-text-muted/20 text-text-muted"}`}>
-                                            {post.isPublished ? "Published" : "Draft"}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 text-text-secondary text-sm">
-                                        {new Date(post.createdAt || post._creationTime).toLocaleDateString()}
-                                    </td>
+            {!postData ? (
+                <SkeletonTable />
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="bg-stadium-elevated border border-border-strong rounded-xl p-6"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold flex items-center gap-2">
+                            <FileText size={18} className="text-purple-400" />
+                            Recent Posts
+                        </h3>
+                        <Link
+                            href="/kism/blog"
+                            className="text-sm text-accent-green hover:underline"
+                        >
+                            View All
+                        </Link>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="text-left text-text-muted text-xs uppercase border-b border-border-subtle">
+                                    <th className="pb-3 font-semibold">Title</th>
+                                    <th className="pb-3 font-semibold">Views</th>
+                                    <th className="pb-3 font-semibold">Status</th>
+                                    <th className="pb-3 font-semibold">Date</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </motion.div>
+                            </thead>
+                            <tbody className="divide-y divide-border-subtle">
+                                {posts.slice(0, 5).map((post: any) => (
+                                    <tr key={post._id} className="hover:bg-white/5">
+                                        <td className="py-3 font-semibold">{post.title}</td>
+                                        <td className="py-3 text-text-secondary">{(post.views || 0).toLocaleString()}</td>
+                                        <td className="py-3">
+                                            <span className={`px-2 py-1 rounded text-xs font-bold ${post.isPublished ? "bg-accent-green/20 text-accent-green" : "bg-text-muted/20 text-text-muted"}`}>
+                                                {post.isPublished ? "Published" : "Draft"}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 text-text-secondary text-sm">
+                                            {new Date(post.createdAt || post._creationTime).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 }

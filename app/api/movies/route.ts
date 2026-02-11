@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
         const isPublished = searchParams.get("isPublished");
         const isPremium = searchParams.get("isPremium");
         const isDubbed = searchParams.get("isDubbed");
+        const isFeatured = searchParams.get("isFeatured");
         const limit = searchParams.get("limit");
         const category = searchParams.get("category");
         const featured = searchParams.get("featured");
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest) {
         const genre = searchParams.get("genre");
         const slug = searchParams.get("slug");
         const id = searchParams.get("id");
+        const sort = searchParams.get("sort");
         const page = parseInt(searchParams.get("page") || "1");
         const pageSize = parseInt(searchParams.get("pageSize") || "50");
 
@@ -33,7 +35,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Light fields for list/card views (skip heavy text content)
-        const LIST_FIELDS = "title titleSomali slug posterUrl backdropUrl releaseDate views isPremium isDubbed isPublished genres isTop10 top10Order isFeatured featuredOrder category createdAt updatedAt imdbRating";
+        const LIST_FIELDS = "title titleSomali slug posterUrl backdropUrl releaseDate views isPremium isDubbed isPublished genres isTop10 top10Order isFeatured featuredOrder category createdAt updatedAt rating";
 
         // Featured movies
         if (featured === "true") {
@@ -64,6 +66,7 @@ export async function GET(req: NextRequest) {
         if (isPublished !== null) filter.isPublished = isPublished !== "false";
         if (isPremium !== null && isPremium !== undefined) filter.isPremium = isPremium === "true";
         if (isDubbed !== null && isDubbed !== undefined) filter.isDubbed = isDubbed === "true";
+        if (isFeatured !== null && isFeatured !== undefined) filter.isFeatured = isFeatured === "true";
         if (category) filter.category = category;
         if (genre) filter.genres = genre;
 
@@ -71,8 +74,18 @@ export async function GET(req: NextRequest) {
         const limitNum = limit ? parseInt(limit) : pageSize;
         const isFull = searchParams.get("full") === "true";
 
+        // Determine sort order
+        let sortObj: Record<string, 1 | -1> = { createdAt: -1 };
+        if (sort === "views") {
+            sortObj = { views: -1 };
+        } else if (sort === "rating") {
+            sortObj = { rating: -1 };
+        } else if (sort === "title") {
+            sortObj = { title: 1 };
+        }
+
         const query = Movie.find(filter)
-            .sort({ createdAt: -1 })
+            .sort(sortObj)
             .skip(skip)
             .limit(limitNum);
 
@@ -114,8 +127,14 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json(movie, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error("POST /api/movies error:", error);
+        if (error.name === "ValidationError") {
+            return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+        if (error.code === 11000) {
+            return NextResponse.json({ error: "Movie with this slug or tmdbId already exists" }, { status: 409 });
+        }
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

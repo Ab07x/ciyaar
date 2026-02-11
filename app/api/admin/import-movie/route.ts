@@ -50,15 +50,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing tmdbId" }, { status: 400 });
         }
 
-        // 1. Fetch metadata via Convex Action (keeps API key secure)
-        // We use the 'action' wrapper naturally or just call valid backend
-        // Actually, for simplicity in this specific "Local FS" setup, we can fetch TMDB directly here
-        // OR call the convex action. Let's call Convex to reuse logic.
-
-        // Wait, 'fetchAction' from convex/nextjs is client-side usually. 
-        // We'll use the 'fetchMutation' / 'fetchQuery' equivalent for server-side if configured,
-        // OR just replicate the fetch logic to ensure we get the URLs to download.
-        // Replicating logic is safer for pure node requirement here.
+        // 1. Fetch metadata from TMDB API directly
 
         const apiKey = process.env.TMDB_API_KEY;
         if (!apiKey) return NextResponse.json({ error: "Server API Key missing" }, { status: 500 });
@@ -108,8 +100,6 @@ export async function POST(req: Request) {
         const trailerUrl = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined;
 
         // 5. Return success (Frontend will then call createMovie with these paths)
-        // Or we call Convex mutation directly here using fetchMutation?
-        // It's better to return to frontend so user can "Preview" before saving.
 
         return NextResponse.json({
             success: true,

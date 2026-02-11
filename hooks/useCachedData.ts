@@ -14,7 +14,7 @@ const movieSwrConfig = {
 
 /**
  * Hook for fetching movies list with SWR caching
- * Reduces Convex bandwidth by using cached API endpoint
+ * Fetches movies list with SWR caching via API endpoint
  */
 export function useCachedMovies(options: {
     isPublished?: boolean;

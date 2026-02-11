@@ -19,7 +19,7 @@ export default function RequestsPage() {
 
             <div className="mb-12">
                 <RequestForm onRequestSubmitted={() => {
-                    // Refetch handled by convex automagically
+                    // Refetch handled by SWR
                 }} />
             </div>
 

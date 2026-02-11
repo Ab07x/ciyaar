@@ -8,10 +8,11 @@ import Link from "next/link";
 
 import { MoviePosterImage } from "@/components/MoviePosterImage";
 import { ContentCarousel } from "@/components/ContentCarousel";
-import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv } from "lucide-react";
+import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
+import { RamadanBanner } from "@/components/RamadanBanner";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -19,7 +20,7 @@ export default function HomePage() {
   const { data: matchData } = useSWR("/api/matches", fetcher);
   const { data: moviesData } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher);
   const { data: featuredMovies } = useSWR("/api/movies?featured=true", fetcher);
-  const { data: trendingContent } = useSWR("/api/data?type=analytics", fetcher);
+  const { data: trendingMovies } = useSWR("/api/movies?sort=views&limit=10&isPublished=true", fetcher);
 
   const { isPremium } = useUser();
 
@@ -111,6 +112,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#020D18]">
+      {/* Ramadan Banner */}
+      <RamadanBanner variant="full" />
+
       {/* HERO SLIDER - Lookmovie Style */}
       {currentHero && (
         <section className="relative w-full h-[400px] md:h-[450px] overflow-hidden">
@@ -230,6 +234,66 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* TRENDING - Most Watched */}
+      {(() => {
+        const trending = Array.isArray(trendingMovies?.movies) ? trendingMovies.movies : Array.isArray(trendingMovies) ? trendingMovies : [];
+        return trending.length > 0 ? (
+          <section className="max-w-7xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <TrendingUp size={22} className="text-[#E50914]" />
+                <h2 className="text-xl font-bold text-white uppercase tracking-wide">Trending Now</h2>
+              </div>
+              <Link href="/movies" className="text-[#E50914] text-sm font-bold hover:underline flex items-center gap-1">
+                View All <ChevronRight size={16} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {trending.slice(0, 10).map((movie: any, idx: number) => (
+                <Link
+                  key={movie._id}
+                  href={`/movies/${movie.slug}-af-somali`}
+                  className="group block relative"
+                >
+                  <div className="relative aspect-[2/3] rounded overflow-hidden bg-[#333333] mb-2">
+                    <MoviePosterImage
+                      src={movie.posterUrl}
+                      alt={`${movie.titleSomali || movie.title} Af Somali`}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                      className="group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-2 left-2 bg-[#E50914] text-white text-xs font-black px-2 py-1 rounded-full min-w-[28px] text-center">
+                      #{idx + 1}
+                    </div>
+                    {movie.rating && (
+                      <div className="absolute top-2 right-2 bg-[#333333]/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <Star size={10} className="text-[#E50914]" fill="currentColor" />
+                        {movie.rating.toFixed(1)}
+                      </div>
+                    )}
+                    {movie.isPremium && (
+                      <div className="absolute bottom-2 right-2 bg-[#E50914] text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                        VIP
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg">
+                        Daawo NOW
+                        <Play size={16} fill="currentColor" />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="text-white text-sm font-medium truncate group-hover:text-[#E50914] transition-colors">
+                    {movie.titleSomali || movie.title}
+                  </h3>
+                  <p className="text-gray-500 text-xs">{movie.releaseDate?.split("-")[0]}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
 
       {/* MOVIES FILTER */}
       <section className="max-w-7xl mx-auto px-4 py-6">

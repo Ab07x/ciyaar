@@ -1,6 +1,6 @@
 /**
  * API Cache Layer
- * Reduces Convex database bandwidth by caching responses server-side
+ * Server-side cache layer for reducing database bandwidth
  */
 
 interface CacheEntry<T> {

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { useSearchParams } from "next/navigation";
 import { SectionLoader } from "@/components/ui/LoadingSpinner";
+import { RamadanBanner } from "@/components/RamadanBanner";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 const ITEMS_PER_PAGE = 35;
@@ -65,6 +66,7 @@ function MoviesContent() {
 
     return (
         <div className="relative min-h-screen bg-[#0d1b2a]">
+            <RamadanBanner variant="slim" />
             <main className="relative z-10">
                 <section className="relative py-12 md:py-16 overflow-hidden border-b border-[#1a3a5c]">
                     <div className="absolute inset-0 bg-gradient-to-b from-[#E50914]/5 via-transparent to-transparent" />

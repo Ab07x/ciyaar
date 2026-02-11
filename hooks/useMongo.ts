@@ -4,7 +4,7 @@ import useSWR, { SWRConfiguration } from "swr";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 /**
- * Drop-in replacement for Convex useQuery.
+ * SWR-based query hook for fetching data from API endpoints.
  * Usage: const movies = useMongoQuery('/api/movies?isPublished=true');
  */
 export function useMongoQuery<T = unknown>(
@@ -21,7 +21,7 @@ export function useMongoQuery<T = unknown>(
 }
 
 /**
- * Drop-in replacement for Convex useMutation.
+ * Mutation hook for POST/PUT/DELETE requests to API endpoints.
  * Usage: const { trigger } = useMongoMutation('/api/movies', 'POST');
  */
 export function useMongoMutation<TBody = unknown, TResult = unknown>(

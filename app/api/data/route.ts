@@ -93,6 +93,27 @@ export async function POST(req: NextRequest) {
                 const sa = await SearchAnalytics.create({ ...data, createdAt: Date.now() });
                 return NextResponse.json(sa, { status: 201 });
             }
+            case "search-track": {
+                const sa = await SearchAnalytics.create({
+                    query: data.query,
+                    queryLower: data.query?.toLowerCase(),
+                    resultsCount: data.resultsCount || 0,
+                    hasResults: (data.resultsCount || 0) > 0,
+                    deviceId: data.deviceId,
+                    userAgent: data.userAgent,
+                    createdAt: Date.now(),
+                });
+                return NextResponse.json({ searchId: sa._id });
+            }
+            case "search-click": {
+                if (data.searchId) {
+                    await SearchAnalytics.findByIdAndUpdate(data.searchId, {
+                        clickedItem: data.clickedItem,
+                        clickedItemType: data.clickedItemType,
+                    });
+                }
+                return NextResponse.json({ success: true });
+            }
             case "category": {
                 const cat = await Category.create({ ...data, createdAt: Date.now() });
                 return NextResponse.json(cat, { status: 201 });

@@ -20,6 +20,7 @@ import { StreamPlayer } from "@/components/StreamPlayer";
 import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { PPVUnlockGate } from "@/components/PPVUnlockGate";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
+import { RamadanBanner } from "@/components/RamadanBanner";
 
 interface MoviePlayClientProps {
     slug: string;
@@ -43,7 +44,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
     const { isPremium, redeemCode, userId } = useUser();
 
-    // PPV Access Check - use fetch instead of Convex
+    // PPV Access Check
     const { data: ppvAccess } = useSWR(
         userId ? `/api/data?type=ppv-check&userId=${userId}&contentType=movie&contentId=${slug}` : null,
         fetcher
@@ -276,6 +277,9 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                         ))}
                     </div>
                 )}
+
+                {/* Ramadan Banner below player */}
+                <RamadanBanner variant="player" className="mt-3" />
             </div>
 
             {/* Action Buttons */}

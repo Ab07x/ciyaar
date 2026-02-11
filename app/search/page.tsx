@@ -19,7 +19,7 @@ export default function SearchPage() {
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // @ts-ignore
-    const { data: results } = useSWR(query.length >= 2 ? `/api/search?query=${encodeURIComponent(query)}` : null, fetcher);
+    const { data: results } = useSWR(query.length >= 2 ? `/api/search?q=${encodeURIComponent(query)}` : null, fetcher);
 
     useEffect(() => {
         // Auto-focus input on mount
