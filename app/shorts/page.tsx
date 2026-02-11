@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import { ShortsPlayer } from "@/components/shorts/ShortsPlayer";
@@ -12,7 +11,8 @@ function ShortsContent() {
     const searchParams = useSearchParams();
     const startIndex = parseInt(searchParams.get("start") || "0", 10);
 
-    const shorts = useQuery(api.shorts.list, { limit: 50 });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: shorts } = useSWR("/api/shorts?limit=50", fetcher);
 
     const handleClose = () => {
         router.back();

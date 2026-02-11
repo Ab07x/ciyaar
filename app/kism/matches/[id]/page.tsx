@@ -1,15 +1,13 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Save, ChevronLeft, Plus, X, Goal } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import type { Id } from "@/convex/_generated/dataModel";
 
-interface Goal {
+interface GoalType {
     team: "A" | "B";
     player: string;
     minute: number;
@@ -18,13 +16,15 @@ interface Goal {
 
 interface Props { params: Promise<{ id: string }>; }
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export default function EditMatchPage({ params }: Props) {
     const router = useRouter();
     const { id } = use(params);
 
-    const match = useQuery(api.matches.getMatchById, { id: id as Id<"matches"> });
-    const leagues = useQuery(api.leagues.listLeagues, {});
-    const updateMatch = useMutation(api.matches.updateMatch);
+    const { data: match } = useSWR(`/api/matches/${id}`, fetcher);
+    const { data: leagueData } = useSWR("/api/leagues", fetcher);
+    const leagues = Array.isArray(leagueData) ? leagueData : leagueData?.leagues || [];
 
     const [formData, setFormData] = useState({
         title: "", slug: "", teamA: "", teamB: "", teamALogo: "", teamBLogo: "", leagueId: "", leagueName: "",
@@ -32,15 +32,13 @@ export default function EditMatchPage({ params }: Props) {
         isPremium: false, requiredPlan: undefined as "match" | "weekly" | "monthly" | "yearly" | undefined,
         thumbnailUrl: "", summary: "", embeds: [{ label: "Server 1", url: "", type: "iframe" as "m3u8" | "iframe" | "video" }],
         articleTitle: "", articleContent: "",
-        scoreA: 0, scoreB: 0, minute: 0, goals: [] as Goal[]
+        scoreA: 0, scoreB: 0, minute: 0, goals: [] as GoalType[]
     });
     const [kickoffDate, setKickoffDate] = useState("");
     const [kickoffTime, setKickoffTime] = useState("");
     const hasInitialized = useRef(false);
 
     useEffect(() => {
-        // Only initialize form data once when match is first loaded
-        // This prevents real-time Convex updates from overwriting user edits
         if (match && !hasInitialized.current) {
             hasInitialized.current = true;
             setFormData({
@@ -49,10 +47,10 @@ export default function EditMatchPage({ params }: Props) {
                 leagueId: match.leagueId || "", leagueName: match.leagueName || "", kickoffAt: match.kickoffAt,
                 status: match.status, isPremium: match.isPremium, requiredPlan: match.requiredPlan,
                 thumbnailUrl: match.thumbnailUrl || "", summary: match.summary || "",
-                embeds: match.embeds.length > 0 ? match.embeds.map(e => ({ ...e, type: (e as any).type || "iframe" })) : [{ label: "Server 1", url: "", type: "iframe" as const }],
+                embeds: match.embeds?.length > 0 ? match.embeds.map((e: any) => ({ ...e, type: e.type || "iframe" })) : [{ label: "Server 1", url: "", type: "iframe" as const }],
                 articleTitle: match.articleTitle || "", articleContent: match.articleContent || "",
-                scoreA: (match as any).scoreA || 0, scoreB: (match as any).scoreB || 0,
-                minute: (match as any).minute || 0, goals: (match as any).goals || []
+                scoreA: match.scoreA || 0, scoreB: match.scoreB || 0,
+                minute: match.minute || 0, goals: match.goals || []
             });
             const d = new Date(match.kickoffAt);
             setKickoffDate(d.toISOString().split("T")[0]);
@@ -65,27 +63,30 @@ export default function EditMatchPage({ params }: Props) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const kickoff = new Date(`${kickoffDate}T${kickoffTime}`).getTime();
-        await updateMatch({
-            id: id as Id<"matches">,
-            ...formData,
-            kickoffAt: kickoff,
-            thumbnailUrl: formData.thumbnailUrl || undefined,
-            teamALogo: formData.teamALogo || undefined,
-            teamBLogo: formData.teamBLogo || undefined,
-            summary: formData.summary || undefined,
-            requiredPlan: formData.requiredPlan,
-            articleTitle: formData.articleTitle || undefined,
-            articleContent: formData.articleContent || undefined,
-            scoreA: formData.scoreA,
-            scoreB: formData.scoreB,
-            minute: formData.minute || undefined,
-            goals: formData.goals.length > 0 ? formData.goals : undefined
+        await fetch(`/api/matches/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                ...formData,
+                kickoffAt: kickoff,
+                thumbnailUrl: formData.thumbnailUrl || undefined,
+                teamALogo: formData.teamALogo || undefined,
+                teamBLogo: formData.teamBLogo || undefined,
+                summary: formData.summary || undefined,
+                requiredPlan: formData.requiredPlan,
+                articleTitle: formData.articleTitle || undefined,
+                articleContent: formData.articleContent || undefined,
+                scoreA: formData.scoreA,
+                scoreB: formData.scoreB,
+                minute: formData.minute || undefined,
+                goals: formData.goals.length > 0 ? formData.goals : undefined
+            })
         });
         router.push("/kism/matches");
     };
 
     const selectLeague = (leagueId: string) => {
-        const league = leagues?.find(l => l._id === leagueId);
+        const league = leagues?.find((l: any) => l._id === leagueId);
         setFormData({ ...formData, leagueId, leagueName: league?.name || "" });
     };
 
@@ -95,18 +96,16 @@ export default function EditMatchPage({ params }: Props) {
     const removeEmbed = (i: number) => setFormData({ ...formData, embeds: formData.embeds.filter((_, idx) => idx !== i) });
     const updateEmbed = (i: number, field: "label" | "url" | "type", value: string) => { const embeds = [...formData.embeds]; (embeds[i] as any)[field] = value; setFormData({ ...formData, embeds }); };
 
-    // Goal management
     const addGoal = (team: "A" | "B") => {
-        const newGoal: Goal = { team, player: "", minute: formData.minute || 1, type: "goal" };
+        const newGoal: GoalType = { team, player: "", minute: formData.minute || 1, type: "goal" };
         setFormData({ ...formData, goals: [...formData.goals, newGoal] });
     };
     const removeGoal = (index: number) => {
         setFormData({ ...formData, goals: formData.goals.filter((_, i) => i !== index) });
     };
-    const updateGoal = (index: number, field: keyof Goal, value: any) => {
+    const updateGoal = (index: number, field: keyof GoalType, value: any) => {
         const goals = [...formData.goals];
         (goals[index] as any)[field] = value;
-        // Auto-update score based on goals
         const scoreA = goals.filter(g => g.team === "A").length;
         const scoreB = goals.filter(g => g.team === "B").length;
         setFormData({ ...formData, goals, scoreA, scoreB });
@@ -137,11 +136,11 @@ export default function EditMatchPage({ params }: Props) {
                         <label className="block text-xs text-text-secondary mb-1">League</label>
                         <select value={formData.leagueId} onChange={e => selectLeague(e.target.value)} required className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3">
                             <option value="" disabled>Select League...</option>
-                            {leagues?.filter(l => PRIORITY_LEAGUES.includes(l.name)).map(l => (
+                            {leagues?.filter((l: any) => PRIORITY_LEAGUES.includes(l.name)).map((l: any) => (
                                 <option key={l._id} value={l._id}>{l.name}</option>
                             ))}
                             {leagues && leagues.length > 0 && <option disabled>──────────</option>}
-                            {leagues?.filter(l => (l.type === "league" || l.type === "competition") && !PRIORITY_LEAGUES.includes(l.name)).map(l => (
+                            {leagues?.filter((l: any) => (l.type === "league" || l.type === "competition") && !PRIORITY_LEAGUES.includes(l.name)).map((l: any) => (
                                 <option key={l._id} value={l._id}>{l.name}</option>
                             ))}
                         </select>
@@ -183,99 +182,48 @@ export default function EditMatchPage({ params }: Props) {
                         <h3 className="text-sm font-bold text-accent-green uppercase border-b border-border-strong pb-3 flex items-center gap-2">
                             <Goal size={18} /> Live Score & Goals
                         </h3>
-
-                        {/* Score Display */}
                         <div className="flex items-center justify-center gap-8 py-4">
                             <div className="text-center">
                                 <p className="text-sm text-text-muted mb-2">{formData.teamA || "Team A"}</p>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={formData.scoreA}
-                                    onChange={e => setFormData({ ...formData, scoreA: parseInt(e.target.value) || 0 })}
-                                    className="w-20 h-20 text-4xl font-black text-center bg-stadium-dark border-2 border-accent-green rounded-xl"
-                                />
+                                <input type="number" min="0" value={formData.scoreA} onChange={e => setFormData({ ...formData, scoreA: parseInt(e.target.value) || 0 })} className="w-20 h-20 text-4xl font-black text-center bg-stadium-dark border-2 border-accent-green rounded-xl" />
                             </div>
                             <div className="text-4xl font-black text-text-muted">-</div>
                             <div className="text-center">
                                 <p className="text-sm text-text-muted mb-2">{formData.teamB || "Team B"}</p>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={formData.scoreB}
-                                    onChange={e => setFormData({ ...formData, scoreB: parseInt(e.target.value) || 0 })}
-                                    className="w-20 h-20 text-4xl font-black text-center bg-stadium-dark border-2 border-accent-green rounded-xl"
-                                />
+                                <input type="number" min="0" value={formData.scoreB} onChange={e => setFormData({ ...formData, scoreB: parseInt(e.target.value) || 0 })} className="w-20 h-20 text-4xl font-black text-center bg-stadium-dark border-2 border-accent-green rounded-xl" />
                             </div>
                         </div>
-
-                        {/* Match Minute (for live) */}
                         {formData.status === "live" && (
                             <div className="flex items-center justify-center gap-4">
                                 <label className="text-sm text-text-secondary">Match Minute:</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="120"
-                                    value={formData.minute}
-                                    onChange={e => setFormData({ ...formData, minute: parseInt(e.target.value) || 0 })}
-                                    className="w-24 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2 text-center font-bold"
-                                />
-                                <span className="text-accent-red font-bold">'</span>
+                                <input type="number" min="0" max="120" value={formData.minute} onChange={e => setFormData({ ...formData, minute: parseInt(e.target.value) || 0 })} className="w-24 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2 text-center font-bold" />
+                                <span className="text-accent-red font-bold">&apos;</span>
                             </div>
                         )}
-
-                        {/* Goals List */}
                         <div className="border-t border-border-subtle pt-4 mt-4">
                             <div className="flex items-center justify-between mb-4">
                                 <h4 className="text-sm font-bold text-text-muted uppercase">Goal Details</h4>
                                 <div className="flex gap-2">
-                                    <button type="button" onClick={() => addGoal("A")} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg flex items-center gap-1">
-                                        <Plus size={12} /> {formData.teamA || "Team A"} Goal
-                                    </button>
-                                    <button type="button" onClick={() => addGoal("B")} className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg flex items-center gap-1">
-                                        <Plus size={12} /> {formData.teamB || "Team B"} Goal
-                                    </button>
+                                    <button type="button" onClick={() => addGoal("A")} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg flex items-center gap-1"><Plus size={12} /> {formData.teamA || "Team A"} Goal</button>
+                                    <button type="button" onClick={() => addGoal("B")} className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg flex items-center gap-1"><Plus size={12} /> {formData.teamB || "Team B"} Goal</button>
                                 </div>
                             </div>
-
                             {formData.goals.length === 0 ? (
                                 <p className="text-center text-text-muted py-4">No goals added yet</p>
                             ) : (
                                 <div className="space-y-2">
                                     {formData.goals.map((goal, i) => (
                                         <div key={i} className={`flex items-center gap-3 p-3 rounded-lg ${goal.team === "A" ? "bg-blue-600/20 border border-blue-600/50" : "bg-red-600/20 border border-red-600/50"}`}>
-                                            <span className={`text-xs font-bold px-2 py-1 rounded ${goal.team === "A" ? "bg-blue-600" : "bg-red-600"}`}>
-                                                {goal.team === "A" ? formData.teamA : formData.teamB}
-                                            </span>
-                                            <input
-                                                type="text"
-                                                value={goal.player}
-                                                onChange={e => updateGoal(i, "player", e.target.value)}
-                                                placeholder="Player name"
-                                                className="flex-1 bg-stadium-dark border border-border-subtle rounded px-3 py-2 text-sm"
-                                            />
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                max="120"
-                                                value={goal.minute}
-                                                onChange={e => updateGoal(i, "minute", parseInt(e.target.value) || 1)}
-                                                className="w-16 bg-stadium-dark border border-border-subtle rounded px-2 py-2 text-sm text-center"
-                                            />
-                                            <span className="text-xs text-text-muted">'</span>
-                                            <select
-                                                value={goal.type || "goal"}
-                                                onChange={e => updateGoal(i, "type", e.target.value)}
-                                                className="bg-stadium-dark border border-border-subtle rounded px-2 py-2 text-xs"
-                                            >
+                                            <span className={`text-xs font-bold px-2 py-1 rounded ${goal.team === "A" ? "bg-blue-600" : "bg-red-600"}`}>{goal.team === "A" ? formData.teamA : formData.teamB}</span>
+                                            <input type="text" value={goal.player} onChange={e => updateGoal(i, "player", e.target.value)} placeholder="Player name" className="flex-1 bg-stadium-dark border border-border-subtle rounded px-3 py-2 text-sm" />
+                                            <input type="number" min="1" max="120" value={goal.minute} onChange={e => updateGoal(i, "minute", parseInt(e.target.value) || 1)} className="w-16 bg-stadium-dark border border-border-subtle rounded px-2 py-2 text-sm text-center" />
+                                            <span className="text-xs text-text-muted">&apos;</span>
+                                            <select value={goal.type || "goal"} onChange={e => updateGoal(i, "type", e.target.value)} className="bg-stadium-dark border border-border-subtle rounded px-2 py-2 text-xs">
                                                 <option value="goal">⚽ Goal</option>
                                                 <option value="penalty">🎯 Penalty</option>
                                                 <option value="own_goal">🔴 Own Goal</option>
                                             </select>
-                                            <button type="button" onClick={() => removeGoal(i)} className="text-accent-red hover:text-red-400">
-                                                <X size={18} />
-                                            </button>
+                                            <button type="button" onClick={() => removeGoal(i)} className="text-accent-red hover:text-red-400"><X size={18} /></button>
                                         </div>
                                     ))}
                                 </div>
@@ -291,15 +239,12 @@ export default function EditMatchPage({ params }: Props) {
                         <div key={i} className="flex gap-2 items-center">
                             <input value={embed.label} onChange={e => updateEmbed(i, "label", e.target.value)} placeholder="Label" className="w-1/5 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm" />
                             <select value={(embed as any).type || "iframe"} onChange={e => updateEmbed(i, "type", e.target.value)} className="w-24 bg-stadium-dark border border-border-subtle rounded-lg px-2 py-2 text-sm">
-                                <option value="iframe">Iframe</option>
-                                <option value="m3u8">M3U8</option>
-                                <option value="video">Video</option>
+                                <option value="iframe">Iframe</option><option value="m3u8">M3U8</option><option value="video">Video</option>
                             </select>
                             <input value={embed.url} onChange={e => updateEmbed(i, "url", e.target.value)} placeholder={(embed as any).type === "m3u8" ? "https://example.com/stream.m3u8" : "Iframe URL"} className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2 text-sm" />
                             {formData.embeds.length > 1 && <button type="button" onClick={() => removeEmbed(i)} className="text-text-muted hover:text-accent-red"><X size={18} /></button>}
                         </div>
                     ))}</div>
-                    {/* Thumbnail & Summary */}
                     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border-subtle">
                         <div><label className="block text-xs text-text-secondary mb-1">Thumbnail URL</label><input value={formData.thumbnailUrl} onChange={e => setFormData({ ...formData, thumbnailUrl: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" placeholder="https://..." /></div>
                         <div><label className="block text-xs text-text-secondary mb-1">Summary (Somali)</label><input value={formData.summary} onChange={e => setFormData({ ...formData, summary: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" placeholder="Warbixin gaaban..." /></div>
@@ -309,14 +254,8 @@ export default function EditMatchPage({ params }: Props) {
                 {/* Article Content */}
                 <div className="md:col-span-2 space-y-4 bg-stadium-elevated border border-border-strong rounded-xl p-6">
                     <h3 className="text-sm font-bold text-text-muted uppercase border-b border-border-strong pb-3">Article Info (Below Player)</h3>
-                    <div>
-                        <label className="block text-xs text-text-secondary mb-1">Article Title (H1)</label>
-                        <input value={formData.articleTitle} onChange={e => setFormData({ ...formData, articleTitle: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" placeholder="Enter a catchy title..." />
-                    </div>
-                    <div>
-                        <label className="block text-xs text-text-secondary mb-1">Article Content (HTML supported)</label>
-                        <textarea value={formData.articleContent} onChange={e => setFormData({ ...formData, articleContent: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 min-h-[300px]" placeholder="<p>Write your article here...</p>" />
-                    </div>
+                    <div><label className="block text-xs text-text-secondary mb-1">Article Title (H1)</label><input value={formData.articleTitle} onChange={e => setFormData({ ...formData, articleTitle: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" placeholder="Enter a catchy title..." /></div>
+                    <div><label className="block text-xs text-text-secondary mb-1">Article Content (HTML supported)</label><textarea value={formData.articleContent} onChange={e => setFormData({ ...formData, articleContent: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 min-h-[300px]" placeholder="<p>Write your article here...</p>" /></div>
                 </div>
             </form>
         </div>

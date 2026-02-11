@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { MatchCardNew } from "@/components/MatchCardNew";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { LiveBadge } from "@/components/ui/LiveBadge";
@@ -14,14 +13,15 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export default function HomePage() {
-  const matchData = useQuery(api.matches.getMatchesByStatus);
-  const movies = useQuery(api.movies.listMovies, { isPublished: true });
-  const featuredMovies = useQuery(api.movies.getFeaturedMovies);
-  const trendingContent = useQuery(api.searchAnalytics.getMostSearchedContent, { limit: 10 });
+  const { data: matchData } = useSWR("/api/matches", fetcher);
+  const { data: moviesData } = useSWR("/api/movies?isPublished=true", fetcher);
+  const { data: featuredMovies } = useSWR("/api/movies?featured=true", fetcher);
+  const { data: trendingContent } = useSWR("/api/data?type=analytics", fetcher);
 
   const { isPremium } = useUser();
-  const trackPageView = useMutation(api.analytics.trackPageView);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedGenre, setSelectedGenre] = useState("");
@@ -35,16 +35,23 @@ export default function HomePage() {
   useEffect(() => {
     if (!hasTracked.current) {
       hasTracked.current = true;
-      trackPageView({ pageType: "home" });
+      fetch("/api/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "pageview", pageType: "home", date: new Date().toISOString().split("T")[0] }),
+      }).catch(() => { });
     }
-  }, [trackPageView]);
+  }, []);
 
-  // Hero movies: featured first, then fall back to latest movies by updatedAt
+  // Extract movies array from paginated response
+  const movies = moviesData?.movies || moviesData || [];
+
+  // Hero movies: featured first, then fall back to latest movies
   const heroMovies = (featuredMovies && featuredMovies.length > 0)
     ? featuredMovies.slice(0, 8)
     : (movies || [])
       .filter((m: any) => m.posterUrl)
-      .sort((a: any, b: any) => (b.updatedAt || b._creationTime || 0) - (a.updatedAt || a._creationTime || 0))
+      .sort((a: any, b: any) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
       .slice(0, 8);
 
   useEffect(() => {
@@ -60,7 +67,7 @@ export default function HomePage() {
     setCurrentPage(1);
   }, [selectedGenre, selectedYear, sortBy]);
 
-  const isLoading = matchData === undefined && movies === undefined;
+  const isLoading = matchData === undefined && moviesData === undefined;
 
   if (isLoading) {
     return (
@@ -75,8 +82,10 @@ export default function HomePage() {
     );
   }
 
-  const live = matchData?.live || [];
-  const upcoming = matchData?.upcoming || [];
+  // Matches: handle both array and object responses
+  const allMatchesRaw = Array.isArray(matchData) ? matchData : [];
+  const live = allMatchesRaw.filter((m: any) => m.status === "live");
+  const upcoming = allMatchesRaw.filter((m: any) => m.status === "upcoming");
   const allMatches = [...live, ...upcoming];
   const moviesList = movies || [];
 
@@ -86,7 +95,7 @@ export default function HomePage() {
     if (selectedYear && movie.releaseDate?.split("-")[0] !== selectedYear) return false;
     return true;
   }).sort((a: any, b: any) => {
-    if (sortBy === "newest") return (b._creationTime || 0) - (a._creationTime || 0);
+    if (sortBy === "newest") return (b.createdAt || 0) - (a.createdAt || 0);
     if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
     return 0;
   });
@@ -188,7 +197,7 @@ export default function HomePage() {
 
           {/* Dots */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-            {heroMovies.map((_, idx) => (
+            {heroMovies.map((_: any, idx: number) => (
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
@@ -199,20 +208,8 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* PREMIUM BANNER AD - Lookmovie Style */}
-      {/* PREMIUM BANNER AD - Lookmovie Style */}
+      {/* PREMIUM BANNER AD */}
       <PremiumBannerNew />
-
-      {/* TRENDING NOW - Search-based + fallback to most viewed */}
-      {trendingContent && trendingContent.length > 0 && (
-        <div className="max-w-7xl mx-auto pt-6">
-          <ContentCarousel
-            title="Trending Now"
-            data={trendingContent}
-            type="mixed"
-          />
-        </div>
-      )}
 
       {/* SPORTS MATCHES - Live & Upcoming */}
       {allMatches.length > 0 && (
@@ -227,7 +224,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {allMatches.slice(0, 6).map((match) => (
+            {allMatches.slice(0, 6).map((match: any) => (
               <MatchCardNew key={match._id} {...match} isLocked={match.isPremium && !isPremium} />
             ))}
           </div>
@@ -278,7 +275,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Movies Grid - Lookmovie Style */}
+        {/* Movies Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-4">
           {paginatedMovies.map((movie: any) => (
             <Link
@@ -294,7 +291,6 @@ export default function HomePage() {
                   className="group-hover:scale-105 transition-transform duration-300"
                 />
 
-                {/* Rating Badge */}
                 {movie.rating && (
                   <div className="absolute top-2 left-2 bg-[#333333]/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                     <Star size={10} className="text-[#E50914]" fill="currentColor" />
@@ -302,19 +298,16 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {/* Premium Badge */}
                 {movie.isPremium && (
                   <div className="absolute top-2 right-2 bg-[#E50914] text-white text-xs font-bold px-1.5 py-0.5 rounded">
                     VIP
                   </div>
                 )}
 
-                {/* HD Badge */}
                 <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                   HD
                 </div>
 
-                {/* Hover - DAAWO NOW Button */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg">
                     Daawo NOW
@@ -335,11 +328,10 @@ export default function HomePage() {
           <p className="text-center text-gray-500 py-12">No movies found</p>
         )}
 
-        {/* Pagination - Show ALL page numbers */}
+        {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-8">
             <div className="flex justify-center items-center gap-1.5 flex-wrap">
-              {/* Previous Button */}
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
@@ -348,7 +340,6 @@ export default function HomePage() {
                 <ChevronLeft size={18} />
               </button>
 
-              {/* ALL Page Numbers */}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
@@ -359,7 +350,6 @@ export default function HomePage() {
                 </button>
               ))}
 
-              {/* Next Button */}
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
@@ -369,7 +359,6 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* Page Info */}
             <p className="text-center text-gray-400 text-sm mt-3">
               Page {currentPage} of {totalPages} ({filteredMovies.length} filimad)
             </p>
@@ -386,9 +375,6 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
-
-
-
     </div>
   );
 }

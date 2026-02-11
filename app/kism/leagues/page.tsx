@@ -1,29 +1,43 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState } from "react";
 import { Plus, Edit, Trash2, Trophy, Users, Star } from "lucide-react";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 const types = ["competition", "league", "club", "player"] as const;
 
 export default function AdminLeaguesPage() {
-    const leagues = useQuery(api.leagues.listLeagues, {});
-    const createLeague = useMutation(api.leagues.createLeague);
-    const updateLeague = useMutation(api.leagues.updateLeague);
-    const deleteLeague = useMutation(api.leagues.deleteLeague);
-    const seedLeagues = useMutation(api.leagues.seedLeagues);
+    const { data: leagues, mutate } = useSWR("/api/leagues", fetcher);
 
     const [showModal, setShowModal] = useState(false);
-    const [editingId, setEditingId] = useState<any>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [filter, setFilter] = useState<string>("all");
     const [formData, setFormData] = useState({ name: "", type: "league" as typeof types[number], country: "", logoUrl: "", apiId: "" });
 
     const handleSubmit = async () => {
-        if (editingId) await updateLeague({ id: editingId, ...formData });
-        else await createLeague(formData);
-        setShowModal(false); setEditingId(null);
-        setFormData({ name: "", type: "league", country: "", logoUrl: "", apiId: "" });
+        try {
+            if (editingId) {
+                await fetch("/api/leagues", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: editingId, ...formData }),
+                });
+            } else {
+                await fetch("/api/leagues", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData),
+                });
+            }
+            mutate();
+            setShowModal(false);
+            setEditingId(null);
+            setFormData({ name: "", type: "league", country: "", logoUrl: "", apiId: "" });
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save league");
+        }
     };
 
     const openEdit = (league: any) => {
@@ -32,7 +46,19 @@ export default function AdminLeaguesPage() {
         setShowModal(true);
     };
 
-    const filtered = leagues?.filter(l => filter === "all" || l.type === filter);
+    const handleDelete = async (id: string) => {
+        if (confirm("Delete this league?")) {
+            await fetch(`/api/leagues?id=${id}`, { method: "DELETE" });
+            mutate();
+        }
+    };
+
+    const seedDefaults = async () => {
+        await fetch("/api/leagues/seed", { method: "POST" });
+        mutate();
+    };
+
+    const filtered = (leagues || []).filter((l: any) => filter === "all" || l.type === filter);
     const getIcon = (type: string) => {
         if (type === "competition" || type === "league") return <Trophy size={16} className="text-accent-gold" />;
         if (type === "club") return <Users size={16} className="text-blue-400" />;
@@ -44,7 +70,7 @@ export default function AdminLeaguesPage() {
             <div className="flex items-center justify-between">
                 <div><h1 className="text-3xl font-black">LEAGUES</h1><p className="text-text-muted">Maamul leagues, clubs, players</p></div>
                 <div className="flex gap-3">
-                    <button onClick={() => seedLeagues()} className="px-4 py-2 bg-stadium-hover rounded-lg text-text-secondary">Seed Defaults</button>
+                    <button onClick={seedDefaults} className="px-4 py-2 bg-stadium-hover rounded-lg text-text-secondary">Seed Defaults</button>
                     <button onClick={() => { setShowModal(true); setEditingId(null); }} className="px-4 py-2 bg-accent-green text-black rounded-lg font-bold flex items-center gap-2"><Plus size={18} />Add</button>
                 </div>
             </div>
@@ -61,14 +87,14 @@ export default function AdminLeaguesPage() {
                         <tr><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Name</th><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Type</th><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Country</th><th className="text-right px-4 py-3 text-xs font-bold text-text-muted uppercase">Actions</th></tr>
                     </thead>
                     <tbody>
-                        {filtered?.map((league) => (
+                        {filtered?.map((league: any) => (
                             <tr key={league._id} className="border-b border-border-subtle last:border-0">
                                 <td className="px-4 py-3 flex items-center gap-2">{getIcon(league.type)}<span className="font-bold">{league.name}</span></td>
                                 <td className="px-4 py-3 capitalize">{league.type}</td>
                                 <td className="px-4 py-3 text-text-muted">{league.country || "-"}</td>
                                 <td className="px-4 py-3"><div className="flex items-center justify-end gap-2">
                                     <button onClick={() => openEdit(league)} className="p-2 hover:bg-stadium-hover rounded-lg"><Edit size={16} /></button>
-                                    <button onClick={() => deleteLeague({ id: league._id })} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red"><Trash2 size={16} /></button>
+                                    <button onClick={() => handleDelete(league._id)} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red"><Trash2 size={16} /></button>
                                 </div></td>
                             </tr>
                         ))}

@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
 import { useState, useEffect, useRef, Suspense } from "react";
@@ -27,7 +26,6 @@ import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { StreamPlayer } from "@/components/StreamPlayer";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import { generateTVSchema } from "@/lib/seo/schema";
-import type { Id } from "@/convex/_generated/dataModel";
 import { ShareableWidget } from "@/components/ShareableWidget";
 
 function SeriesWatchContent() {
@@ -42,18 +40,18 @@ function SeriesWatchContent() {
 
     const [activeSeason, setActiveSeason] = useState(1);
 
-    const series = useQuery(api.series.getSeriesBySlug, { slug });
-    const episodesData = useQuery(
-        api.series.getEpisodesBySeries,
-        series ? { seriesId: series._id } : "skip"
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+    const { data: series } = useSWR(`/api/series/${slug}`, fetcher);
+    const { data: episodesData } = useSWR(
+        series ? `/api/series/${slug}/episodes` : null,
+        fetcher
     );
-    const settings = useQuery(api.settings.getSettings);
-    const similarContent = useQuery(api.recommendations.getSimilarContent, {
-        contentId: slug,
-        contentType: "series",
-        limit: 10
-    });
-    const trackPageView = useMutation(api.analytics.trackPageView);
+    const { data: settings } = useSWR("/api/settings", fetcher);
+    const { data: similarContent } = useSWR(
+        `/api/recommendations?contentId=${slug}&contentType=series&limit=10`,
+        fetcher
+    );
 
     const { isPremium, redeemCode } = useUser();
     const hasTracked = useRef(false);
@@ -70,9 +68,13 @@ function SeriesWatchContent() {
     useEffect(() => {
         if (!hasTracked.current && series) {
             hasTracked.current = true;
-            trackPageView({ pageType: "series", pageId: slug });
+            fetch("/api/analytics/pageview", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pageType: "series", pageId: slug }),
+            }).catch(() => { });
         }
-    }, [series, trackPageView, slug]);
+    }, [series, slug]);
 
     // Effect to update active season if url changes
     useEffect(() => {
@@ -450,7 +452,7 @@ function SeriesWatchContent() {
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    {series.genres.slice(0, 3).map(g => (
+                                    {series.genres.slice(0, 3).map((g: string) => (
                                         <span key={g} className="text-xs px-2 py-1 bg-stadium-hover rounded text-text-secondary">
                                             {g}
                                         </span>

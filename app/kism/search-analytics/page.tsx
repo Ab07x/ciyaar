@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useState } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import {
     Search,
@@ -16,14 +15,16 @@ import {
     Filter,
 } from "lucide-react";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function AdminSearchAnalyticsPage() {
     const [days, setDays] = useState(7);
 
-    const summary = useQuery(api.searchAnalytics.getAnalyticsSummary, { days });
-    const topQueries = useQuery(api.searchAnalytics.getTopQueries, { days, limit: 20 });
-    const zeroResultQueries = useQuery(api.searchAnalytics.getZeroResultQueries, { days, limit: 20 });
-    const recentSearches = useQuery(api.searchAnalytics.getRecentSearches, { limit: 30 });
-    const trendData = useQuery(api.searchAnalytics.getSearchTrend, { days });
+    const { data: summary } = useSWR(`/api/search-analytics?action=summary&days=${days}`, fetcher);
+    const { data: topQueries } = useSWR(`/api/search-analytics?action=topQueries&days=${days}&limit=20`, fetcher);
+    const { data: zeroResultQueries } = useSWR(`/api/search-analytics?action=zeroResults&days=${days}&limit=20`, fetcher);
+    const { data: recentSearches } = useSWR(`/api/search-analytics?action=recent&limit=30`, fetcher);
+    const { data: trendData } = useSWR(`/api/search-analytics?action=trend&days=${days}`, fetcher);
 
     const isLoading = summary === undefined;
 
@@ -111,8 +112,8 @@ export default function AdminSearchAnalyticsPage() {
                         Search Trend
                     </h2>
                     <div className="h-32 flex items-end gap-1">
-                        {trendData.map((day, i) => {
-                            const maxSearches = Math.max(...trendData.map((d) => d.searches));
+                        {trendData.map((day: any, i: number) => {
+                            const maxSearches = Math.max(...trendData.map((d: any) => d.searches));
                             const height = maxSearches > 0 ? (day.searches / maxSearches) * 100 : 0;
                             return (
                                 <div
@@ -150,7 +151,7 @@ export default function AdminSearchAnalyticsPage() {
                         </div>
                     ) : (
                         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                            {topQueries.map((item, i) => (
+                            {topQueries.map((item: any, i: number) => (
                                 <div
                                     key={item.query}
                                     className="flex items-center gap-3 p-3 bg-stadium-dark rounded-xl"
@@ -197,7 +198,7 @@ export default function AdminSearchAnalyticsPage() {
                         </div>
                     ) : (
                         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                            {zeroResultQueries.map((item, i) => (
+                            {zeroResultQueries.map((item: any, i: number) => (
                                 <div
                                     key={item.query}
                                     className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl"
@@ -243,14 +244,14 @@ export default function AdminSearchAnalyticsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {recentSearches.map((search) => (
-                                    <tr key={search.id} className="border-b border-border-subtle/50 hover:bg-stadium-hover">
+                                {recentSearches.map((search: any) => (
+                                    <tr key={search.id || search._id} className="border-b border-border-subtle/50 hover:bg-stadium-hover">
                                         <td className="py-2 px-3 font-medium">{search.query}</td>
                                         <td className="py-2 px-3 text-center">
                                             <span
                                                 className={`px-2 py-0.5 rounded text-xs font-bold ${search.hasResults
-                                                        ? "bg-accent-green/20 text-accent-green"
-                                                        : "bg-red-500/20 text-red-400"
+                                                    ? "bg-accent-green/20 text-accent-green"
+                                                    : "bg-red-500/20 text-red-400"
                                                     }`}
                                             >
                                                 {search.resultsCount}
@@ -282,7 +283,7 @@ export default function AdminSearchAnalyticsPage() {
                 <ul className="text-sm text-text-secondary space-y-1">
                     <li>• Searches are tracked 1 second after users stop typing (debounced)</li>
                     <li>• Click-through is tracked when users select a search result</li>
-                    <li>• "Content Gaps" shows what users searched for but didn't find</li>
+                    <li>• &quot;Content Gaps&quot; shows what users searched for but didn&apos;t find</li>
                     <li>• Use this data to improve your content catalog</li>
                     <li>• High zero-result rate = opportunity to add popular content</li>
                 </ul>

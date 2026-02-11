@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useState, useRef } from "react";
+import useSWR from "swr";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -18,40 +17,50 @@ import {
     ArrowUp,
     ArrowDown,
 } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 const MAX_HERO_SLIDES = 12;
 
 export default function HeroAdminPage() {
-    const allMovies = useQuery(api.movies.listMovies, { isPublished: true, limit: 1000 });
-    const featuredMovies = useQuery(api.movies.getFeaturedMovies);
-    const updateMovie = useMutation(api.movies.updateMovie);
+    const { data: allMoviesData, mutate: mutateAll } = useSWR("/api/movies?isPublished=true&limit=1000", fetcher);
+    const { data: featuredData, mutate: mutateFeatured } = useSWR("/api/movies?isFeatured=true&limit=100", fetcher);
+
+    const allMovies = allMoviesData?.movies || allMoviesData || [];
+    const featuredMovies = featuredData?.movies || featuredData || [];
 
     const [searchQuery, setSearchQuery] = useState("");
     const [saving, setSaving] = useState<string | null>(null);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+    const mutateAllData = () => { mutateAll(); mutateFeatured(); };
+
     // Filter movies for search - show searched ones at top
     const availableMovies = (allMovies || [])
         .filter((m: any) =>
             !m.isFeatured &&
-            (m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (m.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 m.titleSomali?.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         .sort((a: any, b: any) => {
-            // If searching, prioritize exact matches
             if (searchQuery) {
-                const aMatch = a.title.toLowerCase().startsWith(searchQuery.toLowerCase()) ||
+                const aMatch = a.title?.toLowerCase().startsWith(searchQuery.toLowerCase()) ||
                     a.titleSomali?.toLowerCase().startsWith(searchQuery.toLowerCase());
-                const bMatch = b.title.toLowerCase().startsWith(searchQuery.toLowerCase()) ||
+                const bMatch = b.title?.toLowerCase().startsWith(searchQuery.toLowerCase()) ||
                     b.titleSomali?.toLowerCase().startsWith(searchQuery.toLowerCase());
                 if (aMatch && !bMatch) return -1;
                 if (!aMatch && bMatch) return 1;
             }
-            // Then by rating
             return (b.rating || 0) - (a.rating || 0);
         });
+
+    const updateMovie = async (id: string, updates: any) => {
+        await fetch("/api/movies", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, ...updates }),
+        });
+    };
 
     // Add movie to hero
     const addToHero = async (movie: any) => {
@@ -59,11 +68,11 @@ export default function HeroAdminPage() {
         setSaving(movie._id);
         try {
             const maxOrder = Math.max(0, ...(featuredMovies || []).map((m: any) => m.featuredOrder || 0));
-            await updateMovie({
-                id: movie._id as Id<"movies">,
+            await updateMovie(movie._id, {
                 isFeatured: true,
                 featuredOrder: maxOrder + 1,
             });
+            mutateAllData();
         } catch (err) {
             console.error(err);
             alert("Failed to add movie");
@@ -75,11 +84,11 @@ export default function HeroAdminPage() {
     const removeFromHero = async (movie: any) => {
         setSaving(movie._id);
         try {
-            await updateMovie({
-                id: movie._id as Id<"movies">,
+            await updateMovie(movie._id, {
                 isFeatured: false,
                 featuredOrder: 0,
             });
+            mutateAllData();
         } catch (err) {
             console.error(err);
             alert("Failed to remove movie");
@@ -116,11 +125,11 @@ export default function HeroAdminPage() {
         setSaving("reordering");
         try {
             for (let i = 0; i < sorted.length; i++) {
-                await updateMovie({
-                    id: sorted[i]._id as Id<"movies">,
+                await updateMovie(sorted[i]._id, {
                     featuredOrder: i + 1,
                 });
             }
+            mutateAllData();
         } catch (err) {
             console.error(err);
             alert("Failed to reorder");
@@ -143,14 +152,13 @@ export default function HeroAdminPage() {
 
         setSaving(movie._id);
         try {
-            await updateMovie({
-                id: movie._id as Id<"movies">,
+            await updateMovie(movie._id, {
                 featuredOrder: prevMovie.featuredOrder || index - 1,
             });
-            await updateMovie({
-                id: prevMovie._id as Id<"movies">,
+            await updateMovie(prevMovie._id, {
                 featuredOrder: movie.featuredOrder || index,
             });
+            mutateAllData();
         } catch (err) {
             console.error(err);
         }
@@ -165,14 +173,13 @@ export default function HeroAdminPage() {
 
         setSaving(movie._id);
         try {
-            await updateMovie({
-                id: movie._id as Id<"movies">,
+            await updateMovie(movie._id, {
                 featuredOrder: nextMovie.featuredOrder || index + 1,
             });
-            await updateMovie({
-                id: nextMovie._id as Id<"movies">,
+            await updateMovie(nextMovie._id, {
                 featuredOrder: movie.featuredOrder || index,
             });
+            mutateAllData();
         } catch (err) {
             console.error(err);
         }
@@ -240,13 +247,12 @@ export default function HeroAdminPage() {
                                     onDragLeave={handleDragLeave}
                                     onDrop={() => handleDrop(index)}
                                     onDragEnd={handleDragEnd}
-                                    className={`flex items-center gap-3 p-3 bg-stadium-dark rounded-xl border transition-all group cursor-grab active:cursor-grabbing ${
-                                        dragOverIndex === index
+                                    className={`flex items-center gap-3 p-3 bg-stadium-dark rounded-xl border transition-all group cursor-grab active:cursor-grabbing ${dragOverIndex === index
                                             ? "border-accent-green bg-accent-green/10"
                                             : draggedIndex === index
-                                            ? "border-accent-green/50 opacity-50"
-                                            : "border-border-subtle"
-                                    }`}
+                                                ? "border-accent-green/50 opacity-50"
+                                                : "border-border-subtle"
+                                        }`}
                                 >
                                     {/* Drag Handle */}
                                     <GripVertical size={18} className="text-text-muted" />
@@ -358,9 +364,8 @@ export default function HeroAdminPage() {
                             availableMovies.map((movie: any) => (
                                 <div
                                     key={movie._id}
-                                    className={`flex items-center gap-3 p-3 bg-stadium-dark hover:bg-stadium-hover rounded-xl border border-border-subtle transition-colors ${
-                                        sortedFeatured.length >= MAX_HERO_SLIDES ? "opacity-50" : "cursor-pointer"
-                                    }`}
+                                    className={`flex items-center gap-3 p-3 bg-stadium-dark hover:bg-stadium-hover rounded-xl border border-border-subtle transition-colors ${sortedFeatured.length >= MAX_HERO_SLIDES ? "opacity-50" : "cursor-pointer"
+                                        }`}
                                     onClick={() => addToHero(movie)}
                                 >
                                     {/* Poster */}

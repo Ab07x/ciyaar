@@ -1,210 +1,213 @@
 "use client";
 import React, { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useToast } from "@/providers/ToastProvider";
 import { Trash2, Plus, Lock, Eye, Video, Link as LinkIcon, Image as ImageIcon, Edit, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function ShortsAdminPage() {
     const toast = useToast();
 
     // Data
-    const shorts = useQuery(api.shorts.list, { limit: 50 });
-    const createShort = useMutation(api.shorts.create);
-    const updateShort = useMutation(api.shorts.update);
-    const deleteShort = useMutation(api.shorts.remove);
+    const { data: shorts, mutate } = useSWR("/api/shorts?limit=50", fetcher);
 
-    // Form State
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    // State
+    const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         title: "",
-        embedUrl: "",
+        videoUrl: "",
         thumbnailUrl: "",
-        views: 0,
-        isLive: false,
-        channelName: "",
+        isPremium: false,
+        isPublished: true,
     });
 
     const resetForm = () => {
-        setIsFormOpen(false);
+        setFormData({ title: "", videoUrl: "", thumbnailUrl: "", isPremium: false, isPublished: true });
         setEditingId(null);
-        setFormData({
-            title: "",
-            embedUrl: "",
-            thumbnailUrl: "",
-            views: 0,
-            isLive: false,
-            channelName: "",
-        });
+        setShowForm(false);
     };
 
-    const handleEdit = (item: any) => {
+    const handleEdit = (short: any) => {
         setFormData({
-            title: item.title,
-            embedUrl: item.embedUrl,
-            thumbnailUrl: item.thumbnailUrl,
-            views: item.views,
-            isLive: item.isLive,
-            channelName: item.channelName || "",
+            title: short.title || "",
+            videoUrl: short.videoUrl || "",
+            thumbnailUrl: short.thumbnailUrl || "",
+            isPremium: short.isPremium || false,
+            isPublished: short.isPublished ?? true,
         });
-        setEditingId(item._id);
-        setIsFormOpen(true);
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setEditingId(short._id);
+        setShowForm(true);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
+        if (!formData.title || !formData.videoUrl) {
+            toast("Title and video URL required", "error");
+            return;
+        }
         try {
             if (editingId) {
-                await updateShort({ id: editingId as any, ...formData });
-                toast("Short updated successfully", "success");
+                await fetch("/api/shorts", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: editingId, ...formData }),
+                });
+                toast("Short updated!", "success");
             } else {
-                await createShort(formData);
-                toast("Short created successfully", "success");
+                await fetch("/api/shorts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData),
+                });
+                toast("Short created!", "success");
             }
+            mutate();
             resetForm();
-        } catch (error) {
-            toast("Failed to save short", "error");
+        } catch {
+            toast("Failed to save", "error");
         }
     };
 
-    const handleDelete = async (id: any) => {
-        if (confirm("Are you sure you want to delete this short?")) {
-            await deleteShort({ id });
-            toast("Short deleted", "success");
-        }
+    const handleDelete = async (id: string) => {
+        if (!confirm("Delete this short?")) return;
+        await fetch(`/api/shorts?id=${id}`, { method: "DELETE" });
+        toast("Deleted", "success");
+        mutate();
     };
+
+    if (!shorts) {
+        return (
+            <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-20 rounded-xl" />
+                ))}
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black text-white">CiyaarSnaps Manager</h1>
-                    <p className="text-text-muted">Manage Shorts, Reels, and Live Clips</p>
+                    <h1 className="text-3xl font-black">SHORTS</h1>
+                    <p className="text-text-muted">Manage short video clips</p>
                 </div>
                 <button
-                    onClick={() => {
-                        if (isFormOpen) resetForm();
-                        else setIsFormOpen(true);
-                    }}
-                    className={cn("cta-primary", isFormOpen && "bg-stadium-elevated border border-white/10 hover:bg-white/5")}
+                    onClick={() => { resetForm(); setShowForm(true); }}
+                    className="px-6 py-3 bg-accent-green text-black rounded-xl font-bold flex items-center gap-2"
                 >
-                    {isFormOpen ? "Cancel" : "Add New Short"}
-                    {isFormOpen ? <X size={20} /> : <Plus size={20} />}
+                    <Plus size={20} />
+                    Add Short
                 </button>
             </div>
 
-            {/* Create/Edit Form */}
-            {isFormOpen && (
-                <div className="bg-stadium-elevated p-6 rounded-2xl border border-white/10 animate-in slide-in-from-top-4 shadow-2xl">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        {editingId ? <Edit size={20} className="text-accent-gold" /> : <Plus size={20} className="text-accent-green" />}
-                        {editingId ? "Edit Short" : "Create New Short"}
-                    </h2>
-                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-text-muted">Title</label>
-                            <input required className="w-full bg-stadium-dark border border-border-strong rounded-lg p-3 text-white focus:border-accent-green outline-none transition-colors"
-                                value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="e.g. Goolkii Caawa" />
+            {/* Form */}
+            {showForm && (
+                <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-4">
+                    <h3 className="font-bold">{editingId ? "Edit Short" : "New Short"}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm text-text-secondary mb-1">Title *</label>
+                            <input
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
+                            />
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-text-muted">Channel Name</label>
-                            <input required className="w-full bg-stadium-dark border border-border-strong rounded-lg p-3 text-white focus:border-accent-green outline-none transition-colors"
-                                value={formData.channelName} onChange={e => setFormData({ ...formData, channelName: e.target.value })} placeholder="e.g. Gool FM" />
+                        <div>
+                            <label className="block text-sm text-text-secondary mb-1">Video URL *</label>
+                            <input
+                                value={formData.videoUrl}
+                                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                                placeholder="https://..."
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
+                            />
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-text-muted">Views</label>
-                            <input type="number" className="w-full bg-stadium-dark border border-border-strong rounded-lg p-3 text-white focus:border-accent-green outline-none transition-colors"
-                                value={formData.views} onChange={e => setFormData({ ...formData, views: parseInt(e.target.value) })} />
+                        <div>
+                            <label className="block text-sm text-text-secondary mb-1">Thumbnail URL</label>
+                            <input
+                                value={formData.thumbnailUrl}
+                                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                                placeholder="https://..."
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
+                            />
                         </div>
-                        <div className="flex items-center gap-2 pt-8">
-                            <div className="relative flex items-center">
-                                <input type="checkbox" id="isLive" className="peer w-5 h-5 accent-accent-red cursor-pointer"
-                                    checked={formData.isLive} onChange={e => setFormData({ ...formData, isLive: e.target.checked })} />
-                                <label htmlFor="isLive" className="ml-2 text-white font-bold select-none cursor-pointer">Is Live Stream?</label>
-                            </div>
+                        <div className="flex items-end gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isPremium}
+                                    onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
+                                    className="w-4 h-4"
+                                />
+                                <span className="text-sm">Premium</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isPublished}
+                                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                                    className="w-4 h-4"
+                                />
+                                <span className="text-sm">Published</span>
+                            </label>
                         </div>
-                        <div className="space-y-1 md:col-span-2">
-                            <label className="text-sm font-medium text-text-muted">Embed URL (Iframe/Video)</label>
-                            <div className="flex gap-2">
-                                <div className="bg-stadium-dark border border-border-strong border-r-0 rounded-l-lg p-3 flex items-center justify-center">
-                                    <LinkIcon className="text-text-muted" size={20} />
-                                </div>
-                                <input required className="w-full bg-stadium-dark border border-border-strong rounded-r-lg p-3 text-white font-mono text-sm focus:border-accent-green outline-none transition-colors"
-                                    value={formData.embedUrl} onChange={e => setFormData({ ...formData, embedUrl: e.target.value })} placeholder="https://www.youtube.com/embed/dQw4w9WgXcQ" />
-                            </div>
-                        </div>
-                        <div className="space-y-1 md:col-span-2">
-                            <label className="text-sm font-medium text-text-muted">Thumbnail URL (Poster)</label>
-                            <div className="flex gap-2">
-                                <div className="bg-stadium-dark border border-border-strong border-r-0 rounded-l-lg p-3 flex items-center justify-center">
-                                    <ImageIcon className="text-text-muted" size={20} />
-                                </div>
-                                <input required className="w-full bg-stadium-dark border border-border-strong rounded-r-lg p-3 text-white font-mono text-sm focus:border-accent-green outline-none transition-colors"
-                                    value={formData.thumbnailUrl} onChange={e => setFormData({ ...formData, thumbnailUrl: e.target.value })} placeholder="https://images.unsplash.com/..." />
-                            </div>
-                        </div>
-
-                        <div className="md:col-span-2 flex gap-4 pt-4">
-                            <button type="submit" className={cn("flex-1 py-3 px-6 rounded-xl font-bold transition-all transform hover:scale-[1.02]", editingId ? "bg-accent-gold text-black hover:bg-white" : "cta-green")}>
-                                {editingId ? "Update Changes" : "Publish Short"}
-                            </button>
-                            {editingId && (
-                                <button type="button" onClick={resetForm} className="px-6 rounded-xl font-bold text-white bg-white/10 hover:bg-white/20">
-                                    Cancel
-                                </button>
-                            )}
-                        </div>
-                    </form>
+                    </div>
+                    <div className="flex gap-3">
+                        <button onClick={resetForm} className="px-4 py-2 bg-stadium-hover rounded-lg">Cancel</button>
+                        <button onClick={handleSubmit} className="px-6 py-2 bg-accent-green text-black font-bold rounded-lg">
+                            {editingId ? "Update" : "Create"}
+                        </button>
+                    </div>
                 </div>
             )}
 
             {/* List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {shorts === undefined ? (
-                    [...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 rounded-2xl" />)
-                ) : (
-                    shorts.map((item) => (
-                        <div key={item._id} className={cn("bg-stadium-elevated rounded-2xl border overflow-hidden group transition-all duration-300",
-                            editingId === item._id ? "border-accent-gold ring-2 ring-accent-gold" : "border-white/5 hover:border-white/20 hover:shadow-xl")}>
-
-                            <div className="aspect-[9/16] relative cursor-pointer" onClick={() => handleEdit(item)}>
-                                <img src={item.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
-                                    <h3 className="text-white font-bold mb-1 line-clamp-2">{item.title}</h3>
-                                    <div className="flex justify-between items-center text-xs text-gray-300">
-                                        <span>{item.channelName}</span>
-                                        <span className="flex items-center gap-1"><Eye size={12} /> {item.views}</span>
-                                    </div>
+            <div className="space-y-3">
+                {shorts.map((short: any) => (
+                    <div key={short._id} className="bg-stadium-elevated border border-border-strong rounded-xl p-4 flex items-center gap-4">
+                        <div className="w-20 h-12 rounded-lg overflow-hidden bg-stadium-dark flex-shrink-0">
+                            {short.thumbnailUrl ? (
+                                <img src={short.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-text-muted">
+                                    <Video size={16} />
                                 </div>
-                                {item.isLive && (
-                                    <span className="absolute top-2 right-2 bg-accent-red text-white text-[10px] font-bold px-2 py-1 rounded animate-pulse">LIVE</span>
-                                )}
-                                {/* Edit Overlay on Hover */}
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-white font-bold flex items-center gap-2">
-                                        <Edit size={16} /> Edit
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-bold truncate">{short.title}</h3>
+                            <div className="flex gap-2 mt-1">
+                                {short.isPremium && (
+                                    <span className="text-xs bg-accent-gold/20 text-accent-gold px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                                        <Lock size={10} /> Premium
                                     </span>
-                                </div>
-                            </div>
-
-                            <div className="p-3 flex items-center justify-between border-t border-white/5 bg-stadium-elevated relative z-10">
-                                <span className="text-xs text-text-muted font-mono">{new Date(item.createdAt).toLocaleDateString()}</span>
-                                <div className="flex gap-2">
-                                    <button onClick={() => handleEdit(item)} className="p-2 text-accent-gold hover:bg-accent-gold/10 rounded-lg transition-colors" title="Edit">
-                                        <Edit size={18} />
-                                    </button>
-                                    <button onClick={() => handleDelete(item._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
+                                )}
+                                <span className={cn("text-xs px-2 py-0.5 rounded font-bold",
+                                    short.isPublished ? "bg-accent-green/20 text-accent-green" : "bg-gray-600/20 text-gray-400"
+                                )}>
+                                    {short.isPublished ? "Published" : "Draft"}
+                                </span>
                             </div>
                         </div>
-                    ))
+                        <div className="flex gap-2">
+                            <button onClick={() => handleEdit(short)} className="p-2 hover:bg-stadium-hover rounded-lg text-text-muted">
+                                <Edit size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(short._id)} className="p-2 hover:bg-red-500/20 rounded-lg text-text-muted hover:text-red-500">
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {shorts.length === 0 && (
+                    <div className="text-center py-12 bg-stadium-elevated rounded-xl border border-border-strong border-dashed">
+                        <Video size={48} className="mx-auto mb-4 text-text-muted/30" />
+                        <p className="text-text-muted">No shorts yet</p>
+                    </div>
                 )}
             </div>
         </div>

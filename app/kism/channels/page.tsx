@@ -1,28 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { Plus, Edit, Trash2, Save, X, Play } from "lucide-react";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function ChannelsAdminPage() {
-    const channels = useQuery(api.channels.list, {});
-    const createChannel = useMutation(api.channels.create);
-    const updateChannel = useMutation(api.channels.update);
-    const deleteChannel = useMutation(api.channels.remove);
+    const { data: channels, mutate } = useSWR("/api/channels", fetcher);
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Loading state
-    if (channels === undefined) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-stadium-dark">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div>
-            </div>
-        );
-    }
 
     // Form State
     const [formData, setFormData] = useState({
@@ -35,6 +23,15 @@ export default function ChannelsAdminPage() {
         isPremium: false,
         priority: 10,
     });
+
+    // Loading state
+    if (!channels) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-stadium-dark">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div>
+            </div>
+        );
+    }
 
     const resetForm = () => {
         setFormData({
@@ -54,7 +51,16 @@ export default function ChannelsAdminPage() {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await createChannel(formData);
+            const res = await fetch("/api/channels", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ...formData,
+                    embeds: [{ label: "Server 1", url: formData.streamUrl, type: "m3u8" }],
+                }),
+            });
+            if (!res.ok) throw new Error("Failed to create channel");
+            mutate();
             resetForm();
         } catch (err) {
             console.error(err);
@@ -66,10 +72,17 @@ export default function ChannelsAdminPage() {
         e.preventDefault();
         if (!isEditing) return;
         try {
-            await updateChannel({
-                id: isEditing as any,
-                ...formData,
+            const res = await fetch("/api/channels", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: isEditing,
+                    ...formData,
+                    embeds: [{ label: "Server 1", url: formData.streamUrl, type: "m3u8" }],
+                }),
             });
+            if (!res.ok) throw new Error("Failed to update channel");
+            mutate();
             resetForm();
         } catch (err) {
             console.error(err);
@@ -82,7 +95,7 @@ export default function ChannelsAdminPage() {
             name: channel.name,
             slug: channel.slug,
             category: channel.category,
-            streamUrl: channel.embeds[0]?.url || "",
+            streamUrl: channel.embeds?.[0]?.url || "",
             thumbnailUrl: channel.thumbnailUrl || "",
             isLive: channel.isLive,
             isPremium: channel.isPremium,
@@ -92,9 +105,10 @@ export default function ChannelsAdminPage() {
         setIsCreating(true);
     };
 
-    const handleDelete = async (id: any) => {
+    const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this channel?")) {
-            await deleteChannel({ id });
+            await fetch(`/api/channels?id=${id}`, { method: "DELETE" });
+            mutate();
         }
     };
 
@@ -234,7 +248,7 @@ export default function ChannelsAdminPage() {
                     </div>
                 )}
 
-                {channels?.map((channel) => (
+                {channels?.map((channel: any) => (
                     <div key={channel._id} className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex items-center justify-between group hover:border-zinc-700 transition">
                         <div className="flex items-center gap-4">
                             <div className="w-16 h-16 bg-black rounded-lg flex items-center justify-center overflow-hidden">
@@ -251,7 +265,7 @@ export default function ChannelsAdminPage() {
                                     {channel.isPremium && <span className="text-[10px] bg-yellow-500 text-black px-1.5 py-0.5 rounded uppercase">Premium</span>}
                                 </h3>
                                 <p className="text-gray-400 text-sm font-mono truncate max-w-md">
-                                    {channel.embeds[0]?.url}
+                                    {channel.embeds?.[0]?.url}
                                 </p>
                             </div>
                         </div>

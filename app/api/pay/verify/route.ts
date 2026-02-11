@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
+import connectDB from "@/lib/mongodb";
+import { Payment, Device, Subscription } from "@/lib/models";
 
 // Plan duration mapping (days)
 const PLAN_DURATIONS: Record<string, number> = {
@@ -19,6 +19,7 @@ const PLAN_DEVICES: Record<string, number> = {
 
 export async function POST(request: NextRequest) {
     try {
+        await connectDB();
         const body = await request.json();
         const { sid, orderId, deviceId } = body;
 
@@ -37,13 +38,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Look up payment record
-        let payment;
+        let payment: any = null;
         if (orderId) {
-            payment = await fetchQuery(api.payments.getPaymentByOrder, { orderId });
+            payment = await Payment.findOne({ orderId }).lean();
         }
 
         if (!payment && sid) {
-            payment = await fetchQuery(api.payments.getPaymentBySid, { sid });
+            payment = await Payment.findOne({ sifaloSid: sid }).lean();
         }
 
         if (!payment) {
@@ -111,37 +112,44 @@ export async function POST(request: NextRequest) {
             // Payment successful! Activate subscription.
 
             // 1. Resolve user from deviceId
-            const user = await fetchQuery(api.users.getUserByDevice, { deviceId });
+            const device = await Device.findOne({ deviceId }).lean() as any;
 
-            if (!user) {
-                // Shouldn't happen, but fail gracefully
+            if (!device) {
                 return NextResponse.json(
                     { error: "Device not found, please contact support" },
                     { status: 404 }
                 );
             }
 
-            const userId = user._id;
+            const userId = device.userId || device._id;
             const plan = payment.plan as "match" | "weekly" | "monthly" | "yearly";
             const durationDays = PLAN_DURATIONS[plan] || 30;
             const maxDevices = PLAN_DEVICES[plan] || 1;
 
             // 2. Create subscription
-            const subscriptionId = await fetchMutation(api.subscriptions.createSubscription, {
+            const subscription = await Subscription.create({
                 userId,
                 plan,
                 durationDays,
                 maxDevices,
+                status: "active",
+                activatedAt: Date.now(),
+                expiresAt: Date.now() + durationDays * 24 * 60 * 60 * 1000,
+                createdAt: Date.now(),
             });
 
             // 3. Update payment record
-            await fetchMutation(api.payments.completePayment, {
-                orderId: payment.orderId,
-                sifaloSid: verifySid,
-                paymentType: verifyData.payment_type || "unknown",
-                userId,
-                subscriptionId,
-            });
+            await Payment.findOneAndUpdate(
+                { orderId: payment.orderId },
+                {
+                    status: "success",
+                    sifaloSid: verifySid,
+                    paymentType: verifyData.payment_type || "unknown",
+                    userId,
+                    subscriptionId: subscription._id,
+                    completedAt: Date.now(),
+                }
+            );
 
             return NextResponse.json({
                 success: true,
@@ -157,10 +165,14 @@ export async function POST(request: NextRequest) {
             });
         } else {
             // Payment failed
-            await fetchMutation(api.payments.failPayment, {
-                orderId: payment.orderId,
-                sifaloSid: verifySid,
-            });
+            await Payment.findOneAndUpdate(
+                { orderId: payment.orderId },
+                {
+                    status: "failed",
+                    sifaloSid: verifySid,
+                    failedAt: Date.now(),
+                }
+            );
 
             return NextResponse.json({
                 success: false,

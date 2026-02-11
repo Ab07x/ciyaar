@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import Link from "next/link";
 import { AdSlot } from "@/components/AdSlot";
 import { MoviePosterImage } from "@/components/MoviePosterImage";
@@ -13,10 +12,12 @@ import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { useSearchParams } from "next/navigation";
 import { SectionLoader } from "@/components/ui/LoadingSpinner";
 
-const ITEMS_PER_PAGE = 35; // 7x5
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const ITEMS_PER_PAGE = 35;
 
 function MoviesContent() {
-    const movies = useQuery(api.movies.listMovies, { isPublished: true });
+    const { data: moviesData } = useSWR("/api/movies?isPublished=true", fetcher);
+    const movies = moviesData?.movies || moviesData || [];
     const { isPremium } = useUser();
     const searchParams = useSearchParams();
 
@@ -24,40 +25,34 @@ function MoviesContent() {
     const [genreFilter, setGenreFilter] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Check for category from URL
     const categoryParam = searchParams.get("category");
 
-    if (!movies) {
+    if (!moviesData) {
         return <SectionLoader />;
     }
 
-    // Get unique genres
-    const allGenres = Array.from(new Set(movies.flatMap((m) => m.genres))).slice(0, 10);
+    const allGenres = Array.from(new Set(movies.flatMap((m: any) => m.genres || []))).slice(0, 10);
 
-    // Filter movies
-    let filteredMovies = movies;
+    let filteredMovies = [...movies];
 
-    // Category filter from URL
     if (categoryParam) {
-        filteredMovies = filteredMovies.filter((m) => m.category === categoryParam);
+        filteredMovies = filteredMovies.filter((m: any) => m.category === categoryParam);
     }
 
     if (filter === "dubbed") {
-        filteredMovies = filteredMovies.filter((m) => m.isDubbed);
+        filteredMovies = filteredMovies.filter((m: any) => m.isDubbed);
     } else if (filter === "premium") {
-        filteredMovies = filteredMovies.filter((m) => m.isPremium);
+        filteredMovies = filteredMovies.filter((m: any) => m.isPremium);
     }
     if (genreFilter) {
-        filteredMovies = filteredMovies.filter((m) => m.genres.includes(genreFilter));
+        filteredMovies = filteredMovies.filter((m: any) => m.genres?.includes(genreFilter));
     }
 
-    // Pagination
     const totalItems = filteredMovies.length;
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const paginatedMovies = filteredMovies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    // Reset page when filter changes
     const handleFilterChange = (newFilter: typeof filter) => {
         setFilter(newFilter);
         setCurrentPage(1);
@@ -71,7 +66,6 @@ function MoviesContent() {
     return (
         <div className="relative min-h-screen bg-[#0d1b2a]">
             <main className="relative z-10">
-                {/* Hero */}
                 <section className="relative py-12 md:py-16 overflow-hidden border-b border-[#1a3a5c]">
                     <div className="absolute inset-0 bg-gradient-to-b from-[#E50914]/5 via-transparent to-transparent" />
                     <div className="container mx-auto px-4 relative z-10">
@@ -90,13 +84,11 @@ function MoviesContent() {
                     </div>
                 </section>
 
-                {/* Premium Promo Banner */}
                 {!isPremium && <PremiumBannerNew className="my-6" />}
 
                 <div className="container mx-auto px-4 pb-16">
                     <AdSlot slotKey="movies_top" className="mb-8" />
 
-                    {/* Filters */}
                     <div className="flex flex-wrap gap-4 mb-8 p-4 bg-[#1b2838] rounded-xl border border-[#1a3a5c]">
                         <div className="flex gap-2 p-1 bg-[#1a3a5c] rounded-lg">
                             {[
@@ -119,10 +111,9 @@ function MoviesContent() {
                             ))}
                         </div>
 
-                        {/* Genre filter */}
                         <div className="flex flex-wrap gap-2 items-center">
                             <Filter size={16} className="text-text-muted" />
-                            {allGenres.map((genre) => (
+                            {allGenres.map((genre: any) => (
                                 <button
                                     key={genre}
                                     onClick={() => handleGenreChange(genreFilter === genre ? null : genre)}
@@ -139,9 +130,8 @@ function MoviesContent() {
                         </div>
                     </div>
 
-                    {/* Movies Grid - Denser for laptops */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-4">
-                        {paginatedMovies.map((movie) => {
+                        {paginatedMovies.map((movie: any) => {
                             const isLocked = movie.isPremium && !isPremium;
                             return (
                                 <Link
@@ -156,10 +146,8 @@ function MoviesContent() {
                                             className="group-hover:scale-105 transition-transform duration-500"
                                         />
 
-                                        {/* Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
-                                        {/* Play button - DAAWO NOW on hover */}
                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             {isLocked ? (
                                                 <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/50">
@@ -173,7 +161,6 @@ function MoviesContent() {
                                             )}
                                         </div>
 
-                                        {/* Badges */}
                                         <div className="absolute top-2 left-2 flex flex-col gap-1">
                                             {movie.isPremium && (
                                                 <div className="flex items-center gap-1 bg-[#E50914] px-1.5 py-0.5 rounded text-[10px] font-bold text-white">
@@ -188,7 +175,6 @@ function MoviesContent() {
                                             )}
                                         </div>
 
-                                        {/* Rating */}
                                         {movie.rating && movie.rating > 0 && (
                                             <div className="absolute top-2 right-2 flex items-center gap-1 bg-[#1a3a5c]/90 px-1.5 py-0.5 rounded">
                                                 <Star size={10} className="text-[#E50914]" fill="currentColor" />
@@ -196,12 +182,10 @@ function MoviesContent() {
                                             </div>
                                         )}
 
-                                        {/* HD Badge */}
                                         <div className="absolute bottom-12 left-2 bg-[#1a3a5c] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                                             HD
                                         </div>
 
-                                        {/* Title at bottom */}
                                         <div className="absolute bottom-0 left-0 right-0 p-2">
                                             <h3 className="font-bold text-xs line-clamp-2">
                                                 {movie.titleSomali || movie.title}
@@ -216,7 +200,6 @@ function MoviesContent() {
                         })}
                     </div>
 
-                    {/* Pagination */}
                     {totalPages > 1 && (
                         <div className="mt-12">
                             <div className="flex justify-center items-center gap-1.5 flex-wrap">

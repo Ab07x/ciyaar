@@ -1,15 +1,19 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { cn } from "@/lib/utils";
 import { Trophy, Medal, Flame, TrendingUp } from "lucide-react";
 import { useUser } from "@/providers/UserProvider";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export function LeaderboardTable({ limit = 10 }: { limit?: number }) {
     const { userId } = useUser();
-    const leaderboard = useQuery(api.predictions.getLeaderboard, { limit });
-    const myStats = useQuery(api.predictions.getUserStats, { userId: userId || undefined });
+    const { data: leaderboard } = useSWR(`/api/predictions/leaderboard?limit=${limit}`, fetcher);
+    const { data: myStats } = useSWR(
+        userId ? `/api/predictions/stats?userId=${userId}` : null,
+        fetcher
+    );
 
     if (leaderboard === undefined) {
         return (

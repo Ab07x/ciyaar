@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useState } from "react";
+import useSWR from "swr";
 import { Plus, Download, Trash2, Copy, Check, Filter, Ban, MessageSquare } from "lucide-react";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const planOptions = [
     { value: "match", label: "Ciyaar Keliya", days: 1 },
@@ -13,13 +14,8 @@ const planOptions = [
 ];
 
 export default function AdminCodesPage() {
-    const codes = useQuery(api.redemptions.listCodes, {});
-    const stats = useQuery(api.redemptions.getCodeStats);
-    const settings = useQuery(api.settings.getSettings);
-
-    const generateCodes = useMutation(api.redemptions.generateCodes);
-    const revokeCode = useMutation(api.redemptions.revokeCode);
-    const deleteCode = useMutation(api.redemptions.deleteCode);
+    const { data: codes, mutate } = useSWR("/api/redemptions", fetcher);
+    const { data: stats, mutate: mutateStats } = useSWR("/api/redemptions?stats=true", fetcher);
 
     const [showModal, setShowModal] = useState(false);
     const [plan, setPlan] = useState<"match" | "weekly" | "monthly" | "yearly">("weekly");
@@ -35,17 +31,22 @@ export default function AdminCodesPage() {
 
     const handleGenerate = async () => {
         const planOption = planOptions.find(p => p.value === plan);
-        // Use customMaxDevices instead of global setting
         const maxDevices = customMaxDevices;
 
-        const newCodes = await generateCodes({
-            plan,
-            count,
-            durationDays: planOption?.days || 7,
-            maxDevices,
+        const res = await fetch("/api/redemptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                plan,
+                count,
+                durationDays: planOption?.days || 7,
+                maxDevices,
+            }),
         });
-
+        const newCodes = await res.json();
         setGeneratedCodes(newCodes);
+        mutate();
+        mutateStats();
     };
 
     const handleCopy = (code: string, index: number) => {
@@ -65,7 +66,7 @@ export default function AdminCodesPage() {
 
         const csv = [
             ["Code", "Plan", "Duration Days", "Max Devices", "Used", "Revoked", "Created"],
-            ...codes.map(c => [
+            ...codes.map((c: any) => [
                 c.code,
                 c.plan,
                 c.durationDays,
@@ -74,7 +75,7 @@ export default function AdminCodesPage() {
                 c.revokedAt ? "Yes" : "No",
                 new Date(c.createdAt).toISOString(),
             ])
-        ].map(row => row.join(",")).join("\n");
+        ].map((row: any) => row.join(",")).join("\n");
 
         const blob = new Blob([csv], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
@@ -86,15 +87,19 @@ export default function AdminCodesPage() {
 
     const handleWhatsAppGenerate = async () => {
         const planOption = planOptions.find(p => p.value === plan);
-        const maxDevices = customMaxDevices; // Use state value
+        const maxDevices = customMaxDevices;
 
-        const newCodes = await generateCodes({
-            plan,
-            count: 1, // Generate single code
-            durationDays: planOption?.days || 7,
-            maxDevices,
+        const res = await fetch("/api/redemptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                plan,
+                count: 1,
+                durationDays: planOption?.days || 7,
+                maxDevices,
+            }),
         });
-
+        const newCodes = await res.json();
         const code = newCodes[0];
         const link = `https://fanbroj.net/pricing?redeem=${code}`;
         const reply = `Mahadsanid! Waa kan code-kaaga *${planOption?.label}*:
@@ -107,9 +112,29 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
 
         setWhatsAppReply(reply);
         setGeneratedCodes([code]);
+        mutate();
+        mutateStats();
     };
 
-    const filteredCodes = codes?.filter(c => {
+    const handleRevoke = async (id: string) => {
+        if (!confirm("Ma hubtaa inaad joojiso code-kan?")) return;
+        await fetch("/api/redemptions", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, action: "revoke" }),
+        });
+        mutate();
+        mutateStats();
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Ma hubtaa inaad tirtirto code-kan?")) return;
+        await fetch(`/api/redemptions?id=${id}`, { method: "DELETE" });
+        mutate();
+        mutateStats();
+    };
+
+    const filteredCodes = codes?.filter((c: any) => {
         if (filter === "unused") return !c.usedByUserId && !c.revokedAt;
         if (filter === "used") return c.usedByUserId;
         if (filter === "revoked") return c.revokedAt;
@@ -170,7 +195,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                     </div>
                     <div className="bg-stadium-elevated border border-border-strong p-4 rounded-xl">
                         <div className="text-sm font-bold">
-                            M:{stats.byPlan.match} W:{stats.byPlan.weekly} M:{stats.byPlan.monthly} Y:{stats.byPlan.yearly}
+                            M:{stats.byPlan?.match} W:{stats.byPlan?.weekly} M:{stats.byPlan?.monthly} Y:{stats.byPlan?.yearly}
                         </div>
                         <div className="text-xs text-text-muted uppercase">By Plan</div>
                     </div>
@@ -208,7 +233,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredCodes?.map((code) => (
+                        {filteredCodes?.map((code: any) => (
                             <tr key={code._id} className="border-b border-border-subtle last:border-0">
                                 <td className="px-4 py-3 font-mono font-bold">{code.code}</td>
                                 <td className="px-4 py-3 capitalize">{code.plan}</td>
@@ -227,11 +252,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                     <div className="flex justify-end gap-2">
                                         {!code.revokedAt && (
                                             <button
-                                                onClick={() => {
-                                                    if (confirm("Ma hubtaa inaad joojiso code-kan?")) {
-                                                        revokeCode({ id: code._id });
-                                                    }
-                                                }}
+                                                onClick={() => handleRevoke(code._id)}
                                                 title="Revoke (Jooji)"
                                                 className="text-text-muted hover:text-accent-gold"
                                             >
@@ -239,11 +260,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                             </button>
                                         )}
                                         <button
-                                            onClick={() => {
-                                                if (confirm("Ma hubtaa inaad tirtirto code-kan?")) {
-                                                    deleteCode({ id: code._id });
-                                                }
-                                            }}
+                                            onClick={() => handleDelete(code._id)}
                                             title="Delete (Tirtir)"
                                             className="text-text-muted hover:text-accent-red"
                                         >
@@ -272,7 +289,6 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                         onChange={(e) => {
                                             const newPlan = e.target.value as any;
                                             setPlan(newPlan);
-                                            // Auto-suggest max devices based on tier
                                             if (newPlan === "match") setCustomMaxDevices(1);
                                             if (newPlan === "weekly") setCustomMaxDevices(2);
                                             if (newPlan === "monthly") setCustomMaxDevices(3);
@@ -311,28 +327,15 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                 </div>
 
                                 <div className="flex gap-3 mt-6">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-3 bg-stadium-hover rounded-lg"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleGenerate}
-                                        className="flex-1 px-4 py-3 bg-accent-green text-black font-bold rounded-lg"
-                                    >
-                                        Generate
-                                    </button>
+                                    <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-stadium-hover rounded-lg">Cancel</button>
+                                    <button onClick={handleGenerate} className="flex-1 px-4 py-3 bg-accent-green text-black font-bold rounded-lg">Generate</button>
                                 </div>
                             </div>
                         ) : (
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">
                                     <span className="text-text-secondary">{generatedCodes.length} codes generated</span>
-                                    <button
-                                        onClick={handleCopyAll}
-                                        className="text-accent-green text-sm flex items-center gap-1"
-                                    >
+                                    <button onClick={handleCopyAll} className="text-accent-green text-sm flex items-center gap-1">
                                         {copiedIndex === -1 ? <Check size={14} /> : <Copy size={14} />}
                                         Copy All
                                     </button>
@@ -349,12 +352,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                     ))}
                                 </div>
 
-                                <button
-                                    onClick={() => setShowModal(false)}
-                                    className="w-full px-4 py-3 bg-accent-green text-black font-bold rounded-lg mt-4"
-                                >
-                                    Done
-                                </button>
+                                <button onClick={() => setShowModal(false)} className="w-full px-4 py-3 bg-accent-green text-black font-bold rounded-lg mt-4">Done</button>
                             </div>
                         )}
                     </div>
@@ -379,7 +377,6 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                         onChange={(e) => {
                                             const newPlan = e.target.value as any;
                                             setPlan(newPlan);
-                                            // Auto-suggest max devices based on tier
                                             if (newPlan === "match") setCustomMaxDevices(1);
                                             if (newPlan === "weekly") setCustomMaxDevices(2);
                                             if (newPlan === "monthly") setCustomMaxDevices(3);
@@ -408,18 +405,8 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                 </div>
 
                                 <div className="flex gap-3 mt-6">
-                                    <button
-                                        onClick={() => setShowWhatsAppModal(false)}
-                                        className="flex-1 px-4 py-3 bg-stadium-hover rounded-lg"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleWhatsAppGenerate}
-                                        className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700"
-                                    >
-                                        Generate & Create Reply
-                                    </button>
+                                    <button onClick={() => setShowWhatsAppModal(false)} className="flex-1 px-4 py-3 bg-stadium-hover rounded-lg">Cancel</button>
+                                    <button onClick={handleWhatsAppGenerate} className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">Generate & Create Reply</button>
                                 </div>
                             </div>
                         ) : (
@@ -432,10 +419,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                         {whatsAppReply}
                                     </pre>
                                     <button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(whatsAppReply);
-                                            // Optional toast feedback
-                                        }}
+                                        onClick={() => navigator.clipboard.writeText(whatsAppReply)}
                                         className="w-full py-2 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-2 text-sm font-bold"
                                     >
                                         <Copy size={16} /> Copy Message

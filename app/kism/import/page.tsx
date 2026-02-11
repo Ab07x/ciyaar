@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useMutation, useQuery, useAction } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { Download, Check, RefreshCw, Loader2, Filter } from "lucide-react";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function AdminImportPage() {
 
@@ -51,10 +52,6 @@ export default function AdminImportPage() {
         tomorrow: "Tomorrow",
     };
 
-    const syncFixtures = useAction(api.fixtures.syncFixtures);
-    const seedLeagues = useMutation(api.allowedLeagues.seedAllowedLeagues);
-    const importMatch = useMutation(api.matches.createMatch);
-
     const [mode, setMode] = useState<"yesterday" | "today" | "tomorrow">("today");
     const [syncing, setSyncing] = useState(false);
     const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -62,22 +59,26 @@ export default function AdminImportPage() {
     const [lastSyncResult, setLastSyncResult] = useState<{ fetched: number; skipped: number; imported: number; updated: number } | null>(null);
     const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
 
-    const fixtures = useQuery(api.fixtures.getFixturesByDay, { mode });
-    const syncLogs = useQuery(api.fixtures.getSyncLogs, { limit: 1 });
-    const allowedLeagues = useQuery(api.allowedLeagues.getAllowedLeagues);
+    const { data: fixtures } = useSWR(`/api/fixtures?mode=${mode}`, fetcher);
+    const { data: syncLogs } = useSWR("/api/fixtures?action=syncLogs&limit=1", fetcher);
+    const { data: allowedLeagues } = useSWR("/api/fixtures?action=allowedLeagues", fetcher);
 
     // Filter fixtures to only show allowed leagues
     const allowedLeagueNames = useMemo(() => {
-        return new Set(allowedLeagues?.map(l => l.leagueName) || []);
+        return new Set(allowedLeagues?.map((l: any) => l.leagueName) || []);
     }, [allowedLeagues]);
 
     const filteredFixtures = useMemo(() => {
         if (!fixtures || allowedLeagueNames.size === 0) return [];
-        return fixtures.filter(f => allowedLeagueNames.has(f.leagueName));
+        return fixtures.filter((f: any) => allowedLeagueNames.has(f.leagueName));
     }, [fixtures, allowedLeagueNames]);
 
     const handleSeed = async () => {
-        await seedLeagues();
+        await fetch("/api/fixtures", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "seedLeagues" }),
+        });
         alert("Leagues seeded!");
     };
 
@@ -85,7 +86,12 @@ export default function AdminImportPage() {
         setSyncing(true);
         setLastSyncResult(null);
         try {
-            const result = await syncFixtures({ mode });
+            const res = await fetch("/api/fixtures", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "sync", mode }),
+            });
+            const result = await res.json();
             setLastSyncResult({
                 fetched: result.fetched,
                 skipped: result.skipped,
@@ -110,28 +116,32 @@ export default function AdminImportPage() {
     const selectAll = () => {
         if (!filteredFixtures) return;
         if (selected.size === filteredFixtures.length) setSelected(new Set());
-        else setSelected(new Set(filteredFixtures.map(f => f._id)));
+        else setSelected(new Set(filteredFixtures.map((f: any) => f._id)));
     };
 
     const handleImport = async () => {
         if (!filteredFixtures) return;
         setImporting(true);
-        const toImport = filteredFixtures.filter(f => selected.has(f._id));
+        const toImport = filteredFixtures.filter((f: any) => selected.has(f._id));
 
         for (const f of toImport) {
-            await importMatch({
-                slug: f.slug,
-                title: `${f.homeName} vs ${f.awayName}`,
-                teamA: f.homeName,
-                teamB: f.awayName,
-                leagueName: f.leagueName,
-                leagueId: "api-import",
-                kickoffAt: f.kickoffAt,
-                status: f.statusNormalized,
-                isPremium: false,
-                embeds: [],
-                thumbnailUrl: thumbnails[f._id] || undefined,
-                summary: f.description
+            await fetch("/api/matches", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    slug: f.slug,
+                    title: `${f.homeName} vs ${f.awayName}`,
+                    teamA: f.homeName,
+                    teamB: f.awayName,
+                    leagueName: f.leagueName,
+                    leagueId: "api-import",
+                    kickoffAt: f.kickoffAt,
+                    status: f.statusNormalized,
+                    isPremium: false,
+                    embeds: [],
+                    thumbnailUrl: thumbnails[f._id] || undefined,
+                    summary: f.description,
+                }),
             });
         }
 
@@ -173,7 +183,7 @@ export default function AdminImportPage() {
                     )}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {allowedLeagues?.map(league => (
+                    {allowedLeagues?.map((league: any) => (
                         <span key={league._id} className="px-3 py-1 bg-accent-green/10 text-accent-green text-xs font-bold rounded-full border border-accent-green/30">
                             {league.leagueName}
                         </span>
@@ -200,7 +210,7 @@ export default function AdminImportPage() {
             {/* Sync Action */}
             <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 flex items-center justify-between">
                 <div>
-                    <h3 className="font-bold mb-1">Sync {MODE_LABELS[mode]}'s Fixtures</h3>
+                    <h3 className="font-bold mb-1">Sync {MODE_LABELS[mode]}&apos;s Fixtures</h3>
                     <p className="text-sm text-text-muted">Fetch latest data from API-Football (filtered by allowed leagues).</p>
                 </div>
                 <button
@@ -255,7 +265,7 @@ export default function AdminImportPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredFixtures.map((f) => (
+                                {filteredFixtures.map((f: any) => (
                                     <tr
                                         key={f._id}
                                         className={`border-b border-border-subtle hover:bg-stadium-hover cursor-pointer transition-colors ${selected.has(f._id) ? "bg-accent-green/10" : ""}`}
@@ -302,10 +312,9 @@ export default function AdminImportPage() {
                 </div>
             ) : (
                 <div className="text-center py-12 text-text-muted bg-stadium-elevated rounded-xl border border-border-strong border-dashed">
-                    <p>No fixtures found for {MODE_LABELS[mode]}. Click "Sync Now" to fetch from API.</p>
+                    <p>No fixtures found for {MODE_LABELS[mode]}. Click &quot;Sync Now&quot; to fetch from API.</p>
                 </div>
             )}
         </div>
     );
 }
-

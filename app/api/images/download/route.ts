@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import connectDB from "@/lib/mongodb";
+import { Media } from "@/lib/models";
+import fs from "fs";
+import path from "path";
 
 // Allowed image domains for downloading
 const ALLOWED_DOMAINS = [
@@ -12,10 +12,11 @@ const ALLOWED_DOMAINS = [
   "images-na.ssl-images-amazon.com", // Amazon/IMDB
 ];
 
-// Download TMDB/IMDB image and upload to Convex storage
+// Download TMDB/IMDB image and save locally
 export async function POST(request: NextRequest) {
   try {
-    const { tmdbUrl, imageUrl, type = "poster" } = await request.json();
+    await connectDB();
+    const { tmdbUrl, imageUrl, type = "poster", slug } = await request.json();
 
     // Support both tmdbUrl (legacy) and imageUrl (new)
     const sourceUrl = imageUrl || tmdbUrl;
@@ -47,40 +48,32 @@ export async function POST(request: NextRequest) {
 
     const imageBuffer = await imageResponse.arrayBuffer();
     const contentType = imageResponse.headers.get("content-type") || "image/jpeg";
+    const buffer = Buffer.from(imageBuffer);
 
-    // Get upload URL from Convex
-    const uploadUrl = await convex.mutation(api.media.generateUploadUrl, {});
+    // Save locally
+    const dir = path.join(process.cwd(), "public", type === "backdrop" ? "backdrops" : "posters");
+    fs.mkdirSync(dir, { recursive: true });
 
-    // Upload to Convex storage
-    const uploadResponse = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": contentType,
-      },
-      body: imageBuffer,
-    });
+    const filename = slug
+      ? `${slug}-af-somali-${type}.jpg`
+      : `${type}-${Date.now()}.jpg`;
+    const filePath = path.join(dir, filename);
+    fs.writeFileSync(filePath, buffer);
 
-    if (!uploadResponse.ok) {
-      return NextResponse.json({ error: "Failed to upload to storage" }, { status: 500 });
-    }
+    const publicUrl = `/${type === "backdrop" ? "backdrops" : "posters"}/${filename}`;
 
-    const { storageId } = await uploadResponse.json();
-
-    // Save media metadata
-    await convex.mutation(api.media.saveMedia, {
-      storageId,
-      name: `${type}-${Date.now()}`,
+    // Save media metadata to MongoDB
+    await Media.create({
+      name: filename,
       type: contentType,
-      size: imageBuffer.byteLength,
+      size: buffer.byteLength,
+      url: publicUrl,
+      createdAt: Date.now(),
     });
-
-    // Get the public URL
-    const publicUrl = await convex.query(api.media.getMediaUrl, { storageId });
 
     return NextResponse.json({
       success: true,
       url: publicUrl,
-      storageId,
       originalUrl: sourceUrl,
     });
   } catch (error) {
@@ -91,4 +84,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

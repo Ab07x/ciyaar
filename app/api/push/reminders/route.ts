@@ -1,10 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
+import connectDB from "@/lib/mongodb";
+import { MatchReminder, Match } from "@/lib/models";
 
 export async function POST(request: NextRequest) {
     try {
-        const pendingReminders = await fetchQuery(api.reminders.getPendingReminders);
+        await connectDB();
+
+        // Get pending reminders (not yet notified, with matches starting soon)
+        const now = Date.now();
+        const reminderWindow = 30 * 60 * 1000; // 30 minutes before match
+
+        const reminders = await MatchReminder.find({
+            notified: { $ne: true },
+        }).lean() as any[];
+
+        // Enrich with match data
+        const pendingReminders: any[] = [];
+        for (const reminder of reminders) {
+            const match = await Match.findById(reminder.matchId).lean() as any;
+            if (match && match.kickoffAt && match.kickoffAt - now <= reminderWindow && match.kickoffAt > now) {
+                pendingReminders.push({
+                    ...reminder,
+                    teamA: match.teamA,
+                    teamB: match.teamB,
+                    slug: match.slug,
+                    reminderId: reminder._id,
+                    subscriptionId: reminder.pushSubscriptionId,
+                });
+            }
+        }
 
         let sent = 0;
         let failed = 0;
@@ -23,7 +47,7 @@ export async function POST(request: NextRequest) {
                 });
 
                 if (res.ok) {
-                    await fetchMutation(api.reminders.markNotified, { id: reminder.reminderId });
+                    await MatchReminder.findByIdAndUpdate(reminder.reminderId, { notified: true });
                     sent++;
                 } else {
                     failed++;

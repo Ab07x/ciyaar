@@ -12,8 +12,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ToastProvider } from "@/providers/ToastProvider";
 import { PushProvider } from "@/providers/PushProvider";
 import { NotificationOptIn } from "@/components/NotificationOptIn";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
+
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { ConnectionIndicator } from "@/components/mobile/OfflineIndicator";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";

@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -28,25 +27,26 @@ interface MoviePlayClientProps {
     preloadedSettings?: any;
 }
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export default function MoviePlayClient({ slug, preloadedMovie, preloadedSettings }: MoviePlayClientProps) {
-    const movieResult = useQuery(api.movies.getMovieBySlug, { slug });
+    const { data: movieResult } = useSWR(`/api/movies?slug=${slug}`, fetcher);
     const movie = movieResult || preloadedMovie;
 
-    const settingsResult = useQuery(api.settings.getSettings);
+    const { data: settingsResult } = useSWR("/api/settings", fetcher);
     const settings = settingsResult || preloadedSettings;
 
-    const similarContent = useQuery(api.recommendations.getSimilarContent, {
-        contentId: slug,
-        contentType: "movie",
-        limit: 10
-    });
+    const { data: similarContent } = useSWR(
+        slug ? `/api/movies/related?slug=${slug}&limit=10` : null,
+        fetcher
+    );
 
     const { isPremium, redeemCode, userId } = useUser();
 
-    // PPV Access Check
-    const ppvAccess = useQuery(
-        api.ppv.checkAccess,
-        { userId: userId || undefined, contentType: "movie", contentId: slug }
+    // PPV Access Check - use fetch instead of Convex
+    const { data: ppvAccess } = useSWR(
+        userId ? `/api/data?type=ppv-check&userId=${userId}&contentType=movie&contentId=${slug}` : null,
+        fetcher
     );
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
@@ -66,7 +66,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     }
 
     const isUnlocked = !movie.isPremium || isPremium || localUnlocked;
-    const activeEmbed = movie.embeds[activeEmbedIndex];
+    const activeEmbed = movie.embeds?.[activeEmbedIndex];
 
     const handleRedeem = async () => {
         if (!code.trim()) return;
@@ -78,7 +78,8 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
         else setError(result.error || "Code qaldan");
     };
 
-    const whatsappLink = `https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo film ${movie.title}`;
+    const whatsappNumber = settings?.whatsappNumber || "252618274188";
+    const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo film ${movie.title}`;
 
     // Show interstitial ad for non-premium users
     if (!isPremium && showInterstitial && !adCompleted) {
@@ -93,6 +94,8 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
             />
         );
     }
+
+    const relatedMovies = Array.isArray(similarContent) ? similarContent : [];
 
     return (
         <div className="min-h-screen bg-[#020D18]">
@@ -166,14 +169,12 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/50" />
                         </div>
 
-                        {/* Content - Scrollable on mobile */}
+                        {/* Content */}
                         <div className="absolute inset-0 flex flex-col justify-center items-center p-4 md:p-8 overflow-y-auto">
-                            {/* Crown Icon */}
                             <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#E50914] to-[#ff6b6b] rounded-full flex items-center justify-center mb-3 md:mb-4 shadow-lg shadow-red-500/30 animate-pulse">
                                 <Crown size={32} className="text-white md:w-10 md:h-10" />
                             </div>
 
-                            {/* Title */}
                             <h3 className="text-xl md:text-3xl font-black text-white mb-1 md:mb-2 text-center">
                                 🔒 PREMIUM FILM
                             </h3>
@@ -181,7 +182,6 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 Film-kani wuxuu u baahan yahay subscription si aad u daawato
                             </p>
 
-                            {/* Code Input Section */}
                             <div className="w-full max-w-sm space-y-3 mb-4">
                                 <div className="flex gap-2">
                                     <input
@@ -206,9 +206,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 )}
                             </div>
 
-                            {/* CTA Buttons - Full width on mobile */}
                             <div className="w-full max-w-sm space-y-3">
-                                {/* Primary CTA - Buy Premium */}
                                 <Link
                                     href="/pricing"
                                     className="w-full py-4 md:py-5 bg-gradient-to-r from-[#E50914] to-[#ff3d47] hover:from-[#ff3d47] hover:to-[#E50914] text-white font-black rounded-xl text-center text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -217,7 +215,6 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                     IIBSO PREMIUM HADDA
                                 </Link>
 
-                                {/* Secondary CTA - WhatsApp */}
                                 <a
                                     href={whatsappLink}
                                     target="_blank"
@@ -229,7 +226,6 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 </a>
                             </div>
 
-                            {/* Price hint */}
                             <p className="text-white/50 text-xs md:text-sm mt-4 text-center">
                                 ✨ Bilow $1 oo kaliya - Hal ciyaar ama bil oo dhan!
                             </p>
@@ -264,7 +260,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                 )}
 
                 {/* Server Switcher */}
-                {isUnlocked && movie.embeds.length > 1 && (
+                {isUnlocked && movie.embeds?.length > 1 && (
                     <div className="flex flex-wrap gap-2 mt-4 justify-center">
                         {movie.embeds.map((embed: any, i: number) => (
                             <button
@@ -285,7 +281,6 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
             {/* Action Buttons */}
             <div className="max-w-7xl mx-auto px-4 mb-8">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {/* Trailer */}
                     {movie.trailerUrl ? (
                         <a
                             href={movie.trailerUrl}
@@ -303,7 +298,6 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                         </div>
                     )}
 
-                    {/* Download */}
                     {movie.downloadUrl ? (
                         <a
                             href={movie.downloadUrl}
@@ -321,14 +315,12 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                         </div>
                     )}
 
-                    {/* Watch Later */}
                     <MyListButton
                         contentType="movie"
                         contentId={slug}
                         className="h-12 bg-[#333333] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
                     />
 
-                    {/* Favourites */}
                     <MyListButton
                         contentType="movie"
                         contentId={slug}
@@ -339,11 +331,11 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
             </div>
 
             {/* You May Also Like */}
-            {similarContent && similarContent.length > 0 && (
+            {relatedMovies.length > 0 && (
                 <div className="max-w-7xl mx-auto px-4 pb-12">
                     <h2 className="text-white text-xl font-bold mb-4 uppercase tracking-wider">You May Also Like:</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {similarContent.slice(0, 5).map((item: any) => (
+                        {relatedMovies.slice(0, 5).map((item: any) => (
                             <Link
                                 key={item._id || item.slug}
                                 href={`/movies/${item.slug}`}
@@ -363,18 +355,15 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                             <Play size={32} />
                                         </div>
                                     )}
-                                    {/* Rating Badge */}
                                     {item.rating && (
                                         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                                             <Star size={10} className="text-[#E50914]" fill="currentColor" />
                                             {item.rating.toFixed(1)}
                                         </div>
                                     )}
-                                    {/* HD Badge */}
                                     <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                                         HD
                                     </div>
-                                    {/* Hover Play */}
                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                         <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-2 py-1 md:px-4 md:py-2 rounded-full flex items-center gap-1 md:gap-2 text-xs md:text-sm shadow-lg transform scale-100 md:scale-90 md:group-hover:scale-100 transition-transform">
                                             Daawo NOW

@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
@@ -33,30 +32,39 @@ import { useState } from "react";
 import { TrailerModal } from "@/components/TrailerModal";
 import { ShareableWidget } from "@/components/ShareableWidget";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClientProps) {
     const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-    const movieResult = useQuery(api.movies.getMovieBySlug, { slug });
+    const { data: movieResult } = useSWR(`/api/movies?slug=${slug}`, fetcher);
     const movie = movieResult || preloadedMovie;
 
-    const similarContent = useQuery(api.recommendations.getSimilarContent, {
-        contentId: slug,
-        contentType: "movie",
-        limit: 10
-    });
+    const { data: similarContent } = useSWR(
+        slug ? `/api/movies/related?slug=${slug}&limit=10` : null,
+        fetcher
+    );
 
-    const incrementViews = useMutation(api.movies.incrementViews);
-    const trackPageView = useMutation(api.analytics.trackPageView);
     const { isPremium } = useUser();
 
     const hasTracked = useRef(false);
 
     useEffect(() => {
-        if (movie && "_id" in movie && !hasTracked.current) {
+        if (movie && movie._id && !hasTracked.current) {
             hasTracked.current = true;
-            incrementViews({ id: movie._id });
-            trackPageView({ pageType: "movie", pageId: slug });
+            // Increment views
+            fetch("/api/movies/views", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: movie._id }),
+            }).catch(() => { });
+            // Track page view
+            fetch("/api/data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type: "pageview", pageType: "movie", pageId: slug, date: new Date().toISOString().split("T")[0] }),
+            }).catch(() => { });
         }
-    }, [movie?._id, incrementViews, trackPageView, slug]);
+    }, [movie?._id, slug]);
 
     if (!movie) {
         return (
@@ -66,11 +74,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
         );
     }
 
-    const getTrailerId = (url: string) => {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    };
+    const relatedMovies = Array.isArray(similarContent) ? similarContent : [];
 
     return (
         <div className="min-h-screen bg-[#020D18]">
@@ -83,7 +87,6 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
 
             {/* Hero Section with Backdrop and Play Button */}
             <div className="relative">
-                {/* Backdrop Image */}
                 <div className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden">
                     <Image
                         src={movie.backdropUrl || movie.posterUrl}
@@ -97,7 +100,6 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                     <div className="absolute inset-0 bg-gradient-to-t from-[#020D18] via-[#020D18]/60 to-transparent" />
                     <div className="absolute inset-0 bg-gradient-to-r from-[#020D18]/80 via-transparent to-[#020D18]/80" />
 
-                    {/* Play Button Overlay */}
                     <Link
                         href={`/movies/${slug}/play`}
                         className="absolute inset-0 flex items-center justify-center group"
@@ -107,7 +109,6 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                         </div>
                     </Link>
 
-                    {/* Title Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                         <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">
                             {movie.titleSomali || movie.title}
@@ -157,7 +158,6 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
 
                     {/* Right - Info */}
                     <div className="flex-1">
-                        {/* Genres & Year & Runtime */}
                         <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
                             <span className="text-[#E50914] font-bold">{movie.releaseDate?.split("-")[0]}</span>
                             {movie.genres?.map((g: string) => (
@@ -171,12 +171,10 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                             )}
                         </div>
 
-                        {/* Description */}
                         <p className="text-gray-300 leading-relaxed mb-6">
                             {movie.overviewSomali || movie.overview}
                         </p>
 
-                        {/* Tags */}
                         {((movie.tags && movie.tags.length > 0) || (movie.seoKeywords && movie.seoKeywords.length > 0)) && (
                             <div className="flex flex-wrap gap-1.5 mb-6">
                                 {movie.tags?.map((tag: string, i: number) => (
@@ -187,7 +185,6 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                             </div>
                         )}
 
-                        {/* Stars Section */}
                         {movie.cast && movie.cast.length > 0 && (
                             <div className="mb-6">
                                 <h3 className="text-white font-bold mb-3">Stars:</h3>
@@ -215,7 +212,6 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                             </div>
                         )}
 
-                        {/* Director */}
                         {movie.director && (
                             <p className="text-sm text-gray-400 mb-6">
                                 <span className="text-white font-bold">Director:</span> {movie.director}
@@ -224,9 +220,8 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                     </div>
                 </div>
 
-                {/* Action Buttons - Lookmovie Style */}
+                {/* Action Buttons */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-                    {/* Trailer */}
                     {movie.trailerUrl ? (
                         <button
                             onClick={() => setIsTrailerOpen(true)}
@@ -242,7 +237,6 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                         </div>
                     )}
 
-                    {/* Download */}
                     {movie.downloadUrl ? (
                         <a
                             href={movie.downloadUrl}
@@ -260,14 +254,12 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                         </div>
                     )}
 
-                    {/* Watch Later */}
                     <MyListButton
                         contentType="movie"
                         contentId={slug}
                         className="h-12 bg-[#333333] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
                     />
 
-                    {/* Play Button - Green */}
                     <Link
                         href={`/movies/${slug}/play`}
                         className="h-12 bg-[#9AE600] hover:bg-[#8AD500] text-black rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
@@ -278,11 +270,11 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                 </div>
 
                 {/* You May Also Like */}
-                {similarContent && similarContent.length > 0 && (
+                {relatedMovies.length > 0 && (
                     <div className="mt-12">
                         <h2 className="text-white text-xl font-bold mb-4 uppercase tracking-wider">You May Also Like:</h2>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {similarContent.slice(0, 5).map((item: any) => (
+                            {relatedMovies.slice(0, 5).map((item: any) => (
                                 <Link
                                     key={item._id || item.slug}
                                     href={`/movies/${item.slug}`}
@@ -302,18 +294,15 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                                 <Play size={32} />
                                             </div>
                                         )}
-                                        {/* Rating Badge */}
                                         {item.rating && (
                                             <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                                                 <Star size={10} className="text-[#E50914]" fill="currentColor" />
                                                 {item.rating.toFixed(1)}
                                             </div>
                                         )}
-                                        {/* HD Badge */}
                                         <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                                             HD
                                         </div>
-                                        {/* Hover Play */}
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                             <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg transform scale-90 group-hover:scale-110 transition-transform">
                                                 Daawo NOW
@@ -331,7 +320,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                 )}
             </div>
 
-            {/* JSON-LD Schema for Rich Snippets */}
+            {/* JSON-LD Schema */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
@@ -339,7 +328,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                 }}
             />
 
-            {/* Shareable Widget - Floating */}
+            {/* Shareable Widget */}
             <ShareableWidget
                 title={movie.titleSomali || movie.title}
                 type="movie"

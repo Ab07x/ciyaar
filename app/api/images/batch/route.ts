@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import connectDB from "@/lib/mongodb";
+import { Media } from "@/lib/models";
+import fs from "fs";
+import path from "path";
 
 interface ImageToDownload {
   movieId: string;
+  slug?: string;
   posterUrl?: string;
   backdropUrl?: string;
 }
@@ -13,6 +14,7 @@ interface ImageToDownload {
 // Batch download TMDB images for multiple movies
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
     const { movies }: { movies: ImageToDownload[] } = await request.json();
 
     if (!movies || !Array.isArray(movies)) {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
       // Download poster
       if (movie.posterUrl && movie.posterUrl.includes("image.tmdb.org")) {
         try {
-          const url = await downloadAndStore(movie.posterUrl, "poster");
+          const url = await downloadAndStore(movie.posterUrl, "poster", movie.slug);
           movieResult.posterUrl = url;
         } catch (e) {
           movieResult.errors.push(`Poster: ${e}`);
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
       // Download backdrop
       if (movie.backdropUrl && movie.backdropUrl.includes("image.tmdb.org")) {
         try {
-          const url = await downloadAndStore(movie.backdropUrl, "backdrop");
+          const url = await downloadAndStore(movie.backdropUrl, "backdrop", movie.slug);
           movieResult.backdropUrl = url;
         } catch (e) {
           movieResult.errors.push(`Backdrop: ${e}`);
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function downloadAndStore(tmdbUrl: string, type: string): Promise<string> {
+async function downloadAndStore(tmdbUrl: string, type: string, slug?: string): Promise<string> {
   // Upgrade to original quality
   let highQualityUrl = tmdbUrl;
   if (tmdbUrl.includes("/w500/") || tmdbUrl.includes("/w780/")) {
@@ -83,30 +85,28 @@ async function downloadAndStore(tmdbUrl: string, type: string): Promise<string> 
 
   const imageBuffer = await imageResponse.arrayBuffer();
   const contentType = imageResponse.headers.get("content-type") || "image/jpeg";
+  const buffer = Buffer.from(imageBuffer);
 
-  // Upload to Convex
-  const uploadUrl = await convex.mutation(api.media.generateUploadUrl, {});
-  const uploadResponse = await fetch(uploadUrl, {
-    method: "POST",
-    headers: { "Content-Type": contentType },
-    body: imageBuffer,
-  });
+  // Save locally
+  const dir = path.join(process.cwd(), "public", type === "backdrop" ? "backdrops" : "posters");
+  fs.mkdirSync(dir, { recursive: true });
 
-  if (!uploadResponse.ok) {
-    throw new Error("Failed to upload");
-  }
+  const filename = slug
+    ? `${slug}-af-somali-${type}.jpg`
+    : `${type}-${Date.now()}.jpg`;
+  const filePath = path.join(dir, filename);
+  fs.writeFileSync(filePath, buffer);
 
-  const { storageId } = await uploadResponse.json();
+  const publicUrl = `/${type === "backdrop" ? "backdrops" : "posters"}/${filename}`;
 
   // Save metadata
-  await convex.mutation(api.media.saveMedia, {
-    storageId,
-    name: `${type}-${Date.now()}`,
+  await Media.create({
+    name: filename,
     type: contentType,
-    size: imageBuffer.byteLength,
+    size: buffer.byteLength,
+    url: publicUrl,
+    createdAt: Date.now(),
   });
 
-  // Get public URL
-  const publicUrl = await convex.query(api.media.getMediaUrl, { storageId });
-  return publicUrl || "";
+  return publicUrl;
 }

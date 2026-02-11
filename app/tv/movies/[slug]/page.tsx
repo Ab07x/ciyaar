@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Play, Star, Clock, Calendar, ArrowLeft } from "lucide-react";
@@ -13,7 +12,8 @@ export default function TVMovieDetailPage() {
     const params = useParams();
     const router = useRouter();
     const slug = params.slug as string;
-    const movie = useQuery(api.movies.getMovieBySlug, { slug });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: movie } = useSWR(`/api/movies/${slug}`, fetcher);
     const { isPremium } = useUser();
 
     if (!movie) {
@@ -71,7 +71,7 @@ export default function TVMovieDetailPage() {
                 </h1>
 
                 <div className="flex flex-wrap gap-3 mb-8">
-                    {movie.genres?.map((genre) => (
+                    {movie.genres?.map((genre: string) => (
                         <span key={genre} className="px-4 py-1.5 border border-white/20 rounded-full text-white/80 text-lg">
                             {genre}
                         </span>

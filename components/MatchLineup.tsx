@@ -1,14 +1,14 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { Users, Loader2, Shirt } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface MatchLineupProps {
-    matchId: Id<"matches">;
+    matchId: string;
     teamA: string;
     teamB: string;
     teamALogo?: string | null;
@@ -41,7 +41,7 @@ const defaultFormation433: Player[] = [
 
 export function MatchLineup({ matchId, teamA, teamB, teamALogo, teamBLogo }: MatchLineupProps) {
     const [activeTeam, setActiveTeam] = useState<"home" | "away">("home");
-    const match = useQuery(api.matches.getMatchById, { id: matchId });
+    const { data: match } = useSWR(`/api/matches?id=${matchId}`, fetcher);
 
     if (match === undefined) {
         return (

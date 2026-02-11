@@ -1,7 +1,6 @@
 "use client";
 
-import { useAction, useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -17,26 +16,19 @@ import {
     Calendar,
 } from "lucide-react";
 import Link from "next/link";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface Props {
     params?: Promise<{ id: string }>;
 }
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function MovieFormPage({ params }: Props) {
     const router = useRouter();
     const idParams = params ? use(params) : null;
     const id = idParams?.id;
 
-    const existingMovie = useQuery(
-        api.movies.getMovieById,
-        id ? { id: id as Id<"movies"> } : "skip"
-    );
-    const createMovie = useMutation(api.movies.createMovie);
-    const updateMovie = useMutation(api.movies.updateMovie);
-    const fetchFromTMDB = useAction(api.tmdb.fetchMovieFromTMDB);
-    const searchTMDB = useAction(api.tmdb.searchTMDB);
-
+    const { data: existingMovie } = useSWR(id ? `/api/movies/by-id/${id}` : null, fetcher);
 
     const [tmdbInput, setTmdbInput] = useState("");
     const [searching, setSearching] = useState(false);
@@ -94,7 +86,7 @@ export default function MovieFormPage({ params }: Props) {
                 genres: existingMovie.genres,
                 cast: existingMovie.cast,
                 director: existingMovie.director || "",
-                embeds: existingMovie.embeds.length > 0 ? existingMovie.embeds : [{ label: "Server 1", url: "", quality: "720p", type: "iframe" }],
+                embeds: existingMovie.embeds?.length > 0 ? existingMovie.embeds : [{ label: "Server 1", url: "", quality: "720p", type: "iframe" }],
                 isDubbed: existingMovie.isDubbed,
                 isPremium: existingMovie.isPremium,
                 isPublished: existingMovie.isPublished,
@@ -123,8 +115,9 @@ export default function MovieFormPage({ params }: Props) {
         if (!tmdbInput.trim()) return;
         setSearching(true);
         try {
-            const results = await searchTMDB({ query: tmdbInput, type: "movie" });
-            setSearchResults(results);
+            const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(tmdbInput)}&type=movie`);
+            const results = await res.json();
+            setSearchResults(Array.isArray(results) ? results : results?.results || []);
             setShowSearch(true);
         } catch (err) {
             console.error(err);
@@ -137,7 +130,8 @@ export default function MovieFormPage({ params }: Props) {
         setFetching(true);
         setShowSearch(false);
         try {
-            const data = await fetchFromTMDB({ tmdbId });
+            const res = await fetch(`/api/tmdb/fetch?tmdbId=${tmdbId}`);
+            const data = await res.json();
             setFormData({
                 ...formData,
                 slug: data.slug,
@@ -166,7 +160,7 @@ export default function MovieFormPage({ params }: Props) {
 
     // Submit
     const handleSubmit = async () => {
-        if (saving) return; // Prevent double click
+        if (saving) return;
 
         if (!formData.tmdbId || !formData.title) {
             alert("First fetch movie data from TMDB");
@@ -180,29 +174,31 @@ export default function MovieFormPage({ params }: Props) {
         setSaving(true);
         try {
             if (id) {
-                await updateMovie({
-                    id: id as Id<"movies">,
-                    embeds: formData.embeds.map(e => ({
-                        label: e.label,
-                        url: e.url,
-                        quality: e.quality || undefined,
-                        type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
-                    })),
-                    isDubbed: formData.isDubbed,
-                    isPremium: formData.isPremium,
-                    isPublished: formData.isPublished,
-                    isFeatured: formData.isFeatured,
-                    titleSomali: formData.titleSomali || undefined,
-                    overviewSomali: formData.overviewSomali || undefined,
-                    isTop10: formData.isTop10,
-                    top10Order: formData.top10Order || undefined,
-                    trailerUrl: formData.trailerUrl || undefined,
-                    downloadUrl: formData.downloadUrl || undefined,
-                    tags: formData.tags,
-                    category: formData.category || undefined,
+                await fetch(`/api/movies/by-id/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        embeds: formData.embeds.map(e => ({
+                            label: e.label,
+                            url: e.url,
+                            quality: e.quality || undefined,
+                            type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
+                        })),
+                        isDubbed: formData.isDubbed,
+                        isPremium: formData.isPremium,
+                        isPublished: formData.isPublished,
+                        isFeatured: formData.isFeatured,
+                        titleSomali: formData.titleSomali || undefined,
+                        overviewSomali: formData.overviewSomali || undefined,
+                        isTop10: formData.isTop10,
+                        top10Order: formData.top10Order || undefined,
+                        trailerUrl: formData.trailerUrl || undefined,
+                        downloadUrl: formData.downloadUrl || undefined,
+                        tags: formData.tags,
+                        category: formData.category || undefined,
+                    })
                 });
             } else {
-                // Prepare embeds with proper typing
                 const typedEmbeds = formData.embeds.map(e => ({
                     label: e.label,
                     url: e.url,
@@ -210,34 +206,38 @@ export default function MovieFormPage({ params }: Props) {
                     type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
                 }));
 
-                await createMovie({
-                    slug: formData.slug,
-                    tmdbId: formData.tmdbId,
-                    imdbId: formData.imdbId || undefined,
-                    title: formData.title,
-                    titleSomali: formData.titleSomali || undefined,
-                    overview: formData.overview,
-                    overviewSomali: formData.overviewSomali || undefined,
-                    posterUrl: formData.posterUrl,
-                    backdropUrl: formData.backdropUrl || undefined,
-                    releaseDate: formData.releaseDate,
-                    runtime: formData.runtime || undefined,
-                    rating: formData.rating || undefined,
-                    voteCount: formData.voteCount || undefined,
-                    genres: formData.genres,
-                    cast: formData.cast,
-                    director: formData.director || undefined,
-                    embeds: typedEmbeds,
-                    isDubbed: formData.isDubbed,
-                    isPremium: formData.isPremium,
-                    isPublished: formData.isPublished,
-                    isFeatured: formData.isFeatured,
-                    isTop10: formData.isTop10 || undefined,
-                    top10Order: formData.top10Order || undefined,
-                    trailerUrl: formData.trailerUrl || undefined,
-                    downloadUrl: formData.downloadUrl || undefined,
-                    tags: formData.tags,
-                    category: formData.category || undefined,
+                await fetch("/api/movies", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        slug: formData.slug,
+                        tmdbId: formData.tmdbId,
+                        imdbId: formData.imdbId || undefined,
+                        title: formData.title,
+                        titleSomali: formData.titleSomali || undefined,
+                        overview: formData.overview,
+                        overviewSomali: formData.overviewSomali || undefined,
+                        posterUrl: formData.posterUrl,
+                        backdropUrl: formData.backdropUrl || undefined,
+                        releaseDate: formData.releaseDate,
+                        runtime: formData.runtime || undefined,
+                        rating: formData.rating || undefined,
+                        voteCount: formData.voteCount || undefined,
+                        genres: formData.genres,
+                        cast: formData.cast,
+                        director: formData.director || undefined,
+                        embeds: typedEmbeds,
+                        isDubbed: formData.isDubbed,
+                        isPremium: formData.isPremium,
+                        isPublished: formData.isPublished,
+                        isFeatured: formData.isFeatured,
+                        isTop10: formData.isTop10 || undefined,
+                        top10Order: formData.top10Order || undefined,
+                        trailerUrl: formData.trailerUrl || undefined,
+                        downloadUrl: formData.downloadUrl || undefined,
+                        tags: formData.tags,
+                        category: formData.category || undefined,
+                    })
                 });
             }
             router.push("/kism/movies");

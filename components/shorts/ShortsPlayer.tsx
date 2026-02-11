@@ -3,8 +3,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import {
     Heart,
     MessageCircle,

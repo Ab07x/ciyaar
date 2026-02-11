@@ -8,13 +8,12 @@ import { useUser } from "@/providers/UserProvider";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Crown, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface Embed { label: string; url: string; type?: "m3u8" | "iframe" | "video" | "auto"; isProtected?: boolean; }
 
 interface PlayerStageProps {
     match: {
-        _id: Id<"matches">;
+        _id: string;
         status: "live" | "upcoming" | "finished";
         kickoffAt: number;
         embeds: Embed[];

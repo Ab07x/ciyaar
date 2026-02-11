@@ -1,31 +1,30 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { Search, Loader2, Trophy, Calendar, Film, Tv } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getDeviceId } from "@/lib/device";
-import { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function SearchBox() {
     const [query, setQuery] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [lastTrackedQuery, setLastTrackedQuery] = useState("");
-    const [currentSearchId, setCurrentSearchId] = useState<Id<"search_analytics"> | null>(null);
+    const [currentSearchId, setCurrentSearchId] = useState<string | null>(null);
     const searchRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
-    // Use unified search query
-    // @ts-ignore - api.search might not be generated yet in types
-    const results = useQuery(api.search.searchAll, { query: query.length >= 2 ? query : "" });
-
-    // Analytics mutations
-    const trackSearch = useMutation(api.searchAnalytics.trackSearch);
-    const trackSearchClick = useMutation(api.searchAnalytics.trackSearchClick);
+    // Use unified search via SWR
+    const { data: results } = useSWR(
+        query.length >= 2 ? `/api/search?q=${encodeURIComponent(query)}` : null,
+        fetcher,
+        { dedupingInterval: 300 }
+    );
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -49,14 +48,20 @@ export function SearchBox() {
                 (results?.series?.length || 0);
 
             try {
-                const searchId = await trackSearch({
-                    query: query.trim(),
-                    resultsCount,
-                    deviceId: getDeviceId(),
-                    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+                const res = await fetch("/api/data", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        type: "search-track",
+                        query: query.trim(),
+                        resultsCount,
+                        deviceId: getDeviceId(),
+                        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+                    }),
                 });
-                if (searchId) {
-                    setCurrentSearchId(searchId);
+                const data = await res.json();
+                if (data?.searchId) {
+                    setCurrentSearchId(data.searchId);
                 }
                 setLastTrackedQuery(query);
             } catch (e) {
@@ -65,16 +70,21 @@ export function SearchBox() {
         }, 1000); // Track 1 second after user stops typing
 
         return () => clearTimeout(timer);
-    }, [query, results, lastTrackedQuery, trackSearch]);
+    }, [query, results, lastTrackedQuery]);
 
     const handleSelect = useCallback(async (path: string, itemType: "match" | "movie" | "series", slug: string) => {
         // Track the click if we have a search ID
         if (currentSearchId) {
             try {
-                await trackSearchClick({
-                    searchId: currentSearchId,
-                    clickedItem: slug,
-                    clickedItemType: itemType,
+                await fetch("/api/data", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        type: "search-click",
+                        searchId: currentSearchId,
+                        clickedItem: slug,
+                        clickedItemType: itemType,
+                    }),
                 });
             } catch (e) {
                 console.error("Failed to track search click:", e);
@@ -85,7 +95,7 @@ export function SearchBox() {
         setQuery("");
         setCurrentSearchId(null);
         router.push(path);
-    }, [currentSearchId, trackSearchClick, router]);
+    }, [currentSearchId, router]);
 
     const hasResults = results && (results.matches.length > 0 || results.movies.length > 0 || results.series.length > 0);
 

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import {
     Plus,
     Trash2,
@@ -17,21 +16,19 @@ import {
     TrendingUp,
     Settings,
 } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
 import { AdSettingsModal } from "./AdSettingsModal";
 
-export default function AdminPPVPage() {
-    const ppvContent = useQuery(api.ppv.listPPVContent, {});
-    const ppvStats = useQuery(api.ppv.getPPVStats);
-    const movies = useQuery(api.movies.listMovies, {});
-    const matches = useQuery(api.matches.listMatches, {});
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-    const upsertPPV = useMutation(api.ppv.upsertPPVContent);
-    const deletePPV = useMutation(api.ppv.deletePPVContent);
+export default function AdminPPVPage() {
+    const { data: ppvContent, mutate } = useSWR("/api/ppv", fetcher);
+    const { data: ppvStats } = useSWR("/api/ppv?stats=true", fetcher);
+    const { data: movies } = useSWR("/api/movies", fetcher);
+    const { data: matches } = useSWR("/api/matches", fetcher);
 
     const [showForm, setShowForm] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
-    const [editingId, setEditingId] = useState<Id<"ppv_content"> | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [filter, setFilter] = useState<"all" | "match" | "movie">("all");
     const [search, setSearch] = useState("");
 
@@ -115,7 +112,7 @@ export default function AdminPPVPage() {
     };
 
     const handleSubmit = async () => {
-        await upsertPPV({
+        const payload = {
             id: editingId || undefined,
             contentType: formData.contentType,
             contentId: formData.contentId,
@@ -136,17 +133,25 @@ export default function AdminPPVPage() {
             adAdsenseSlot: formData.adAdsenseSlot,
             adDuration: formData.adDuration,
             adSkipAfter: formData.adSkipAfter,
+        };
+
+        await fetch("/api/ppv", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
         });
         resetForm();
+        mutate();
     };
 
-    const handleDelete = async (id: Id<"ppv_content">) => {
+    const handleDelete = async (id: string) => {
         if (confirm("Delete this PPV config?")) {
-            await deletePPV({ id });
+            await fetch(`/api/ppv?id=${id}`, { method: "DELETE" });
+            mutate();
         }
     };
 
-    const filtered = ppvContent?.filter((p) => {
+    const filtered = ppvContent?.filter((p: any) => {
         if (filter !== "all" && p.contentType !== filter) return false;
         if (search && !p.title.toLowerCase().includes(search.toLowerCase())) return false;
         return true;
@@ -154,8 +159,8 @@ export default function AdminPPVPage() {
 
     // Get content options based on type
     const contentOptions = formData.contentType === "movie"
-        ? movies?.map((m) => ({ id: m.slug, title: m.title })) || []
-        : matches?.map((m) => ({ id: m._id, title: `${m.teamA} vs ${m.teamB}` })) || [];
+        ? movies?.map((m: any) => ({ id: m.slug, title: m.title })) || []
+        : matches?.map((m: any) => ({ id: m._id, title: `${m.teamA} vs ${m.teamB}` })) || [];
 
     return (
         <div className="space-y-8">
@@ -242,7 +247,7 @@ export default function AdminPPVPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filtered?.map((item) => (
+                        {filtered?.map((item: any) => (
                             <tr key={item._id} className="border-t border-border-subtle hover:bg-stadium-hover/50">
                                 <td className="px-4 py-3">
                                     <div className="font-medium">{item.title}</div>
@@ -350,7 +355,7 @@ export default function AdminPPVPage() {
                                 <select
                                     value={formData.contentId}
                                     onChange={(e) => {
-                                        const selected = contentOptions.find((o) => o.id === e.target.value);
+                                        const selected = contentOptions.find((o: any) => o.id === e.target.value);
                                         setFormData({
                                             ...formData,
                                             contentId: e.target.value,
@@ -360,7 +365,7 @@ export default function AdminPPVPage() {
                                     className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-4 py-2"
                                 >
                                     <option value="">Select...</option>
-                                    {contentOptions.map((opt) => (
+                                    {contentOptions.map((opt: any) => (
                                         <option key={opt.id} value={opt.id}>
                                             {opt.title}
                                         </option>

@@ -1,12 +1,12 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ChevronLeft, Plus, X, Tv } from "lucide-react";
+import { Save, ChevronLeft, Plus, X } from "lucide-react";
 import Link from "next/link";
-import type { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 interface Props {
     params?: Promise<{ id: string }>;
@@ -17,12 +17,10 @@ export default function ChannelFormPage({ params }: Props) {
     const idParams = params ? use(params) : null;
     const id = idParams?.id;
 
-    const channel = useQuery(
-        api.channels.getChannelBySlug,
-        id ? { slug: id } : "skip"
+    const { data: channel } = useSWR(
+        id ? `/api/channels?slug=${id}` : null,
+        fetcher
     );
-    const createChannel = useMutation(api.channels.createChannel);
-    const updateChannel = useMutation(api.channels.updateChannel);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -47,8 +45,8 @@ export default function ChannelFormPage({ params }: Props) {
                 isPremium: channel.isPremium,
                 isLive: channel.isLive,
                 priority: channel.priority,
-                embeds: channel.embeds.length > 0
-                    ? channel.embeds.map(e => ({ ...e, type: (e as any).type || "iframe" }))
+                embeds: channel.embeds?.length > 0
+                    ? channel.embeds.map((e: any) => ({ ...e, type: (e as any).type || "iframe" }))
                     : [{ label: "Server 1", url: "", type: "iframe" as const }],
             });
         }
@@ -62,12 +60,27 @@ export default function ChannelFormPage({ params }: Props) {
             thumbnailUrl: formData.thumbnailUrl || undefined,
         };
 
-        if (channel && "_id" in channel) {
-            await updateChannel({ id: channel._id as Id<"channels">, ...data });
-        } else {
-            await createChannel(data);
+        try {
+            if (channel && "_id" in channel) {
+                const res = await fetch("/api/channels", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: channel._id, ...data }),
+                });
+                if (!res.ok) throw new Error("Failed to update");
+            } else {
+                const res = await fetch("/api/channels", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+                if (!res.ok) throw new Error("Failed to create");
+            }
+            router.push("/kism/channels");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save channel");
         }
-        router.push("/kism/channels");
     };
 
     const generateSlug = () => {

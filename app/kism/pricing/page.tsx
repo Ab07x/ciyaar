@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { Save, DollarSign, Smartphone } from "lucide-react";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function AdminPricingPage() {
-    const settings = useQuery(api.settings.getSettings);
-    const updateSettings = useMutation(api.settings.updateSettings);
+    const { data: settings, mutate } = useSWR("/api/settings", fetcher);
     const [saved, setSaved] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -29,7 +29,12 @@ export default function AdminPricingPage() {
     }, [settings]);
 
     const handleSave = async () => {
-        await updateSettings(formData);
+        await fetch("/api/settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+        });
+        mutate();
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     };

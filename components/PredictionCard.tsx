@@ -1,16 +1,16 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import { Trophy, CheckCircle2, XCircle, Clock, LogIn } from "lucide-react";
-import { Id } from "@/convex/_generated/dataModel";
 import { useUser } from "@/providers/UserProvider";
 import Link from "next/link";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 interface PredictionCardProps {
-    matchId: Id<"matches">;
+    matchId: string;
     teamA: string;
     teamB: string;
     kickoffAt: number;
@@ -20,18 +20,26 @@ interface PredictionCardProps {
 export function PredictionCard({ matchId, teamA, teamB, kickoffAt, status }: PredictionCardProps) {
     const { userId } = useUser();
 
-    const userPrediction = useQuery(api.predictions.getUserPrediction, { matchId, userId: userId || undefined });
-    const stats = useQuery(api.predictions.getMatchPredictionStats, { matchId });
-    const submitPrediction = useMutation(api.predictions.submitPrediction);
+    const { data: userPrediction } = useSWR(
+        `/api/predictions?matchId=${matchId}&userId=${userId || ""}`,
+        fetcher
+    );
+    const { data: stats } = useSWR(`/api/predictions/stats?matchId=${matchId}`, fetcher);
 
     const now = Date.now();
     const isLocked = status !== "upcoming" && kickoffAt <= now;
 
     const handleVote = async (prediction: "home" | "draw" | "away") => {
-        if (!userId) return; // Should show login prompt
+        if (!userId) return;
         if (isLocked) return;
         try {
-            await submitPrediction({ matchId, prediction, userId });
+            await fetch("/api/predictions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ matchId, prediction, userId }),
+            });
+            mutate(`/api/predictions?matchId=${matchId}&userId=${userId || ""}`);
+            mutate(`/api/predictions/stats?matchId=${matchId}`);
         } catch (error) {
             console.error("Failed to submit prediction", error);
         }

@@ -1,19 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { Copy, Gift, MessageCircle, Share2, Users, Check, AlertCircle, Loader2, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export function ReferralCard() {
     const { userId } = useUser();
-    const user = useQuery(api.users.getUser, userId ? { userId } : "skip");
-    const stats = useQuery(api.referrals.getStats, userId ? { userId } : "skip");
-    const leaderboard = useQuery(api.referrals.getLeaderboard, { limit: 5 });
-    const createCode = useMutation(api.referrals.createReferralCode);
-    const redeemReferral = useMutation(api.referrals.redeemReferral);
+    const { data: user } = useSWR(userId ? `/api/users?userId=${userId}` : null, fetcher);
+    const { data: stats } = useSWR(userId ? `/api/referrals/stats?userId=${userId}` : null, fetcher);
+    const { data: leaderboard } = useSWR("/api/referrals/leaderboard?limit=5", fetcher);
 
     const [isCreating, setIsCreating] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -28,7 +27,12 @@ export function ReferralCard() {
         if (!user) return;
         setIsCreating(true);
         try {
-            await createCode({ userId: user._id });
+            await fetch("/api/referrals/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user._id }),
+            });
+            mutate(`/api/referrals/stats?userId=${userId}`);
         } catch (error) {
             console.error(error);
         } finally {
@@ -61,18 +65,22 @@ Ku biir halkan: https://fanbroj.net/login`;
         setRedeemStatus(null);
 
         try {
-            // Get device ID from local storage or identifier
             let deviceId = localStorage.getItem("deviceId");
             if (!deviceId) {
                 deviceId = crypto.randomUUID();
                 localStorage.setItem("deviceId", deviceId);
             }
 
-            const result = await redeemReferral({
-                userId: user._id,
-                code: redeemCode,
-                deviceId
+            const res = await fetch("/api/referrals/redeem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: user._id,
+                    code: redeemCode,
+                    deviceId
+                }),
             });
+            const result = await res.json();
 
             setRedeemStatus(result);
         } catch (error) {

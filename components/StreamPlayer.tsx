@@ -8,8 +8,7 @@ import {
     Settings, RefreshCw, AlertCircle, Loader2, SkipForward, SkipBack,
     ChevronUp, PictureInPicture2, X, Lock, Zap
 } from "lucide-react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { BufferIndicator } from "./player/BufferIndicator";
 import { MobileGestures } from "./player/MobileGestures";
@@ -185,12 +184,12 @@ export function StreamPlayer({
         };
     }, [isMobile, isPlaying, streamType]);
 
-    // Convex Mutations
-    const saveProgress = useMutation(api.watch.saveProgress);
-    const resumePoint = useQuery(api.watch.getResumePoint,
-        (trackParams && userId) ? { userId, contentType: trackParams.contentType, contentId: trackParams.contentId } : "skip"
+    // API-based data fetching
+    const { data: resumePoint } = useSWR(
+        (trackParams && userId) ? `/api/watch/resume?userId=${userId}&contentType=${trackParams.contentType}&contentId=${trackParams.contentId}` : null,
+        (url: string) => fetch(url).then(r => r.json()).then(d => d.position || 0)
     );
-    const settings = useQuery(api.settings.getSettings);
+    const { data: settings } = useSWR("/api/settings", (url: string) => fetch(url).then(r => r.json()));
     const { isPremium } = useUser();
 
     const [showPaywall, setShowPaywall] = useState(false);
@@ -270,19 +269,23 @@ export function StreamPlayer({
             const dur = video.duration || trackParams.duration || 0;
 
             if (current > 5 && dur > 0) {
-                saveProgress({
-                    userId,
-                    contentType: trackParams.contentType,
-                    contentId: trackParams.contentId,
-                    seriesId: trackParams.seriesId,
-                    progressSeconds: Math.floor(current),
-                    durationSeconds: Math.floor(dur),
+                fetch("/api/watch/progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId,
+                        contentType: trackParams.contentType,
+                        contentId: trackParams.contentId,
+                        seriesId: trackParams.seriesId,
+                        progressSeconds: Math.floor(current),
+                        durationSeconds: Math.floor(dur),
+                    }),
                 }).catch(err => console.error("Failed to save progress", err));
             }
         }, 15000);
 
         return () => clearInterval(interval);
-    }, [isPlaying, trackParams, userId, saveProgress]);
+    }, [isPlaying, trackParams, userId]);
 
     // Keyboard shortcuts
     useEffect(() => {

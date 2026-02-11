@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import Link from "next/link";
 import { Newspaper } from "lucide-react";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export function RelatedNews({ limit = 3 }: { limit?: number }) {
-    const posts = useQuery(api.posts.listPosts, { isPublished: true, limit });
+    const { data: posts } = useSWR(`/api/posts?isPublished=true&limit=${limit}`, fetcher);
 
     if (!posts || posts.length === 0) return null;
 

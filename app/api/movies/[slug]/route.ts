@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import connectDB from "@/lib/mongodb";
+import { Movie } from "@/lib/models";
 import { getCached, CACHE_TTL } from "@/lib/cache";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 // Cached single movie endpoint
 export async function GET(
@@ -15,7 +13,10 @@ export async function GET(
     try {
         const data = await getCached(
             `movie:${slug}`,
-            () => convex.query(api.movies.getMovieBySlug, { slug }),
+            async () => {
+                await connectDB();
+                return Movie.findOne({ slug }).lean();
+            },
             CACHE_TTL.MOVIE_DETAIL
         );
 

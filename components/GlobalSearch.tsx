@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { Search, X, Trophy, Film, Tv, Loader2, Command, ArrowRight, Clock, Star, Users } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getDeviceId } from "@/lib/device";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface GlobalSearchProps {
     trigger?: React.ReactNode;
@@ -21,15 +22,12 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    // Search query
-    const results = useQuery(
-        api.search.searchAll,
-        { query: query.length >= 2 ? query : "" }
+    // Search query via SWR
+    const { data: results, isLoading: swrLoading } = useSWR(
+        query.length >= 2 ? `/api/search?q=${encodeURIComponent(query)}` : null,
+        fetcher,
+        { dedupingInterval: 300 }
     );
-
-    // Analytics
-    const trackSearch = useMutation(api.searchAnalytics.trackSearch);
-    const trackSearchClick = useMutation(api.searchAnalytics.trackSearchClick);
 
     // Keyboard shortcut: Cmd/Ctrl + K
     useEffect(() => {
@@ -65,11 +63,16 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                 (results?.series?.length || 0);
 
             try {
-                await trackSearch({
-                    query: query.trim(),
-                    resultsCount,
-                    deviceId: getDeviceId(),
-                    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+                await fetch("/api/data", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        type: "search-track",
+                        query: query.trim(),
+                        resultsCount,
+                        deviceId: getDeviceId(),
+                        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+                    }),
                 });
             } catch (e) {
                 // Silently fail
@@ -77,7 +80,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [query, results, trackSearch]);
+    }, [query, results]);
 
     const handleSelect = useCallback((path: string) => {
         setIsOpen(false);
@@ -86,12 +89,12 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
     }, [router]);
 
     const hasResults = results && (
-        results.matches.length > 0 ||
-        results.movies.length > 0 ||
-        results.series.length > 0
+        results.matches?.length > 0 ||
+        results.movies?.length > 0 ||
+        results.series?.length > 0
     );
 
-    const isLoading = query.length >= 2 && results === undefined;
+    const isLoading = query.length >= 2 && swrLoading;
 
     // Recent searches (from localStorage)
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -245,7 +248,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                 {query.length >= 2 && !isLoading && hasResults && (
                                     <div className="p-2">
                                         {/* Matches */}
-                                        {results.matches.length > 0 && (
+                                        {results.matches?.length > 0 && (
                                             <div className="mb-4">
                                                 <h3 className="px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                                     <Trophy className="w-3 h-3 text-[#E50914]" />
@@ -278,7 +281,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                         )}
 
                                         {/* Movies */}
-                                        {results.movies.length > 0 && (
+                                        {results.movies?.length > 0 && (
                                             <div className="mb-4">
                                                 <h3 className="px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                                     <Film className="w-3 h-3 text-blue-400" />
@@ -324,7 +327,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                         )}
 
                                         {/* Series */}
-                                        {results.series.length > 0 && (
+                                        {results.series?.length > 0 && (
                                             <div>
                                                 <h3 className="px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                                     <Tv className="w-3 h-3 text-green-400" />
@@ -365,7 +368,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
                                     <div className="p-8 text-center">
                                         <Search className="w-12 h-12 mx-auto mb-3 text-gray-600" />
                                         <p className="text-gray-400">
-                                            Lama helin natiijo "{query}"
+                                            Lama helin natiijo &quot;{query}&quot;
                                         </p>
                                         <p className="text-sm text-gray-500 mt-1">
                                             Isku day erey kale

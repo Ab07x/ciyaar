@@ -1,6 +1,6 @@
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
 import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import { Settings } from "@/lib/models";
 
 // Admin credentials - set these in environment variables
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
@@ -26,11 +26,12 @@ export async function POST(request: NextRequest) {
         let dbAdminUsername: string | undefined;
         let dbAdminPassword: string | undefined;
         try {
-            const settings = await fetchQuery(api.settings.getSettings);
-            dbAdminUsername = (settings as any)?.adminUsername;
-            dbAdminPassword = (settings as any)?.adminPassword;
+            await connectDB();
+            const settings = await Settings.findOne().lean() as any;
+            dbAdminUsername = settings?.adminUsername;
+            dbAdminPassword = settings?.adminPassword;
         } catch (err) {
-            console.error("Failed to fetch settings from Convex:", err);
+            console.error("Failed to fetch settings from MongoDB:", err);
         }
 
         let isAuthenticated = false;
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
         // Fallback to environment variables
         if (!isAuthenticated && ADMIN_PASSWORD) {
             const validUsernames = [ADMIN_USERNAME, "fanproj", "admin"];
-            const validPasswords = [ADMIN_PASSWORD.trim(), ADMIN_PASSWORD.trim().toLowerCase()]; // Allow case-insensitive for this specific token if user forgot caps
+            const validPasswords = [ADMIN_PASSWORD.trim(), ADMIN_PASSWORD.trim().toLowerCase()];
 
             if (validUsernames.includes(inputUsername) && validPasswords.includes(inputPassword)) {
                 isAuthenticated = true;
@@ -68,15 +69,13 @@ export async function POST(request: NextRequest) {
         const protocol = request.headers.get("x-forwarded-proto") || "http";
         const isSecure = protocol === "https";
 
-        // Set session cookie - works across subdomains
-        // For cd.fanbroj.net, we need to ensure cookie is accessible
+        // Set session cookie
         response.cookies.set("fanbroj_admin_session", "authenticated", {
-            httpOnly: false, // Must be false so client JS can check auth
+            httpOnly: false,
             secure: isSecure,
             sameSite: "lax",
             maxAge: 60 * 60 * 24 * 7, // 7 days
             path: "/",
-            // Don't set domain - let browser handle it for current domain
         });
 
         return response;

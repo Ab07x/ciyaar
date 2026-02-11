@@ -1,7 +1,5 @@
 "use client";
 
-import { useMutation, useAction } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import { X, Save, Plus, Trash2 } from "lucide-react";
 
@@ -12,7 +10,6 @@ interface Props {
 }
 
 export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
-    const updateEpisode = useMutation(api.series.updateEpisode);
 
 
     const [formData, setFormData] = useState({
@@ -31,9 +28,10 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await updateEpisode({
-                id: episode._id,
-                ...formData,
+            await fetch("/api/episodes", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: episode._id, ...formData }),
             });
             onSave();
             onClose();

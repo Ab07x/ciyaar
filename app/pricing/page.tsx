@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { Check, X, Sparkles, Shield, Zap, Crown, ShieldCheck, Moon, Star, MessageCircle, Gift, Film, Tv, Users, Play, Flame } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { PricingCards } from "@/components/PricingCards";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 const freeVsPremium = [
     { feature: "Xayeysiis (Ads)", free: "Aad u badan ❌", premium: "Maya ✅", premiumGood: true },
@@ -21,8 +22,7 @@ const freeVsPremium = [
 ];
 
 export default function PricingPage() {
-    const settings = useQuery(api.settings.getSettings);
-    const trackPageView = useMutation(api.analytics.trackPageView);
+    const { data: settings } = useSWR("/api/settings", fetcher);
     const { deviceId, redeemCode, isPremium } = useUser();
     const [code, setCode] = useState("");
     const [redemptionResult, setRedemptionResult] = useState<any>(null);
@@ -33,9 +33,13 @@ export default function PricingPage() {
     useEffect(() => {
         if (!hasTracked.current) {
             hasTracked.current = true;
-            trackPageView({ pageType: "pricing" });
+            fetch("/api/data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type: "pageview", pageType: "pricing", date: new Date().toISOString().split("T")[0] }),
+            }).catch(() => { });
         }
-    }, [trackPageView]);
+    }, []);
 
     const handleRedeem = async () => {
         if (!code.trim()) return;

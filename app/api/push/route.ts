@@ -1,128 +1,161 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
-import { sendMulticastNotification, sendNotification } from "@/lib/firebase-admin";
+import connectDB from "@/lib/mongodb";
+import { PushSubscription } from "@/lib/models";
+import { sendNotification, sendMulticastNotification } from "@/lib/firebase-admin";
 
-// CORS headers for direct server access
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-};
+// POST /api/push
+// Two modes:
+//   1. Save FCM token (when body has `token` + `deviceId`)
+//   2. Send notification (when body has `title` + `body`)
+//      - broadcast: true → send to ALL active subscribers
+//      - fcmToken: "xxx" → send to single device (test)
+export async function POST(req: NextRequest) {
+    try {
+        await connectDB();
+        const body = await req.json();
 
-// Handle CORS preflight
-export async function OPTIONS() {
-    return NextResponse.json({}, { headers: corsHeaders });
+        // ─── MODE 1: Save FCM Token (subscription) ───
+        if (body.token && body.deviceId) {
+            const { token, deviceId, userId, userAgent } = body;
+
+            // Upsert by deviceId
+            const existing = await PushSubscription.findOne({ deviceId });
+            if (existing) {
+                existing.fcmToken = token;
+                existing.userId = userId;
+                existing.userAgent = userAgent;
+                existing.isActive = true;
+                existing.lastUsedAt = Date.now();
+                await existing.save();
+                return NextResponse.json(existing);
+            }
+
+            const sub = await PushSubscription.create({
+                deviceId,
+                fcmToken: token,
+                endpoint: token,
+                keys: { p256dh: "", auth: "" },
+                userId,
+                userAgent,
+                isActive: true,
+                createdAt: Date.now(),
+                lastUsedAt: Date.now(),
+            });
+
+            return NextResponse.json(sub, { status: 201 });
+        }
+
+        // ─── MODE 2: Send Notification ───
+        if (body.title && body.body) {
+            const { title, body: messageBody, url, image, icon, broadcast, fcmToken } = body;
+            const data: Record<string, string> = {};
+            if (url) data.url = url;
+
+            // Single device test
+            if (fcmToken && !broadcast) {
+                const result = await sendNotification(
+                    fcmToken,
+                    title,
+                    messageBody,
+                    data,
+                    image,
+                    icon
+                );
+                return NextResponse.json({
+                    sent: result.success ? 1 : 0,
+                    failed: result.success ? 0 : 1,
+                    ...result,
+                });
+            }
+
+            // Broadcast to all active subscribers
+            if (broadcast) {
+                const subs = await PushSubscription.find({ isActive: true, fcmToken: { $exists: true, $ne: "" } }).lean() as any[];
+                const tokens = subs.map((s: any) => s.fcmToken).filter(Boolean);
+
+                if (tokens.length === 0) {
+                    return NextResponse.json({ sent: 0, failed: 0, message: "No active subscribers" });
+                }
+
+                // Firebase can handle up to 500 tokens per batch
+                let totalSent = 0;
+                let totalFailed = 0;
+                const failedTokens: string[] = [];
+
+                for (let i = 0; i < tokens.length; i += 500) {
+                    const batch = tokens.slice(i, i + 500);
+                    const result = await sendMulticastNotification(
+                        batch,
+                        title,
+                        messageBody,
+                        data,
+                        image,
+                        icon
+                    );
+                    totalSent += result.sent || 0;
+                    totalFailed += result.failed || 0;
+                    if (result.failedTokens) {
+                        failedTokens.push(...result.failedTokens);
+                    }
+                }
+
+                // Deactivate permanently invalid tokens
+                if (failedTokens.length > 0) {
+                    await PushSubscription.updateMany(
+                        { fcmToken: { $in: failedTokens } },
+                        { isActive: false }
+                    );
+                    console.log(`Deactivated ${failedTokens.length} invalid push tokens`);
+                }
+
+                return NextResponse.json({
+                    sent: totalSent,
+                    failed: totalFailed,
+                    total: tokens.length,
+                    deactivated: failedTokens.length,
+                });
+            }
+
+            return NextResponse.json({ error: "Must provide broadcast:true or fcmToken" }, { status: 400 });
+        }
+
+        return NextResponse.json({ error: "Invalid request: provide (token+deviceId) or (title+body)" }, { status: 400 });
+    } catch (error) {
+        console.error("POST /api/push error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
 }
 
-export async function POST(request: NextRequest) {
+// GET /api/push — list subscriptions (for admin stats)
+export async function GET() {
     try {
-        const body = await request.json();
-        const {
-            title,
-            body: message,
-            icon,
-            image,
-            url,
-            broadcast,
-            fcmToken,
-        } = body;
+        await connectDB();
+        const subs = await PushSubscription.find({ isActive: true }).lean();
+        return NextResponse.json({ subscriptions: subs, count: subs.length });
+    } catch (error) {
+        console.error("GET /api/push error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
 
-        console.log("Push Request:", {
-            title,
-            message,
-            broadcast,
-            hasFcmToken: !!fcmToken,
-        });
+// DELETE /api/push — remove FCM token
+export async function DELETE(req: NextRequest) {
+    try {
+        await connectDB();
+        const { deviceId } = await req.json();
 
-        if (!title || !message) {
-            return NextResponse.json(
-                { error: "Title and body are required" },
-                { status: 400, headers: corsHeaders }
-            );
+        if (!deviceId) {
+            return NextResponse.json({ error: "deviceId required" }, { status: 400 });
         }
 
-        const data = {
-            url: url || "/",
-        };
-
-        const notificationIcon = icon || "/icon-192.png";
-
-        // Send to single FCM token (for testing)
-        if (fcmToken) {
-            const result = await sendNotification(
-                fcmToken,
-                title,
-                message,
-                data,
-                image,
-                notificationIcon
-            );
-
-            if (result.success) {
-                return NextResponse.json({ success: true, sent: 1 }, { headers: corsHeaders });
-            } else {
-                return NextResponse.json(
-                    { error: result.error },
-                    { status: 500, headers: corsHeaders }
-                );
-            }
-        }
-
-        // Broadcast to all FCM subscribers
-        if (broadcast) {
-            console.log("Fetching FCM tokens from Convex...");
-            console.log("CONVEX URL:", process.env.NEXT_PUBLIC_CONVEX_URL);
-
-            const subscriptions = await fetchQuery(api.push.getAllFcmTokens);
-            console.log(`Got ${subscriptions?.length || 0} subscriptions:`, JSON.stringify(subscriptions, null, 2));
-
-            if (!subscriptions || subscriptions.length === 0) {
-                return NextResponse.json({
-                    success: true,
-                    sent: 0,
-                    failed: 0,
-                    total: 0,
-                    message: "No active subscribers found"
-                }, { headers: corsHeaders });
-            }
-
-            const tokens = subscriptions.map((s: any) => s.token);
-
-            const result = await sendMulticastNotification(
-                tokens,
-                title,
-                message,
-                data,
-                image,
-                notificationIcon
-            );
-
-            // Mark failed tokens as inactive
-            if (result.failedTokens && result.failedTokens.length > 0) {
-                for (const token of result.failedTokens) {
-                    await fetchMutation(api.push.markFcmTokenInvalid, { token });
-                }
-            }
-
-            console.log(`Broadcast complete. Sent: ${result.sent}, Failed: ${result.failed}`);
-            return NextResponse.json({
-                success: true,
-                sent: result.sent,
-                failed: result.failed,
-                total: subscriptions.length,
-            }, { headers: corsHeaders });
-        }
-
-        return NextResponse.json(
-            { error: "Specify fcmToken or set broadcast: true" },
-            { status: 400, headers: corsHeaders }
+        await PushSubscription.updateMany(
+            { deviceId },
+            { isActive: false }
         );
-    } catch (error: any) {
-        console.error("Push notification error:", error);
-        return NextResponse.json(
-            { error: error.message || "Failed to send notification" },
-            { status: 500, headers: corsHeaders }
-        );
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("DELETE /api/push error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

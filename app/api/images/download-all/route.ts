@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import connectDB from "@/lib/mongodb";
+import { Movie } from "@/lib/models";
 import fs from "fs";
 import path from "path";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 // Generate SEO-friendly filename from movie slug
 function slugToFilename(slug: string, type: "poster" | "backdrop"): string {
@@ -33,15 +31,15 @@ async function downloadImage(url: string, savePath: string): Promise<boolean> {
 
 export async function POST(request: NextRequest) {
     try {
+        await connectDB();
         const body = await request.json().catch(() => ({}));
         const limit = body.limit || 50;
         const offset = body.offset || 0;
 
-        // Get all movies from Convex
-        const movies = await convex.query(api.movies.listMovies, {
-            isPublished: true,
-            limit: 250,
-        });
+        // Get all movies from MongoDB
+        const movies = await Movie.find({ isPublished: true })
+            .limit(250)
+            .lean() as any[];
 
         if (!movies || movies.length === 0) {
             return NextResponse.json({ error: "No movies found" }, { status: 404 });
@@ -73,7 +71,6 @@ export async function POST(request: NextRequest) {
                     result.posterOk = true;
                     result.posterSkipped = true;
                 } else {
-                    // Use original quality
                     const highQUrl = movie.posterUrl.replace(/\/w\d+\//, "/w500/");
                     const success = await downloadImage(highQUrl, posterPath);
                     result.posterOk = success;
@@ -87,7 +84,6 @@ export async function POST(request: NextRequest) {
                     result.localPoster = `/posters/${posterFilename}`;
                 }
             } else if (movie.posterUrl && movie.posterUrl.startsWith("/posters/")) {
-                // Already local
                 result.posterOk = true;
                 result.alreadyLocal = true;
             }
@@ -111,11 +107,10 @@ export async function POST(request: NextRequest) {
                 }
             }
 
-            // Update Convex with local paths
+            // Update MongoDB with local paths
             if (result.localPoster || result.localBackdrop) {
                 try {
-                    await convex.mutation(api.movies.updateMovieImages, {
-                        id: movie._id,
+                    await Movie.findByIdAndUpdate(movie._id, {
                         ...(result.localPoster && { posterUrl: result.localPoster }),
                         ...(result.localBackdrop && { backdropUrl: result.localBackdrop }),
                     });
@@ -128,8 +123,8 @@ export async function POST(request: NextRequest) {
             results.push(result);
         }
 
-        const postersOk = results.filter(r => r.posterOk).length;
-        const postersFailed = results.filter(r => !r.posterOk && !r.alreadyLocal).length;
+        const postersOk = results.filter((r: any) => r.posterOk).length;
+        const postersFailed = results.filter((r: any) => !r.posterOk && !r.alreadyLocal).length;
 
         return NextResponse.json({
             success: true,

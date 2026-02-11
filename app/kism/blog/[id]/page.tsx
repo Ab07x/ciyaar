@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 import { ChevronLeft, Save } from "lucide-react";
 import Link from "next/link";
-import type { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const categories = [
     "Wararka Kubadda Cagta",
@@ -19,207 +19,172 @@ const categories = [
     "Wararka Horyaalka Spain"
 ] as const;
 
-interface EditBlogPostPageProps {
-    params: Promise<{ id: string }>;
-}
-
-export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
+export default function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
-
-    const post = useQuery(api.posts.getPostById, { id: id as Id<"posts"> });
-    const updatePost = useMutation(api.posts.updatePost);
-
+    const { data: post } = useSWR(`/api/posts?id=${id}`, async (url) => {
+        const res = await fetch(url);
+        const data = await res.json();
+        // API returns array for list, single for id lookup 
+        return Array.isArray(data) ? data.find((p: any) => p._id === id) : data;
+    });
+    const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
         slug: "",
-        excerpt: "",
+        category: categories[0] as string,
         content: "",
-        featuredImageUrl: "",
-        category: "News" as typeof categories[number],
-        tags: "",
+        excerpt: "",
+        coverImage: "",
         isPublished: false,
-        seoTitle: "",
-        seoDescription: "",
+        author: "Admin",
     });
+    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
-        if (post) {
+        if (post && !initialized) {
             setFormData({
-                title: post.title,
-                slug: post.slug,
-                excerpt: post.excerpt,
-                content: post.content,
-                featuredImageUrl: post.featuredImageUrl || "",
-                category: post.category as typeof categories[number],
-                tags: post.tags.join(", "),
-                isPublished: post.isPublished,
-                seoTitle: post.seoTitle || "",
-                seoDescription: post.seoDescription || "",
+                title: post.title || "",
+                slug: post.slug || "",
+                category: post.category || categories[0],
+                content: post.content || "",
+                excerpt: post.excerpt || "",
+                coverImage: post.coverImage || "",
+                isPublished: post.isPublished ?? false,
+                author: post.author || "Admin",
             });
+            setInitialized(true);
         }
-    }, [post]);
+    }, [post, initialized]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        await updatePost({
-            id: id as Id<"posts">,
-            ...formData,
-            tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
-        });
-
-        router.push("/kism/blog");
+    const handleSubmit = async () => {
+        if (!formData.title || !formData.content) {
+            alert("Title and content are required");
+            return;
+        }
+        setSaving(true);
+        try {
+            await fetch("/api/posts", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, ...formData }),
+            });
+            router.push("/kism/blog");
+        } catch (error) {
+            console.error(error);
+            alert("Failed to update post");
+        } finally {
+            setSaving(false);
+        }
     };
 
-    if (post === undefined) {
-        return <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green mx-auto mt-20"></div>;
-    }
+    if (!post) return <div className="p-8">Loading...</div>;
 
     return (
-        <div className="max-w-4xl space-y-8">
-            {/* Header */}
+        <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Link href="/kism/blog" className="p-2 bg-stadium-elevated rounded-lg">
+                    <Link href="/kism/blog" className="p-2 bg-stadium-elevated rounded-lg hover:bg-stadium-hover">
                         <ChevronLeft size={24} />
                     </Link>
-                    <h1 className="text-3xl font-black">EDIT POST</h1>
+                    <h1 className="text-2xl font-black">EDIT POST</h1>
                 </div>
                 <button
                     onClick={handleSubmit}
-                    className="px-6 py-3 bg-accent-green text-black rounded-xl font-bold flex items-center gap-2"
+                    disabled={saving}
+                    className="px-6 py-3 bg-accent-green text-black rounded-xl font-bold flex items-center gap-2 disabled:opacity-50"
                 >
                     <Save size={20} />
-                    Update
+                    {saving ? "Saving..." : "Update"}
                 </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Info */}
-                <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-4">
-                    <h3 className="font-bold text-text-muted uppercase text-sm tracking-wider mb-4">Content</h3>
+            <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-6">
+                <div>
+                    <label className="block text-sm font-bold text-text-secondary mb-2">Title</label>
+                    <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 text-lg"
+                    />
+                </div>
 
+                <div>
+                    <label className="block text-sm font-bold text-text-secondary mb-2">Slug</label>
+                    <input
+                        type="text"
+                        value={formData.slug}
+                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono text-sm"
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm text-text-secondary mb-2">Title (H1)</label>
+                        <label className="block text-sm font-bold text-text-secondary mb-2">Category</label>
+                        <select
+                            value={formData.category}
+                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                        >
+                            {categories.map((cat) => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-text-secondary mb-2">Author</label>
                         <input
                             type="text"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            required
+                            value={formData.author}
+                            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-text-secondary mb-2">URL Slug</label>
-                        <input
-                            type="text"
-                            value={formData.slug}
-                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                            required
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-text-secondary mb-2">Excerpt</label>
-                        <textarea
-                            value={formData.excerpt}
-                            onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                            required
-                            rows={2}
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 resize-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-text-secondary mb-2">Content (Markdown)</label>
-                        <textarea
-                            value={formData.content}
-                            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                            required
-                            rows={15}
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono text-sm resize-none"
                         />
                     </div>
                 </div>
 
-                {/* Meta */}
-                <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-4">
-                    <h3 className="font-bold text-text-muted uppercase text-sm tracking-wider mb-4">Meta</h3>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm text-text-secondary mb-2">Category</label>
-                            <select
-                                value={formData.category}
-                                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                            >
-                                {categories.map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-text-secondary mb-2">Tags (comma separated)</label>
-                            <input
-                                type="text"
-                                value={formData.tags}
-                                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-text-secondary mb-2">Featured Image URL</label>
-                        <input
-                            type="text"
-                            value={formData.featuredImageUrl}
-                            onChange={(e) => setFormData({ ...formData, featuredImageUrl: e.target.value })}
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-3 pt-4">
-                        <input
-                            type="checkbox"
-                            id="published"
-                            checked={formData.isPublished}
-                            onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                            className="w-5 h-5"
-                        />
-                        <label htmlFor="published" className="text-sm">Published</label>
-                    </div>
+                <div>
+                    <label className="block text-sm font-bold text-text-secondary mb-2">Cover Image URL</label>
+                    <input
+                        type="text"
+                        value={formData.coverImage}
+                        onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                    />
                 </div>
 
-                {/* SEO */}
-                <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-4">
-                    <h3 className="font-bold text-text-muted uppercase text-sm tracking-wider mb-4">SEO</h3>
-
-                    <div>
-                        <label className="block text-sm text-text-secondary mb-2">SEO Title</label>
-                        <input
-                            type="text"
-                            value={formData.seoTitle}
-                            onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-text-secondary mb-2">SEO Description</label>
-                        <textarea
-                            value={formData.seoDescription}
-                            onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
-                            rows={2}
-                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 resize-none"
-                        />
-                    </div>
+                <div>
+                    <label className="block text-sm font-bold text-text-secondary mb-2">Excerpt</label>
+                    <textarea
+                        value={formData.excerpt}
+                        onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                        rows={2}
+                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                    />
                 </div>
-            </form>
+
+                <div>
+                    <label className="block text-sm font-bold text-text-secondary mb-2">Content (Markdown)</label>
+                    <textarea
+                        value={formData.content}
+                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                        rows={15}
+                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono text-sm"
+                    />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={formData.isPublished}
+                        onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                        className="w-5 h-5 rounded"
+                    />
+                    <label className="font-semibold">Published</label>
+                </div>
+            </div>
         </div>
     );
 }

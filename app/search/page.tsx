@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import useSWR from "swr";
 import { Search, Loader2, Trophy, Film, Tv, ArrowLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -15,14 +13,13 @@ export default function SearchPage() {
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const trackSearch = useMutation(api.searchAnalytics.trackSearch);
-    const trackSearchClick = useMutation(api.searchAnalytics.trackSearchClick);
-    const lastSearchIdRef = useRef<Id<"search_analytics"> | null>(null);
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const lastSearchIdRef = useRef<string | null>(null);
     const trackedQueriesRef = useRef(new Set<string>());
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // @ts-ignore
-    const results = useQuery(api.search.searchAll, { query: query.length >= 2 ? query : "" }) as any;
+    const { data: results } = useSWR(query.length >= 2 ? `/api/search?query=${encodeURIComponent(query)}` : null, fetcher);
 
     useEffect(() => {
         // Auto-focus input on mount
@@ -49,12 +46,13 @@ export default function SearchPage() {
                 : undefined;
 
             try {
-                const searchId = await trackSearch({
-                    query,
-                    resultsCount,
-                    deviceId,
+                const res = await fetch("/api/search-analytics", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query, resultsCount, deviceId }),
                 });
-                if (searchId) lastSearchIdRef.current = searchId;
+                const data = await res.json();
+                if (data?.searchId) lastSearchIdRef.current = data.searchId;
                 trackedQueriesRef.current.add(q);
             } catch {
                 // Silently fail - analytics shouldn't break the app
@@ -64,17 +62,21 @@ export default function SearchPage() {
         return () => {
             if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         };
-    }, [query, results, trackSearch]);
+    }, [query, results]);
 
     const handleResultClick = useCallback((slug: string, type: "match" | "movie" | "series") => {
         if (lastSearchIdRef.current) {
-            trackSearchClick({
-                searchId: lastSearchIdRef.current,
-                clickedItem: slug,
-                clickedItemType: type,
+            fetch("/api/search-analytics/click", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    searchId: lastSearchIdRef.current,
+                    clickedItem: slug,
+                    clickedItemType: type,
+                }),
             }).catch(() => { });
         }
-    }, [trackSearchClick]);
+    }, []);
 
     const hasResults = results && (
         (results.matches?.length || 0) > 0 ||

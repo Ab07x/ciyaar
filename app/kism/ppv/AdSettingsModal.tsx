@@ -2,12 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { X, Save, Upload, Plus, Trash2, Globe, Monitor, Smartphone, Video, Code, Image as ImageIcon } from "lucide-react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 
 interface AdSettingsModalProps {
-    ppvId: Id<"ppv_content"> | null;
+    ppvId: string | null;
     initialData?: any;
     onClose: () => void;
     onSave: (data: any) => Promise<void>;
@@ -90,8 +87,8 @@ export function AdSettingsModal({ ppvId, initialData, onClose, onSave }: AdSetti
                                 key={type}
                                 onClick={() => setAdType(type)}
                                 className={`px-2 py-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${adType === type
-                                        ? "bg-accent-green/10 border-accent-green text-accent-green"
-                                        : "bg-stadium-elevated border-transparent text-text-secondary hover:bg-stadium-hover"
+                                    ? "bg-accent-green/10 border-accent-green text-accent-green"
+                                    : "bg-stadium-elevated border-transparent text-text-secondary hover:bg-stadium-hover"
                                     }`}
                             >
                                 {type === "video" && <Video size={18} />}

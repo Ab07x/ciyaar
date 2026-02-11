@@ -1,10 +1,26 @@
 "use client";
 
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { SWRConfig } from "swr";
 import { ReactNode } from "react";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Global SWR fetcher
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+/**
+ * Replaces ConvexClientProvider with SWR config.
+ * We keep the same component name so layout.tsx doesn't need to change the import.
+ */
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
-    return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+    return (
+        <SWRConfig
+            value={{
+                fetcher,
+                revalidateOnFocus: false,
+                dedupingInterval: 5000,
+                errorRetryCount: 3,
+            }}
+        >
+            {children}
+        </SWRConfig>
+    );
 }

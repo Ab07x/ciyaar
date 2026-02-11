@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, Tag, ChevronRight } from "lucide-react";
@@ -11,7 +10,8 @@ import { AdSlot } from "@/components/AdSlot";
 const categories = ["All", "News", "Market", "Match Preview", "Analysis"] as const;
 
 export default function BlogPage() {
-    const posts = useQuery(api.posts.listPosts, { isPublished: true });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: posts } = useSWR("/api/posts?isPublished=true", fetcher);
 
     if (posts === undefined) {
         return (

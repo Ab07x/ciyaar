@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Play, Download, Sparkles, MessageSquare } from "lucide-react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface PremiumAdInterstitialProps {
     onComplete: () => void;
@@ -23,7 +24,7 @@ export function PremiumAdInterstitial({
     const hasCompleted = useRef(false);
 
     // Fetch interstitial banner from database
-    const banner = useQuery(api.promoBanners.getActiveBanner, { type: "interstitial" });
+    const { data: banner } = useSWR("/api/promo-banners?type=interstitial", fetcher);
 
     // Use banner data or defaults
     const headline = banner?.headline || "Premium";

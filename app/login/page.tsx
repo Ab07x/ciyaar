@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { Ticket, Loader2, CheckCircle2, XCircle, Lock } from "lucide-react";
 import Link from "next/link";
@@ -22,17 +20,15 @@ function getDeviceId(): string {
 
 export default function LoginPage() {
     const router = useRouter();
-    const redeemCode = useMutation(api.redemptions.redeemCode);
 
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<{ success: boolean; message?: string; error?: string; plan?: string } | null>(null);
+    const [result, setResult] = useState<{ success: boolean; message?: string; error?: string; plan?: string; expiresAt?: string } | null>(null);
     const [deviceId, setDeviceId] = useState("");
     const { isPremium } = useUser();
 
     useEffect(() => {
         setDeviceId(getDeviceId());
-        // Don't redirect - let users enter codes
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -43,11 +39,16 @@ export default function LoginPage() {
         setResult(null);
 
         try {
-            const response = await redeemCode({
-                code: code.trim().toUpperCase(),
-                deviceId,
-                userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+            const res = await fetch("/api/redemptions/redeem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    code: code.trim().toUpperCase(),
+                    deviceId,
+                    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+                }),
             });
+            const response = await res.json();
 
             setResult(response);
 

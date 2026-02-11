@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import Image from "next/image";
 import Link from "next/link";
 import { Calendar, Tag, ChevronLeft } from "lucide-react";
@@ -15,7 +14,8 @@ interface BlogClientPageProps {
 }
 
 export default function BlogClientPage({ slug }: BlogClientPageProps) {
-    const post = useQuery(api.posts.getPostBySlug, { slug });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: post } = useSWR(`/api/posts/${slug}`, fetcher);
 
     if (post === undefined) {
         return (

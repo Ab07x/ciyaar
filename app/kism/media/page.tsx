@@ -1,30 +1,20 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState, useRef } from "react";
-import { Upload, Trash2, Copy, FileIcon, ImageIcon, X, Loader2, Check } from "lucide-react";
+import { Upload, Trash2, Copy, FileIcon, ImageIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/providers/ToastProvider";
 import { cn } from "@/lib/utils";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function AdminMediaPage() {
-    const listMediaApi: any = api.media?.listMedia;
-    const generateUploadUrlApi: any = api.media?.generateUploadUrl;
-    const saveMediaApi: any = api.media?.saveMedia;
-    const deleteMediaApi: any = api.media?.deleteMedia;
-
-    const mediaList = useQuery(listMediaApi) || [];
-    const generateUploadUrl = useMutation(generateUploadUrlApi);
-    const saveMedia = useMutation(saveMediaApi);
-    const deleteMedia = useMutation(deleteMediaApi);
-
+    const { data: mediaList = [], mutate } = useSWR("/api/media", fetcher);
     const toast = useToast();
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Filter state
     const [filter, setFilter] = useState<"all" | "image" | "file">("all");
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -54,7 +44,6 @@ export default function AdminMediaPage() {
     const handleUpload = async (file: File) => {
         setIsUploading(true);
         try {
-            // Use local API for VPS storage (utilizing AWS Lightsail 80GB)
             const formData = new FormData();
             formData.append("file", file);
 
@@ -67,15 +56,20 @@ export default function AdminMediaPage() {
 
             const data = await result.json();
 
-            // Save metadata to Convex (URL reference)
-            await saveMedia({
-                url: data.url,
-                name: data.name,
-                type: data.type,
-                size: data.size,
+            // Save metadata to MongoDB
+            await fetch("/api/media", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: data.url,
+                    name: data.name,
+                    type: data.type,
+                    size: data.size,
+                }),
             });
 
-            toast("File uploaded to AWS storage", "success");
+            mutate();
+            toast("File uploaded to storage", "success");
         } catch (error) {
             console.error(error);
             toast("Upload failed", "error");
@@ -85,10 +79,11 @@ export default function AdminMediaPage() {
         }
     };
 
-    const handleDelete = async (id: any, storageId: any) => {
+    const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this file?")) return;
         try {
-            await deleteMedia({ id, storageId });
+            await fetch(`/api/media?id=${id}`, { method: "DELETE" });
+            mutate();
             toast("File deleted", "success");
         } catch (error) {
             toast("Delete failed", "error");
@@ -209,7 +204,7 @@ export default function AdminMediaPage() {
                                         <Copy size={14} /> Copy URL
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(file._id, file.storageId)}
+                                        onClick={() => handleDelete(file._id)}
                                         className="bg-accent-red/20 text-accent-red border border-accent-red/50 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:bg-accent-red/30 transition-colors w-full justify-center"
                                     >
                                         <Trash2 size={14} /> Delete

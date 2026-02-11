@@ -1,35 +1,46 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import Link from "next/link";
 import { Plus, Edit, Trash2, PlayCircle, Lock, Search } from "lucide-react";
 import { useState } from "react";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export default function AdminMatchesPage() {
-    const matches = useQuery(api.matches.listMatches, {});
-    const deleteMatch = useMutation(api.matches.deleteMatch);
-    const bulkUpdateStatus = useMutation(api.matches.bulkUpdateStatus);
+    const { data: matchData } = useSWR("/api/matches", fetcher);
+    const matches = Array.isArray(matchData) ? matchData : matchData?.matches || [];
 
     const [filter, setFilter] = useState<"all" | "live" | "upcoming" | "finished" | "premium">("all");
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<Set<string>>(new Set());
 
-    const filtered = matches?.filter(m => {
+    const handleDelete = async (id: string) => {
+        if (!confirm("Delete this match?")) return;
+        await fetch(`/api/matches/${id}`, { method: "DELETE" });
+        mutate("/api/matches");
+    };
+
+    const handleBulkStatus = async (status: "live" | "upcoming" | "finished") => {
+        await fetch("/api/matches/bulk-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: Array.from(selected), status }),
+        });
+        setSelected(new Set());
+        mutate("/api/matches");
+    };
+
+    const filtered = matches?.filter((m: any) => {
         if (filter === "premium") return m.isPremium;
         if (filter !== "all") return m.status === filter;
         return true;
-    }).filter(m => m.title.toLowerCase().includes(search.toLowerCase()) || m.teamA.toLowerCase().includes(search.toLowerCase()) || m.teamB.toLowerCase().includes(search.toLowerCase()));
+    }).filter((m: any) => m.title.toLowerCase().includes(search.toLowerCase()) || m.teamA.toLowerCase().includes(search.toLowerCase()) || m.teamB.toLowerCase().includes(search.toLowerCase()));
 
     const toggleSelect = (id: string) => {
         const n = new Set(selected);
         if (n.has(id)) n.delete(id); else n.add(id);
         setSelected(n);
-    };
-
-    const handleBulkStatus = async (status: "live" | "upcoming" | "finished") => {
-        await bulkUpdateStatus({ ids: Array.from(selected) as any[], status });
-        setSelected(new Set());
     };
 
     return (
@@ -61,7 +72,7 @@ export default function AdminMatchesPage() {
                         <tr><th className="w-10 px-4 py-3"></th><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Match</th><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">League</th><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Views</th><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Kickoff</th><th className="text-left px-4 py-3 text-xs font-bold text-text-muted uppercase">Status</th><th className="text-right px-4 py-3 text-xs font-bold text-text-muted uppercase">Actions</th></tr>
                     </thead>
                     <tbody>
-                        {filtered?.map(m => (
+                        {filtered?.map((m: any) => (
                             <tr key={m._id} className="border-b border-border-subtle last:border-0">
                                 <td className="px-4 py-3"><input type="checkbox" checked={selected.has(m._id)} onChange={() => toggleSelect(m._id)} className="w-4 h-4" /></td>
                                 <td className="px-4 py-3"><div className="flex items-center gap-2">{m.isPremium && <Lock size={14} className="text-accent-gold" />}<span className="font-bold">{m.title}</span></div><span className="text-xs text-text-muted">/match/{m.slug}</span></td>
@@ -69,7 +80,7 @@ export default function AdminMatchesPage() {
                                 <td className="px-4 py-3 text-sm font-mono text-accent-green">{m.views || 0}</td>
                                 <td className="px-4 py-3 text-sm text-text-muted">{new Date(m.kickoffAt).toLocaleString()}</td>
                                 <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-1 rounded ${m.status === "live" ? "bg-accent-red/20 text-accent-red" : m.status === "upcoming" ? "bg-accent-green/20 text-accent-green" : "bg-text-muted/20 text-text-muted"}`}>{m.status.toUpperCase()}</span></td>
-                                <td className="px-4 py-3"><div className="flex items-center justify-end gap-2"><Link href={`/kism/matches/${m._id}`} className="p-2 hover:bg-stadium-hover rounded-lg"><Edit size={16} /></Link><button onClick={() => deleteMatch({ id: m._id })} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red"><Trash2 size={16} /></button></div></td>
+                                <td className="px-4 py-3"><div className="flex items-center justify-end gap-2"><Link href={`/kism/matches/${m._id}`} className="p-2 hover:bg-stadium-hover rounded-lg"><Edit size={16} /></Link><button onClick={() => handleDelete(m._id)} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red"><Trash2 size={16} /></button></div></td>
                             </tr>
                         ))}
                     </tbody>

@@ -1,22 +1,19 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useState } from "react";
+import useSWR from "swr";
 import { Plus, Edit2, Trash2, Eye, EyeOff, GripVertical, Film, Tv, Image as ImageIcon } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
 import Image from "next/image";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function AdminHeroSlidesPage() {
-    const slides = useQuery(api.heroSlides.getAllSlides);
-    const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 50 });
-    const series = useQuery(api.series.listSeries, { isPublished: true, limit: 50 });
-    const createSlide = useMutation(api.heroSlides.createSlide);
-    const updateSlide = useMutation(api.heroSlides.updateSlide);
-    const deleteSlide = useMutation(api.heroSlides.deleteSlide);
+    const { data: slides, mutate } = useSWR("/api/hero-slides", fetcher);
+    const { data: movies } = useSWR("/api/movies?limit=50", fetcher);
+    const { data: series } = useSWR("/api/series?limit=50", fetcher);
 
     const [isAdding, setIsAdding] = useState(false);
-    const [editingId, setEditingId] = useState<Id<"hero_slides"> | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         contentType: "movie" as "movie" | "series" | "custom",
         contentId: "",
@@ -41,13 +38,22 @@ export default function AdminHeroSlidesPage() {
         }
 
         if (editingId) {
-            await updateSlide({ id: editingId, ...formData });
+            await fetch("/api/hero-slides", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: editingId, ...formData }),
+            });
             setEditingId(null);
         } else {
-            await createSlide(formData);
+            await fetch("/api/hero-slides", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
         }
         setIsAdding(false);
         resetForm();
+        mutate();
     };
 
     const resetForm = () => {
@@ -82,14 +88,20 @@ export default function AdminHeroSlidesPage() {
         setIsAdding(true);
     };
 
-    const handleDelete = async (id: Id<"hero_slides">) => {
+    const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this slide?")) {
-            await deleteSlide({ id });
+            await fetch(`/api/hero-slides?id=${id}`, { method: "DELETE" });
+            mutate();
         }
     };
 
-    const handleToggleActive = async (id: Id<"hero_slides">, isActive: boolean) => {
-        await updateSlide({ id, isActive: !isActive });
+    const handleToggleActive = async (id: string, isActive: boolean) => {
+        await fetch("/api/hero-slides", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, isActive: !isActive }),
+        });
+        mutate();
     };
 
     return (
@@ -152,12 +164,12 @@ export default function AdminHeroSlidesPage() {
                             >
                                 <option value="">Select...</option>
                                 {formData.contentType === "movie"
-                                    ? movies?.map((m) => (
+                                    ? movies?.map((m: any) => (
                                         <option key={m._id} value={m.slug}>
                                             {m.title} ({m.releaseDate?.split("-")[0]})
                                         </option>
                                     ))
-                                    : series?.map((s) => (
+                                    : series?.map((s: any) => (
                                         <option key={s._id} value={s.slug}>
                                             {s.title} ({s.firstAirDate?.split("-")[0]})
                                         </option>
@@ -282,7 +294,7 @@ export default function AdminHeroSlidesPage() {
                         <p className="text-text-muted text-sm">Add slides to feature movies/series on the homepage hero</p>
                     </div>
                 ) : (
-                    slides.map((slide) => (
+                    slides.map((slide: any) => (
                         <div
                             key={slide._id}
                             className={`bg-stadium-elevated border border-border-strong rounded-2xl p-4 flex items-center gap-4 ${!slide.isActive ? "opacity-60" : ""}`}

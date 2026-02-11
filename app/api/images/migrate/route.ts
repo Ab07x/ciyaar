@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import connectDB from "@/lib/mongodb";
+import { Movie } from "@/lib/models";
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 // Download image, convert to WebP with SEO-friendly filename
 async function downloadAndConvertToLocal(
@@ -66,12 +64,14 @@ export async function POST(request: NextRequest) {
     const skip = parseInt(searchParams.get("skip") || "0");
 
     try {
+        await connectDB();
+
         // Get all movies
-        const allMovies = await convex.query(api.movies.listMovies, {});
+        const allMovies = await Movie.find().lean() as any[];
 
         // Filter only movies with TMDB URLs (not yet migrated)
         const moviesToMigrate = allMovies.filter(
-            (m) =>
+            (m: any) =>
                 m.posterUrl?.includes("image.tmdb.org") ||
                 m.backdropUrl?.includes("image.tmdb.org")
         );
@@ -146,8 +146,7 @@ export async function POST(request: NextRequest) {
 
                 // Update movie in database
                 if (updated) {
-                    await convex.mutation(api.movies.updateMovieImages, {
-                        id: movie._id,
+                    await Movie.findByIdAndUpdate(movie._id, {
                         posterUrl,
                         backdropUrl,
                     });
@@ -181,22 +180,23 @@ export async function POST(request: NextRequest) {
 // GET to check migration status
 export async function GET() {
     try {
-        const allMovies = await convex.query(api.movies.listMovies, {});
+        await connectDB();
+        const allMovies = await Movie.find().lean() as any[];
 
-        const withTmdbPoster = allMovies.filter((m) =>
+        const withTmdbPoster = allMovies.filter((m: any) =>
             m.posterUrl?.includes("image.tmdb.org")
         ).length;
 
-        const withTmdbBackdrop = allMovies.filter((m) =>
+        const withTmdbBackdrop = allMovies.filter((m: any) =>
             m.backdropUrl?.includes("image.tmdb.org")
         ).length;
 
-        const withLocalImages = allMovies.filter((m) =>
+        const withLocalImages = allMovies.filter((m: any) =>
             m.posterUrl?.startsWith("/posters/") || m.posterUrl?.startsWith("/movies/")
         ).length;
 
         const fullyMigrated = allMovies.filter(
-            (m) =>
+            (m: any) =>
                 !m.posterUrl?.includes("image.tmdb.org") &&
                 !m.backdropUrl?.includes("image.tmdb.org")
         ).length;

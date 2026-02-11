@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useParams } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
 import { useState, useEffect, useRef } from "react";
@@ -19,10 +18,10 @@ export default function ChannelWatchPage() {
     const params = useParams();
     const slug = params.slug as string;
 
-    const channel = useQuery(api.channels.getChannelBySlug, { slug });
-    const allChannels = useQuery(api.channels.getChannelsByStatus);
-    const settings = useQuery(api.settings.getSettings);
-    const trackPageView = useMutation(api.analytics.trackPageView);
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: channel } = useSWR(`/api/channels/${slug}`, fetcher);
+    const { data: allChannels } = useSWR("/api/channels?byStatus=true", fetcher);
+    const { data: settings } = useSWR("/api/settings", fetcher);
     const { isPremium, redeemCode } = useUser();
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
@@ -32,9 +31,13 @@ export default function ChannelWatchPage() {
     useEffect(() => {
         if (!hasTracked.current && channel) {
             hasTracked.current = true;
-            trackPageView({ pageType: "live", pageId: slug });
+            fetch("/api/analytics/pageview", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pageType: "live", pageId: slug }),
+            }).catch(() => { });
         }
-    }, [channel, trackPageView, slug]);
+    }, [channel, slug]);
     const [code, setCode] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);

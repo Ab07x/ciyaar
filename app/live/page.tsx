@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { ChannelCard } from "@/components/ChannelCard";
 import { PremiumBanner } from "@/components/PremiumBanner";
 import { AdSlot } from "@/components/AdSlot";
@@ -19,7 +18,8 @@ const categories = [
 ] as const;
 
 export default function LivePage() {
-    const channelData = useQuery(api.channels.getChannelsByStatus);
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: channelData } = useSWR("/api/channels?byStatus=true", fetcher);
     const { isPremium } = useUser();
     const [activeCategory, setActiveCategory] = useState<string>("all");
 

@@ -3,10 +3,9 @@ import React from "react";
 import Image from "next/image";
 import { Star, Crown, Play } from "lucide-react";
 import Link from "next/link";
-import { Doc } from "@/convex/_generated/dataModel";
 
 interface TVMovieCardProps {
-    movie: Doc<"movies">;
+    movie: any;
     isPremium: boolean;
     priority?: boolean;
 }

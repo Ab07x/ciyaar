@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import {
   Zap,
@@ -168,10 +167,15 @@ const planRanks: Record<string, number> = {
   yearly: 4,
 };
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export function PricingCards({ className }: { className?: string }) {
-  const settings = useQuery(api.settings.getSettings);
+  const { data: settings } = useSWR("/api/settings", fetcher);
   const { deviceId } = useUser();
-  const subDetails = useQuery(api.subscriptions.getUserSubscriptionDetails, { deviceId: deviceId || "" });
+  const { data: subDetails } = useSWR(
+    deviceId ? `/api/subscriptions?deviceId=${deviceId}` : null,
+    fetcher
+  );
 
   const currentPlanId = subDetails?.subscription?.plan;
   const currentRank = currentPlanId ? (planRanks[currentPlanId] || 0) : 0;

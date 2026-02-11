@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAction, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Search, Loader2, Film, Tv, Plus } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -21,8 +19,6 @@ interface SearchResult {
 export function RequestForm({ onRequestSubmitted }: { onRequestSubmitted: () => void }) {
     const { userId } = useUser();
     const toast = useToast();
-    const searchTMDB = useAction(api.tmdb.searchTMDB);
-    const submitRequest = useMutation(api.requests.submitRequest);
 
     const [query, setQuery] = useState("");
     const [type, setType] = useState<"movie" | "tv">("movie");
@@ -35,7 +31,8 @@ export function RequestForm({ onRequestSubmitted }: { onRequestSubmitted: () => 
             if (query.length > 2) {
                 setIsSearching(true);
                 try {
-                    const data = await searchTMDB({ query, type });
+                    const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(query)}&type=${type}`);
+                    const data = await res.json();
                     setResults(data);
                 } catch (error) {
                     console.error("Search failed", error);
@@ -48,7 +45,7 @@ export function RequestForm({ onRequestSubmitted }: { onRequestSubmitted: () => 
         }, 500);
 
         return () => clearTimeout(timeout);
-    }, [query, type, searchTMDB]);
+    }, [query, type]);
 
     const handleRequest = async (item: SearchResult) => {
         if (!userId) {
@@ -58,14 +55,19 @@ export function RequestForm({ onRequestSubmitted }: { onRequestSubmitted: () => 
 
         setIsSubmitting(true);
         try {
-            const result = await submitRequest({
-                userId,
-                tmdbId: item.id,
-                type,
-                title: item.title,
-                posterUrl: item.posterUrl,
-                year: item.year,
+            const res = await fetch("/api/requests", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId,
+                    tmdbId: item.id,
+                    type,
+                    title: item.title,
+                    posterUrl: item.posterUrl,
+                    year: item.year,
+                }),
             });
+            const result = await res.json();
 
             if (result.status === "created") {
                 toast("Request submitted successfully!", "success");

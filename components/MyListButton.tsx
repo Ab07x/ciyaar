@@ -1,13 +1,14 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import { Check, Heart, Loader2, Plus, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/providers/ToastProvider";
 import { useState } from "react";
 import { useUser } from "@/providers/UserProvider";
 import { PremiumPopupBanner } from "@/components/PremiumPopupBanner";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface MyListButtonProps {
     contentType: "movie" | "series" | "match";
@@ -18,8 +19,9 @@ interface MyListButtonProps {
 
 export function MyListButton({ contentType, contentId, className, variant = "full" }: MyListButtonProps) {
     const { userId, isPremium } = useUser();
-    const isListed = useQuery(api.mylist.checkStatus, userId ? { userId, contentType, contentId } : "skip");
-    const toggle = useMutation(api.mylist.toggle);
+    const swrKey = userId ? `/api/mylist?action=check&userId=${userId}&contentType=${contentType}&contentId=${contentId}` : null;
+    const { data: listData } = useSWR(swrKey, fetcher);
+    const isListed = listData?.isListed ?? false;
 
     // Custom toast
     const toast = useToast();
@@ -45,12 +47,19 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
 
         setIsLoading(true);
         try {
-            const result = await toggle({ userId, contentType, contentId });
+            const res = await fetch("/api/mylist", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, contentType, contentId }),
+            });
+            const result = await res.json();
             if (result.action === "added") {
                 toast("Added to My List", "success");
             } else {
                 toast("Removed from My List", "info");
             }
+            // Revalidate the SWR cache
+            if (swrKey) mutate(swrKey);
         } catch (error) {
             console.error("Failed to toggle list", error);
             toast("Failed to update list", "error");
@@ -60,7 +69,7 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
     };
 
     // If loading initial state
-    if (isListed === undefined) {
+    if (listData === undefined && userId) {
         if (variant === "icon") return <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse" />;
         return <div className="h-12 w-32 bg-white/10 rounded-xl animate-pulse" />;
     }

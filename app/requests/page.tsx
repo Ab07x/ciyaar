@@ -1,7 +1,5 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { RequestForm } from "@/components/requests/RequestForm";
 import { RequestList } from "@/components/requests/RequestList";
 import { AdSlot } from "@/components/AdSlot";

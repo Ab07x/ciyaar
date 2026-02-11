@@ -1,47 +1,81 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Eye, EyeOff, Image as ImageIcon, Sparkles, Monitor, Square, MessageSquareMore, Maximize, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function AdminBannersPage() {
     const router = useRouter();
-    const banners = useQuery(api.promoBanners.getAllBanners);
-    const deleteBanner = useMutation(api.promoBanners.deleteBanner);
-    const updateBanner = useMutation(api.promoBanners.updateBanner);
-    const seedBanner = useMutation(api.promoBanners.seedDefaultBanner);
-    const seedBannerByType = useMutation(api.promoBanners.seedBannerByType);
+    const { data: banners, mutate } = useSWR("/api/banners", fetcher);
+    const { data: activeMain } = useSWR("/api/banners?type=main&active=true", async (url) => {
+        const res = await fetch(url);
+        const data = await res.json();
+        return data?.[0] || null;
+    });
+    const { data: activeSmall } = useSWR("/api/banners?type=small&active=true", async (url) => {
+        const res = await fetch(url);
+        const data = await res.json();
+        return data?.[0] || null;
+    });
+    const { data: activePopup } = useSWR("/api/banners?type=popup&active=true", async (url) => {
+        const res = await fetch(url);
+        const data = await res.json();
+        return data?.[0] || null;
+    });
+    const { data: activeInterstitial } = useSWR("/api/banners?type=interstitial&active=true", async (url) => {
+        const res = await fetch(url);
+        const data = await res.json();
+        return data?.[0] || null;
+    });
 
-    // Get current active banners for each type
-    const activeMain = useQuery(api.promoBanners.getActiveBanner, { type: "main" });
-    const activeSmall = useQuery(api.promoBanners.getActiveBanner, { type: "small" });
-    const activePopup = useQuery(api.promoBanners.getActiveBanner, { type: "popup" });
-    const activeInterstitial = useQuery(api.promoBanners.getActiveBanner, { type: "interstitial" });
+    // Seed a banner by type - creates a default, then navigates to edit
+    const seedBannerByType = async (type: string) => {
+        const defaults: Record<string, any> = {
+            main: { name: "Main Premium Banner", type: "main", headline: "Ads suck but keep the site free.", subheadline: "Remove ads and get many features with Premium Membership", ctaText: "CHECK OPTIONS", ctaLink: "/pricing", leftImageUrl: "/img/dragon-left.png", rightImageUrl: "/img/right-cartoons.png", backgroundColor: "#333333", accentColor: "#9AE600", isActive: true, priority: 1 },
+            small: { name: "Small Premium Banner", type: "small", headline: "Go Premium!", subheadline: "Unlock exclusive features", ctaText: "UPGRADE", ctaLink: "/pricing", backgroundColor: "#2a1a4c", accentColor: "#FFD700", isActive: true, priority: 1 },
+            popup: { name: "Popup Offer Banner", type: "popup", headline: "Limited Time Offer!", subheadline: "Get 50% off Premium today", ctaText: "CLAIM OFFER", ctaLink: "/pricing", backgroundColor: "#1a1a2e", accentColor: "#FF6B6B", isActive: true, priority: 1 },
+            interstitial: { name: "Interstitial Premium Ad", type: "interstitial", headline: "Premium", subheadline: "Membership ?", ctaText: "CHECK OUR PLANS", ctaLink: "/pricing", backgroundColor: "#000000", accentColor: "#9AE600", isActive: true, priority: 1 },
+        };
+        const res = await fetch("/api/banners", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(defaults[type] || defaults.main),
+        });
+        const banner = await res.json();
+        mutate();
+        if (banner?._id) router.push(`/kism/banners/${banner._id}`);
+    };
 
-    // Handle creating a banner if none exists, then navigate to edit
-    const handleEditOrCreate = async (type: "main" | "small" | "popup" | "interstitial", existingId?: Id<"promo_banners">) => {
+    const handleEditOrCreate = async (type: string, existingId?: string) => {
         if (existingId) {
             router.push(`/kism/banners/${existingId}`);
         } else {
-            const newId = await seedBannerByType({ type });
-            if (newId) {
-                router.push(`/kism/banners/${newId}`);
-            }
+            await seedBannerByType(type);
         }
     };
 
-    const handleToggleActive = async (id: Id<"promo_banners">, isActive: boolean) => {
-        await updateBanner({ id, isActive: !isActive });
+    const handleToggleActive = async (id: string, isActive: boolean) => {
+        await fetch("/api/banners", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, isActive: !isActive }),
+        });
+        mutate();
     };
 
-    const handleDelete = async (id: Id<"promo_banners">) => {
+    const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this banner?")) {
-            await deleteBanner({ id });
+            await fetch(`/api/banners?id=${id}`, { method: "DELETE" });
+            mutate();
         }
+    };
+
+    const seedBanner = async () => {
+        await seedBannerByType("main");
     };
 
     const typeColors: Record<string, string> = {
@@ -80,7 +114,7 @@ export default function AdminBannersPage() {
                 ))}
             </div>
 
-            {/* CURRENT ACTIVE BANNERS - What's showing on the site */}
+            {/* CURRENT ACTIVE BANNERS */}
             <div className="bg-stadium-elevated border-2 border-accent-green/50 rounded-2xl p-6">
                 <h2 className="font-bold text-lg mb-2 flex items-center gap-2">
                     <Zap size={20} className="text-accent-green" />
@@ -197,101 +231,55 @@ export default function AdminBannersPage() {
                 </div>
             </div>
 
-            {/* Banner Samples with Previews */}
+            {/* Banner Samples */}
             <div className="bg-stadium-elevated border border-border-strong rounded-2xl p-6">
                 <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
                     <Sparkles size={20} className="text-accent-green" />
                     Banner Samples
                 </h2>
-                <p className="text-text-muted text-sm mb-6">
-                    Preview each banner type and seed a sample to edit
-                </p>
+                <p className="text-text-muted text-sm mb-6">Preview each banner type and seed a sample to edit</p>
 
                 <div className="grid gap-6">
                     {/* MAIN Banner Sample */}
                     <div className="border border-blue-500/30 rounded-xl overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-2 bg-blue-500/10">
-                            <span className="font-bold text-sm text-blue-400 flex items-center gap-2">
-                                <Monitor size={16} /> MAIN BANNER
-                            </span>
-                            <button
-                                onClick={() => seedBannerByType({ type: "main" })}
-                                className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors"
-                            >
-                                + Seed Sample
-                            </button>
+                            <span className="font-bold text-sm text-blue-400 flex items-center gap-2"><Monitor size={16} /> MAIN BANNER</span>
+                            <button onClick={() => seedBannerByType("main")} className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600">+ Seed Sample</button>
                         </div>
-                        {/* Main Banner Preview */}
                         <div className="relative bg-[#333333] p-6 flex items-center justify-between overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-r from-[#333333] via-[#333333]/90 to-[#333333]/70" />
                             <div className="relative z-10 flex items-center gap-4">
-                                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
-                                    <span className="text-2xl">🐉</span>
-                                </div>
-                                <div>
-                                    <p className="font-bold text-white">Ads suck but keep the site <span className="text-[#9AE600]">free.</span></p>
-                                    <p className="text-white/70 text-sm">Remove ads and get many features with Premium</p>
-                                </div>
+                                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center"><span className="text-2xl">🐉</span></div>
+                                <div><p className="font-bold text-white">Ads suck but keep the site <span className="text-[#9AE600]">free.</span></p><p className="text-white/70 text-sm">Remove ads and get many features with Premium</p></div>
                             </div>
-                            <button className="relative z-10 px-4 py-2 bg-[#9AE600] text-black font-bold rounded-lg text-sm">
-                                CHECK OPTIONS
-                            </button>
+                            <button className="relative z-10 px-4 py-2 bg-[#9AE600] text-black font-bold rounded-lg text-sm">CHECK OPTIONS</button>
                         </div>
                     </div>
 
                     {/* SMALL Banner Sample */}
                     <div className="border border-green-500/30 rounded-xl overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-2 bg-green-500/10">
-                            <span className="font-bold text-sm text-green-400 flex items-center gap-2">
-                                <Square size={16} /> SMALL BANNER
-                            </span>
-                            <button
-                                onClick={() => seedBannerByType({ type: "small" })}
-                                className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600 transition-colors"
-                            >
-                                + Seed Sample
-                            </button>
+                            <span className="font-bold text-sm text-green-400 flex items-center gap-2"><Square size={16} /> SMALL BANNER</span>
+                            <button onClick={() => seedBannerByType("small")} className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600">+ Seed Sample</button>
                         </div>
-                        {/* Small Banner Preview */}
                         <div className="bg-[#2a1a4c] p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <span className="text-xl">🐉</span>
-                                <div>
-                                    <p className="font-bold text-[#FFD700] text-sm">Go Premium!</p>
-                                    <p className="text-white/60 text-xs">Unlock exclusive features</p>
-                                </div>
-                            </div>
-                            <button className="px-3 py-1.5 bg-[#FFD700] text-black font-bold rounded text-xs">
-                                UPGRADE
-                            </button>
+                            <div className="flex items-center gap-3"><span className="text-xl">🐉</span><div><p className="font-bold text-[#FFD700] text-sm">Go Premium!</p><p className="text-white/60 text-xs">Unlock exclusive features</p></div></div>
+                            <button className="px-3 py-1.5 bg-[#FFD700] text-black font-bold rounded text-xs">UPGRADE</button>
                         </div>
                     </div>
 
                     {/* POPUP Banner Sample */}
                     <div className="border border-purple-500/30 rounded-xl overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-2 bg-purple-500/10">
-                            <span className="font-bold text-sm text-purple-400 flex items-center gap-2">
-                                <MessageSquareMore size={16} /> POPUP BANNER
-                            </span>
-                            <button
-                                onClick={() => seedBannerByType({ type: "popup" })}
-                                className="px-3 py-1 bg-purple-500 text-white text-xs font-bold rounded-lg hover:bg-purple-600 transition-colors"
-                            >
-                                + Seed Sample
-                            </button>
+                            <span className="font-bold text-sm text-purple-400 flex items-center gap-2"><MessageSquareMore size={16} /> POPUP BANNER</span>
+                            <button onClick={() => seedBannerByType("popup")} className="px-3 py-1 bg-purple-500 text-white text-xs font-bold rounded-lg hover:bg-purple-600">+ Seed Sample</button>
                         </div>
-                        {/* Popup Banner Preview */}
                         <div className="bg-[#0d1117] p-6 relative">
                             <div className="max-w-sm mx-auto bg-stadium-elevated border border-border-strong rounded-xl p-6 text-center">
-                                <div className="flex justify-center gap-2 mb-4">
-                                    <span className="text-2xl">🐉</span>
-                                    <span className="text-2xl">🎬</span>
-                                </div>
+                                <div className="flex justify-center gap-2 mb-4"><span className="text-2xl">🐉</span><span className="text-2xl">🎬</span></div>
                                 <p className="font-bold text-[#FF6B6B] text-lg mb-1">Limited Time Offer!</p>
                                 <p className="text-white/70 text-sm mb-4">Get 50% off Premium today</p>
-                                <button className="px-4 py-2 bg-[#FF6B6B] text-white font-bold rounded-lg text-sm w-full">
-                                    CLAIM OFFER
-                                </button>
+                                <button className="px-4 py-2 bg-[#FF6B6B] text-white font-bold rounded-lg text-sm w-full">CLAIM OFFER</button>
                             </div>
                         </div>
                     </div>
@@ -299,29 +287,15 @@ export default function AdminBannersPage() {
                     {/* INTERSTITIAL Banner Sample */}
                     <div className="border border-orange-500/30 rounded-xl overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-2 bg-orange-500/10">
-                            <span className="font-bold text-sm text-orange-400 flex items-center gap-2">
-                                <Maximize size={16} /> INTERSTITIAL (Full-screen Ad)
-                            </span>
-                            <button
-                                onClick={() => seedBannerByType({ type: "interstitial" })}
-                                className="px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-lg hover:bg-orange-600 transition-colors"
-                            >
-                                + Seed Sample
-                            </button>
+                            <span className="font-bold text-sm text-orange-400 flex items-center gap-2"><Maximize size={16} /> INTERSTITIAL (Full-screen Ad)</span>
+                            <button onClick={() => seedBannerByType("interstitial")} className="px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-lg hover:bg-orange-600">+ Seed Sample</button>
                         </div>
-                        {/* Interstitial Banner Preview - Mini version */}
                         <div className="bg-black p-6 relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
                             <div className="relative z-10 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center">
-                                        <span className="text-3xl">⭐</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-[#9AE600] font-bold text-xl">Premium</p>
-                                        <p className="text-white font-bold">Membership ?</p>
-                                        <p className="text-white/50 text-xs mt-1">Support us and go ad-free</p>
-                                    </div>
+                                    <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center"><span className="text-3xl">⭐</span></div>
+                                    <div><p className="text-[#9AE600] font-bold text-xl">Premium</p><p className="text-white font-bold">Membership ?</p><p className="text-white/50 text-xs mt-1">Support us and go ad-free</p></div>
                                 </div>
                                 <div className="text-right">
                                     <div className="flex flex-col gap-1 text-xs mb-2">
@@ -329,15 +303,10 @@ export default function AdminBannersPage() {
                                         <span className="text-white/70">Download <span className="text-[#9AE600] font-bold">Directly</span></span>
                                         <span className="text-white/70">Watch <span className="text-[#9AE600] font-bold">Without Ads</span></span>
                                     </div>
-                                    <button className="px-4 py-2 bg-amber-500 text-black font-bold rounded-lg text-sm">
-                                        CHECK OUR PLANS
-                                    </button>
+                                    <button className="px-4 py-2 bg-amber-500 text-black font-bold rounded-lg text-sm">CHECK OUR PLANS</button>
                                 </div>
                             </div>
-                            {/* Progress bar */}
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
-                                <div className="h-full w-1/3 bg-[#9AE600]" />
-                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20"><div className="h-full w-1/3 bg-[#9AE600]" /></div>
                         </div>
                     </div>
                 </div>
@@ -361,11 +330,10 @@ export default function AdminBannersPage() {
                         </button>
                     </div>
                 ) : (
-                    banners.map((banner) => (
+                    banners.map((banner: any) => (
                         <div
                             key={banner._id}
-                            className={`bg-stadium-elevated border border-border-strong rounded-2xl p-6 ${!banner.isActive ? "opacity-60" : ""
-                                }`}
+                            className={`bg-stadium-elevated border border-border-strong rounded-2xl p-6 ${!banner.isActive ? "opacity-60" : ""}`}
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
@@ -396,7 +364,6 @@ export default function AdminBannersPage() {
                                         )}
                                     </div>
 
-                                    {/* Image previews */}
                                     <div className="flex gap-4 mt-4">
                                         {banner.leftImageUrl && (
                                             <div className="w-12 h-12 rounded-full overflow-hidden border border-border-subtle">

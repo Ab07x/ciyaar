@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBoostedViews, formatViews } from "@/lib/analytics";
@@ -22,7 +20,6 @@ export function ViewCounter({
     className,
     showIcon = true,
 }: ViewCounterProps) {
-    const increment = useMutation(api.analytics.increment);
     const [views, setViews] = useState(initialViews);
     const [hasIncremented, setHasIncremented] = useState(false);
 
@@ -30,7 +27,11 @@ export function ViewCounter({
         if (!hasIncremented && id) {
             // Prevent double counting in Strict Mode or re-renders
             setHasIncremented(true);
-            increment({ id, collection })
+            fetch("/api/data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type: "increment", id, collection }),
+            })
                 .then(() => {
                     // Optimistic update or just increment local state
                     setViews((v) => v + 1);
@@ -39,7 +40,7 @@ export function ViewCounter({
                     console.error("Failed to increment views:", err);
                 });
         }
-    }, [id, collection, increment, hasIncremented]);
+    }, [id, collection, hasIncremented]);
 
     if (views === 0) return null;
 

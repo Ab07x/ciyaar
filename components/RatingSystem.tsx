@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import { useUser } from "@/providers/UserProvider";
 import {
     Star,
@@ -15,6 +14,8 @@ import {
     Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 // Simple time ago formatter
 function timeAgo(timestamp: number): string {
@@ -51,40 +52,41 @@ export function RatingSystem({
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    // Queries
-    const averageRating = useQuery(api.ratings.getContentAverageRating, {
-        contentType,
-        contentId,
-    });
-
-    const userRating = useQuery(
-        api.ratings.getUserRating,
-        userId ? { userId, contentType, contentId } : "skip"
+    // Queries via SWR
+    const { data: averageRating } = useSWR(
+        `/api/ratings/average?contentType=${contentType}&contentId=${contentId}`,
+        fetcher
     );
 
-    const reviews = useQuery(api.ratings.getContentRatings, {
-        contentType,
-        contentId,
-        limit: showAllReviews ? 50 : 5,
-    });
+    const { data: userRating } = useSWR(
+        userId ? `/api/ratings/user?userId=${userId}&contentType=${contentType}&contentId=${contentId}` : null,
+        fetcher
+    );
 
-    // Mutations
-    const upsertRating = useMutation(api.ratings.upsertRating);
-    const markHelpful = useMutation(api.ratings.markHelpful);
-    const reportRating = useMutation(api.ratings.reportRating);
+    const { data: reviews } = useSWR(
+        `/api/ratings?contentType=${contentType}&contentId=${contentId}&limit=${showAllReviews ? 50 : 5}`,
+        fetcher
+    );
 
     // Handle rating submission
     const handleSubmitRating = async () => {
         if (!userId || selectedRating === 0) return;
 
         setSubmitting(true);
-        await upsertRating({
-            userId,
-            contentType,
-            contentId,
-            rating: selectedRating,
-            review: review.trim() || undefined,
+        await fetch("/api/ratings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId,
+                contentType,
+                contentId,
+                rating: selectedRating,
+                review: review.trim() || undefined,
+            }),
         });
+        mutate(`/api/ratings/average?contentType=${contentType}&contentId=${contentId}`);
+        mutate(`/api/ratings/user?userId=${userId}&contentType=${contentType}&contentId=${contentId}`);
+        mutate(`/api/ratings?contentType=${contentType}&contentId=${contentId}&limit=${showAllReviews ? 50 : 5}`);
         setSubmitting(false);
         setShowReviewInput(false);
         setReview("");
@@ -243,12 +245,12 @@ export function RatingSystem({
                 <div className="space-y-4">
                     <h3 className="font-bold text-lg">Faallooyin</h3>
 
-                    {reviews.map((r) => (
+                    {reviews.map((r: any) => (
                         <ReviewCard
                             key={r._id}
                             review={r}
-                            onHelpful={() => markHelpful({ ratingId: r._id })}
-                            onReport={() => reportRating({ ratingId: r._id })}
+                            onHelpful={() => fetch("/api/ratings/helpful", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ratingId: r._id }) })}
+                            onReport={() => fetch("/api/ratings/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ratingId: r._id }) })}
                         />
                     ))}
 

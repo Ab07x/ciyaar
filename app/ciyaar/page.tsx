@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { MatchCardNew } from "@/components/MatchCardNew";
 import { EmptyState, NoMatchesState } from "@/components/EmptyState";
 import { AdSlot } from "@/components/AdSlot";
@@ -13,6 +12,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Radio, Calendar, CheckCircle, LayoutGrid, ChevronLeft } from "lucide-react";
 import { useUser } from "@/providers/UserProvider";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 type FilterStatus = "all" | "live" | "upcoming" | "finished";
 
@@ -28,15 +29,19 @@ function MatchesContent() {
   const router = useRouter();
   const leagueIdParam = searchParams.get("league");
   const [filter, setFilter] = useState<FilterStatus>("all");
-  const matches = useQuery(api.matches.listMatches, {
-    status: filter === "all" ? undefined : filter as any,
-    leagueId: leagueIdParam || undefined
-  });
+
+  const queryParams = new URLSearchParams();
+  if (filter !== "all") queryParams.set("status", filter);
+  if (leagueIdParam) queryParams.set("leagueId", leagueIdParam);
+  const qs = queryParams.toString();
+
+  const { data: matches } = useSWR(`/api/matches${qs ? `?${qs}` : ""}`, fetcher, { refreshInterval: 15000 });
+  const { data: allMatches } = useSWR("/api/matches", fetcher);
   const { isPremium } = useUser();
 
-  // Count matches by status for the badges
-  const allMatches = useQuery(api.matches.listMatches, {});
-  const liveCount = allMatches?.filter(m => m.status === "live").length || 0;
+  const matchesList = Array.isArray(matches) ? matches : [];
+  const allMatchesList = Array.isArray(allMatches) ? allMatches : [];
+  const liveCount = allMatchesList.filter((m: any) => m.status === "live").length;
 
   return (
     <>
@@ -67,7 +72,7 @@ function MatchesContent() {
           </button>
         )}
 
-        {/* Filter Tabs - Redesigned */}
+        {/* Filter Tabs */}
         <div className="flex items-center gap-2 p-1 bg-[#333333] rounded-xl border border-[#2a4a6c] w-full md:w-fit overflow-x-auto no-scrollbar">
           {(Object.keys(filterConfig) as FilterStatus[]).map((status) => {
             const config = filterConfig[status];
@@ -121,7 +126,7 @@ function MatchesContent() {
           >
             <SkeletonMatchGrid count={8} />
           </motion.div>
-        ) : matches.length > 0 ? (
+        ) : matchesList.length > 0 ? (
           <motion.div
             key="matches"
             initial={{ opacity: 0 }}
@@ -129,7 +134,7 @@ function MatchesContent() {
             exit={{ opacity: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
           >
-            {matches.map((match, index) => (
+            {matchesList.map((match: any, index: number) => (
               <motion.div
                 key={match._id}
                 initial={{ opacity: 0, y: 20 }}
@@ -177,7 +182,6 @@ function MatchesContent() {
 export default function CiyaarArchivePage() {
   return (
     <div className="relative min-h-screen bg-[#020D18]">
-      {/* Subtle Background Pattern */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(154,230,0,0.03)_0%,transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_50%,rgba(220,38,38,0.05)_0%,transparent_30%)]" />

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
+import connectDB from "@/lib/mongodb";
+import { Settings, Payment } from "@/lib/models";
 
 // Plan duration mapping (days)
 const PLAN_DURATIONS: Record<string, number> = {
@@ -19,6 +19,7 @@ const PLAN_DEVICES: Record<string, number> = {
 
 export async function POST(request: NextRequest) {
     try {
+        await connectDB();
         const body = await request.json();
         const { plan, deviceId } = body;
 
@@ -37,9 +38,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Get price from settings
-        const settings = await fetchQuery(api.settings.getSettings);
-        const priceKey = `price${plan.charAt(0).toUpperCase() + plan.slice(1)}` as keyof typeof settings;
-        const baseAmount = (settings as any)[priceKey] || 0;
+        const settings = await Settings.findOne().lean() as any;
+        const priceKey = `price${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
+        const baseAmount = settings?.[priceKey] || 0;
 
         if (!baseAmount || baseAmount <= 0) {
             return NextResponse.json(
@@ -110,20 +111,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Save pending payment in Convex
-        await fetchMutation(api.payments.createPayment, {
+        // Save pending payment in MongoDB
+        await Payment.create({
             deviceId,
-            plan: plan as "match" | "weekly" | "monthly" | "yearly",
+            plan,
             amount: baseAmount,
             currency: "USD",
             orderId,
             gateway: "checkout",
             sifaloKey: key,
             sifaloToken: token,
+            status: "pending",
+            createdAt: Date.now(),
         });
 
         // Build checkout URL
-        // Don't re-encode — Sifalo API returns key/token already URL-safe
         const checkoutUrl = `https://pay.sifalo.com/checkout/?key=${key}&token=${token}`;
 
         return NextResponse.json({

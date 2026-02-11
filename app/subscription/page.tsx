@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useEffect, useState } from "react";
 import { Loader2, Crown, Calendar, Smartphone, Ticket, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import Link from "next/link";
@@ -20,8 +19,10 @@ export default function SubscriptionPage() {
         }
     }, []);
 
-    const subscriptionData = useQuery(api.subscriptions.getUserSubscriptionDetails,
-        deviceId ? { deviceId } : "skip"
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: subscriptionData } = useSWR(
+        deviceId ? `/api/subscriptions?deviceId=${deviceId}` : null,
+        fetcher
     );
 
     if (!deviceId) {

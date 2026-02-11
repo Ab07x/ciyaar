@@ -1,12 +1,11 @@
 
-import { Doc } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import Image from "next/image";
 import { Play, Info, Crown, Star } from "lucide-react";
 import { useLanguage } from "@/providers/LanguageProvider";
 
 interface MovieHeroProps {
-    movie: Doc<"movies">;
+    movie: any;
 }
 
 export function MovieHero({ movie }: MovieHeroProps) {

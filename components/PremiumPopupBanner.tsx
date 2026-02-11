@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 import { useUser } from "@/providers/UserProvider";
 
 interface PremiumPopupBannerProps {
@@ -15,7 +16,7 @@ interface PremiumPopupBannerProps {
 
 export function PremiumPopupBanner({ onClose, show = true }: PremiumPopupBannerProps) {
     const { isPremium } = useUser();
-    const banner = useQuery(api.promoBanners.getActiveBanner, { type: "popup" });
+    const { data: banner } = useSWR("/api/promo-banners?type=popup", fetcher);
     const [isVisible, setIsVisible] = useState(show);
 
     // Sync visibility with props

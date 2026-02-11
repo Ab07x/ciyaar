@@ -1,40 +1,45 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import Link from "next/link";
 import { Plus, Edit, Trash2, Tv, Crown, Eye, Search, Check, X } from "lucide-react";
 import { useState } from "react";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function AdminSeriesPage() {
-    const seriesList = useQuery(api.series.listSeries, {});
-    const deleteSeries = useMutation(api.series.deleteSeries);
+    const { data: seriesList, mutate } = useSWR("/api/series", fetcher);
 
     const [filter, setFilter] = useState<"all" | "published" | "draft" | "premium" | "dubbed">("all");
     const [search, setSearch] = useState("");
 
-    const filtered = seriesList?.filter((s) => {
-        if (filter === "published") return s.isPublished;
-        if (filter === "draft") return !s.isPublished;
-        if (filter === "premium") return s.isPremium;
-        if (filter === "dubbed") return s.isDubbed;
+    const filtered = seriesList?.filter((s: any) => {
+        if (filter === "published" && !s.isPublished) return false;
+        if (filter === "draft" && s.isPublished) return false;
+        if (filter === "premium" && !s.isPremium) return false;
+        if (filter === "dubbed" && s.language !== "somali") return false;
+        if (search && !s.title.toLowerCase().includes(search.toLowerCase())) return false;
         return true;
-    }).filter((s) =>
-        s.title.toLowerCase().includes(search.toLowerCase())
-    );
+    });
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Delete this series and all its episodes?")) return;
+        await fetch(`/api/series?id=${id}`, { method: "DELETE" });
+        mutate();
+    };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black">SERIES</h1>
-                    <p className="text-text-muted">Musalsalada – One-click TMDB import</p>
+                    <p className="text-text-muted">Manage TV series and episodes</p>
                 </div>
                 <Link
                     href="/kism/series/new"
-                    className="px-4 py-2 bg-accent-green text-black rounded-lg font-bold flex items-center gap-2"
+                    className="px-6 py-3 bg-accent-green text-black rounded-xl font-bold flex items-center gap-2"
                 >
-                    <Plus size={18} />
+                    <Plus size={20} />
                     Add Series
                 </Link>
             </div>
@@ -42,16 +47,16 @@ export default function AdminSeriesPage() {
             {/* Filters */}
             <div className="flex flex-wrap gap-4 items-center">
                 <div className="flex gap-2">
-                    {["all", "published", "draft", "premium", "dubbed"].map((f) => (
+                    {(["all", "published", "draft", "premium", "dubbed"] as const).map((f) => (
                         <button
                             key={f}
-                            onClick={() => setFilter(f as any)}
+                            onClick={() => setFilter(f)}
                             className={`px-3 py-1 rounded-full text-sm capitalize ${filter === f
-                                    ? "bg-accent-green text-black font-bold"
-                                    : "bg-stadium-hover text-text-secondary"
+                                ? "bg-accent-green text-black font-bold"
+                                : "bg-stadium-hover text-text-secondary"
                                 }`}
                         >
-                            {f === "dubbed" ? "Af-Somali" : f}
+                            {f}
                         </button>
                     ))}
                 </div>
@@ -67,81 +72,53 @@ export default function AdminSeriesPage() {
             </div>
 
             {/* Series Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filtered?.map((series) => (
-                    <div
-                        key={series._id}
-                        className="bg-stadium-elevated border border-border-strong rounded-xl overflow-hidden group"
-                    >
-                        <div className="relative aspect-[2/3]">
-                            {series.posterUrl ? (
-                                <img
-                                    src={series.posterUrl}
-                                    alt={series.title}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-stadium-dark flex items-center justify-center">
-                                    <Tv size={48} className="text-text-muted/30" />
-                                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filtered?.map((s: any) => (
+                    <div key={s._id} className="bg-stadium-elevated border border-border-strong rounded-xl overflow-hidden">
+                        <div className="h-32 bg-stadium-dark relative">
+                            {s.backdropUrl && (
+                                <img src={s.backdropUrl} alt="" className="w-full h-full object-cover opacity-50" />
                             )}
-
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <Link
-                                    href={`/kism/series/${series._id}`}
-                                    className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
-                                >
-                                    <Edit size={18} />
-                                </Link>
-                                <button
-                                    onClick={() => deleteSeries({ id: series._id })}
-                                    className="p-2 bg-accent-red/50 rounded-lg hover:bg-accent-red"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
-
-                            <div className="absolute top-2 left-2 flex flex-col gap-1">
-                                {series.isPremium && (
-                                    <div className="flex items-center gap-1 bg-accent-gold px-2 py-0.5 rounded text-xs font-bold text-black">
-                                        <Crown size={10} />
-                                        PREMIUM
-                                    </div>
+                            <div className="absolute top-2 right-2 flex gap-1">
+                                {s.isPremium && (
+                                    <span className="bg-accent-gold text-black text-xs px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                                        <Crown size={12} /> Premium
+                                    </span>
                                 )}
-                                {series.isDubbed && (
-                                    <div className="bg-accent-green px-2 py-0.5 rounded text-xs font-bold text-black">
-                                        AF-SOMALI
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="absolute top-2 right-2">
-                                {series.isPublished ? (
-                                    <div className="w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
-                                        <Check size={14} className="text-black" />
-                                    </div>
+                                {s.isPublished ? (
+                                    <span className="bg-accent-green/20 text-accent-green text-xs px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                                        <Check size={12} /> Live
+                                    </span>
                                 ) : (
-                                    <div className="w-6 h-6 bg-text-muted rounded-full flex items-center justify-center">
-                                        <X size={14} className="text-white" />
-                                    </div>
+                                    <span className="bg-gray-600/50 text-gray-300 text-xs px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                                        <X size={12} /> Draft
+                                    </span>
                                 )}
-                            </div>
-
-                            {/* Season count */}
-                            <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-xs">
-                                {series.numberOfSeasons} Seasons
                             </div>
                         </div>
-
-                        <div className="p-3">
-                            <h3 className="font-bold text-sm truncate">{series.title}</h3>
-                            <div className="flex items-center justify-between mt-1">
+                        <div className="p-4">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Tv size={16} className="text-purple-400" />
+                                <h3 className="font-bold truncate">{s.title}</h3>
+                            </div>
+                            <p className="text-sm text-text-muted mb-3 truncate">{s.genre?.join(", ")}</p>
+                            <div className="flex items-center justify-between">
                                 <span className="text-xs text-text-muted">
-                                    {series.firstAirDate?.split("-")[0]}
+                                    {s.totalSeasons || 1} season{(s.totalSeasons || 1) > 1 ? "s" : ""}
                                 </span>
-                                <div className="flex items-center gap-1 text-xs text-text-muted">
-                                    <Eye size={12} />
-                                    {series.views || 0}
+                                <div className="flex gap-2">
+                                    <Link
+                                        href={`/kism/series/${s._id}`}
+                                        className="p-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30"
+                                    >
+                                        <Edit size={16} />
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(s._id)}
+                                        className="p-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -149,10 +126,10 @@ export default function AdminSeriesPage() {
                 ))}
             </div>
 
-            {filtered?.length === 0 && (
-                <div className="text-center py-12">
+            {(!filtered || filtered.length === 0) && (
+                <div className="text-center py-12 bg-stadium-elevated rounded-xl border border-border-strong border-dashed">
                     <Tv size={48} className="mx-auto mb-4 text-text-muted/30" />
-                    <p className="text-text-muted">Ma jiraan series. Ku dar mid cusub TMDB-ga.</p>
+                    <p className="text-text-muted">No series found</p>
                 </div>
             )}
         </div>

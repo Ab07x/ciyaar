@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Gift, Plus, Copy, Check, Download, Filter } from "lucide-react";
+import useSWR from "swr";
+import { Gift, Plus, Copy, Check, Download } from "lucide-react";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const planOptions = [
     { value: "monthly", label: "1 Bishiiba", days: 30 },
@@ -19,8 +20,7 @@ const occasionOptions = [
 ];
 
 export default function AdminGiftsPage() {
-    const settings = useQuery(api.settings.getSettings);
-    const generateBulkGifts = useMutation(api.gifts.generateBulkGiftCodes);
+    const { data: settings } = useSWR("/api/settings", fetcher);
 
     const [showModal, setShowModal] = useState(false);
     const [plan, setPlan] = useState<"monthly" | "3month" | "yearly">("monthly");
@@ -30,19 +30,20 @@ export default function AdminGiftsPage() {
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
     const handleGenerate = async () => {
-        if (!settings?.adminPassword) {
-            alert("Admin password not set");
-            return;
-        }
-
         try {
-            const result = await generateBulkGifts({
-                adminPass: settings.adminPassword,
-                plan,
-                count,
-                occasion,
+            const planOption = planOptions.find(p => p.value === plan);
+            const res = await fetch("/api/gift-codes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    plan,
+                    count,
+                    occasion,
+                    durationDays: planOption?.days || 30,
+                }),
             });
-            setGeneratedCodes(result.codes);
+            const result = await res.json();
+            setGeneratedCodes(result.codes || [result.code || result._id]);
         } catch (error: any) {
             alert("Error: " + error.message);
         }
@@ -207,18 +208,8 @@ export default function AdminGiftsPage() {
                                 </div>
 
                                 <div className="flex gap-3 mt-6">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-3 bg-stadium-hover rounded-lg"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleGenerate}
-                                        className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold rounded-lg"
-                                    >
-                                        Generate
-                                    </button>
+                                    <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-stadium-hover rounded-lg">Cancel</button>
+                                    <button onClick={handleGenerate} className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold rounded-lg">Generate</button>
                                 </div>
                             </div>
                         ) : (
@@ -226,17 +217,11 @@ export default function AdminGiftsPage() {
                                 <div className="flex justify-between items-center">
                                     <span className="text-text-secondary">{generatedCodes.length} gift codes generated</span>
                                     <div className="flex gap-2">
-                                        <button
-                                            onClick={handleCopyAll}
-                                            className="text-purple-400 text-sm flex items-center gap-1"
-                                        >
+                                        <button onClick={handleCopyAll} className="text-purple-400 text-sm flex items-center gap-1">
                                             {copiedIndex === -1 ? <Check size={14} /> : <Copy size={14} />}
                                             Copy All
                                         </button>
-                                        <button
-                                            onClick={handleExportCSV}
-                                            className="text-purple-400 text-sm flex items-center gap-1"
-                                        >
+                                        <button onClick={handleExportCSV} className="text-purple-400 text-sm flex items-center gap-1">
                                             <Download size={14} />
                                             CSV
                                         </button>
@@ -245,10 +230,7 @@ export default function AdminGiftsPage() {
 
                                 <div className="max-h-64 overflow-y-auto space-y-2">
                                     {generatedCodes.map((code, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center justify-between bg-stadium-dark px-4 py-2 rounded-lg"
-                                        >
+                                        <div key={i} className="flex items-center justify-between bg-stadium-dark px-4 py-2 rounded-lg">
                                             <span className="font-mono font-bold text-purple-300">{code}</span>
                                             <button onClick={() => handleCopy(code, i)}>
                                                 {copiedIndex === i ? (
@@ -261,12 +243,7 @@ export default function AdminGiftsPage() {
                                     ))}
                                 </div>
 
-                                <button
-                                    onClick={() => setShowModal(false)}
-                                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold rounded-lg mt-4"
-                                >
-                                    Done
-                                </button>
+                                <button onClick={() => setShowModal(false)} className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold rounded-lg mt-4">Done</button>
                             </div>
                         )}
                     </div>

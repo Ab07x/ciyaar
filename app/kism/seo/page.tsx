@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { Check, Save, Upload, Globe, Search, Shield, Lock } from "lucide-react";
 import { useToast } from "@/providers/ToastProvider";
 
-// ... imports
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-// Define interface based on schema
 interface Settings {
     siteName?: string;
     seoTagline?: string;
@@ -21,23 +19,18 @@ interface Settings {
     adminPassword?: string;
     sitemapEnabled?: boolean;
     footballApiKey?: string;
-    _id: string;
-    _creationTime: number;
+    _id?: string;
 }
 
 export default function AdminSEOPage() {
-    const settings = useQuery(api.settings.getSettings);
-    const updateSettings = useMutation(api.settings.updateSettings);
+    const { data: settings, mutate } = useSWR("/api/settings", fetcher);
     const toast = useToast();
     const [loading, setLoading] = useState(false);
 
-    // Form states (synced with settings once loaded)
     const [formData, setFormData] = useState<Partial<Settings>>({});
     const [initialized, setInitialized] = useState(false);
 
-    // Sync settings to state
     if (settings && !initialized) {
-        // Safe cast as settings comes from DB
         const s = settings as any;
         setFormData({
             siteName: s.siteName,
@@ -54,7 +47,6 @@ export default function AdminSEOPage() {
         });
         setInitialized(true);
     }
-    // ... rest of component
 
     const handleChange = (field: string, value: any) => {
         setFormData((prev: any) => ({ ...prev, [field]: value }));
@@ -63,7 +55,12 @@ export default function AdminSEOPage() {
     const handleSave = async () => {
         setLoading(true);
         try {
-            await updateSettings(formData);
+            await fetch("/api/settings", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+            mutate();
             toast("Settings updated successfully", "success");
         } catch (error) {
             console.error(error);
@@ -185,11 +182,7 @@ export default function AdminSEOPage() {
                                     readOnly
                                     className="w-full bg-stadium-dark/50 border border-border-subtle rounded-xl px-4 py-3 text-text-muted select-all"
                                 />
-                                <a
-                                    href="/sitemap.xml"
-                                    target="_blank"
-                                    className="p-3 bg-stadium-hover rounded-xl hover:text-accent-green"
-                                >
+                                <a href="/sitemap.xml" target="_blank" className="p-3 bg-stadium-hover rounded-xl hover:text-accent-green">
                                     <Globe size={20} />
                                 </a>
                             </div>

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import connectDB from "@/lib/mongodb";
+import { Movie } from "@/lib/models";
 import fs from "fs";
 import path from "path";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p";
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
@@ -27,14 +26,13 @@ async function downloadImage(url: string, savePath: string): Promise<boolean> {
 
 export async function POST(request: NextRequest) {
     try {
+        await connectDB();
         const body = await request.json().catch(() => ({}));
         const limit = body.limit || 50;
         const offset = body.offset || 0;
 
-        // Fetch ALL movies - no limit
-        const movies = await convex.query(api.movies.listMovies, {
-            isPublished: true,
-        });
+        // Fetch ALL movies
+        const movies = await Movie.find({ isPublished: true }).lean() as any[];
 
         if (!movies?.length) {
             return NextResponse.json({ error: "No movies" }, { status: 404 });
@@ -62,10 +60,7 @@ export async function POST(request: NextRequest) {
 
                 // Just make sure DB is updated
                 if (movie.posterUrl !== localPosterUrl) {
-                    await convex.mutation(api.movies.updateMovieImages, {
-                        id: movie._id,
-                        posterUrl: localPosterUrl,
-                    });
+                    await Movie.findByIdAndUpdate(movie._id, { posterUrl: localPosterUrl });
                     result.dbFixed = true;
                 }
                 results.push(result);
@@ -76,10 +71,8 @@ export async function POST(request: NextRequest) {
             let tmdbPosterUrl = "";
 
             if (movie.posterUrl && movie.posterUrl.includes("image.tmdb.org")) {
-                // DB still has TMDB URL - use it
                 tmdbPosterUrl = movie.posterUrl.replace(/\/w\d+\//, "/w500/");
             } else if (movie.tmdbId && TMDB_API_KEY) {
-                // DB has local path (broken) - fetch from TMDB API
                 try {
                     const tmdbRes = await fetch(
                         `https://api.themoviedb.org/3/movie/${movie.tmdbId}?api_key=${TMDB_API_KEY}`,
@@ -90,7 +83,6 @@ export async function POST(request: NextRequest) {
                         if (tmdbData.poster_path) {
                             tmdbPosterUrl = `${TMDB_IMAGE_BASE}/w500${tmdbData.poster_path}`;
                         }
-                        // Also get backdrop
                         if (tmdbData.backdrop_path) {
                             const backdropFilename = slugToFilename(movie.slug, "backdrop");
                             const backdropPath = path.join(backdropsDir, backdropFilename);
@@ -116,8 +108,7 @@ export async function POST(request: NextRequest) {
 
                     // Update DB
                     try {
-                        await convex.mutation(api.movies.updateMovieImages, {
-                            id: movie._id,
+                        await Movie.findByIdAndUpdate(movie._id, {
                             posterUrl: localPosterUrl,
                             ...(result.localBackdrop && { backdropUrl: result.localBackdrop }),
                         });
@@ -135,8 +126,8 @@ export async function POST(request: NextRequest) {
             results.push(result);
         }
 
-        const ok = results.filter(r => r.posterOk).length;
-        const failed = results.filter(r => !r.posterOk).length;
+        const ok = results.filter((r: any) => r.posterOk).length;
+        const failed = results.filter((r: any) => !r.posterOk).length;
 
         return NextResponse.json({
             success: true,

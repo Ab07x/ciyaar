@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { Lock, Play, Tv, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-import type { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface PPVUnlockGateProps {
     contentType: "match" | "movie";
@@ -41,15 +41,13 @@ export function PPVUnlockGate({
         return id;
     });
 
-    // Queries
-    const accessCheck = useQuery(
-        api.ppv.checkAccess,
-        userId
-            ? { userId: userId, contentType, contentId }
-            : { contentType, contentId }
-    );
+    // Queries via SWR
+    const accessParams = userId
+        ? `userId=${userId}&contentType=${contentType}&contentId=${contentId}`
+        : `contentType=${contentType}&contentId=${contentId}`;
+    const { data: accessCheck } = useSWR(`/api/ppv/check?${accessParams}`, fetcher);
 
-    const globalAd = useQuery(api.ads.getAdBySlot, { slotKey: "ppv_unlock" });
+    const { data: globalAd } = useSWR(`/api/ads?slotKey=ppv_unlock`, fetcher);
 
     // Determine the active ad configuration (Embedded > Global > Fallback)
     const activeAd = (() => {
@@ -87,9 +85,22 @@ export function PPVUnlockGate({
         return null;
     })();
 
-    // Mutations
-    const recordAdWatch = useMutation(api.ppv.recordAdWatch);
-    const trackAdImpression = useMutation(api.ppv.trackAdImpression);
+    // API mutation helpers
+    const recordAdWatch = async (params: any) => {
+        const res = await fetch("/api/ppv/ad-watch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(params),
+        });
+        return res.json();
+    };
+    const trackAdImpression = async (params: any) => {
+        await fetch("/api/ppv/impression", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(params),
+        });
+    };
 
     // Handle ad completion
     const handleAdComplete = useCallback(async () => {
@@ -122,7 +133,7 @@ export function PPVUnlockGate({
         if (result.isUnlocked && onUnlock) {
             onUnlock();
         }
-    }, [userId, deviceId, contentType, contentId, recordAdWatch, trackAdImpression, onUnlock]);
+    }, [userId, deviceId, contentType, contentId, onUnlock]);
 
     // Get ad duration from config or use default
     const adDuration = activeAd?.videoDuration || DEFAULT_AD_DURATION;

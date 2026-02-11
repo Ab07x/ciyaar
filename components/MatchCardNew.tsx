@@ -9,10 +9,9 @@ import { LiveBadge } from "./ui/LiveBadge";
 import { ViewerCount } from "./ui/ViewerCount";
 import { formatKickoffTime } from "@/lib/date-utils";
 import { getBoostedViews } from "@/lib/analytics";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface MatchCardNewProps {
-  _id: Id<"matches">;
+  _id: string;
   slug: string;
   title: string;
   teamA: string;

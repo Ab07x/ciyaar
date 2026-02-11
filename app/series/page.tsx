@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import Link from "next/link";
 import Image from "next/image";
 import { AdSlot } from "@/components/AdSlot";
@@ -11,7 +10,8 @@ import { Tv, Crown, Star, Play, Lock, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function SeriesPage() {
-    const series = useQuery(api.series.listSeries, { isPublished: true });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: series } = useSWR("/api/series?isPublished=true", fetcher);
     const { isPremium } = useUser();
     const [filter, setFilter] = useState<"all" | "dubbed" | "premium">("all");
     const [genreFilter, setGenreFilter] = useState<string | null>(null);

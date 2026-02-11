@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
 import BlogClientPage from "./BlogClientPage";
 
 interface BlogPostPageProps {
@@ -9,7 +7,8 @@ interface BlogPostPageProps {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
     const { slug } = await params;
-    const post = await fetchQuery(api.posts.getPostBySlug, { slug });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/posts/${slug}`, { cache: 'no-store' });
+    const post = res.ok ? await res.json() : null;
 
     if (!post) return { title: "Post Not Found - Fanbroj" };
 
@@ -44,7 +43,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const { slug } = await params;
-    const post = await fetchQuery(api.posts.getPostBySlug, { slug });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/posts/${slug}`, { cache: 'no-store' });
+    const post = res.ok ? await res.json() : null;
 
     const jsonLd = post ? {
         "@context": "https://schema.org",

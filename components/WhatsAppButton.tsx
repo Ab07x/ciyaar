@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { cn } from "@/lib/utils";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface WhatsAppButtonProps {
     className?: string;
@@ -13,7 +14,7 @@ interface WhatsAppButtonProps {
 }
 
 export function WhatsAppButton({ className, showLabel = true }: WhatsAppButtonProps) {
-    const settings = useQuery(api.settings.getSettings);
+    const { data: settings } = useSWR("/api/settings", fetcher);
     const { isPremium } = useUser();
     const [mounted, setMounted] = useState(false);
 

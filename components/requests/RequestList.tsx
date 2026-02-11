@@ -1,21 +1,21 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { useToast } from "@/providers/ToastProvider";
 import { ThumbsUp, CheckCircle2, Clock, XCircle, Film, Tv } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export function RequestList() {
     const { userId } = useUser();
     const toast = useToast();
 
     // In a real app complexity, these should probably be PAGINATED
-    const requests = useQuery(api.requests.listRequests, { limit: 50 });
-    const myVotes = useQuery(api.requests.getMyVotes, userId ? { userId } : "skip");
-    const vote = useMutation(api.requests.voteRequest);
+    const { data: requests } = useSWR("/api/requests?limit=50", fetcher);
+    const { data: myVotes } = useSWR(userId ? `/api/requests/votes?userId=${userId}` : null, fetcher);
 
     const handleVote = async (requestId: any) => {
         if (!userId) {
@@ -27,7 +27,13 @@ export function RequestList() {
         if (myVotes?.includes(requestId)) return;
 
         try {
-            await vote({ requestId, userId });
+            await fetch("/api/requests/vote", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ requestId, userId }),
+            });
+            mutate("/api/requests?limit=50");
+            mutate(`/api/requests/votes?userId=${userId}`);
             toast("Voted!", "success");
         } catch (error) {
             toast("Failed to vote", "error");

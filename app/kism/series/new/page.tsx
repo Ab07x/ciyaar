@@ -1,9 +1,8 @@
 "use client";
 
-import { useAction, useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import {
     Save,
     ChevronLeft,
@@ -19,8 +18,9 @@ import {
     Play
 } from "lucide-react";
 import Link from "next/link";
-import type { Id } from "@/convex/_generated/dataModel";
 import EpisodeEditor from "@/components/admin/EpisodeEditor";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 interface Props {
     params?: Promise<{ id: string }>;
@@ -31,28 +31,37 @@ export default function SeriesFormPage({ params }: Props) {
     const idParams = params ? use(params) : null;
     const id = idParams?.id;
 
-    const existingSeries = useQuery(
-        api.series.getSeriesById,
-        id ? { id: id as Id<"series"> } : "skip"
-    );
-    const episodesData = useQuery(
-        api.series.getEpisodesBySeries,
-        id ? { seriesId: id as Id<"series"> } : "skip"
+    const { data: existingSeries, mutate: mutateSeries } = useSWR(
+        id ? `/api/series?id=${id}` : null,
+        fetcher
     );
 
-    const createSeries = useMutation(api.series.createSeries);
-    const updateSeries = useMutation(api.series.updateSeries);
-    const fetchFromTMDB = useAction(api.tmdb.fetchSeriesFromTMDB);
-    const fetchSeasonFromTMDB = useAction(api.tmdb.fetchSeasonFromTMDB);
-    const bulkCreateEpisodes = useMutation(api.series.bulkCreateEpisodes);
-    const searchTMDB = useAction(api.tmdb.searchTMDB);
+    // Fetch episodes grouped by season
+    const { data: episodesRaw, mutate: mutateEpisodes } = useSWR(
+        id ? `/api/series?slug=${existingSeries?.slug || ""}&includeEpisodes=true` : null,
+        async (url) => {
+            if (!existingSeries?.slug) return null;
+            const res = await fetch(`/api/series?slug=${existingSeries.slug}`);
+            const data = await res.json();
+            return data?.episodes || [];
+        }
+    );
 
+    // Group episodes by season
+    const episodesData: Record<number, any[]> = {};
+    if (episodesRaw) {
+        for (const ep of episodesRaw) {
+            const sn = ep.seasonNumber || 1;
+            if (!episodesData[sn]) episodesData[sn] = [];
+            episodesData[sn].push(ep);
+        }
+    }
 
     const [activeTab, setActiveTab] = useState<"details" | "episodes">("details");
     const [tmdbInput, setTmdbInput] = useState("");
     const [searching, setSearching] = useState(false);
     const [fetching, setFetching] = useState(false);
-    const [syncing, setSyncing] = useState(0); // Season number currently syncing
+    const [syncing, setSyncing] = useState(0);
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [showSearch, setShowSearch] = useState(false);
     const [editingEpisode, setEditingEpisode] = useState<any>(null);
@@ -81,7 +90,7 @@ export default function SeriesFormPage({ params }: Props) {
     });
 
     useEffect(() => {
-        if (existingSeries && "title" in existingSeries) {
+        if (existingSeries && existingSeries.title) {
             setFormData({
                 slug: existingSeries.slug,
                 tmdbId: existingSeries.tmdbId,
@@ -93,15 +102,15 @@ export default function SeriesFormPage({ params }: Props) {
                 lastAirDate: existingSeries.lastAirDate || "",
                 status: existingSeries.status,
                 rating: existingSeries.rating || 0,
-                genres: existingSeries.genres,
-                cast: existingSeries.cast,
-                numberOfSeasons: existingSeries.numberOfSeasons,
-                numberOfEpisodes: existingSeries.numberOfEpisodes,
+                genres: existingSeries.genres || [],
+                cast: existingSeries.cast || [],
+                numberOfSeasons: existingSeries.numberOfSeasons || existingSeries.totalSeasons || 0,
+                numberOfEpisodes: existingSeries.numberOfEpisodes || existingSeries.totalEpisodes || 0,
                 titleSomali: existingSeries.titleSomali || "",
                 overviewSomali: existingSeries.overviewSomali || "",
-                isDubbed: existingSeries.isDubbed,
-                isPremium: existingSeries.isPremium,
-                isPublished: existingSeries.isPublished,
+                isDubbed: existingSeries.isDubbed || false,
+                isPremium: existingSeries.isPremium || false,
+                isPublished: existingSeries.isPublished || false,
                 tags: existingSeries.tags || [],
             });
         }
@@ -111,8 +120,9 @@ export default function SeriesFormPage({ params }: Props) {
         if (!tmdbInput.trim()) return;
         setSearching(true);
         try {
-            const results = await searchTMDB({ query: tmdbInput, type: "tv" });
-            setSearchResults(results);
+            const res = await fetch(`/api/admin/import-movie?query=${encodeURIComponent(tmdbInput)}&type=tv`);
+            const results = await res.json();
+            setSearchResults(Array.isArray(results) ? results : []);
             setShowSearch(true);
         } catch (err) {
             console.error(err);
@@ -124,7 +134,8 @@ export default function SeriesFormPage({ params }: Props) {
         setFetching(true);
         setShowSearch(false);
         try {
-            const data = await fetchFromTMDB({ tmdbId });
+            const res = await fetch(`/api/admin/import-movie?tmdbId=${tmdbId}&type=tv`);
+            const data = await res.json();
             setFormData({
                 ...formData,
                 slug: data.slug,
@@ -133,14 +144,14 @@ export default function SeriesFormPage({ params }: Props) {
                 overview: data.overview,
                 posterUrl: data.posterUrl,
                 backdropUrl: data.backdropUrl || "",
-                firstAirDate: data.firstAirDate,
+                firstAirDate: data.firstAirDate || data.releaseDate || "",
                 lastAirDate: data.lastAirDate || "",
-                status: data.status,
+                status: data.status || "",
                 rating: data.rating || 0,
-                genres: data.genres,
-                cast: data.cast,
-                numberOfSeasons: data.numberOfSeasons,
-                numberOfEpisodes: data.numberOfEpisodes,
+                genres: data.genres || [],
+                cast: data.cast || [],
+                numberOfSeasons: data.numberOfSeasons || data.totalSeasons || 0,
+                numberOfEpisodes: data.numberOfEpisodes || data.totalEpisodes || 0,
             });
         } catch (err) {
             console.error(err);
@@ -157,26 +168,37 @@ export default function SeriesFormPage({ params }: Props) {
 
         try {
             if (id) {
-                await updateSeries({
-                    id: id as Id<"series">,
-                    isDubbed: formData.isDubbed,
-                    isPremium: formData.isPremium,
-                    isPublished: formData.isPublished,
-                    titleSomali: formData.titleSomali || undefined,
-                    overviewSomali: formData.overviewSomali || undefined,
-                    tags: formData.tags,
+                await fetch("/api/series", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id,
+                        isDubbed: formData.isDubbed,
+                        isPremium: formData.isPremium,
+                        isPublished: formData.isPublished,
+                        titleSomali: formData.titleSomali || undefined,
+                        overviewSomali: formData.overviewSomali || undefined,
+                        tags: formData.tags,
+                    }),
                 });
+                mutateSeries();
             } else {
-                const newId = await createSeries({
-                    ...formData,
-                    backdropUrl: formData.backdropUrl || undefined,
-                    lastAirDate: formData.lastAirDate || undefined,
-                    rating: formData.rating || undefined,
-                    titleSomali: formData.titleSomali || undefined,
-                    overviewSomali: formData.overviewSomali || undefined,
-                    tags: formData.tags,
+                const res = await fetch("/api/series", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ...formData,
+                        backdropUrl: formData.backdropUrl || undefined,
+                        lastAirDate: formData.lastAirDate || undefined,
+                        rating: formData.rating || undefined,
+                        titleSomali: formData.titleSomali || undefined,
+                        overviewSomali: formData.overviewSomali || undefined,
+                        tags: formData.tags,
+                    }),
                 });
-                router.push(`/kism/series/${newId}`); // Redirect to edit mode to add episodes
+                const newSeries = await res.json();
+                router.push(`/kism/series/${newSeries._id}`);
+                return;
             }
             if (!id) router.push("/kism/series");
         } catch (err) {
@@ -193,24 +215,33 @@ export default function SeriesFormPage({ params }: Props) {
 
         setSyncing(seasonNum);
         try {
-            const data = await fetchSeasonFromTMDB({
-                tmdbId: existingSeries.tmdbId,
-                seasonNumber: seasonNum
-            });
+            const res = await fetch(
+                `/api/admin/import-movie?tmdbId=${existingSeries.tmdbId}&type=tv&season=${seasonNum}`
+            );
+            const data = await res.json();
 
             const existingEps = episodesData?.[seasonNum] || [];
-            const newEpisodes = data.episodes.filter((ep: any) =>
-                !existingEps.some(existing => existing.episodeNumber === ep.episodeNumber)
+            const newEpisodes = (data.episodes || []).filter((ep: any) =>
+                !existingEps.some((existing: any) => existing.episodeNumber === ep.episodeNumber)
             );
 
             if (newEpisodes.length === 0) {
                 alert("All episodes already imported.");
             } else {
-                await bulkCreateEpisodes({
-                    seriesId: id as Id<"series">,
-                    seasonNumber: seasonNum,
-                    episodes: newEpisodes
-                });
+                // Create episodes via API
+                for (const ep of newEpisodes) {
+                    await fetch("/api/series", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            _type: "episode",
+                            seriesId: id,
+                            seasonNumber: seasonNum,
+                            ...ep,
+                        }),
+                    });
+                }
+                mutateEpisodes();
                 alert(`Imported ${newEpisodes.length} episodes!`);
             }
         } catch (err: any) {
@@ -350,14 +381,14 @@ export default function SeriesFormPage({ params }: Props) {
                                         </div>
                                         <div className="space-y-3">
                                             <input
-                                                value={(formData as any).titleSomali || ""}
-                                                onChange={(e) => setFormData({ ...formData, titleSomali: e.target.value } as any)}
+                                                value={formData.titleSomali || ""}
+                                                onChange={(e) => setFormData({ ...formData, titleSomali: e.target.value })}
                                                 placeholder="Ciwaan Somali"
                                                 className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm"
                                             />
                                             <textarea
-                                                value={(formData as any).overviewSomali || ""}
-                                                onChange={(e) => setFormData({ ...formData, overviewSomali: e.target.value } as any)}
+                                                value={formData.overviewSomali || ""}
+                                                onChange={(e) => setFormData({ ...formData, overviewSomali: e.target.value })}
                                                 placeholder="Faahfaahin Somali..."
                                                 rows={4}
                                                 className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm"
@@ -441,8 +472,7 @@ export default function SeriesFormPage({ params }: Props) {
             {/* TAB: EPISODES */}
             {activeTab === "episodes" && id && (
                 <div className="space-y-6">
-                    {/* Season Loop */}
-                    {Array.from({ length: existingSeries?.numberOfSeasons || 1 }).map((_, i) => {
+                    {Array.from({ length: existingSeries?.numberOfSeasons || existingSeries?.totalSeasons || 1 }).map((_, i) => {
                         const seasonNum = i + 1;
                         const episodes = episodesData?.[seasonNum] || [];
                         const isSyncing = syncing === seasonNum;
@@ -475,7 +505,7 @@ export default function SeriesFormPage({ params }: Props) {
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
-                                            {episodes.map((ep) => (
+                                            {episodes.map((ep: any) => (
                                                 <div
                                                     key={ep._id}
                                                     className="flex items-center gap-4 p-3 bg-stadium-hover rounded-lg hover:ring-1 hover:ring-border-subtle transition-all"
@@ -497,7 +527,7 @@ export default function SeriesFormPage({ params }: Props) {
                                                             <h4 className="font-bold text-sm truncate">{ep.title}</h4>
                                                         </div>
                                                         <p className="text-xs text-text-muted truncate mt-1">
-                                                            {ep.embeds.length} embed links • {ep.runtime} min
+                                                            {ep.embeds?.length || 0} embed links • {ep.runtime || 0} min
                                                         </p>
                                                     </div>
                                                     <button
@@ -522,7 +552,7 @@ export default function SeriesFormPage({ params }: Props) {
                 <EpisodeEditor
                     episode={editingEpisode}
                     onClose={() => setEditingEpisode(null)}
-                    onSave={() => setEditingEpisode(null)}
+                    onSave={() => { setEditingEpisode(null); mutateEpisodes(); }}
                 />
             )}
         </div>

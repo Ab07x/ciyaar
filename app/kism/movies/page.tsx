@@ -1,40 +1,44 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import Link from "next/link";
 import { Plus, Edit, Trash2, Film, Crown, Eye, Search, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
-const ITEMS_PER_PAGE = 35; // 7 columns x 5 rows
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const ITEMS_PER_PAGE = 35;
 
 export default function AdminMoviesPage() {
-    const movies = useQuery(api.movies.listMovies, {});
-    const deleteMovie = useMutation(api.movies.deleteMovie);
+    const { data: movieData } = useSWR("/api/movies?limit=500", fetcher);
+    const movies = movieData?.movies || movieData || [];
 
     const [filter, setFilter] = useState<"all" | "published" | "draft" | "premium" | "dubbed">("all");
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
-    const filtered = movies?.filter((m) => {
+    const handleDelete = async (id: string) => {
+        if (!confirm("Delete this movie?")) return;
+        await fetch(`/api/movies/${id}`, { method: "DELETE" });
+        mutate("/api/movies?limit=500");
+    };
+
+    const filtered = movies?.filter((m: any) => {
         if (filter === "published") return m.isPublished;
         if (filter === "draft") return !m.isPublished;
         if (filter === "premium") return m.isPremium;
         if (filter === "dubbed") return m.isDubbed;
         return true;
-    }).filter((m) =>
+    }).filter((m: any) =>
         m.title.toLowerCase().includes(search.toLowerCase()) ||
         m.titleSomali?.toLowerCase().includes(search.toLowerCase())
     );
 
-    // Pagination
     const totalItems = filtered?.length || 0;
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
     const paginatedMovies = filtered?.slice(startIndex, endIndex);
 
-    // Reset to page 1 when filter/search changes
     const handleFilterChange = (newFilter: typeof filter) => {
         setFilter(newFilter);
         setCurrentPage(1);
@@ -61,7 +65,6 @@ export default function AdminMoviesPage() {
                 </Link>
             </div>
 
-            {/* Filters */}
             <div className="flex flex-wrap gap-4 items-center">
                 <div className="flex gap-2">
                     {["all", "published", "draft", "premium", "dubbed"].map((f) => (
@@ -88,48 +91,32 @@ export default function AdminMoviesPage() {
                 </div>
             </div>
 
-            {/* Movies Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-4">
-                {paginatedMovies?.map((movie) => (
+                {paginatedMovies?.map((movie: any) => (
                     <div
                         key={movie._id}
                         className="bg-stadium-elevated border border-border-strong rounded-xl overflow-hidden group"
                     >
                         <div className="relative aspect-[2/3]">
                             {movie.posterUrl ? (
-                                <img
-                                    src={movie.posterUrl}
-                                    alt={movie.title}
-                                    className="w-full h-full object-cover"
-                                />
+                                <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full bg-stadium-dark flex items-center justify-center">
                                     <Film size={48} className="text-text-muted/30" />
                                 </div>
                             )}
-
-                            {/* Overlay */}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <Link
-                                    href={`/kism/movies/${movie._id}`}
-                                    className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
-                                >
+                                <Link href={`/kism/movies/${movie._id}`} className="p-2 bg-white/20 rounded-lg hover:bg-white/30">
                                     <Edit size={18} />
                                 </Link>
-                                <button
-                                    onClick={() => deleteMovie({ id: movie._id })}
-                                    className="p-2 bg-accent-red/50 rounded-lg hover:bg-accent-red"
-                                >
+                                <button onClick={() => handleDelete(movie._id)} className="p-2 bg-accent-red/50 rounded-lg hover:bg-accent-red">
                                     <Trash2 size={18} />
                                 </button>
                             </div>
-
-                            {/* Badges */}
                             <div className="absolute top-2 left-2 flex flex-col gap-1">
                                 {movie.isPremium && (
                                     <div className="flex items-center gap-1 bg-accent-gold px-2 py-0.5 rounded text-xs font-bold text-black">
-                                        <Crown size={10} />
-                                        PREMIUM
+                                        <Crown size={10} /> PREMIUM
                                     </div>
                                 )}
                                 {movie.isDubbed && (
@@ -143,8 +130,6 @@ export default function AdminMoviesPage() {
                                     </div>
                                 )}
                             </div>
-
-                            {/* Status */}
                             <div className="absolute top-2 right-2">
                                 {movie.isPublished ? (
                                     <div className="w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
@@ -157,16 +142,12 @@ export default function AdminMoviesPage() {
                                 )}
                             </div>
                         </div>
-
                         <div className="p-3">
                             <h3 className="font-bold text-sm truncate">{movie.titleSomali || movie.title}</h3>
                             <div className="flex items-center justify-between mt-1">
-                                <span className="text-xs text-text-muted">
-                                    {movie.releaseDate?.split("-")[0]}
-                                </span>
+                                <span className="text-xs text-text-muted">{movie.releaseDate?.split("-")[0]}</span>
                                 <div className="flex items-center gap-1 text-xs text-text-muted">
-                                    <Eye size={12} />
-                                    {movie.views || 0}
+                                    <Eye size={12} /> {movie.views || 0}
                                 </div>
                             </div>
                         </div>
@@ -174,76 +155,38 @@ export default function AdminMoviesPage() {
                 ))}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-6 border-t border-border-subtle">
-                    <button
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                        className="p-2 rounded-lg bg-stadium-elevated border border-border-subtle disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stadium-hover"
-                    >
+                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-lg bg-stadium-elevated border border-border-subtle disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stadium-hover">
                         <ChevronLeft size={18} />
                     </button>
-
                     <div className="flex gap-1">
-                        {/* First page */}
                         {currentPage > 3 && (
                             <>
-                                <button
-                                    onClick={() => setCurrentPage(1)}
-                                    className="px-3 py-1 rounded-lg bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover text-sm"
-                                >
-                                    1
-                                </button>
+                                <button onClick={() => setCurrentPage(1)} className="px-3 py-1 rounded-lg bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover text-sm">1</button>
                                 {currentPage > 4 && <span className="px-2 text-text-muted">...</span>}
                             </>
                         )}
-
-                        {/* Page numbers */}
                         {Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter(page =>
-                                page >= currentPage - 2 &&
-                                page <= currentPage + 2
-                            )
+                            .filter(page => page >= currentPage - 2 && page <= currentPage + 2)
                             .map(page => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`px-3 py-1 rounded-lg text-sm ${
-                                        currentPage === page
-                                            ? "bg-accent-green text-black font-bold"
-                                            : "bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover"
-                                    }`}
-                                >
+                                <button key={page} onClick={() => setCurrentPage(page)} className={`px-3 py-1 rounded-lg text-sm ${currentPage === page ? "bg-accent-green text-black font-bold" : "bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover"}`}>
                                     {page}
                                 </button>
                             ))}
-
-                        {/* Last page */}
                         {currentPage < totalPages - 2 && (
                             <>
                                 {currentPage < totalPages - 3 && <span className="px-2 text-text-muted">...</span>}
-                                <button
-                                    onClick={() => setCurrentPage(totalPages)}
-                                    className="px-3 py-1 rounded-lg bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover text-sm"
-                                >
+                                <button onClick={() => setCurrentPage(totalPages)} className="px-3 py-1 rounded-lg bg-stadium-elevated border border-border-subtle hover:bg-stadium-hover text-sm">
                                     {totalPages}
                                 </button>
                             </>
                         )}
                     </div>
-
-                    <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                        className="p-2 rounded-lg bg-stadium-elevated border border-border-subtle disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stadium-hover"
-                    >
+                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-lg bg-stadium-elevated border border-border-subtle disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stadium-hover">
                         <ChevronRight size={18} />
                     </button>
-
-                    <span className="ml-4 text-sm text-text-muted">
-                        Page {currentPage} of {totalPages}
-                    </span>
+                    <span className="ml-4 text-sm text-text-muted">Page {currentPage} of {totalPages}</span>
                 </div>
             )}
 

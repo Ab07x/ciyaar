@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import Link from "next/link";
 import { PlayCircle } from "lucide-react";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 export function MatchLinks({ limit = 3 }: { limit?: number }) {
-    const matches = useQuery(api.matches.getMatchesByStatus);
+    const { data: matches } = useSWR("/api/matches?byStatus=true", fetcher);
 
     if (!matches) return null;
 

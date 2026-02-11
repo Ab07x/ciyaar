@@ -1,22 +1,25 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { Send, User, Crown, Info, Loader2, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface LiveChatProps {
-    matchId: Id<"matches">;
+    matchId: string;
     className?: string;
 }
 
 export function LiveChat({ matchId, className }: LiveChatProps) {
     const { userId, isPremium } = useUser();
-    const messages = useQuery(api.messages.list, { matchId, limit: 100 });
-    const sendMessage = useMutation(api.messages.send);
+    const { data: messages, mutate: refreshMessages } = useSWR(
+        `/api/messages?matchId=${matchId}&limit=100`,
+        fetcher,
+        { refreshInterval: 3000 } // Poll every 3 seconds for live chat
+    );
 
     const [nickname, setNickname] = useState<string>("");
     const [isSettingNickname, setIsSettingNickname] = useState(true);
@@ -54,13 +57,18 @@ export function LiveChat({ matchId, className }: LiveChatProps) {
         try {
             const content = newMessage.trim();
             setNewMessage(""); // Clear early for better UX
-            await sendMessage({
-                matchId,
-                userId,
-                nickname,
-                content,
-                isPremium,
+            await fetch("/api/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    matchId,
+                    userId,
+                    nickname,
+                    content,
+                    isPremium,
+                }),
             });
+            refreshMessages();
         } catch (err) {
             console.error("Failed to send message:", err);
         }

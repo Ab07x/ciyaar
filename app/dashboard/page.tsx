@@ -1,11 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { Crown, Clock, Monitor, ChevronRight, LogOut, Home } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface LocalSubscription {
     plan: string;
@@ -86,14 +83,14 @@ export default function DashboardPage() {
 
                 {/* Subscription Card */}
                 <div className={`rounded-2xl border p-6 mb-6 ${!subscription || isExpired
-                        ? "bg-stadium-elevated border-border-subtle"
-                        : "bg-gradient-to-br from-accent-gold/20 to-accent-gold/5 border-accent-gold/30"
+                    ? "bg-stadium-elevated border-border-subtle"
+                    : "bg-gradient-to-br from-accent-gold/20 to-accent-gold/5 border-accent-gold/30"
                     }`}>
                     <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className={`p-3 rounded-xl ${!subscription || isExpired
-                                    ? "bg-stadium-hover"
-                                    : "bg-accent-gold/20"
+                                ? "bg-stadium-hover"
+                                : "bg-accent-gold/20"
                                 }`}>
                                 <Crown className={
                                     !subscription || isExpired

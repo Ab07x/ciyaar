@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { StreamPlayer } from "@/components/StreamPlayer";
 import { Tv, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 
 export default function LiveTVPage() {
     // Fetch channels from database
-    const channels = useQuery(api.channels.list, { isLive: true });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: channels } = useSWR("/api/channels?isLive=true", fetcher);
 
     // State
     const [selectedChannel, setSelectedChannel] = useState<any>(null);

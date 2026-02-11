@@ -1,16 +1,16 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR, { mutate } from "swr";
 import { Bell, BellOff, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePush } from "@/providers/PushProvider";
 import { useToast } from "@/providers/ToastProvider";
 import { cn } from "@/lib/utils";
-import type { Id } from "@/convex/_generated/dataModel";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface MatchReminderButtonProps {
-    matchId: Id<"matches">;
+    matchId: string;
     className?: string;
     variant?: "icon" | "full";
 }
@@ -28,11 +28,8 @@ export function MatchReminderButton({ matchId, className, variant = "icon" }: Ma
         setDeviceId(id);
     }, []);
 
-    const isReminded = useQuery(api.reminders.getReminderStatus,
-        matchId ? { matchId, deviceId } : "skip"
-    );
-
-    const toggleReminder = useMutation(api.reminders.toggleReminder);
+    const swrKey = matchId && deviceId ? `/api/reminders?matchId=${matchId}&deviceId=${deviceId}` : null;
+    const { data: isReminded } = useSWR(swrKey, fetcher);
 
     const handleToggle = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -48,10 +45,13 @@ export function MatchReminderButton({ matchId, className, variant = "icon" }: Ma
 
         setIsLoading(true);
         try {
-            const result = await toggleReminder({
-                matchId,
-                deviceId,
+            const res = await fetch("/api/reminders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ matchId, deviceId }),
             });
+            const result = await res.json();
+            mutate(swrKey);
 
             if (result.action === "added") {
                 toast("Ogeysiis ayaa laguu soo diri doonaa wakhtiga ciyaarta!", "success");

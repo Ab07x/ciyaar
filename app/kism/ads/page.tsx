@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useState } from "react";
+import useSWR from "swr";
 import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Video, Globe, Code, Tv } from "lucide-react";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const networks = ["adsense", "adsterra", "monetag", "custom", "vast", "video", "popup", "ppv"] as const;
 const formats = ["responsive", "banner", "native", "interstitial", "video_preroll", "video_midroll", "popunder", "social_bar"] as const;
@@ -32,13 +33,8 @@ const formatLabels: Record<string, string> = {
 };
 
 export default function AdminAdsPage() {
-    const ads = useQuery(api.ads.listAds);
-    const settings = useQuery(api.settings.getSettings);
-    const updateSettings = useMutation(api.settings.updateSettings);
-    const createAd = useMutation(api.ads.createAd);
-    const updateAd = useMutation(api.ads.updateAd);
-    const deleteAd = useMutation(api.ads.deleteAd);
-    const toggleAd = useMutation(api.ads.toggleAd);
+    const { data: ads, mutate } = useSWR("/api/ads", fetcher);
+    const { data: settings, mutate: mutateSettings } = useSWR("/api/settings", fetcher);
 
     const [showModal, setShowModal] = useState(false);
     const [editingAd, setEditingAd] = useState<any>(null);
@@ -46,28 +42,20 @@ export default function AdminAdsPage() {
         slotKey: "",
         network: "custom" as typeof networks[number],
         format: "responsive" as typeof formats[number],
-        // General
         codeHtml: "",
-        // AdSense
         adsenseClient: "",
         adsenseSlot: "",
-        // Adsterra
         adsterraKey: "",
         adsterraDomain: "",
-        // VAST/VPAID
         vastUrl: "",
         vpaidEnabled: false,
-        // Video Ad
         videoUrl: "",
         videoSkipAfter: 5,
         videoDuration: 15,
-        // Popup
         popupUrl: "",
         popupWidth: 800,
         popupHeight: 600,
-        // Monetag
         monetagId: "",
-        // Display
         showOn: [] as string[],
         enabled: true,
     });
@@ -96,13 +84,22 @@ export default function AdminAdsPage() {
         };
 
         if (editingAd) {
-            await updateAd({ id: editingAd._id, ...payload });
+            await fetch("/api/ads", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: editingAd._id, ...payload }),
+            });
         } else {
-            await createAd(payload);
+            await fetch("/api/ads", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
         }
         setShowModal(false);
         setEditingAd(null);
         resetForm();
+        mutate();
     };
 
     const resetForm = () => {
@@ -163,6 +160,30 @@ export default function AdminAdsPage() {
         }
     };
 
+    const handleToggleAd = async (id: string, enabled: boolean) => {
+        await fetch("/api/ads", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, enabled: !enabled }),
+        });
+        mutate();
+    };
+
+    const handleDeleteAd = async (id: string) => {
+        if (!confirm("Delete this ad slot?")) return;
+        await fetch(`/api/ads?id=${id}`, { method: "DELETE" });
+        mutate();
+    };
+
+    const handleToggleGlobal = async () => {
+        await fetch("/api/settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ adsEnabled: !settings?.adsEnabled }),
+        });
+        mutateSettings();
+    };
+
     const getNetworkIcon = (network: string) => {
         switch (network) {
             case "video":
@@ -202,7 +223,7 @@ export default function AdminAdsPage() {
                         <p className="text-sm text-text-muted">Dami ama fur dhammaan xayeysiisyada</p>
                     </div>
                     <button
-                        onClick={() => updateSettings({ adsEnabled: !settings?.adsEnabled })}
+                        onClick={handleToggleGlobal}
                         className={`p-2 rounded-lg ${settings?.adsEnabled ? "bg-accent-green/20 text-accent-green" : "bg-stadium-hover text-text-muted"}`}
                     >
                         {settings?.adsEnabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
@@ -233,24 +254,23 @@ export default function AdminAdsPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {ads?.map((ad) => (
+                        {ads?.map((ad: any) => (
                             <tr key={ad._id} className="border-b border-border-subtle last:border-0">
                                 <td className="px-4 py-3 font-mono font-bold">{ad.slotKey}</td>
                                 <td className="px-4 py-3">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                        ad.network === "ppv" ? "bg-accent-gold/20 text-accent-gold" :
-                                        ad.network === "video" || ad.network === "vast" ? "bg-purple-500/20 text-purple-400" :
-                                        "bg-blue-500/20 text-blue-400"
-                                    }`}>
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${ad.network === "ppv" ? "bg-accent-gold/20 text-accent-gold" :
+                                            ad.network === "video" || ad.network === "vast" ? "bg-purple-500/20 text-purple-400" :
+                                                "bg-blue-500/20 text-blue-400"
+                                        }`}>
                                         {getNetworkIcon(ad.network)}
                                         {networkLabels[ad.network] || ad.network}
                                     </span>
                                 </td>
                                 <td className="px-4 py-3 text-sm capitalize">{formatLabels[ad.format] || ad.format}</td>
-                                <td className="px-4 py-3 text-sm text-text-secondary">{ad.showOn.join(", ")}</td>
+                                <td className="px-4 py-3 text-sm text-text-secondary">{ad.showOn?.join(", ")}</td>
                                 <td className="px-4 py-3">
                                     <button
-                                        onClick={() => toggleAd({ id: ad._id })}
+                                        onClick={() => handleToggleAd(ad._id, ad.enabled)}
                                         className={`text-sm font-bold ${ad.enabled ? "text-accent-green" : "text-text-muted"}`}
                                     >
                                         {ad.enabled ? "Active" : "Disabled"}
@@ -261,7 +281,7 @@ export default function AdminAdsPage() {
                                         <button onClick={() => openEdit(ad)} className="p-2 hover:bg-stadium-hover rounded-lg">
                                             <Edit size={16} />
                                         </button>
-                                        <button onClick={() => deleteAd({ id: ad._id })} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red">
+                                        <button onClick={() => handleDeleteAd(ad._id)} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -591,9 +611,8 @@ export default function AdminAdsPage() {
                                     <h4 className="font-bold text-accent-gold">PPV Unlock Ad Settings</h4>
                                     <p className="text-sm text-text-muted">
                                         Xayeysiiskan wuxuu u muuqdaa user-ka marka uu daawaynayo xayeysiis si uu u furo content PPV ah.
-                                        Use slot key "ppv_unlock" for the default PPV gate.
+                                        Use slot key &quot;ppv_unlock&quot; for the default PPV gate.
                                     </p>
-
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-sm text-text-secondary mb-2">Video Ad URL (MP4/M3U8)</label>
@@ -605,7 +624,6 @@ export default function AdminAdsPage() {
                                                 className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                             />
                                         </div>
-
                                         <div>
                                             <label className="block text-sm text-text-secondary mb-2">Or VAST Tag URL</label>
                                             <input
@@ -616,7 +634,6 @@ export default function AdminAdsPage() {
                                                 className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                             />
                                         </div>
-
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm text-text-secondary mb-2">Ad Duration (seconds)</label>
@@ -640,7 +657,6 @@ export default function AdminAdsPage() {
                                                 />
                                             </div>
                                         </div>
-
                                         <div>
                                             <label className="block text-sm text-text-secondary mb-2">Or Custom Ad Player HTML</label>
                                             <textarea
@@ -651,7 +667,6 @@ export default function AdminAdsPage() {
                                                 className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono text-sm resize-none"
                                             />
                                         </div>
-
                                         <div>
                                             <label className="block text-sm text-text-secondary mb-2">AdSense (fallback)</label>
                                             <div className="grid grid-cols-2 gap-2">
@@ -685,8 +700,8 @@ export default function AdminAdsPage() {
                                             type="button"
                                             onClick={() => toggleShowOn(page)}
                                             className={`px-3 py-1 rounded-full text-sm ${formData.showOn.includes(page)
-                                                    ? "bg-accent-green text-black font-bold"
-                                                    : "bg-stadium-hover text-text-secondary"
+                                                ? "bg-accent-green text-black font-bold"
+                                                : "bg-stadium-hover text-text-secondary"
                                                 }`}
                                         >
                                             {page}

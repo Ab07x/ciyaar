@@ -5,13 +5,12 @@ import { formatKickoffTime } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { Eye, Play, Tv } from "lucide-react";
 import { getBoostedViews, formatViews } from "@/lib/analytics";
-import type { Id } from "@/convex/_generated/dataModel";
 import { MatchReminderButton } from "./MatchReminderButton";
 
 import { Lock } from "lucide-react";
 
 interface MatchCardProps {
-    _id: Id<"matches">;
+    _id: string;
     slug: string;
     title: string;
     teamA: string;

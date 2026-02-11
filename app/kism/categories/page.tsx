@@ -1,22 +1,18 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Eye, EyeOff, GripVertical, Palette } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/providers/ToastProvider";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function AdminCategoriesPage() {
     const toast = useToast();
-    const categories = useQuery(api.categories.listCategories, {}) as any;
-    const createCategory = useMutation(api.categories.createCategory);
-    const updateCategory = useMutation(api.categories.updateCategory);
-    const deleteCategory = useMutation(api.categories.deleteCategory);
-    const seedCategories = useMutation(api.categories.seedDefaultCategories);
+    const { data: categories, mutate } = useSWR("/api/categories", fetcher);
 
     const [isAdding, setIsAdding] = useState(false);
-    const [editingId, setEditingId] = useState<Id<"categories"> | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: "",
         slug: "",
@@ -33,15 +29,24 @@ export default function AdminCategoriesPage() {
         }
 
         if (editingId) {
-            await updateCategory({ id: editingId, ...formData });
+            await fetch("/api/categories", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: editingId, ...formData }),
+            });
             toast("Category updated", "success");
             setEditingId(null);
         } else {
-            await createCategory(formData);
+            await fetch("/api/categories", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
             toast("Category created", "success");
         }
         setIsAdding(false);
         setFormData({ name: "", slug: "", description: "", color: "#9AE600", order: 1, isActive: true });
+        mutate();
     };
 
     const handleEdit = (cat: any) => {
@@ -57,14 +62,29 @@ export default function AdminCategoriesPage() {
         setIsAdding(true);
     };
 
-    const handleDelete = async (id: Id<"categories">) => {
+    const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this category?")) {
-            await deleteCategory({ id });
+            await fetch(`/api/categories?id=${id}`, { method: "DELETE" });
+            mutate();
         }
     };
 
-    const handleToggleActive = async (id: Id<"categories">, isActive: boolean) => {
-        await updateCategory({ id, isActive: !isActive });
+    const handleToggleActive = async (id: string, isActive: boolean) => {
+        await fetch("/api/categories", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, isActive: !isActive }),
+        });
+        mutate();
+    };
+
+    const handleSeedDefaults = async () => {
+        await fetch("/api/categories", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "seed" }),
+        });
+        mutate();
     };
 
     return (
@@ -77,7 +97,7 @@ export default function AdminCategoriesPage() {
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => seedCategories()}
+                        onClick={handleSeedDefaults}
                         className="px-4 py-2 bg-stadium-elevated border border-border-strong rounded-xl font-bold text-sm hover:bg-stadium-hover transition-colors"
                     >
                         Seed Defaults
@@ -199,7 +219,7 @@ export default function AdminCategoriesPage() {
                         <Palette size={48} className="mx-auto mb-4 text-text-muted/30" />
                         <p className="text-text-muted mb-4">No categories yet</p>
                         <button
-                            onClick={() => seedCategories()}
+                            onClick={handleSeedDefaults}
                             className="px-4 py-2 bg-accent-green text-black rounded-lg font-bold text-sm"
                         >
                             Seed Default Categories

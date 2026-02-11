@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { Bell, Send, Users, Loader2, CheckCircle, X, Upload, Smartphone, ImageIcon } from "lucide-react";
 import { usePush } from "@/providers/PushProvider";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 // Default icons available for notifications
 const ICON_OPTIONS = [
@@ -83,7 +84,8 @@ interface NotificationForm {
 }
 
 export default function AdminNotificationsPage() {
-    const subscriptions = useQuery(api.push.getAllSubscriptions);
+    const { data: subscriptionsData } = useSWR("/api/push/subscriptions", fetcher);
+    const subscriptions = subscriptionsData?.subscriptions || subscriptionsData || [];
 
     const [formData, setFormData] = useState<NotificationForm>({
         title: "",
@@ -230,26 +232,11 @@ export default function AdminNotificationsPage() {
         }
     };
 
-    const isCloudFront = typeof window !== 'undefined' &&
-        (window.location.hostname === 'fanbroj.net' || window.location.hostname === 'www.fanbroj.net');
+
+    const subCount = Array.isArray(subscriptions) ? subscriptions.length : 0;
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
-            {/* CloudFront Warning */}
-            {isCloudFront && (
-                <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4">
-                    <p className="font-bold text-red-400">CloudFront Blocks POST Requests</p>
-                    <p className="text-sm text-red-300 mt-1">
-                        Push notifications won't work through CloudFront. Access admin directly:
-                    </p>
-                    <a
-                        href="http://16.170.141.191/kism/notifications"
-                        className="inline-block mt-2 px-4 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600"
-                    >
-                        Go to Direct Admin Panel
-                    </a>
-                </div>
-            )}
 
             {/* Header */}
             <div>
@@ -266,7 +253,7 @@ export default function AdminNotificationsPage() {
                         </div>
                         <div>
                             <p className="text-sm text-text-muted">Total Subscribers</p>
-                            <p className="text-2xl font-black">{subscriptions?.length || 0}</p>
+                            <p className="text-2xl font-black">{subCount}</p>
                         </div>
                     </div>
                 </div>
@@ -315,11 +302,10 @@ export default function AdminNotificationsPage() {
                                     key={opt.value}
                                     type="button"
                                     onClick={() => setFormData({ ...formData, icon: opt.value })}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
-                                        formData.icon === opt.value
-                                            ? "border-accent-green bg-accent-green/20 text-accent-green"
-                                            : "border-border-subtle bg-stadium-dark hover:border-border-strong"
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${formData.icon === opt.value
+                                        ? "border-accent-green bg-accent-green/20 text-accent-green"
+                                        : "border-border-subtle bg-stadium-dark hover:border-border-strong"
+                                        }`}
                                 >
                                     {opt.value !== "custom" && (
                                         <img src={opt.value} alt={opt.label} className="w-6 h-6 rounded" />
@@ -448,7 +434,7 @@ export default function AdminNotificationsPage() {
                     ) : (
                         <>
                             <Send size={20} />
-                            Send to {subscriptions?.length || 0} Subscribers
+                            Send to {subCount} Subscribers
                         </>
                     )}
                 </button>

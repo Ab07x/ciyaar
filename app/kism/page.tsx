@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { motion } from "framer-motion";
 import {
     PlayCircle,
@@ -26,9 +25,11 @@ import Link from "next/link";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { ViewsChart, TopContentChart, SubscriptionChart } from "@/components/admin/ViewsChart";
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
 // Top Movies Section Component
 function TopMoviesSection() {
-    const topMovies = useQuery(api.movies.getMoviesByViews, { limit: 10 });
+    const { data: topMovies } = useSWR("/api/movies?isPublished=true&limit=10&sort=views", fetcher);
 
     if (!topMovies) {
         return (
@@ -52,6 +53,8 @@ function TopMoviesSection() {
             </motion.div>
         );
     }
+
+    const movieList = topMovies?.movies || topMovies || [];
 
     return (
         <motion.div
@@ -84,7 +87,7 @@ function TopMoviesSection() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-subtle">
-                        {topMovies.map((movie: any, index: number) => (
+                        {movieList.slice(0, 10).map((movie: any, index: number) => (
                             <tr key={movie._id} className="hover:bg-white/5">
                                 <td className="py-3">
                                     <span className={`font-bold ${index < 3 ? 'text-accent-gold' : 'text-text-muted'}`}>
@@ -126,7 +129,7 @@ function TopMoviesSection() {
                         ))}
                     </tbody>
                 </table>
-                {topMovies.length === 0 && (
+                {movieList.length === 0 && (
                     <div className="text-center py-8 text-text-muted">
                         <Film size={40} className="mx-auto mb-2 opacity-50" />
                         <p>No movies yet</p>
@@ -139,14 +142,16 @@ function TopMoviesSection() {
 
 
 export default function AdminDashboard() {
-    const matches = useQuery(api.matches.listMatches, {});
-    const posts = useQuery(api.posts.listPosts, {});
-    const codeStats = useQuery(api.redemptions.getCodeStats);
-    const settings = useQuery(api.settings.getSettings);
-    const analyticsStats = useQuery(api.analytics.getDashboardStats);
-    const seedAnalytics = useMutation(api.analytics.seedSampleAnalytics);
+    const { data: matchData } = useSWR("/api/matches", fetcher);
+    const { data: postData } = useSWR("/api/posts", fetcher);
+    const { data: codeStats } = useSWR("/api/redemptions?stats=true", fetcher);
+    const { data: settings } = useSWR("/api/settings", fetcher);
+    const { data: analyticsStats } = useSWR("/api/analytics/dashboard", fetcher);
 
-    if (!matches || !posts || !codeStats) {
+    const matches = matchData || [];
+    const posts = Array.isArray(postData) ? postData : postData?.posts || [];
+
+    if (!matchData || !postData || !codeStats) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <motion.div
@@ -158,26 +163,26 @@ export default function AdminDashboard() {
         );
     }
 
-    const totalViews = matches.reduce((acc, m) => acc + (m.views || 0), 0) + posts.reduce((acc, p) => acc + (p.views || 0), 0);
+    const totalViews = matches.reduce((acc: number, m: any) => acc + (m.views || 0), 0) + posts.reduce((acc: number, p: any) => acc + (p.views || 0), 0);
 
     const stats = [
         { label: "Total Matches", value: matches.length, icon: PlayCircle, color: "text-accent-blue" },
-        { label: "Live Now", value: matches.filter(m => m.status === "live").length, icon: PlayCircle, color: "text-accent-red", trend: { value: 12, isPositive: true } },
-        { label: "Upcoming", value: matches.filter(m => m.status === "upcoming").length, icon: Calendar, color: "text-accent-green" },
-        { label: "Premium", value: matches.filter(m => m.isPremium).length, icon: Lock, color: "text-accent-gold" },
+        { label: "Live Now", value: matches.filter((m: any) => m.status === "live").length, icon: PlayCircle, color: "text-accent-red", trend: { value: 12, isPositive: true } },
+        { label: "Upcoming", value: matches.filter((m: any) => m.status === "upcoming").length, icon: Calendar, color: "text-accent-green" },
+        { label: "Premium", value: matches.filter((m: any) => m.isPremium).length, icon: Lock, color: "text-accent-gold" },
         { label: "Total Views", value: totalViews, icon: Eye, color: "text-accent-green", trend: { value: 23, isPositive: true } },
         { label: "Blog Posts", value: posts.length, icon: FileText, color: "text-purple-400" },
-        { label: "Active Codes", value: codeStats.available, icon: Ticket, color: "text-accent-blue" },
+        { label: "Active Codes", value: codeStats?.available || 0, icon: Ticket, color: "text-accent-blue" },
     ];
 
     // Use real analytics data or fallback to mock
-    const viewsData = analyticsStats?.dailyBreakdown?.map((d, i) => {
+    const viewsData = analyticsStats?.dailyBreakdown?.map((d: any) => {
         const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         const date = new Date(d.date);
         return {
             date: dayNames[date.getDay()],
             views: d.views,
-            users: Math.floor(d.views * 0.15), // Estimate unique users
+            users: Math.floor(d.views * 0.15),
         };
     }) || [
             { date: "Mon", views: 2400, users: 400 },
@@ -189,7 +194,7 @@ export default function AdminDashboard() {
             { date: "Sun", views: 4300, users: 700 },
         ];
 
-    const topContent = analyticsStats?.topPageTypes?.map(p => ({
+    const topContent = analyticsStats?.topPageTypes?.map((p: any) => ({
         name: p.type.charAt(0).toUpperCase() + p.type.slice(1),
         views: p.views,
     })) || [
@@ -201,7 +206,7 @@ export default function AdminDashboard() {
         ];
 
     const subscriptionData = [
-        { name: "Premium", value: codeStats.used || 0, color: "#F59E0B" },
+        { name: "Premium", value: codeStats?.used || 0, color: "#F59E0B" },
         { name: "Free", value: 1200, color: "#6B7280" },
         { name: "Trial", value: 89, color: "#22C55E" },
     ];
@@ -213,6 +218,10 @@ export default function AdminDashboard() {
     };
 
     const todayVsYesterday = analyticsStats ? getPercentChange(analyticsStats.today, analyticsStats.yesterday) : 0;
+
+    const handleSeedAnalytics = async () => {
+        await fetch("/api/analytics/seed", { method: "POST" });
+    };
 
     return (
         <div className="space-y-8">
@@ -342,7 +351,7 @@ export default function AdminDashboard() {
                             { href: "/kism/series/new", icon: Tv, label: "Add Series", color: "purple-400" },
                             { href: "/kism/shorts", icon: PlayCircle, label: "Shorts", color: "accent-red" },
                             { href: "/kism/codes", icon: Ticket, label: "Codes", color: "blue-400" },
-                        ].map((action, i) => (
+                        ].map((action) => (
                             <motion.div
                                 key={action.href}
                                 whileHover={{ scale: 1.02 }}
@@ -361,7 +370,7 @@ export default function AdminDashboard() {
                     {/* Seed Analytics Button */}
                     {(!analyticsStats || analyticsStats.today === 0) && (
                         <button
-                            onClick={() => seedAnalytics()}
+                            onClick={handleSeedAnalytics}
                             className="w-full mt-4 py-2 bg-accent-green/20 text-accent-green rounded-lg text-sm font-semibold hover:bg-accent-green/30 transition-colors"
                         >
                             Generate Sample Analytics Data
@@ -413,7 +422,7 @@ export default function AdminDashboard() {
                                         </span>
                                     </td>
                                     <td className="py-3 text-text-secondary text-sm">
-                                        {new Date(post._creationTime).toLocaleDateString()}
+                                        {new Date(post.createdAt || post._creationTime).toLocaleDateString()}
                                     </td>
                                 </tr>
                             ))}

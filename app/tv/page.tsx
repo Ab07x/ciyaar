@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { TVMovieCard } from "@/components/tv/TVMovieCard";
 import { Tv, Search, User, LogOut, Home, PlayCircle, Play } from "lucide-react";
@@ -14,7 +13,8 @@ function TVPageContent() {
     const searchParams = useSearchParams();
     const isGuest = searchParams.get("guest") === "true";
     const { userId, isPremium } = useUser();
-    const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 50 });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: movies } = useSWR("/api/movies?isPublished=true&limit=50", fetcher);
     const [activeCategory, setActiveCategory] = useState("all");
 
     if (!movies) {

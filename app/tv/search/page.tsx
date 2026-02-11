@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { TVMovieCard } from "@/components/tv/TVMovieCard";
 import { Tv, Search, User, LogOut, Home, PlayCircle, X } from "lucide-react";
@@ -12,9 +11,10 @@ import Image from "next/image";
 export default function TVSearchPage() {
     const { userId, isPremium } = useUser();
     const [searchQuery, setSearchQuery] = useState("");
-    const movies = useQuery(api.movies.listMovies, { isPublished: true, limit: 100 });
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: movies } = useSWR("/api/movies?isPublished=true&limit=100", fetcher);
 
-    const filteredMovies = movies?.filter((movie) =>
+    const filteredMovies = movies?.filter((movie: any) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         movie.titleSomali?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -90,7 +90,7 @@ export default function TVSearchPage() {
                                 {filteredMovies?.length || 0} Results
                             </h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                {filteredMovies?.map((movie) => (
+                                {filteredMovies?.map((movie: any) => (
                                     <TVMovieCard key={movie._id} movie={movie} isPremium={isPremium || false} />
                                 ))}
                             </div>

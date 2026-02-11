@@ -1,19 +1,17 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { getDeviceId, getUserAgent } from "@/lib/device";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface UserContextType {
     deviceId: string;
-    userId: Id<"users"> | null;
+    userId: string | null;
     isLoading: boolean;
     isPremium: boolean;
     subscription: any;
-    checkMatchAccess: (matchId: Id<"matches">) => boolean;
-    redeemCode: (code: string, matchId?: Id<"matches">) => Promise<any>;
+    checkMatchAccess: (matchId: string) => boolean;
+    redeemCode: (code: string, matchId?: string) => Promise<any>;
     logout: () => void;
 }
 
@@ -21,87 +19,92 @@ const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
     const [deviceId, setDeviceId] = useState<string>("");
-    const [userId, setUserId] = useState<Id<"users"> | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-    const redeemCodeMutation = useMutation(api.redemptions.redeemCode);
-
-    const subscription = useQuery(
-        api.subscriptions.getUserSubscription,
-        userId ? { userId } : "skip"
-    );
-
-    const premiumAccess = useQuery(
-        api.subscriptions.checkPremiumAccess,
-        userId ? { userId } : "skip"
-    );
-
+    // Initialize user on mount
     useEffect(() => {
         const initUser = async () => {
             const id = getDeviceId();
             setDeviceId(id);
 
             try {
-                const uid = await getOrCreateUser({
-                    deviceId: id,
-                    userAgent: getUserAgent(),
+                const res = await fetch("/api/users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        deviceId: id,
+                        userAgent: getUserAgent(),
+                    }),
                 });
-                setUserId(uid);
+                const data = await res.json();
+                if (data?.user?._id) {
+                    setUserId(data.user._id);
+                }
             } catch (error) {
                 console.error("Failed to init user:", error);
             }
+            setIsInitialized(true);
         };
 
         initUser();
-    }, [getOrCreateUser]);
+    }, []);
 
-    const checkMatchAccess = (matchId: Id<"matches">) => {
+    // Fetch subscription status (only when userId is set)
+    const { data: subData } = useSWR(
+        userId ? `/api/subscriptions?userId=${userId}` : null,
+        (url: string) => fetch(url).then((r) => r.json()),
+        { refreshInterval: 30000 } // Check every 30s
+    );
+
+    const subscription = subData?.subscription || null;
+    const isPremium = subData?.active ?? false;
+
+    const checkMatchAccess = (matchId: string) => {
         if (!userId) return false;
-        if (premiumAccess?.hasAccess) return true;
+        if (isPremium) return true;
         return false;
     };
 
-    const redeemCode = async (code: string, matchId?: Id<"matches">) => {
+    const redeemCode = async (code: string, matchId?: string) => {
         if (!deviceId) return { success: false, error: "Device not initialized" };
 
-        const result = await redeemCodeMutation({
-            code,
-            deviceId,
-            userAgent: getUserAgent(),
-            matchId,
-        });
-
-        if (result.success) {
-            // Force refresh of user identity
-            const newUserId = await getOrCreateUser({
-                deviceId,
-                userAgent: getUserAgent(),
+        try {
+            const res = await fetch("/api/redemptions/redeem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code, deviceId }),
             });
-            setUserId(newUserId);
+            const result = await res.json();
+
+            if (result.success) {
+                // Re-init user to refresh subscription
+                const userRes = await fetch("/api/users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        deviceId,
+                        userAgent: getUserAgent(),
+                    }),
+                });
+                const userData = await userRes.json();
+                if (userData?.user?._id) {
+                    setUserId(userData.user._id);
+                }
+            }
+
+            return result;
+        } catch (error) {
+            return { success: false, error: "Network error" };
         }
-
-        return result;
     };
-
-    const logoutMutation = useMutation(api.users.logout);
 
     const logout = () => {
         if (typeof window !== "undefined") {
-            // IMMEDIATELY clear local storage first
             localStorage.removeItem("fanbroj_device_id");
             localStorage.removeItem("fanbroj_subscription");
-
-            // Clear state
-            const oldDeviceId = deviceId;
             setDeviceId("");
             setUserId(null);
-
-            // Try to notify server (fire and forget)
-            if (oldDeviceId) {
-                logoutMutation({ deviceId: oldDeviceId }).catch(() => { });
-            }
-
-            // Force hard redirect immediately
             window.location.href = "/";
         }
     };
@@ -111,8 +114,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
             value={{
                 deviceId,
                 userId,
-                isLoading: deviceId === "" || (userId !== null && subscription === undefined),
-                isPremium: (!!subscription) || (premiumAccess?.hasAccess ?? false),
+                isLoading: !isInitialized || (userId !== null && subData === undefined),
+                isPremium,
                 subscription,
                 checkMatchAccess,
                 redeemCode,

@@ -1,5 +1,4 @@
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
+
 import MovieViewClient from "./MovieViewClient";
 import type { Metadata } from "next";
 import { permanentRedirect } from "next/navigation";
@@ -20,7 +19,8 @@ function getDbSlug(urlSlug: string): string {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
     const dbSlug = getDbSlug(slug);
-    const movie = await fetchQuery(api.movies.getMovieBySlug, { slug: dbSlug });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies/${dbSlug}`, { cache: 'no-store' });
+    const movie = res.ok ? await res.json() : null;
 
     if (!movie) {
         return {
@@ -69,7 +69,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export async function generateStaticParams() {
     try {
-        const movies = await fetchQuery(api.movies.listMovies, { limit: 20 });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies?limit=20`, { cache: 'no-store' });
+        const movies = res.ok ? await res.json() : [];
         // Generate both old and new URL versions
         const params: { slug: string }[] = [];
         for (const movie of movies) {
@@ -92,7 +93,8 @@ export default async function MovieViewPage({ params }: PageProps) {
         permanentRedirect(`/movies/${dbSlug}-af-somali`);
     }
 
-    const movie = await fetchQuery(api.movies.getMovieBySlug, { slug: dbSlug });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies/${dbSlug}`, { cache: 'no-store' });
+    const movie = res.ok ? await res.json() : null;
 
     return <MovieViewClient slug={dbSlug} preloadedMovie={movie} />;
 }

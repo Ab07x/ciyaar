@@ -1,16 +1,13 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { Save, Settings, MessageSquare, Search, Globe } from "lucide-react";
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function AdminSettingsPage() {
-    const settings = useQuery(api.settings.getSettings);
-    const updateSettings = useMutation(api.settings.updateSettings);
-    const seedSettings = useMutation(api.settings.seedSettings);
-    const seedLeagues = useMutation(api.leagues.seedLeagues);
-    const seedAds = useMutation(api.ads.seedAds);
+    const { data: settings, mutate } = useSWR("/api/settings", fetcher);
 
     const [formData, setFormData] = useState({
         siteName: "Fanbroj",
@@ -68,16 +65,29 @@ export default function AdminSettingsPage() {
     }, [settings]);
 
     const handleSave = async () => {
-        await updateSettings(formData);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+        try {
+            await fetch("/api/settings", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+            mutate();
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save settings");
+        }
     };
 
     const seedAll = async () => {
-        await seedSettings();
-        await seedLeagues();
-        await seedAds();
-        window.location.reload();
+        try {
+            await fetch("/api/settings/seed", { method: "POST" });
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert("Seed failed");
+        }
     };
 
     return (
@@ -242,7 +252,7 @@ export default function AdminSettingsPage() {
             <div className="bg-stadium-dark border border-border-subtle rounded-xl p-6">
                 <h3 className="font-bold mb-2">Environment Variables</h3>
                 <div className="space-y-2 font-mono text-sm">
-                    <div className="flex justify-between"><span className="text-text-muted">NEXT_PUBLIC_CONVEX_URL</span><span className="text-accent-green">✓ Set</span></div>
+                    <div className="flex justify-between"><span className="text-text-muted">MONGODB_URI</span><span className="text-accent-green">✓ Set</span></div>
                     <div className="flex justify-between"><span className="text-text-muted">ADMIN_TOKEN</span><span className="text-accent-gold">Required</span></div>
                     <div className="flex justify-between"><span className="text-text-muted">FOOTBALL_API_KEY</span><span className="text-text-muted">Optional</span></div>
                 </div>

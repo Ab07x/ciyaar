@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { MovieCard } from "@/components/MovieCard";
 import { SeriesCard } from "@/components/SeriesCard";
@@ -12,7 +11,8 @@ import { Button } from "@/components/ui/Button";
 
 export default function MyListPage() {
     const { userId } = useUser();
-    const myList = useQuery(api.mylist.getMyList, userId ? { userId } : "skip");
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: myList } = useSWR(userId ? `/api/mylist?userId=${userId}` : null, fetcher);
 
     if (myList === undefined) {
         return (
@@ -54,7 +54,7 @@ export default function MyListPage() {
             </h1>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {myList.map((item) => {
+                {myList.map((item: any) => {
                     if (!item.details) return null;
 
                     if (item.contentType === "movie") {

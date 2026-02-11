@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import useSWR from "swr";
 import { PlayerStage } from "@/components/PlayerStage";
 import { MatchCardNew } from "@/components/MatchCardNew";
 import { AdSlot } from "@/components/AdSlot";
@@ -37,15 +36,19 @@ type TabType = "chat" | "stats" | "lineup";
 export default function MatchClientPage({ slug }: MatchClientPageProps) {
   const { isPremium, userId } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>("chat");
+  const fetcher = (url: string) => fetch(url).then((r: any) => r.json());
 
-  const match = useQuery(api.matches.getMatchBySlug, { slug });
-  const settings = useQuery(api.settings.getSettings);
-  const relatedMatches = useQuery(api.matches.getRelatedMatches, (match && match.leagueId) ? { matchId: match._id, leagueId: match.leagueId } : "skip");
-  const matchesStatus = useQuery(api.matches.getMatchesByStatus);
+  const { data: match } = useSWR(`/api/matches/${slug}`, fetcher);
+  const { data: settings } = useSWR("/api/settings", fetcher);
+  const { data: relatedMatches } = useSWR(
+    match?.leagueId ? `/api/matches/related?matchId=${match._id}&leagueId=${match.leagueId}` : null,
+    fetcher
+  );
+  const { data: matchesStatus } = useSWR("/api/matches?byStatus=true", fetcher);
 
-  const ppvAccess = useQuery(
-    api.ppv.checkAccess,
-    match ? { userId: userId || undefined, contentType: "match", contentId: match._id } : "skip"
+  const { data: ppvAccess } = useSWR(
+    match ? `/api/ppv/check?contentType=match&contentId=${match._id}${userId ? `&userId=${userId}` : ''}` : null,
+    fetcher
   );
 
   if (match === undefined || settings === undefined || matchesStatus === undefined) {
