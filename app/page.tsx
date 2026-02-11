@@ -17,7 +17,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function HomePage() {
   const { data: matchData } = useSWR("/api/matches", fetcher);
-  const { data: moviesData } = useSWR("/api/movies?isPublished=true", fetcher);
+  const { data: moviesData } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher);
   const { data: featuredMovies } = useSWR("/api/movies?featured=true", fetcher);
   const { data: trendingContent } = useSWR("/api/data?type=analytics", fetcher);
 

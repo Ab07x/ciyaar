@@ -16,7 +16,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 const ITEMS_PER_PAGE = 35;
 
 function MoviesContent() {
-    const { data: moviesData } = useSWR("/api/movies?isPublished=true", fetcher);
+    const { data: moviesData } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher);
     const movies = moviesData?.movies || moviesData || [];
     const { isPremium } = useUser();
     const searchParams = useSearchParams();
