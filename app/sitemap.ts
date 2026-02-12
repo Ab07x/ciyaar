@@ -25,16 +25,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${BASE_URL}/apps`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
         { url: `${BASE_URL}/apps/android`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
         { url: `${BASE_URL}/apps/ios`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
+        { url: `${BASE_URL}/tags`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
         { url: `${BASE_URL}/requests`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.4 },
     ];
 
     // 2. Dynamic Routes - fetch all from MongoDB
-    const [movies, series, matches, posts, channels] = await Promise.all([
+    const [movies, series, matches, posts, channels, tagAgg] = await Promise.all([
         Movie.find({ isPublished: true }, "slug updatedAt views").lean().catch(() => []),
         Series.find({ isPublished: true }, "slug updatedAt views").lean().catch(() => []),
         Match.find({ status: { $in: ["live", "upcoming"] } }, "slug updatedAt").lean().catch(() => []),
         Post.find({ isPublished: true }, "slug updatedAt").lean().catch(() => []),
         Channel.find({ isLive: true }, "slug updatedAt").lean().catch(() => []),
+        Movie.aggregate([
+            { $match: { isPublished: true, tags: { $exists: true, $ne: [] } } },
+            { $unwind: "$tags" },
+            { $group: { _id: "$tags", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+        ]).catch(() => []),
     ]);
 
     // Movies with -af-somali suffix - boost popular movies
@@ -77,8 +84,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
     }));
 
+    // Tags - indexable keyword pages
+    const tagRoutes: MetadataRoute.Sitemap = [
+        { url: `${BASE_URL}/tags`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+        ...(tagAgg as any[]).map((t) => ({
+            url: `${BASE_URL}/tags/${t._id.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+            lastModified: new Date(),
+            changeFrequency: "weekly" as const,
+            priority: t.count > 50 ? 0.8 : t.count > 10 ? 0.7 : 0.6,
+        })),
+    ];
+
     return [
         ...staticRoutes,
+        ...tagRoutes,
         ...movieRoutes,
         ...seriesRoutes,
         ...matchRoutes,

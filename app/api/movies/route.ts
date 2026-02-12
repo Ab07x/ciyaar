@@ -69,6 +69,8 @@ export async function GET(req: NextRequest) {
         if (isFeatured !== null && isFeatured !== undefined) filter.isFeatured = isFeatured === "true";
         if (category) filter.category = category;
         if (genre) filter.genres = genre;
+        const tag = searchParams.get("tag");
+        if (tag) filter.tags = tag;
 
         const skip = (page - 1) * pageSize;
         const limitNum = limit ? parseInt(limit) : pageSize;

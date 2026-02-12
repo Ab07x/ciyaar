@@ -217,6 +217,7 @@ export default function RootLayout({
                           <Link href="/movies" className="text-sm font-bold text-white hover:text-[#E50914] transition-colors uppercase">Hindi AF Somali</Link>
                           <Link href="/series" className="text-sm font-bold text-white hover:text-[#DC2626] transition-colors uppercase">Musalsal</Link>
                           <Link href="/live" className="text-sm font-bold text-white hover:text-[#3B82F6] transition-colors uppercase">Fanbroj TV</Link>
+                          <Link href="/tags" className="text-sm font-bold text-white hover:text-[#E50914] transition-colors uppercase">Tags</Link>
                           <Link href="/pricing" className="text-sm font-bold text-[#E50914] hover:text-[#E50914]/80 transition-colors uppercase">Premium</Link>
                         </nav>
 
