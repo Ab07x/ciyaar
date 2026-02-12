@@ -2,7 +2,7 @@
 
 import useSWR, { mutate } from "swr";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Film, Crown, Eye, Search, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash2, Film, Crown, Eye, Search, Check, X, ChevronLeft, ChevronRight, Bell, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -15,11 +15,47 @@ export default function AdminMoviesPage() {
     const [filter, setFilter] = useState<"all" | "published" | "draft" | "premium" | "dubbed">("all");
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [pushingId, setPushingId] = useState<string | null>(null);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Delete this movie?")) return;
         await fetch(`/api/movies?id=${id}`, { method: "DELETE" });
         mutate("/api/movies?limit=500");
+    };
+
+    const handleSendPush = async (movie: any) => {
+        if (!confirm(`Send push notification for "${movie.titleSomali || movie.title}"?`)) return;
+        setPushingId(movie._id);
+        try {
+            const movieName = movie.titleSomali || movie.title;
+            const year = movie.releaseDate?.split("-")[0] || "";
+            const genreText = (movie.genres || []).slice(0, 2).join(" & ");
+            const res = await fetch("/api/push", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: movie.isDubbed
+                        ? `🔥 CUSUB: ${movieName} (${year}) AF SOMALI`
+                        : `🎬 NEW: ${movieName} (${year})`,
+                    body: movie.isDubbed
+                        ? `${genreText} — Hadda ku daawo Fanbroj! Bilaash 🍿`
+                        : `${genreText} — Now streaming on Fanbroj! 🍿`,
+                    broadcast: true,
+                    url: `https://fanbroj.net/movies/${movie.slug}-af-somali`,
+                    image: movie.posterUrl || undefined,
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Push sent! ${data.sent || 0} delivered, ${data.failed || 0} failed`);
+            } else {
+                alert("Push failed: " + (data.error || "Unknown error"));
+            }
+        } catch (err) {
+            console.error("Push error:", err);
+            alert("Failed to send push notification");
+        }
+        setPushingId(null);
     };
 
     const filtered = movies?.filter((m: any) => {
@@ -109,6 +145,14 @@ export default function AdminMoviesPage() {
                                 <Link href={`/kism/movies/${movie._id}`} className="p-2 bg-white/20 rounded-lg hover:bg-white/30">
                                     <Edit size={18} />
                                 </Link>
+                                <button
+                                    onClick={() => handleSendPush(movie)}
+                                    disabled={pushingId === movie._id}
+                                    className="p-2 bg-blue-500/50 rounded-lg hover:bg-blue-500"
+                                    title="Send Push Notification"
+                                >
+                                    {pushingId === movie._id ? <Loader2 size={18} className="animate-spin" /> : <Bell size={18} />}
+                                </button>
                                 <button onClick={() => handleDelete(movie._id)} className="p-2 bg-accent-red/50 rounded-lg hover:bg-accent-red">
                                     <Trash2 size={18} />
                                 </button>

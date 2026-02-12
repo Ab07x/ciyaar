@@ -238,7 +238,7 @@ export default function MovieFormPage({ params }: Props) {
                     const movieName = formData.titleSomali || formData.title;
                     const year = formData.releaseDate?.split("-")[0] || "";
                     const genreText = formData.genres.slice(0, 2).join(" & ");
-                    await fetch("/api/push", {
+                    const pushRes = await fetch("/api/push", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -253,8 +253,15 @@ export default function MovieFormPage({ params }: Props) {
                             image: formData.posterUrl || undefined,
                         }),
                     });
+                    const pushData = await pushRes.json();
+                    if (pushRes.ok) {
+                        alert(`Movie saved! Push sent to ${pushData.sent || 0} users.`);
+                    } else {
+                        alert(`Movie saved but push failed: ${pushData.error || "Unknown error"}`);
+                    }
                 } catch (pushErr) {
                     console.error("Push notification error:", pushErr);
+                    alert("Movie saved but push notification failed to send.");
                 }
             }
 
@@ -506,29 +513,30 @@ export default function MovieFormPage({ params }: Props) {
                             </div>
 
                             {/* Push Notification Toggle */}
-                            {!id && (
-                                <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Bell size={18} className="text-blue-400" />
-                                            <span className="font-medium">Send Push Notification</span>
-                                            <span className="text-xs text-text-muted">(broadcast to all users)</span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSendPush(!sendPush)}
-                                            className={`w-12 h-6 rounded-full relative ${sendPush ? "bg-blue-500" : "bg-border-strong"}`}
-                                        >
-                                            <div
-                                                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${sendPush ? "right-1" : "left-1"}`}
-                                            />
-                                        </button>
+                            <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Bell size={18} className="text-blue-400" />
+                                        <span className="font-medium">Send Push Notification</span>
+                                        <span className="text-xs text-text-muted">(broadcast to all users)</span>
                                     </div>
-                                    {sendPush && !formData.isPublished && (
-                                        <p className="text-xs text-yellow-400 mt-2">Note: Push will only send if movie is published</p>
-                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSendPush(!sendPush)}
+                                        className={`w-12 h-6 rounded-full relative ${sendPush ? "bg-blue-500" : "bg-border-strong"}`}
+                                    >
+                                        <div
+                                            className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${sendPush ? "right-1" : "left-1"}`}
+                                        />
+                                    </button>
                                 </div>
-                            )}
+                                {sendPush && !formData.isPublished && (
+                                    <p className="text-xs text-yellow-400 mt-2">Note: Push will only send if movie is published</p>
+                                )}
+                                {sendPush && id && (
+                                    <p className="text-xs text-blue-400 mt-2">Push notification will be sent when you click Update</p>
+                                )}
+                            </div>
 
                             {/* Category Dropdown */}
                             <div className="p-4 bg-stadium-dark rounded-xl">
