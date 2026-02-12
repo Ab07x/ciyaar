@@ -123,5 +123,47 @@ export default async function MovieViewPage({ params }: PageProps) {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/movies/${dbSlug}`, { cache: 'no-store' });
     const movie = res.ok ? await res.json() : null;
 
-    return <MovieViewClient slug={dbSlug} preloadedMovie={movie} />;
+    // Movie JSON-LD structured data for Google rich results
+    const jsonLd = movie ? {
+        "@context": "https://schema.org",
+        "@type": "Movie",
+        name: movie.titleSomali || movie.title,
+        alternateName: movie.titleSomali ? movie.title : undefined,
+        description: movie.overviewSomali || movie.overview || "",
+        image: movie.posterUrl,
+        datePublished: movie.releaseDate,
+        genre: movie.genres || [],
+        inLanguage: movie.isDubbed ? "so" : "en",
+        url: `https://fanbroj.net/movies/${dbSlug}-af-somali`,
+        ...(movie.rating && movie.rating > 0 ? {
+            aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: movie.rating,
+                bestRating: 10,
+                ratingCount: movie.views || 1,
+            },
+        } : {}),
+        ...(movie.duration ? { duration: `PT${movie.duration}M` } : {}),
+        potentialAction: {
+            "@type": "WatchAction",
+            target: `https://fanbroj.net/movies/${dbSlug}-af-somali`,
+        },
+        provider: {
+            "@type": "Organization",
+            name: "Fanproj",
+            url: "https://fanbroj.net",
+        },
+    } : null;
+
+    return (
+        <>
+            {jsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+            )}
+            <MovieViewClient slug={dbSlug} preloadedMovie={movie} />
+        </>
+    );
 }

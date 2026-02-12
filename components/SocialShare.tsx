@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2, MessageCircle, Facebook, Twitter } from "lucide-react";
+import { Share2, MessageCircle, Facebook, Twitter, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SocialShareProps {
@@ -10,7 +10,7 @@ interface SocialShareProps {
 }
 
 export function SocialShare({ title, url, className }: SocialShareProps) {
-    const shareUrl = typeof window !== "undefined" ? window.location.origin + url : url;
+    const shareUrl = url.startsWith("http") ? url : `https://fanbroj.net${url}`;
     const encodedUrl = encodeURIComponent(shareUrl);
     const encodedTitle = encodeURIComponent(title);
 
@@ -22,13 +22,19 @@ export function SocialShare({ title, url, className }: SocialShareProps) {
             color: "hover:text-[#25D366] hover:bg-[#25D366]/10",
         },
         {
+            name: "Telegram",
+            icon: Send,
+            href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+            color: "hover:text-[#0088cc] hover:bg-[#0088cc]/10",
+        },
+        {
             name: "Facebook",
             icon: Facebook,
             href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
             color: "hover:text-[#1877F2] hover:bg-[#1877F2]/10",
         },
         {
-            name: "X (Twitter)",
+            name: "X",
             icon: Twitter,
             href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
             color: "hover:text-white hover:bg-white/10",

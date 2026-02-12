@@ -87,8 +87,8 @@ export function AggressivePushBanner() {
         }, 30 * 1000);
     };
 
-    // Don't render if subscribed
-    if (isSubscribed || isLoading) return null;
+    // Don't render if subscribed (don't hide on isLoading - causes flash)
+    if (isSubscribed) return null;
 
     return (
         <AnimatePresence>

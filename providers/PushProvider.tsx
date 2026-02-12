@@ -42,8 +42,19 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
             setIsSupported(supported);
 
             if (supported) {
+                // Check localStorage first for instant UI state
+                const wasSubscribed = localStorage.getItem("fanbroj_push_subscribed") === "true";
+                const wasUnsubscribed = localStorage.getItem("fanbroj_push_unsubscribed");
+                if (wasSubscribed && !wasUnsubscribed) {
+                    setIsSubscribed(true);
+                }
+
                 if (Notification.permission === "granted") {
-                    await initializeFirebase();
+                    const token = await initializeFirebase();
+                    if (!token && wasSubscribed && !wasUnsubscribed) {
+                        // Token failed but user was previously subscribed - keep subscribed state
+                        // Will retry on next page load
+                    }
                 }
             }
             setIsLoading(false);
@@ -51,7 +62,7 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
 
         const timer = setTimeout(() => {
             checkSupport();
-        }, 2000);
+        }, 1500);
 
         return () => clearTimeout(timer);
     }, []);
@@ -147,17 +158,13 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
         if (!isSupported) return false;
 
         try {
-            setIsLoading(true);
-
             const permission = await Notification.requestPermission();
             if (permission !== "granted") {
-                setIsLoading(false);
                 return false;
             }
 
             const token = await initializeFirebase();
             if (!token) {
-                setIsLoading(false);
                 return false;
             }
 
@@ -172,13 +179,17 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
                     userId: userId || undefined,
                     userAgent: navigator.userAgent,
                 }),
-            });
+            }).catch(() => {}); // Don't fail subscribe if API save fails
 
-            setIsLoading(false);
+            // Ensure subscribed state is set (initializeFirebase sets it too, but be safe)
+            setIsSubscribed(true);
+            setFcmToken(token);
+            localStorage.setItem("fanbroj_push_subscribed", "true");
+            localStorage.removeItem("fanbroj_push_unsubscribed");
+
             return true;
         } catch (error) {
             console.error("Subscribe error:", error);
-            setIsLoading(false);
             return false;
         }
     }, [isSupported, userId]);

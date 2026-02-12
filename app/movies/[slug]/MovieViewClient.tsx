@@ -22,6 +22,7 @@ import { MyListButton } from "@/components/MyListButton";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { generateMovieSchema } from "@/lib/seo/schema";
+import { SocialShare } from "@/components/SocialShare";
 
 interface MovieViewClientProps {
     slug: string;
@@ -267,6 +268,14 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                         <Play size={18} fill="currentColor" />
                         Daawo NOW
                     </Link>
+                </div>
+
+                {/* Share */}
+                <div className="mt-6 p-4 bg-[#1a1a2e] rounded-xl border border-[#333333]">
+                    <SocialShare
+                        title={`Daawo ${movie.titleSomali || movie.title} Af Somali bilaash HD - Fanproj`}
+                        url={`/movies/${slug}-af-somali`}
+                    />
                 </div>
 
                 {/* You May Also Like */}
