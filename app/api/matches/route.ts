@@ -10,6 +10,8 @@ export async function GET(req: NextRequest) {
         const slug = searchParams.get("slug");
         const id = searchParams.get("id");
         const limit = searchParams.get("limit");
+        const byStatus = searchParams.get("byStatus");
+        const leagueId = searchParams.get("leagueId");
 
         // Single match by slug
         if (slug) {
@@ -23,9 +25,22 @@ export async function GET(req: NextRequest) {
             return NextResponse.json(match || null);
         }
 
+        // Grouped by status (for match detail page sidebar)
+        if (byStatus === "true") {
+            const [live, upcoming, finished] = await Promise.all([
+                Match.find({ status: "live" }).sort({ kickoffAt: -1 }).limit(10).lean(),
+                Match.find({ status: "upcoming" }).sort({ kickoffAt: 1 }).limit(10).lean(),
+                Match.find({ status: "finished" }).sort({ kickoffAt: -1 }).limit(10).lean(),
+            ]);
+            return NextResponse.json({ live, upcoming, finished }, {
+                headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" },
+            });
+        }
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filter: any = {};
         if (status) filter.status = status;
+        if (leagueId) filter.leagueId = leagueId;
 
         const query = Match.find(filter).sort({ kickoffAt: -1 });
         if (limit) query.limit(parseInt(limit));

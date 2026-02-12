@@ -25,13 +25,8 @@ export async function GET(req: NextRequest) {
             // Find device first, then user
             const device = await Device.findOne({ deviceId }).lean();
             if (device) {
-                const user = await User.findOne({ convexId: device.userId }).lean();
-                if (!user) {
-                    // Try by MongoDB _id
-                    const userById = await User.findById(device.userId).lean();
-                    return NextResponse.json(userById || null);
-                }
-                return NextResponse.json(user);
+                const user = await User.findById(device.userId).lean();
+                return NextResponse.json(user || null);
             }
             return NextResponse.json(null);
         }

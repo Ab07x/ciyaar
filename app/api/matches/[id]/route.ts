@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Match } from "@/lib/models";
+import mongoose from "mongoose";
 
 export async function GET(
     req: NextRequest,
@@ -9,7 +10,16 @@ export async function GET(
     try {
         await connectDB();
         const { id } = await params;
-        const match = await Match.findById(id).lean();
+
+        // Try by ObjectId first, then by slug
+        let match;
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            match = await Match.findById(id).lean();
+        }
+        if (!match) {
+            match = await Match.findOne({ slug: id }).lean();
+        }
+
         if (!match) return NextResponse.json({ error: "Not found" }, { status: 404 });
         return NextResponse.json(match);
     } catch (error) {

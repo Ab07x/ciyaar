@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
             const series = await Series.findOne({ slug }).lean();
             if (series) {
                 // Also fetch episodes
-                const episodes = await Episode.find({ seriesId: series.convexId || (series._id as string).toString() })
+                const episodes = await Episode.find({ seriesId: (series._id as string).toString() })
                     .sort({ seasonNumber: 1, episodeNumber: 1 })
                     .lean();
                 return NextResponse.json({ ...series, episodes });
