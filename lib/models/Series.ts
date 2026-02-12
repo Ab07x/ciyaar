@@ -102,7 +102,7 @@ const EpisodeSchema = new Schema<IEpisode>(
         stillUrl: String,
         airDate: String,
         runtime: Number,
-        embeds: [{ label: String, url: String, type: String, isProtected: Boolean }],
+        embeds: [{ label: String, url: String, type: { type: String }, isProtected: Boolean }],
         isPublished: { type: Boolean, default: true },
         createdAt: { type: Number, required: true },
     },

@@ -198,7 +198,7 @@ const ChannelSchema = new Schema<IChannel>(
         description: String,
         thumbnailUrl: String,
         category: { type: String, required: true, index: true },
-        embeds: [{ label: String, url: String, type: String, isProtected: Boolean }],
+        embeds: [{ label: String, url: String, type: { type: String }, isProtected: Boolean }],
         isPremium: { type: Boolean, required: true },
         isLive: { type: Boolean, required: true },
         priority: { type: Number, required: true },
