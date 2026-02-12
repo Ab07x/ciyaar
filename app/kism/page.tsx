@@ -179,6 +179,8 @@ export default function AdminDashboard() {
     const { data: settings } = useSWR("/api/settings", fetcher);
     const { data: analyticsStats, mutate: mutateAnalytics } = useSWR("/api/analytics/dashboard", fetcher);
     const { data: moviesData, mutate: mutateMovies } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher);
+    const { data: seriesData, mutate: mutateSeries } = useSWR("/api/series", fetcher);
+    const { data: pushStats, mutate: mutatePush } = useSWR("/api/push/subscriptions", fetcher);
 
     const [refreshing, setRefreshing] = useState(false);
 
@@ -186,6 +188,7 @@ export default function AdminDashboard() {
     const matches = matchData || [];
     const posts = Array.isArray(postData) ? postData : postData?.posts || [];
     const moviesList = moviesData?.movies || moviesData || [];
+    const seriesList = Array.isArray(seriesData) ? seriesData : seriesData?.series || [];
 
     const handleRefresh = async () => {
         setRefreshing(true);
@@ -195,6 +198,8 @@ export default function AdminDashboard() {
             mutateCodes(),
             mutateAnalytics(),
             mutateMovies(),
+            mutateSeries(),
+            mutatePush(),
         ]);
         setRefreshing(false);
     };
@@ -206,13 +211,13 @@ export default function AdminDashboard() {
     const totalViews = matchViews + postViews + movieViews;
 
     const stats = [
-        { label: "Total Matches", value: matchData ? matches.length : "-", icon: PlayCircle, color: "text-accent-blue" },
-        { label: "Live Now", value: matchData ? matches.filter((m: any) => m.status === "live").length : "-", icon: PlayCircle, color: "text-accent-red" },
-        { label: "Upcoming", value: matchData ? matches.filter((m: any) => m.status === "upcoming").length : "-", icon: Calendar, color: "text-accent-green" },
         { label: "Movies", value: moviesData ? moviesList.length : "-", icon: Film, color: "text-accent-gold" },
+        { label: "Series", value: seriesData ? seriesList.length : "-", icon: Tv, color: "text-purple-400" },
         { label: "Total Views", value: (matchData || moviesData) ? totalViews : "-", icon: Eye, color: "text-accent-green" },
-        { label: "Blog Posts", value: postData ? posts.length : "-", icon: FileText, color: "text-purple-400" },
-        { label: "Active Codes", value: codeStats ? (codeStats?.available || 0) : "-", icon: Ticket, color: "text-accent-blue" },
+        { label: "Matches", value: matchData ? matches.length : "-", icon: PlayCircle, color: "text-accent-blue" },
+        { label: "Live Now", value: matchData ? matches.filter((m: any) => m.status === "live").length : "-", icon: PlayCircle, color: "text-accent-red" },
+        { label: "Blog Posts", value: postData ? posts.length : "-", icon: FileText, color: "text-pink-400" },
+        { label: "Push Subs", value: pushStats ? (pushStats.activeCount || 0) : "-", icon: Users, color: "text-blue-400" },
     ];
 
     // Use real analytics data or fallback to zeros (not fake data)
@@ -246,9 +251,10 @@ export default function AdminDashboard() {
         ];
 
     const subscriptionData = [
-        { name: "Premium", value: codeStats?.used || 0, color: "#F59E0B" },
-        { name: "Free", value: codeStats ? 1200 : 0, color: "#6B7280" },
-        { name: "Trial", value: codeStats ? 89 : 0, color: "#22C55E" },
+        { name: "Premium (Redeemed)", value: codeStats?.used || 0, color: "#F59E0B" },
+        { name: "Codes Available", value: codeStats?.available || 0, color: "#22C55E" },
+        { name: "Push Subscribers", value: pushStats?.activeCount || 0, color: "#3B82F6" },
+        { name: "Push Inactive", value: pushStats?.inactiveCount || 0, color: "#6B7280" },
     ];
 
     // Calculate percentage change
@@ -395,9 +401,9 @@ export default function AdminDashboard() {
             </div>
 
             {/* Second Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Subscription Stats */}
-                <SubscriptionChart data={subscriptionData} title="User Subscriptions" />
+                <SubscriptionChart data={subscriptionData} title="Users & Subscriptions" />
 
                 {/* Quick Actions */}
                 <motion.div
@@ -409,12 +415,12 @@ export default function AdminDashboard() {
                     <h3 className="font-bold mb-4">Quick Actions</h3>
                     <div className="grid grid-cols-2 gap-3">
                         {[
-                            { href: "/kism/hero", icon: ImageIcon, label: "Hero Slider", color: "accent-gold" },
-                            { href: "/kism/matches/new", icon: PlayCircle, label: "Add Match", color: "accent-green" },
-                            { href: "/kism/movies/new", icon: Film, label: "Add Movie", color: "accent-blue" },
-                            { href: "/kism/series/new", icon: Tv, label: "Add Series", color: "purple-400" },
-                            { href: "/kism/shorts", icon: PlayCircle, label: "Shorts", color: "accent-red" },
-                            { href: "/kism/codes", icon: Ticket, label: "Codes", color: "blue-400" },
+                            { href: "/kism/hero", icon: ImageIcon, label: "Hero Slider", iconClass: "text-accent-gold", hoverClass: "hover:bg-yellow-500/20" },
+                            { href: "/kism/matches/new", icon: PlayCircle, label: "Add Match", iconClass: "text-accent-green", hoverClass: "hover:bg-green-500/20" },
+                            { href: "/kism/movies/new", icon: Film, label: "Add Movie", iconClass: "text-accent-blue", hoverClass: "hover:bg-blue-500/20" },
+                            { href: "/kism/series/new", icon: Tv, label: "Add Series", iconClass: "text-purple-400", hoverClass: "hover:bg-purple-500/20" },
+                            { href: "/kism/shorts", icon: PlayCircle, label: "Shorts", iconClass: "text-accent-red", hoverClass: "hover:bg-red-500/20" },
+                            { href: "/kism/codes", icon: Ticket, label: "Codes", iconClass: "text-blue-400", hoverClass: "hover:bg-blue-400/20" },
                         ].map((action) => (
                             <motion.div
                                 key={action.href}
@@ -423,9 +429,9 @@ export default function AdminDashboard() {
                             >
                                 <Link
                                     href={action.href}
-                                    className={`p-4 bg-stadium-hover rounded-xl text-center hover:bg-${action.color}/20 transition-colors block`}
+                                    className={`p-4 bg-stadium-hover rounded-xl text-center ${action.hoverClass} transition-colors block`}
                                 >
-                                    <action.icon size={24} className={`mx-auto mb-2 text-${action.color}`} />
+                                    <action.icon size={24} className={`mx-auto mb-2 ${action.iconClass}`} />
                                     <span className="text-sm font-semibold">{action.label}</span>
                                 </Link>
                             </motion.div>

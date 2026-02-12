@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Users } from "lucide-react";
 import {
     LineChart,
     Line,
@@ -108,6 +109,8 @@ interface TopContentChartProps {
     title?: string;
 }
 
+const BAR_COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#EF4444", "#A855F7", "#06B6D4"];
+
 export function TopContentChart({ data, title = "Top Content" }: TopContentChartProps) {
     return (
         <motion.div
@@ -129,17 +132,20 @@ export function TopContentChart({ data, title = "Top Content" }: TopContentChart
                         <YAxis
                             dataKey="name"
                             type="category"
-                            tick={{ fill: "#6B7280", fontSize: 11 }}
+                            tick={{ fill: "#9CA3AF", fontSize: 12, fontWeight: 600 }}
                             axisLine={{ stroke: "#2D3748" }}
-                            width={100}
+                            width={80}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar
                             dataKey="views"
-                            fill="#22C55E"
-                            radius={[0, 4, 4, 0]}
+                            radius={[0, 6, 6, 0]}
                             name="Views"
-                        />
+                        >
+                            {data.map((_, index) => (
+                                <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
+                            ))}
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </div>
@@ -154,6 +160,9 @@ interface SubscriptionChartProps {
 }
 
 export function SubscriptionChart({ data, title = "Subscriptions" }: SubscriptionChartProps) {
+    const total = data.reduce((sum, d) => sum + d.value, 0);
+    const hasData = total > 0;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -162,31 +171,44 @@ export function SubscriptionChart({ data, title = "Subscriptions" }: Subscriptio
             className="bg-stadium-elevated border border-border-strong rounded-xl p-6"
         >
             <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
-            <div className="h-[300px] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie
-                            data={data}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={100}
-                            paddingAngle={5}
-                            dataKey="value"
-                        >
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend
-                            formatter={(value) => (
-                                <span className="text-text-secondary text-sm">{value}</span>
-                            )}
-                        />
-                    </PieChart>
-                </ResponsiveContainer>
-            </div>
+            {hasData ? (
+                <div className="h-[300px] flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={data}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={100}
+                                paddingAngle={3}
+                                dataKey="value"
+                                label={({ name, value }) => `${value}`}
+                            >
+                                {data.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend
+                                formatter={(value, entry: any) => {
+                                    const item = data.find(d => d.name === value);
+                                    return (
+                                        <span className="text-text-secondary text-sm">
+                                            {value}: <strong className="text-white">{item?.value || 0}</strong>
+                                        </span>
+                                    );
+                                }}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+            ) : (
+                <div className="h-[300px] flex flex-col items-center justify-center text-text-muted">
+                    <Users size={40} className="mb-2 opacity-50" />
+                    <p className="text-sm">No subscription data yet</p>
+                </div>
+            )}
         </motion.div>
     );
 }
