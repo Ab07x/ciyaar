@@ -18,7 +18,7 @@ export default function AdminMoviesPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm("Delete this movie?")) return;
-        await fetch(`/api/movies/${id}`, { method: "DELETE" });
+        await fetch(`/api/movies?id=${id}`, { method: "DELETE" });
         mutate("/api/movies?limit=500");
     };
 

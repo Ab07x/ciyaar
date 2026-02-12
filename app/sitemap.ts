@@ -2,6 +2,10 @@ import { MetadataRoute } from "next";
 import connectDB from "@/lib/mongodb";
 import { Movie, Series, Match, Post, Channel } from "@/lib/models";
 
+// Force dynamic rendering - sitemap needs DB access
+export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate every hour
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -7,12 +7,81 @@ export async function GET(req: NextRequest) {
         await connectDB();
         const { searchParams } = new URL(req.url);
         const activeOnly = searchParams.get("activeOnly");
+        const auto = searchParams.get("auto");
+
+        // Auto-rotate mode: return 8 random published movies with backdrops
+        // Rotates every 24 hours using date as seed
+        if (auto === "true") {
+            const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD as seed
+            const seedNum = today.split("-").join("").slice(-6);
+
+            // Get movies with backdrop images, sorted by a pseudo-random seed
+            const movies = await Movie.find({
+                isPublished: true,
+                backdropUrl: { $exists: true, $ne: "" },
+            })
+                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium")
+                .lean();
+
+            // Deterministic shuffle based on date
+            const shuffled = movies
+                .map((m: any, i: number) => ({
+                    ...m,
+                    _sortKey: ((i + 1) * parseInt(seedNum)) % (movies.length + 1),
+                }))
+                .sort((a: any, b: any) => a._sortKey - b._sortKey)
+                .slice(0, 8);
+
+            const autoSlides = shuffled.map((m: any, i: number) => ({
+                _id: `auto-${i}`,
+                contentType: "movie",
+                contentId: m.slug,
+                title: m.titleSomali || m.title,
+                subtitle: m.genres?.slice(0, 3).join(" • ") || "",
+                imageUrl: m.backdropUrl,
+                order: i,
+                isActive: true,
+                isAuto: true,
+                content: m,
+            }));
+
+            return NextResponse.json(autoSlides, {
+                headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+            });
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filter: any = {};
         if (activeOnly === "true") filter.isActive = true;
 
         const slides = await HeroSlide.find(filter).sort({ order: 1 }).lean();
+
+        // If no manual slides and activeOnly requested, fall back to auto
+        if (activeOnly === "true" && slides.length === 0) {
+            const movies = await Movie.find({
+                isPublished: true,
+                backdropUrl: { $exists: true, $ne: "" },
+            })
+                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium")
+                .sort({ views: -1 })
+                .limit(8)
+                .lean();
+
+            const autoSlides = movies.map((m: any, i: number) => ({
+                _id: `auto-${i}`,
+                contentType: "movie",
+                contentId: m.slug,
+                title: m.titleSomali || m.title,
+                subtitle: m.genres?.slice(0, 3).join(" • ") || "",
+                imageUrl: m.backdropUrl,
+                order: i,
+                isActive: true,
+                isAuto: true,
+                content: m,
+            }));
+
+            return NextResponse.json(autoSlides);
+        }
 
         // Hydrate content data for each slide
         const hydrated = await Promise.all(

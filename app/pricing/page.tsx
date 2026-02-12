@@ -21,6 +21,66 @@ const freeVsPremium = [
     { feature: "Filimada cusub", free: "Sugitaan", premium: "Marka hore", premiumGood: true },
 ];
 
+function RamadanCountdown() {
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const ramadanStart = new Date("2026-02-28T00:00:00").getTime();
+
+    useEffect(() => {
+        const tick = () => {
+            const now = Date.now();
+            const diff = ramadanStart - now;
+            if (diff <= 0) {
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                return;
+            }
+            setTimeLeft({
+                days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((diff / (1000 * 60)) % 60),
+                seconds: Math.floor((diff / 1000) % 60),
+            });
+        };
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+    }, []);
+
+    const isRamadan = Date.now() >= ramadanStart;
+
+    return (
+        <div className="bg-gradient-to-r from-emerald-900/40 via-green-800/30 to-emerald-900/40 border border-emerald-500/20 rounded-2xl p-6 md:p-8 text-center backdrop-blur-sm mb-8">
+            <div className="text-3xl mb-2">🌙</div>
+            <h3 className="text-xl md:text-2xl font-black text-yellow-400 mb-1">
+                {isRamadan ? "RAMADAN KARIIM!" : "ISU DIYAARI RAMADAN!"}
+            </h3>
+            <p className="text-sm text-emerald-300 mb-4">
+                {isRamadan
+                    ? "Ku raaxayso 724+ filim AF Somali — Qiimo yaab leh!"
+                    : "Iibso Premium si aad Ramadan ugu raaxaysto 724+ filim AF Somali"}
+            </p>
+            {!isRamadan && (
+                <div className="flex items-center justify-center gap-3 md:gap-5">
+                    {[
+                        { value: timeLeft.days, label: "Maalmood" },
+                        { value: timeLeft.hours, label: "Saacadood" },
+                        { value: timeLeft.minutes, label: "Daqiiqo" },
+                        { value: timeLeft.seconds, label: "Ilbiriqsi" },
+                    ].map((item) => (
+                        <div key={item.label} className="flex flex-col items-center">
+                            <div className="w-16 h-16 md:w-20 md:h-20 bg-black/50 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                                <span className="text-2xl md:text-3xl font-black text-white tabular-nums">
+                                    {String(item.value).padStart(2, "0")}
+                                </span>
+                            </div>
+                            <span className="text-[10px] md:text-xs text-emerald-400 mt-1 font-bold uppercase">{item.label}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function PricingPage() {
     const { data: settings } = useSWR("/api/settings", fetcher);
     const { deviceId, redeemCode, isPremium } = useUser();
@@ -156,6 +216,11 @@ export default function PricingPage() {
                         </div>
                     </div>
                 </div>
+            </section>
+
+            {/* Ramadan Countdown */}
+            <section className="container mx-auto px-4">
+                <RamadanCountdown />
             </section>
 
             {/* Plans Grid */}

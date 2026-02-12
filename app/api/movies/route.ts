@@ -113,12 +113,36 @@ export async function POST(req: NextRequest) {
         await connectDB();
         const body = await req.json();
 
+        if (!body.title || !body.slug) {
+            return NextResponse.json({ error: "Title and slug are required" }, { status: 400 });
+        }
+
+        // Check for existing movie by tmdbId or slug
+        const existing = await Movie.findOne({
+            $or: [
+                ...(body.tmdbId ? [{ tmdbId: body.tmdbId }] : []),
+                { slug: body.slug },
+            ],
+        });
+
+        if (existing) {
+            return NextResponse.json(
+                { error: `Filimkaan horey ayuu u jiray: "${existing.title}". Badal slug-ga ama edit-garee.` },
+                { status: 409 }
+            );
+        }
+
         const now = Date.now();
         const seoTitle = `Daawo ${body.title} ${body.isDubbed ? "Af-Somali" : ""} Online | Fanbroj`;
         const seoDescription = (body.overview || "").slice(0, 155) + "...";
 
         const movie = await Movie.create({
             ...body,
+            overview: body.overview || "No description available.",
+            posterUrl: body.posterUrl || "",
+            releaseDate: body.releaseDate || "2026-01-01",
+            genres: body.genres || [],
+            cast: body.cast || [],
             seoTitle: body.seoTitle || seoTitle,
             seoDescription: body.seoDescription || seoDescription,
             views: 0,
@@ -130,10 +154,11 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         console.error("POST /api/movies error:", error);
         if (error.name === "ValidationError") {
-            return NextResponse.json({ error: error.message }, { status: 400 });
+            const fields = Object.keys(error.errors || {}).join(", ");
+            return NextResponse.json({ error: `Validation failed: ${fields}. ${error.message}` }, { status: 400 });
         }
         if (error.code === 11000) {
-            return NextResponse.json({ error: "Movie with this slug or tmdbId already exists" }, { status: 409 });
+            return NextResponse.json({ error: "Filimkaan horey ayuu u jiray (duplicate slug or tmdbId)" }, { status: 409 });
         }
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }

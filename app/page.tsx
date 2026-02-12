@@ -19,7 +19,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 export default function HomePage() {
   const { data: matchData } = useSWR("/api/matches", fetcher);
   const { data: moviesData } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher);
-  const { data: featuredMovies } = useSWR("/api/movies?featured=true", fetcher);
+  const { data: heroSlidesData } = useSWR("/api/hero-slides?auto=true", fetcher);
   const { data: trendingMovies } = useSWR("/api/movies?sort=views&limit=10&isPublished=true", fetcher);
 
   const { isPremium } = useUser();
@@ -47,12 +47,12 @@ export default function HomePage() {
   // Extract movies array from paginated response
   const movies = moviesData?.movies || moviesData || [];
 
-  // Hero movies: featured first, then fall back to latest movies
-  const heroMovies = (featuredMovies && featuredMovies.length > 0)
-    ? featuredMovies.slice(0, 8)
+  // Hero movies: auto-rotated slides (changes every 24hrs), fallback to latest movies
+  const heroMovies = (heroSlidesData && heroSlidesData.length > 0)
+    ? heroSlidesData.map((s: any) => s.content || { title: s.title, backdropUrl: s.imageUrl, slug: s.contentId, posterUrl: s.imageUrl })
     : (movies || [])
       .filter((m: any) => m.posterUrl)
-      .sort((a: any, b: any) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
+      .sort((a: any, b: any) => (b.views || 0) - (a.views || 0))
       .slice(0, 8);
 
   useEffect(() => {

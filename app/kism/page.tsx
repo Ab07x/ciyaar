@@ -261,6 +261,7 @@ export default function AdminDashboard() {
 
     const handleSeedAnalytics = async () => {
         await fetch("/api/analytics/seed", { method: "POST" });
+        mutateAnalytics();
     };
 
     return (
@@ -277,10 +278,11 @@ export default function AdminDashboard() {
                 </div>
                 <button
                     onClick={handleRefresh}
-                    className="flex items-center gap-2 px-4 py-2 bg-stadium-elevated border border-border-strong rounded-lg text-sm font-semibold hover:bg-stadium-hover transition-colors"
+                    disabled={refreshing}
+                    className="flex items-center gap-2 px-4 py-2 bg-stadium-elevated border border-border-strong rounded-lg text-sm font-semibold hover:bg-stadium-hover transition-colors disabled:opacity-50"
                 >
-                    <RefreshCw size={16} />
-                    Refresh
+                    <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+                    {refreshing ? "Refreshing..." : "Refresh Data"}
                 </button>
             </motion.div>
 

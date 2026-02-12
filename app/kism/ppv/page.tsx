@@ -23,7 +23,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 export default function AdminPPVPage() {
     const { data: ppvContent, mutate } = useSWR("/api/ppv", fetcher);
     const { data: ppvStats } = useSWR("/api/ppv?stats=true", fetcher);
-    const { data: movies } = useSWR("/api/movies", fetcher);
+    const { data: movies } = useSWR("/api/movies?limit=1000&isPublished=true", fetcher);
     const { data: matches } = useSWR("/api/matches", fetcher);
 
     const [showForm, setShowForm] = useState(false);
@@ -158,9 +158,11 @@ export default function AdminPPVPage() {
     });
 
     // Get content options based on type
+    const movieList = movies?.movies || movies || [];
+    const matchList = Array.isArray(matches) ? matches : matches?.matches || [];
     const contentOptions = formData.contentType === "movie"
-        ? movies?.map((m: any) => ({ id: m.slug, title: m.title })) || []
-        : matches?.map((m: any) => ({ id: m._id, title: `${m.teamA} vs ${m.teamB}` })) || [];
+        ? movieList.map((m: any) => ({ id: m.slug, title: m.title }))
+        : matchList.map((m: any) => ({ id: m._id, title: `${m.teamA} vs ${m.teamB}` }));
 
     return (
         <div className="space-y-8">

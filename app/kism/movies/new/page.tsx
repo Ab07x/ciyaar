@@ -36,6 +36,10 @@ export default function MovieFormPage({ params }: Props) {
     const [fetching, setFetching] = useState(false);
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [showSearch, setShowSearch] = useState(false);
+    const [tmdbPage, setTmdbPage] = useState(1);
+    const [tmdbTotalPages, setTmdbTotalPages] = useState(1);
+    const [tmdbTotalResults, setTmdbTotalResults] = useState(0);
+    const [lastQuery, setLastQuery] = useState("");
 
     const [formData, setFormData] = useState({
         slug: "",
@@ -113,13 +117,18 @@ export default function MovieFormPage({ params }: Props) {
     }
 
     // Search TMDB
-    const handleSearch = async () => {
-        if (!tmdbInput.trim()) return;
+    const handleSearch = async (page = 1) => {
+        const query = page > 1 ? lastQuery : tmdbInput.trim();
+        if (!query) return;
         setSearching(true);
         try {
-            const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(tmdbInput)}&type=movie`);
-            const results = await res.json();
-            setSearchResults(Array.isArray(results) ? results : results?.results || []);
+            const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(query)}&type=movie&page=${page}`);
+            const data = await res.json();
+            setSearchResults(Array.isArray(data) ? data : data?.results || []);
+            setTmdbPage(data?.page || 1);
+            setTmdbTotalPages(data?.totalPages || 1);
+            setTmdbTotalResults(data?.totalResults || 0);
+            setLastQuery(query);
             setShowSearch(true);
         } catch (err) {
             console.error(err);
@@ -175,99 +184,72 @@ export default function MovieFormPage({ params }: Props) {
 
         setSaving(true);
         try {
-            if (id) {
-                await fetch(`/api/movies`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        id,
-                        embeds: formData.embeds.map(e => ({
-                            label: e.label,
-                            url: e.url,
-                            quality: e.quality || undefined,
-                            type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
-                        })),
-                        slug: formData.slug,
-                        tmdbId: formData.tmdbId,
-                        imdbId: formData.imdbId || undefined,
-                        title: formData.title,
-                        titleSomali: formData.titleSomali || undefined,
-                        overview: formData.overview,
-                        overviewSomali: formData.overviewSomali || undefined,
-                        posterUrl: formData.posterUrl,
-                        backdropUrl: formData.backdropUrl || undefined,
-                        releaseDate: formData.releaseDate,
-                        runtime: formData.runtime || undefined,
-                        rating: formData.rating || undefined,
-                        voteCount: formData.voteCount || undefined,
-                        genres: formData.genres,
-                        cast: formData.cast,
-                        director: formData.director || undefined,
-                        isDubbed: formData.isDubbed,
-                        isPremium: formData.isPremium,
-                        isPublished: formData.isPublished,
-                        isFeatured: formData.isFeatured,
-                        isTop10: formData.isTop10,
-                        top10Order: formData.top10Order || undefined,
-                        trailerUrl: formData.trailerUrl || undefined,
-                        downloadUrl: formData.downloadUrl || undefined,
-                        tags: formData.tags,
-                        category: formData.category || undefined,
-                    })
-                });
-            } else {
-                const typedEmbeds = formData.embeds.map(e => ({
-                    label: e.label,
-                    url: e.url,
-                    quality: e.quality || undefined,
-                    type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
-                }));
+            const typedEmbeds = formData.embeds.map(e => ({
+                label: e.label,
+                url: e.url,
+                quality: e.quality || undefined,
+                type: (e.type as "m3u8" | "iframe" | "video") || "iframe",
+            }));
 
-                await fetch("/api/movies", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        slug: formData.slug,
-                        tmdbId: formData.tmdbId,
-                        imdbId: formData.imdbId || undefined,
-                        title: formData.title,
-                        titleSomali: formData.titleSomali || undefined,
-                        overview: formData.overview,
-                        overviewSomali: formData.overviewSomali || undefined,
-                        posterUrl: formData.posterUrl,
-                        backdropUrl: formData.backdropUrl || undefined,
-                        releaseDate: formData.releaseDate,
-                        runtime: formData.runtime || undefined,
-                        rating: formData.rating || undefined,
-                        voteCount: formData.voteCount || undefined,
-                        genres: formData.genres,
-                        cast: formData.cast,
-                        director: formData.director || undefined,
-                        embeds: typedEmbeds,
-                        isDubbed: formData.isDubbed,
-                        isPremium: formData.isPremium,
-                        isPublished: formData.isPublished,
-                        isFeatured: formData.isFeatured,
-                        isTop10: formData.isTop10 || undefined,
-                        top10Order: formData.top10Order || undefined,
-                        trailerUrl: formData.trailerUrl || undefined,
-                        downloadUrl: formData.downloadUrl || undefined,
-                        tags: formData.tags,
-                        category: formData.category || undefined,
-                    })
-                });
+            const payload = {
+                ...(id ? { id } : {}),
+                slug: formData.slug,
+                tmdbId: formData.tmdbId,
+                imdbId: formData.imdbId || undefined,
+                title: formData.title,
+                titleSomali: formData.titleSomali || undefined,
+                overview: formData.overview,
+                overviewSomali: formData.overviewSomali || undefined,
+                posterUrl: formData.posterUrl,
+                backdropUrl: formData.backdropUrl || undefined,
+                releaseDate: formData.releaseDate,
+                runtime: formData.runtime || undefined,
+                rating: formData.rating || undefined,
+                voteCount: formData.voteCount || undefined,
+                genres: formData.genres,
+                cast: formData.cast,
+                director: formData.director || undefined,
+                embeds: typedEmbeds,
+                isDubbed: formData.isDubbed,
+                isPremium: formData.isPremium,
+                isPublished: formData.isPublished,
+                isFeatured: formData.isFeatured,
+                isTop10: formData.isTop10 || undefined,
+                top10Order: formData.top10Order || undefined,
+                trailerUrl: formData.trailerUrl || undefined,
+                downloadUrl: formData.downloadUrl || undefined,
+                tags: formData.tags,
+                category: formData.category || undefined,
+            };
+
+            const res = await fetch("/api/movies", {
+                method: id ? "PUT" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || `Failed to ${id ? "update" : "create"} movie`);
             }
             // Send push notification if enabled
             if (sendPush && formData.isPublished) {
                 try {
+                    const movieName = formData.titleSomali || formData.title;
+                    const year = formData.releaseDate?.split("-")[0] || "";
+                    const genreText = formData.genres.slice(0, 2).join(" & ");
                     await fetch("/api/push", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            title: `${formData.isDubbed ? "🎬 Cusub" : "🎬 New"}: ${formData.titleSomali || formData.title}`,
-                            body: `${formData.isDubbed ? "Hadda daawo" : "Watch now"} - ${formData.genres.slice(0, 2).join(", ")} ${formData.releaseDate?.split("-")[0] || ""}`,
+                            title: formData.isDubbed
+                                ? `🔥 CUSUB: ${movieName} (${year}) AF SOMALI`
+                                : `🎬 NEW: ${movieName} (${year})`,
+                            body: formData.isDubbed
+                                ? `${genreText} — Hadda ku daawo Fanbroj! Bilaash 🍿`
+                                : `${genreText} — Now streaming on Fanbroj! 🍿`,
                             broadcast: true,
-                            url: `/movies/${formData.slug}-af-somali`,
+                            url: `https://fanbroj.net/movies/${formData.slug}-af-somali`,
                             image: formData.posterUrl || undefined,
                         }),
                     });
@@ -366,26 +348,59 @@ export default function MovieFormPage({ params }: Props) {
 
                     {/* Search Results */}
                     {showSearch && searchResults.length > 0 && (
-                        <div className="mt-4 grid grid-cols-5 gap-3">
-                            {searchResults.map((r) => (
-                                <button
-                                    key={r.id}
-                                    onClick={() => handleFetchTMDB(r.id)}
-                                    className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-accent-green transition-all"
-                                >
-                                    {r.posterUrl ? (
-                                        <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover" />
-                                    ) : (
-                                        <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
-                                            <Film size={24} className="text-text-muted" />
-                                        </div>
-                                    )}
-                                    <div className="p-2">
-                                        <p className="text-xs font-bold truncate">{r.title}</p>
-                                        <p className="text-xs text-text-muted">{r.year}</p>
+                        <div className="mt-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm text-text-muted">{tmdbTotalResults} results found</p>
+                                {tmdbTotalPages > 1 && (
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleSearch(tmdbPage - 1)}
+                                            disabled={tmdbPage <= 1 || searching}
+                                            className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
+                                        >
+                                            Prev
+                                        </button>
+                                        <span className="text-sm text-text-muted">
+                                            {tmdbPage} / {tmdbTotalPages}
+                                        </span>
+                                        <button
+                                            onClick={() => handleSearch(tmdbPage + 1)}
+                                            disabled={tmdbPage >= tmdbTotalPages || searching}
+                                            className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
+                                        >
+                                            Next
+                                        </button>
                                     </div>
-                                </button>
-                            ))}
+                                )}
+                            </div>
+                            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                                {searchResults.map((r) => (
+                                    <button
+                                        key={r.id}
+                                        onClick={() => handleFetchTMDB(r.id)}
+                                        className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-accent-green transition-all group"
+                                    >
+                                        {r.posterUrl ? (
+                                            <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover group-hover:brightness-110" />
+                                        ) : (
+                                            <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
+                                                <Film size={24} className="text-text-muted" />
+                                            </div>
+                                        )}
+                                        <div className="p-2">
+                                            <p className="text-xs font-bold truncate">{r.title}</p>
+                                            <div className="flex items-center justify-between mt-1">
+                                                <span className="text-xs text-text-muted">{r.year}</span>
+                                                {r.rating && (
+                                                    <span className="text-xs text-accent-gold flex items-center gap-0.5">
+                                                        <Star size={10} className="fill-accent-gold" /> {r.rating}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

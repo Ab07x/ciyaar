@@ -1,15 +1,19 @@
-
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query");
-    const type = searchParams.get("type") || "movie"; // 'movie' or 'tv'
+    const type = searchParams.get("type") || "movie";
+    const page = searchParams.get("page") || "1";
 
-    if (!query) return NextResponse.json({ results: [] });
+    if (!query) return NextResponse.json({ results: [], page: 1, totalPages: 0, totalResults: 0 });
 
     const apiKey = process.env.TMDB_API_KEY;
-    const url = `https://api.themoviedb.org/3/search/${type}?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=en-US&page=1`;
+    if (!apiKey) {
+        return NextResponse.json({ error: "TMDB API key not configured" }, { status: 500 });
+    }
+
+    const url = `https://api.themoviedb.org/3/search/${type}?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=en-US&page=${page}`;
 
     try {
         const res = await fetch(url);
@@ -20,10 +24,16 @@ export async function GET(req: NextRequest) {
             title: item.title || item.name,
             year: (item.release_date || item.first_air_date || "").substring(0, 4),
             posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
-            overview: item.overview
+            overview: item.overview,
+            rating: item.vote_average ? item.vote_average.toFixed(1) : null,
         }));
 
-        return NextResponse.json({ results });
+        return NextResponse.json({
+            results,
+            page: data.page || 1,
+            totalPages: data.total_pages || 1,
+            totalResults: data.total_results || 0,
+        });
     } catch (e) {
         console.error("TMDB Search Error:", e);
         return NextResponse.json({ error: "Failed to search TMDB" }, { status: 500 });
