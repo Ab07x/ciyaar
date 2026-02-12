@@ -18,39 +18,55 @@ import { ConnectionIndicator } from "@/components/mobile/OfflineIndicator";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { AggressivePushBanner } from "@/components/AggressivePushBanner";
 
-// Use static metadata to prevent build hangs
-// Dynamic settings loaded client-side via SWR provider
+// SEO-optimized metadata targeting top search keywords
 export function generateMetadata(): Metadata {
-  const siteName = "Fanbroj";
-  const title = `${siteName} - Daawo Ciyaar Live & Filimaan`;
-  const description = "Fanbroj waa halka aad kala socon karto ciyaaraha tooska ah (live), ciyaaraha maanta, iyo wararka kubadda cagta.";
-  const keywords = ["ciyaar live", "somali", "kubadda cagta", "fanbroj", "live sports"];
+  const siteName = "Fanproj";
+  const title = "Fanproj – Daawo Hindi Af Somali Cusub 2026 | Filimaan & Ciyaar Live | Fanbroj TV";
+  const description = "Fanproj (Fanbroj) waa goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub, Astaan Films, Saafi Films iyo ciyaaraha live tooska ah. Daawo filim Hindi af Somali oo bilaash ah HD – Fanproj NXT, Fanproj Play, Fanproj TV.";
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net"),
     title: {
       default: title,
-      template: `%s | ${siteName}`,
+      template: `%s | Fanproj - Hindi Af Somali`,
     },
-    description: description,
-    keywords: keywords,
-    authors: [{ name: "Fanbroj Team" }],
+    description,
+    keywords: [
+      "fanproj", "fanbroj", "fanproj nxt", "fanprojnxt", "fanproj net",
+      "hindi af somali", "hindi af somali cusub", "hindi afsomali",
+      "filim hindi af somali", "filim hindi afsomali 2025", "filim hindi afsomali 2026",
+      "fanproj afsomali", "fanproj hindi af somali", "fanproj afsomali 2025",
+      "fanproj play", "fanproj tv", "fanproj films", "fanproj aflaam",
+      "streamnxt", "streamnxt fanproj", "fanproj nxt af somali",
+      "astaan films hindi af somali", "saafi films",
+      "mysomali", "fanbaroj", "fanbroj",
+      "daawo filim af somali", "daawo online", "ciyaar live",
+      "somali movies", "hindi dubbed somali", "bollywood af somali",
+    ],
+    authors: [{ name: "Fanproj Team" }],
     creator: siteName,
+    publisher: "Fanproj (Fanbroj.net)",
     openGraph: {
       type: "website",
       locale: "so_SO",
       url: "https://fanbroj.net",
-      title: title,
-      description: description,
-      siteName: siteName,
+      title: "Fanproj – Hindi Af Somali Cusub | Daawo Filimaan & Ciyaar Live FREE",
+      description: "Daawo filimaha Hindi Af Somali cusub 2026 oo bilaash ah. Fanproj NXT, Astaan Films, Saafi Films, Fanproj Play & ciyaaraha live. Ku daawo HD!",
+      siteName: "Fanproj – Fanbroj.net",
       images: [
         {
           url: "/og-image.jpg",
           width: 1200,
           height: 630,
-          alt: `${siteName} - Ciyaaraha & Madadaalada`,
+          alt: "Fanproj - Daawo Hindi Af Somali Cusub | Filimaan & Ciyaar Live",
         },
       ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Fanproj – Hindi Af Somali Cusub 2026 | Fanbroj TV",
+      description: "Daawo filimaha Hindi Af Somali cusub oo bilaash ah HD. Fanproj NXT, Astaan Films, Saafi Films & ciyaaraha live.",
+      images: ["/og-image.jpg"],
     },
     icons: {
       icon: [
@@ -61,6 +77,9 @@ export function generateMetadata(): Metadata {
       apple: "/icon-192.png",
     },
     manifest: "/manifest.json",
+    alternates: {
+      canonical: "https://fanbroj.net",
+    },
     robots: {
       index: true,
       follow: true,
@@ -71,6 +90,9 @@ export function generateMetadata(): Metadata {
         "max-image-preview": "large",
         "max-snippet": -1,
       },
+    },
+    verification: {
+      google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
     },
   };
 }
@@ -85,6 +107,53 @@ export default function RootLayout({
       <head>
         {/* Mobile Viewport - Optimized for iOS and Android */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, viewport-fit=cover, user-scalable=yes" />
+
+        {/* JSON-LD Structured Data for Google */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://fanbroj.net/#organization",
+                  name: "Fanproj",
+                  alternateName: ["Fanbroj", "Fanproj NXT", "Fanproj TV", "Fanproj Play", "Fanbaroj"],
+                  url: "https://fanbroj.net",
+                  logo: "https://fanbroj.net/icon-512.png",
+                  description: "Fanproj - Goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub, Astaan Films, Saafi Films iyo ciyaaraha live.",
+                  sameAs: [],
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://fanbroj.net/#website",
+                  url: "https://fanbroj.net",
+                  name: "Fanproj - Hindi Af Somali Cusub",
+                  alternateName: "Fanbroj",
+                  publisher: { "@id": "https://fanbroj.net/#organization" },
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: {
+                      "@type": "EntryPoint",
+                      urlTemplate: "https://fanbroj.net/search?q={search_term_string}",
+                    },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+                {
+                  "@type": "WebPage",
+                  "@id": "https://fanbroj.net/#webpage",
+                  url: "https://fanbroj.net",
+                  name: "Fanproj – Daawo Hindi Af Somali Cusub 2026 | Filimaan & Ciyaar Live",
+                  isPartOf: { "@id": "https://fanbroj.net/#website" },
+                  about: { "@id": "https://fanbroj.net/#organization" },
+                  description: "Daawo filimaha Hindi Af Somali cusub 2026 oo bilaash ah. Fanproj NXT, Astaan Films, Saafi Films, Fanproj Play & ciyaaraha live.",
+                },
+              ],
+            }),
+          }}
+        />
 
         {/* iOS Web App Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -176,14 +245,17 @@ export default function RootLayout({
                           </div>
                         </div>
 
-                        {/* Tagline */}
-                        <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
-                          Halkani waa hoyga taageerayaasha ciyaaraha ee Soomaaliyeed. Waxaan idiin soo gudbinnaa ciyaaraha ugu xiisaha badan dunida.
+                        {/* SEO-rich Tagline */}
+                        <p className="text-gray-400 text-sm max-w-2xl mx-auto mb-4">
+                          Fanproj (Fanbroj) waa goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub, Astaan Films, Saafi Films iyo ciyaaraha live. Fanproj NXT, Fanproj Play, Fanproj TV – dhammaantood hal goobtaa ku daawo bilaash.
+                        </p>
+                        <p className="text-gray-500 text-xs max-w-xl mx-auto mb-6">
+                          Hindi Af Somali 2025 &amp; 2026 | Filim Hindi Afsomali | Fanproj Aflaam | Bollywood Af Somali | Musalsal Cusub | Ciyaar Live | StreamNXT
                         </p>
 
                         {/* Copyright */}
                         <p className="text-gray-500 text-xs">
-                          © {new Date().getFullYear()} Fanbroj.net. Dhamaan xuquuqda waa dhowran tahay.
+                          © {new Date().getFullYear()} Fanproj (Fanbroj.net). Dhamaan xuquuqda waa dhowran tahay.
                         </p>
                       </div>
                     </div>

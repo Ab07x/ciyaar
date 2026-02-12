@@ -28,41 +28,66 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     }
 
-    const seoTitle = movie.titleSomali
-        ? `${movie.titleSomali} (${movie.title}) Af Somali - Daawo Online | Fanbroj`
-        : `${movie.title} Af Somali - Daawo Online | Fanbroj`;
+    const year = movie.releaseDate?.split("-")[0] || "";
+    const isDubbed = movie.isDubbed;
+    const movieName = movie.titleSomali || movie.title;
+
+    const seoTitle = isDubbed
+        ? `${movieName} (${movie.title}) Hindi Af Somali ${year} - Daawo Online FREE | Fanproj`
+        : `${movie.title} Af Somali ${year} - Daawo Online | Fanproj`;
+
+    const seoDescription = isDubbed
+        ? `Daawo ${movieName} (${movie.title}) oo Hindi Af Somali ah ${year} bilaash ah HD. ${(movie.genres || []).slice(0, 3).join(", ")} - Fanproj (Fanbroj). ${(movie.overviewSomali || movie.overview || "").slice(0, 120)}`
+        : `Daawo ${movie.title} Af Somali ${year} online HD. ${(movie.overviewSomali || movie.overview || "").slice(0, 140)}`;
 
     const keywords = [
         movie.title,
         movie.titleSomali,
         `${movie.title} af somali`,
         `${movie.title} hindi af somali`,
+        `daawo ${movie.title} af somali`,
+        `${movie.title} ${year}`,
+        `${movie.title} af somali ${year}`,
         ...(movie.tags || []),
         ...(movie.genres || []),
-        "af somali",
-        "fanproj",
-        "fanbroj",
-        "hindi af somali",
-        "daawo online",
-        movie.releaseDate?.split("-")[0],
+        "af somali", "hindi af somali", "hindi af somali cusub",
+        "fanproj", "fanbroj", "fanproj aflaam", "fanproj play",
+        "daawo online", "filim hindi af somali",
+        year,
     ].filter(Boolean).join(", ");
 
-    // Use local poster for SEO if available
     const posterUrl = movie.posterUrl?.startsWith("/")
         ? `https://fanbroj.net${movie.posterUrl}`
         : movie.posterUrl || "";
 
     return {
         title: seoTitle,
-        description: movie.overviewSomali || movie.overview,
-        keywords: keywords,
+        description: seoDescription,
+        keywords,
         alternates: {
             canonical: `https://fanbroj.net/movies/${dbSlug}-af-somali`,
         },
         openGraph: {
-            images: [posterUrl],
+            type: "video.movie",
             title: seoTitle,
-            description: movie.overviewSomali || movie.overview,
+            description: seoDescription,
+            url: `https://fanbroj.net/movies/${dbSlug}-af-somali`,
+            siteName: "Fanproj – Fanbroj.net",
+            images: [
+                {
+                    url: posterUrl,
+                    width: 500,
+                    height: 750,
+                    alt: `${movieName} - Hindi Af Somali ${year} | Fanproj`,
+                },
+            ],
+            releaseDate: movie.releaseDate,
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: isDubbed ? `${movieName} - Hindi Af Somali ${year} | Fanproj` : `${movie.title} - Af Somali | Fanproj`,
+            description: seoDescription,
+            images: [posterUrl],
         },
     };
 }
@@ -70,12 +95,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export async function generateStaticParams() {
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies?limit=20`, { cache: 'no-store' });
-        const movies = res.ok ? await res.json() : [];
-        // Generate both old and new URL versions
+        if (!res.ok) return [];
+        const data = await res.json();
+        const movies = Array.isArray(data) ? data : data?.movies || [];
         const params: { slug: string }[] = [];
         for (const movie of movies) {
-            params.push({ slug: movie.slug });
-            params.push({ slug: `${movie.slug}-af-somali` });
+            if (movie?.slug) {
+                params.push({ slug: `${movie.slug}-af-somali` });
+            }
         }
         return params;
     } catch (e) {
