@@ -26,12 +26,12 @@ const nextConfig = {
     // Enable image optimization for better performance
     unoptimized: false,
     minimumCacheTTL: 31536000, // 1 year - images are immutable once generated
-    qualities: [25, 50, 75, 80, 85, 100],
-    formats: ["image/avif", "image/webp"],
+    qualities: [75, 85],
+    formats: ["image/webp"],
     // Use custom loader for BunnyCDN integration
     loader: "default",
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    deviceSizes: [640, 750, 1080, 1920],
+    imageSizes: [32, 64, 128, 256, 384],
   },
   typescript: {
     ignoreBuildErrors: true, // Temporarily ignore to pass build
