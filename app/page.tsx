@@ -29,7 +29,7 @@ export default function HomePage() {
   const [selectedYear, setSelectedYear] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
-  const moviesPerPage = 24;
+  const moviesPerPage = 42;
 
   const hasTracked = useRef(false);
 
@@ -404,15 +404,33 @@ export default function HomePage() {
                 <ChevronLeft size={18} />
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`min-w-[36px] px-2.5 py-2 rounded font-bold text-sm transition-colors ${currentPage === page ? "bg-[#E50914] text-white scale-110" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
-                >
-                  {page}
-                </button>
-              ))}
+              {(() => {
+                const pages: (number | string)[] = [];
+                if (totalPages <= 7) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (currentPage > 3) pages.push("...");
+                  const start = Math.max(2, currentPage - 1);
+                  const end = Math.min(totalPages - 1, currentPage + 1);
+                  for (let i = start; i <= end; i++) pages.push(i);
+                  if (currentPage < totalPages - 2) pages.push("...");
+                  pages.push(totalPages);
+                }
+                return pages.map((page, idx) =>
+                  typeof page === "string" ? (
+                    <span key={`dots-${idx}`} className="px-2 text-gray-500">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`min-w-[36px] px-2.5 py-2 rounded font-bold text-sm transition-colors ${currentPage === page ? "bg-[#E50914] text-white scale-110" : "bg-[#333333] text-white hover:bg-[#444444]"}`}
+                    >
+                      {page}
+                    </button>
+                  )
+                );
+              })()}
 
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}

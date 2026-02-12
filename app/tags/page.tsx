@@ -25,20 +25,23 @@ export const metadata: Metadata = {
 };
 
 export default async function TagsIndexPage() {
-    await connectDB();
-
-    const result = await Movie.aggregate([
-        { $match: { isPublished: true, tags: { $exists: true, $ne: [] } } },
-        { $unwind: "$tags" },
-        { $group: { _id: "$tags", count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-    ]);
-
-    const tags = result.map((r: any) => ({
-        name: r._id,
-        slug: r._id.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-        count: r.count,
-    }));
+    let tags: { name: string; slug: string; count: number }[] = [];
+    try {
+        await connectDB();
+        const result = await Movie.aggregate([
+            { $match: { isPublished: true, tags: { $exists: true, $ne: [] } } },
+            { $unwind: "$tags" },
+            { $group: { _id: "$tags", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+        ]);
+        tags = result.map((r: any) => ({
+            name: r._id,
+            slug: r._id.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+            count: r.count,
+        }));
+    } catch {
+        // DB not available at build time
+    }
 
     const totalMovies = tags.reduce((sum: number, t: any) => sum + t.count, 0);
 

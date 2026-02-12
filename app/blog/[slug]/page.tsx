@@ -7,7 +7,7 @@ interface BlogPostPageProps {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
     const { slug } = await params;
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/posts/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/posts/${slug}`, { cache: 'no-store' });
     const post = res.ok ? await res.json() : null;
 
     if (!post) return { title: "Post Not Found - Fanbroj" };
@@ -19,10 +19,14 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     return {
         title: `${title} – Wararka Kubadda Cagta | Fanbroj`,
         description,
+        alternates: {
+            canonical: `https://fanbroj.net/blog/${slug}`,
+        },
         openGraph: {
             title: `${title} – Wararka Kubadda Cagta | Fanbroj`,
             description,
             type: "article",
+            url: `https://fanbroj.net/blog/${slug}`,
             images: [
                 {
                     url: imageUrl,
@@ -43,7 +47,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const { slug } = await params;
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/posts/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/posts/${slug}`, { cache: 'no-store' });
     const post = res.ok ? await res.json() : null;
 
     const jsonLd = post ? {

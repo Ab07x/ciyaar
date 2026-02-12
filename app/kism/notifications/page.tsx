@@ -182,7 +182,7 @@ export default function AdminNotificationsPage() {
                     title: formData.title,
                     body: formData.body,
                     url: formData.url || "/",
-                    image: formData.image || undefined,
+                    image: formData.image || "https://fanbroj.net/img/lm-bg.jpg",
                     icon: getIconUrl(),
                     broadcast: true,
                 }),

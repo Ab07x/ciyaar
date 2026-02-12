@@ -68,16 +68,19 @@ export default async function TagPage({ params }: PageProps) {
     const { tag: tagSlug } = await params;
     const tagName = tagFromSlug(tagSlug);
 
-    await connectDB();
-
-    // Find movies with this tag (case-insensitive)
-    const movies = await Movie.find({
-        isPublished: true,
-        tags: { $regex: new RegExp(`^${tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
-    })
-        .select("title titleSomali slug posterUrl releaseDate rating genres isDubbed isPremium views")
-        .sort({ views: -1, createdAt: -1 })
-        .lean();
+    let movies: any[] = [];
+    try {
+        await connectDB();
+        movies = await Movie.find({
+            isPublished: true,
+            tags: { $regex: new RegExp(`^${tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+        })
+            .select("title titleSomali slug posterUrl releaseDate rating genres isDubbed isPremium views tags")
+            .sort({ views: -1, createdAt: -1 })
+            .lean();
+    } catch {
+        // DB not available at build time
+    }
 
     const displayTag = tagName.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 

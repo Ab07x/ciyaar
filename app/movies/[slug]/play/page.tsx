@@ -17,7 +17,7 @@ function getDbSlug(urlSlug: string): string {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
     const dbSlug = getDbSlug(slug);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies/${dbSlug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/movies/${dbSlug}`, { cache: 'no-store' });
     const movie = res.ok ? await res.json() : null;
 
     if (!movie) {
@@ -40,9 +40,9 @@ export default async function MoviePlayPage({ params }: PageProps) {
         permanentRedirect(`/movies/${dbSlug}-af-somali/play`);
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies/${dbSlug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/movies/${dbSlug}`, { cache: 'no-store' });
     const movie = res.ok ? await res.json() : null;
-    const settingsRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/settings`, { cache: 'no-store' });
+    const settingsRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/settings`, { cache: 'no-store' });
     const settings = settingsRes.ok ? await settingsRes.json() : null;
 
     if (!movie) {

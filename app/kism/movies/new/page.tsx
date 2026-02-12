@@ -250,7 +250,7 @@ export default function MovieFormPage({ params }: Props) {
                                 : `${genreText} — Now streaming on Fanbroj! 🍿`,
                             broadcast: true,
                             url: `https://fanbroj.net/movies/${formData.slug}-af-somali`,
-                            image: formData.posterUrl || undefined,
+                            image: formData.posterUrl || "https://fanbroj.net/img/lm-bg.jpg",
                         }),
                     });
                     const pushData = await pushRes.json();

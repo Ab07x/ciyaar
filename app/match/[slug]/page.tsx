@@ -6,7 +6,7 @@ interface MatchPageProps { params: Promise<{ slug: string }>; }
 
 export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
     const { slug } = await params;
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/matches/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/matches/${slug}`, { cache: 'no-store' });
     const match = res.ok ? await res.json() : null;
 
     if (!match) return { title: "Match Not Found - Fanbroj" };
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
 
 export default async function MatchPage({ params }: MatchPageProps) {
     const { slug } = await params;
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/matches/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/matches/${slug}`, { cache: 'no-store' });
     const match = res.ok ? await res.json() : null;
 
     const jsonLd = match ? {

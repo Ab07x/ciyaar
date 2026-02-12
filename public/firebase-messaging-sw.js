@@ -57,7 +57,9 @@ self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
     const urlToOpen = event.notification.data?.url || '/';
-    const fullUrl = new URL(urlToOpen, self.location.origin).href;
+    // Always use production URL, even if SW was registered from localhost
+    const baseUrl = self.location.hostname === 'localhost' ? 'https://fanbroj.net' : self.location.origin;
+    const fullUrl = urlToOpen.startsWith('http') ? urlToOpen : new URL(urlToOpen, baseUrl).href;
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

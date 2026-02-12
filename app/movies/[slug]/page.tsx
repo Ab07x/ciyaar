@@ -19,7 +19,7 @@ function getDbSlug(urlSlug: string): string {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
     const dbSlug = getDbSlug(slug);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies/${dbSlug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/movies/${dbSlug}`, { cache: 'no-store' });
     const movie = res.ok ? await res.json() : null;
 
     if (!movie) {
@@ -94,7 +94,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export async function generateStaticParams() {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies?limit=20`, { cache: 'no-store' });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/movies?limit=20`, { cache: 'no-store' });
         if (!res.ok) return [];
         const data = await res.json();
         const movies = Array.isArray(data) ? data : data?.movies || [];
@@ -120,7 +120,7 @@ export default async function MovieViewPage({ params }: PageProps) {
         permanentRedirect(`/movies/${dbSlug}-af-somali`);
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/movies/${dbSlug}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/movies/${dbSlug}`, { cache: 'no-store' });
     const movie = res.ok ? await res.json() : null;
 
     return <MovieViewClient slug={dbSlug} preloadedMovie={movie} />;
