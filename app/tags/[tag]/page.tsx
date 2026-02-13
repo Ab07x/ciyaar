@@ -3,7 +3,7 @@ import connectDB from "@/lib/mongodb";
 import { Movie } from "@/lib/models";
 import Link from "next/link";
 import { Film, ChevronLeft, Tag } from "lucide-react";
-import { optimizeImageUrl } from "@/components/MoviePosterImage";
+import { optimizeImageUrl } from "@/lib/image-utils";
 
 export const revalidate = 3600; // Revalidate every hour
 export const dynamicParams = true;
