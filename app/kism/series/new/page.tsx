@@ -198,6 +198,11 @@ export default function SeriesFormPage({ params }: Props) {
                         tags: formData.tags,
                     }),
                 });
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    alert(errData.error || "Failed to create series");
+                    return;
+                }
                 const newSeries = await res.json();
                 router.push(`/kism/series/${newSeries._id}`);
                 return;
@@ -220,6 +225,11 @@ export default function SeriesFormPage({ params }: Props) {
             const res = await fetch(
                 `/api/admin/import-movie?tmdbId=${existingSeries.tmdbId}&type=tv&season=${seasonNum}`
             );
+            if (!res.ok) {
+                alert(`TMDB fetch failed (status ${res.status})`);
+                setSyncing(0);
+                return;
+            }
             const data = await res.json();
 
             const existingEps = episodesData?.[seasonNum] || [];
@@ -232,11 +242,10 @@ export default function SeriesFormPage({ params }: Props) {
             } else {
                 // Create episodes via API
                 for (const ep of newEpisodes) {
-                    await fetch("/api/series", {
+                    await fetch("/api/episodes", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            _type: "episode",
                             seriesId: id,
                             seasonNumber: seasonNum,
                             ...ep,

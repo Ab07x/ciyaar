@@ -1,5 +1,4 @@
-
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
@@ -39,6 +38,47 @@ async function downloadAndConvertImage(url: string, slug: string, type: "poster"
     } catch (error) {
         console.error(`Error processing ${type} image:`, error);
         return null;
+    }
+}
+
+export async function GET(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const tmdbId = searchParams.get("tmdbId");
+        const type = searchParams.get("type") || "movie";
+        const season = searchParams.get("season");
+
+        if (!tmdbId) {
+            return NextResponse.json({ error: "Missing tmdbId" }, { status: 400 });
+        }
+
+        const apiKey = process.env.TMDB_API_KEY;
+        if (!apiKey) return NextResponse.json({ error: "Server API Key missing" }, { status: 500 });
+
+        if (type === "tv" && season) {
+            const seasonUrl = `https://api.themoviedb.org/3/tv/${tmdbId}/season/${season}?api_key=${apiKey}`;
+            const seasonRes = await fetch(seasonUrl);
+            if (!seasonRes.ok) {
+                return NextResponse.json({ error: "TMDB Season Error" }, { status: seasonRes.status });
+            }
+            const seasonData = await seasonRes.json();
+
+            const episodes = (seasonData.episodes || []).map((ep: any) => ({
+                episodeNumber: ep.episode_number,
+                title: ep.name,
+                overview: ep.overview,
+                stillUrl: ep.still_path ? `https://image.tmdb.org/t/p/w500${ep.still_path}` : null,
+                runtime: ep.runtime,
+                airDate: ep.air_date,
+            }));
+
+            return NextResponse.json({ episodes });
+        }
+
+        return NextResponse.json({ error: "Invalid request. For TV series, provide type=tv and season parameter." }, { status: 400 });
+    } catch (error: any) {
+        console.error("Import GET Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 

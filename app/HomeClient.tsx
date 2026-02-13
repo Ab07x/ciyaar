@@ -8,7 +8,7 @@ import Link from "next/link";
 
 import { MoviePosterImage, optimizeImageUrl } from "@/components/MoviePosterImage";
 import { ContentCarousel } from "@/components/ContentCarousel";
-import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp } from "lucide-react";
+import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp, Film } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
@@ -28,6 +28,7 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
   const { data: moviesData } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher, { fallbackData: initialMovies });
   const { data: heroSlidesData } = useSWR("/api/hero-slides?auto=true", fetcher, { fallbackData: initialHeroSlides });
   const { data: trendingMovies } = useSWR("/api/movies?sort=views&limit=10&isPublished=true", fetcher, { fallbackData: initialTrending });
+  const { data: seriesData } = useSWR("/api/series?isPublished=true", fetcher);
 
   const { isPremium } = useUser();
 
@@ -296,6 +297,70 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
                     {movie.titleSomali || movie.title}
                   </h3>
                   <p className="text-gray-500 text-xs">{movie.releaseDate?.split("-")[0]}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+
+      {/* MUSALSAL (SERIES) SECTION */}
+      {(() => {
+        const seriesList = Array.isArray(seriesData) ? seriesData : [];
+        return seriesList.length > 0 ? (
+          <section className="max-w-7xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Tv size={22} className="text-purple-500" />
+                <h2 className="text-xl font-bold text-white uppercase tracking-wide">Musalsal AF Somali</h2>
+              </div>
+              <Link href="/series" className="text-[#E50914] text-sm font-bold hover:underline flex items-center gap-1">
+                View All <ChevronRight size={16} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {seriesList.slice(0, 10).map((series: any) => (
+                <Link
+                  key={series._id}
+                  href={`/series/${series.slug}`}
+                  className="group block relative"
+                >
+                  <div className="relative aspect-[2/3] rounded overflow-hidden bg-[#333333] mb-2">
+                    <MoviePosterImage
+                      src={series.posterUrl}
+                      alt={`${series.titleSomali || series.title} Af Somali`}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                      className="group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {series.isDubbed && (
+                      <div className="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        AF SOMALI
+                      </div>
+                    )}
+                    {series.rating > 0 && (
+                      <div className="absolute top-2 right-2 bg-[#333333]/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <Star size={10} className="text-[#E50914]" fill="currentColor" />
+                        {series.rating.toFixed(1)}
+                      </div>
+                    )}
+                    {series.isPremium && (
+                      <div className="absolute bottom-2 right-2 bg-[#E50914] text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                        VIP
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg">
+                        Daawo NOW
+                        <Play size={16} fill="currentColor" />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="text-white text-sm font-medium truncate group-hover:text-purple-400 transition-colors">
+                    {series.titleSomali || series.title}
+                  </h3>
+                  <p className="text-gray-500 text-xs">
+                    {series.numberOfSeasons || series.totalSeasons || 1} Season{(series.numberOfSeasons || series.totalSeasons || 1) > 1 ? 's' : ''}
+                  </p>
                 </Link>
               ))}
             </div>
