@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import { User, Device, Subscription, Redemption } from "@/lib/models";
 
@@ -17,6 +18,9 @@ export async function GET(req: NextRequest) {
         }
 
         if (userId) {
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return NextResponse.json(null);
+            }
             const user = await User.findById(userId).lean();
             return NextResponse.json(user || null);
         }
@@ -58,17 +62,21 @@ export async function POST(req: NextRequest) {
             if (userAgent) device.userAgent = userAgent;
             await device.save();
 
-            // Return existing user
-            const user = await User.findById(device.userId).lean();
-            if (user) {
-                // Get subscription
-                const subscription = await Subscription.findOne({
-                    userId: user._id.toString(),
-                    status: "active",
-                }).lean();
+            // Validate userId is a proper MongoDB ObjectId (old Convex IDs will fail)
+            if (mongoose.Types.ObjectId.isValid(device.userId)) {
+                const user = await User.findById(device.userId).lean();
+                if (user) {
+                    const subscription = await Subscription.findOne({
+                        userId: user._id.toString(),
+                        status: "active",
+                    }).lean();
 
-                return NextResponse.json({ user, subscription, isNew: false });
+                    return NextResponse.json({ user, subscription, isNew: false });
+                }
             }
+            // Invalid or missing user — delete stale device and create fresh below
+            await Device.deleteOne({ _id: device._id });
+            device = null;
         }
 
         // Create new user

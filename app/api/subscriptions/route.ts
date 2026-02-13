@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
             if (device) {
                 targetUserId = device.userId;
             } else {
-                return NextResponse.json({ active: false, subscription: null });
+                return NextResponse.json({ active: false, subscription: null, devices: [] });
             }
         }
 
@@ -36,11 +36,12 @@ export async function GET(req: NextRequest) {
         }).lean();
 
         if (subscription) {
-            // Check device count
+            // Get all devices for this user
             const devices = await Device.find({ userId: targetUserId }).lean();
             return NextResponse.json({
                 active: true,
                 subscription,
+                devices,
                 deviceCount: devices.length,
                 maxDevices: subscription.maxDevices,
             });
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
             { status: "expired" }
         );
 
-        return NextResponse.json({ active: false, subscription: null });
+        return NextResponse.json({ active: false, subscription: null, devices: [] });
     } catch (error) {
         console.error("GET /api/subscriptions error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

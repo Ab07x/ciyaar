@@ -73,7 +73,7 @@ export default function SubscriptionPage() {
         );
     }
 
-    const { subscription, devices, code } = subscriptionData;
+    const { subscription, devices = [], code } = subscriptionData;
 
     // Use subscription expiresAt
     const expiresAt = subscription?.expiresAt || 0;
