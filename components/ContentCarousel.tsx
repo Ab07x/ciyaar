@@ -71,7 +71,7 @@ export function ContentCarousel({ title, link, data, type = "movie" }: ContentCa
                                 key={item._id || index}
                                 className={cn(
                                     "snap-start flex-shrink-0 transition-transform duration-300",
-                                    itemType === "match" ? "w-[280px] md:w-[320px]" : "w-[150px] md:w-[180px]"
+                                    itemType === "match" ? "w-[280px] md:w-[320px]" : "w-[150px] md:w-[170px] lg:w-[180px]"
                                 )}
                             >
                                 {itemType === "movie" && (

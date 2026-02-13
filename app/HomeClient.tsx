@@ -124,7 +124,7 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
 
       {/* HERO SLIDER - Lookmovie Style */}
       {currentHero && (
-        <section className="relative w-full h-[400px] md:h-[450px] overflow-hidden">
+        <section className="relative w-full h-[400px] md:h-[420px] lg:h-[450px] xl:h-[500px] overflow-hidden">
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#020D18] via-[#1b2838] to-[#020D18]">
             <div className="absolute inset-0 opacity-100">
@@ -144,7 +144,7 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
           <div className="relative z-10 h-full flex items-center justify-between px-4 md:px-16 max-w-7xl mx-auto">
             {/* Left - Movie Info */}
             <div className="flex-1 max-w-lg">
-              <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 uppercase">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 uppercase">
                 {currentHero.titleSomali || currentHero.title}
                 <span className="text-[#E50914] ml-2">({currentHero.releaseDate?.split("-")[0]})</span>
               </h1>
@@ -348,7 +348,7 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
         </div>
 
         {/* Movies Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
           {paginatedMovies.map((movie: any) => (
             <Link
               key={movie._id}

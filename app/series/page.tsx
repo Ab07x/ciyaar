@@ -50,7 +50,7 @@ export default function SeriesPage() {
                         <Tv size={24} className="text-blue-400" />
                         <span className="text-blue-400 font-bold">MUSALSAL</span>
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4">
+                    <h1 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter mb-4">
                         Daawo <span className="text-accent-green">Musalsal</span> Cusub
                     </h1>
                     <p className="text-xl text-text-secondary max-w-2xl">
@@ -106,7 +106,7 @@ export default function SeriesPage() {
                 </div>
 
                 {/* Series Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                     {filteredSeries.map((s) => {
                         const isLocked = s.isPremium && !isPremium;
                         return (

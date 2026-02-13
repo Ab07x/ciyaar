@@ -172,7 +172,7 @@ export default function PricingPage() {
                         <Sparkles size={16} />
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight">
+                    <h1 className="text-4xl md:text-5xl xl:text-6xl font-black mb-4 leading-tight">
                         <span className="text-yellow-400">🌙 Ramadan</span> ku Raaxayso<br />
                         <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">724+ Filim AF Somali</span>
                     </h1>

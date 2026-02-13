@@ -161,7 +161,7 @@ export default async function TagPage({ params }: PageProps) {
 
             {/* Movies Grid */}
             <div className="container mx-auto px-4 pb-16">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
                     {(movies as any[]).map((movie) => (
                         <Link
                             key={movie._id}
