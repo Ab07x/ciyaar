@@ -43,8 +43,49 @@ function MatchesContent() {
   const allMatchesList = Array.isArray(allMatches) ? allMatches : [];
   const liveCount = allMatchesList.filter((m: any) => m.status === "live").length;
 
+  // Dynamic SportsEvent JSON-LD for matches
+  const sportsEventsJsonLd = matchesList.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Live & Upcoming Sports Matches",
+    "itemListOrder": "https://schema.org/ItemListUnordered",
+    "numberOfItems": matchesList.length,
+    "itemListElement": matchesList.slice(0, 20).map((match: any, idx: number) => ({
+      "@type": "ListItem",
+      "position": idx + 1,
+      "item": {
+        "@type": "SportsEvent",
+        "name": `${match.teamA} vs ${match.teamB}`,
+        "startDate": match.kickoffAt ? new Date(match.kickoffAt).toISOString() : undefined,
+        "sport": "Soccer",
+        "homeTeam": { "@type": "SportsTeam", "name": match.teamA },
+        "awayTeam": { "@type": "SportsTeam", "name": match.teamB },
+        "organizer": { "@type": "Organization", "name": match.leagueName || "League" },
+        "eventStatus": match.status === "live" ? "https://schema.org/EventScheduled" :
+          match.status === "finished" ? "https://schema.org/EventCompleted" :
+            "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+        "url": `https://fanbroj.net/match/${match.slug}`,
+        "image": match.thumbnailUrl || "https://fanbroj.net/og-image.jpg",
+        "offers": {
+          "@type": "Offer",
+          "url": `https://fanbroj.net/match/${match.slug}`,
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/OnlineOnly",
+        },
+      },
+    })),
+  } : null;
+
   return (
     <>
+      {sportsEventsJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventsJsonLd) }}
+        />
+      )}
       {/* Header Section */}
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

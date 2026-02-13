@@ -69,9 +69,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
             "name": match.leagueName,
             "url": "https://fanbroj.net"
         },
-        "eventStatus": match.status === "live" ? "https://schema.org/EventLive" :
-            match.status === "finished" ? "https://schema.org/EventMovedOnline" :
+        "eventStatus": match.status === "live" ? "https://schema.org/EventScheduled" :
+            match.status === "finished" ? "https://schema.org/EventCompleted" :
                 "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
         "image": match.thumbnailUrl || "https://fanbroj.net/og-image.jpg",
         "offers": {
             "@type": "Offer",

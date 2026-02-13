@@ -18,6 +18,33 @@ export const metadata: Metadata = {
     },
 };
 
+const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Live TV & Channels – Fanproj TV",
+    "description": "Daawo Live TV channels – Sports, News, Entertainment bilaash HD streaming.",
+    "url": "https://fanbroj.net/live",
+    "isPartOf": { "@id": "https://fanbroj.net/#website" },
+    "mainEntity": {
+        "@type": "ItemList",
+        "name": "Live TV Channels",
+        "itemListElement": [],
+    },
+    "provider": {
+        "@type": "Organization",
+        "name": "Fanproj TV",
+        "url": "https://fanbroj.net",
+    },
+};
+
 export default function LiveLayout({ children }: { children: React.ReactNode }) {
-    return children;
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            {children}
+        </>
+    );
 }

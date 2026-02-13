@@ -20,6 +20,33 @@ export const metadata: Metadata = {
     },
 };
 
+const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Daawo Ciyaar Live Maanta – Fanproj TV",
+    "description": "Daawo ciyaaraha kubadda cagta oo live tooska ah. Premier League, La Liga, Champions League.",
+    "url": "https://fanbroj.net/ciyaar",
+    "isPartOf": { "@id": "https://fanbroj.net/#website" },
+    "mainEntity": {
+        "@type": "ItemList",
+        "name": "Live & Upcoming Sports Matches",
+        "itemListElement": [],
+    },
+    "provider": {
+        "@type": "Organization",
+        "name": "Fanproj TV",
+        "url": "https://fanbroj.net",
+    },
+};
+
 export default function CiyaarLayout({ children }: { children: React.ReactNode }) {
-    return <div className="container mx-auto px-4 py-8">{children}</div>;
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <div className="container mx-auto px-4 py-8">{children}</div>
+        </>
+    );
 }

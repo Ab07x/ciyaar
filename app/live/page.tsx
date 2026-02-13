@@ -47,8 +47,45 @@ export default function LivePage() {
         ? premium
         : premium.filter((c) => c.category === activeCategory);
 
+    // Dynamic BroadcastEvent JSON-LD for live channels
+    const broadcastJsonLd = live.length > 0 ? {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Live Broadcasting Channels",
+        "itemListOrder": "https://schema.org/ItemListUnordered",
+        "numberOfItems": live.length,
+        "itemListElement": live.slice(0, 20).map((ch: any, idx: number) => ({
+            "@type": "ListItem",
+            "position": idx + 1,
+            "item": {
+                "@type": "BroadcastEvent",
+                "name": ch.name || ch.title,
+                "isLiveBroadcast": true,
+                "videoFormat": "HD",
+                "broadcastOfEvent": {
+                    "@type": "Event",
+                    "name": ch.name || ch.title,
+                    "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+                },
+                "publishedOn": {
+                    "@type": "BroadcastService",
+                    "name": "Fanproj TV",
+                    "url": "https://fanbroj.net/live",
+                    "broadcastDisplayName": "Fanproj TV",
+                },
+                "url": `https://fanbroj.net/live/${ch.slug}`,
+            },
+        })),
+    } : null;
+
     return (
         <div className="relative min-h-screen">
+            {broadcastJsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(broadcastJsonLd) }}
+                />
+            )}
             <RamadanBanner variant="slim" />
             {/* Background Image */}
             <div
