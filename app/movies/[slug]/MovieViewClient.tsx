@@ -5,7 +5,7 @@ import { useUser } from "@/providers/UserProvider";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MoviePosterImage } from "@/components/MoviePosterImage";
+import { MoviePosterImage, optimizeImageUrl } from "@/components/MoviePosterImage";
 import {
     Play,
     Star,
@@ -90,7 +90,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
             <div className="relative">
                 <div className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden">
                     <Image
-                        src={movie.backdropUrl || movie.posterUrl}
+                        src={optimizeImageUrl(movie.backdropUrl || movie.posterUrl, "backdrop") || movie.posterUrl}
                         alt={movie.title}
                         fill
                         priority
@@ -292,7 +292,7 @@ export default function MovieViewClient({ slug, preloadedMovie }: MovieViewClien
                                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#333333] mb-2">
                                         {item.posterUrl ? (
                                             <Image
-                                                src={item.posterUrl}
+                                                src={optimizeImageUrl(item.posterUrl, "poster") || item.posterUrl}
                                                 alt={item.title}
                                                 fill
                                                 className="object-cover group-hover:scale-105 transition-transform duration-300"

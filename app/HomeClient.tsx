@@ -6,7 +6,7 @@ import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { LiveBadge } from "@/components/ui/LiveBadge";
 import Link from "next/link";
 
-import { MoviePosterImage } from "@/components/MoviePosterImage";
+import { MoviePosterImage, optimizeImageUrl } from "@/components/MoviePosterImage";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -130,10 +130,11 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
             <div className="absolute inset-0 opacity-100">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={currentHero.backdropUrl || currentHero.posterUrl}
+                src={optimizeImageUrl(currentHero.backdropUrl || currentHero.posterUrl, "backdrop") || ""}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover"
                 loading="eager"
+                fetchPriority="high"
               />
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-[#020D18] via-transparent to-[#020D18]" />

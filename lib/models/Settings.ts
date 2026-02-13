@@ -2,7 +2,6 @@ import mongoose, { Schema, Document } from "mongoose";
 
 // SETTINGS
 export interface ISettings extends Document {
-    convexId?: string;
     whatsappNumber: string;
     siteName: string;
     adsEnabled: boolean;
@@ -40,7 +39,6 @@ export interface ISettings extends Document {
 
 const SettingsSchema = new Schema<ISettings>(
     {
-        convexId: String,
         whatsappNumber: { type: String, required: true },
         siteName: { type: String, required: true },
         adsEnabled: { type: Boolean, required: true },
@@ -82,7 +80,6 @@ export const Settings = mongoose.models.Settings || mongoose.model<ISettings>("S
 
 // ADS
 export interface IAd extends Document {
-    convexId?: string;
     slotKey: string;
     network: string;
     format: string;
@@ -106,7 +103,6 @@ export interface IAd extends Document {
 
 const AdSchema = new Schema<IAd>(
     {
-        convexId: String,
         slotKey: { type: String, required: true, index: true },
         network: { type: String, required: true },
         format: { type: String, required: true },
@@ -134,7 +130,6 @@ export const Ad = mongoose.models.Ad || mongoose.model<IAd>("Ad", AdSchema, "ads
 
 // POSTS
 export interface IPost extends Document {
-    convexId?: string;
     slug: string;
     title: string;
     excerpt: string;
@@ -153,7 +148,6 @@ export interface IPost extends Document {
 
 const PostSchema = new Schema<IPost>(
     {
-        convexId: String,
         slug: { type: String, required: true, index: true },
         title: { type: String, required: true },
         excerpt: { type: String, required: true },
@@ -176,7 +170,6 @@ export const Post = mongoose.models.Post || mongoose.model<IPost>("Post", PostSc
 
 // CHANNELS
 export interface IChannel extends Document {
-    convexId?: string;
     slug: string;
     name: string;
     description?: string;
@@ -192,7 +185,6 @@ export interface IChannel extends Document {
 
 const ChannelSchema = new Schema<IChannel>(
     {
-        convexId: String,
         slug: { type: String, required: true, index: true },
         name: { type: String, required: true },
         description: String,
@@ -212,7 +204,6 @@ export const Channel = mongoose.models.Channel || mongoose.model<IChannel>("Chan
 
 // CATEGORIES
 export interface ICategory extends Document {
-    convexId?: string;
     name: string;
     slug: string;
     description?: string;
@@ -225,7 +216,6 @@ export interface ICategory extends Document {
 
 const CategorySchema = new Schema<ICategory>(
     {
-        convexId: String,
         name: { type: String, required: true },
         slug: { type: String, required: true, index: true },
         description: String,
@@ -242,7 +232,6 @@ export const Category = mongoose.models.Category || mongoose.model<ICategory>("C
 
 // LEAGUES
 export interface ILeague extends Document {
-    convexId?: string;
     name: string;
     type: string;
     country?: string;
@@ -253,7 +242,6 @@ export interface ILeague extends Document {
 
 const LeagueSchema = new Schema<ILeague>(
     {
-        convexId: String,
         name: { type: String, required: true, index: true },
         type: { type: String, required: true },
         country: String,
@@ -268,7 +256,6 @@ export const League = mongoose.models.League || mongoose.model<ILeague>("League"
 
 // FIXTURES
 export interface IFixture extends Document {
-    convexId?: string;
     apiFixtureId: number;
     slug: string;
     kickoffAt: number;
@@ -291,7 +278,6 @@ export interface IFixture extends Document {
 
 const FixtureSchema = new Schema<IFixture>(
     {
-        convexId: String,
         apiFixtureId: { type: Number, required: true, index: true },
         slug: { type: String, required: true, index: true },
         kickoffAt: { type: Number, required: true, index: true },
@@ -318,7 +304,6 @@ export const Fixture = mongoose.models.Fixture || mongoose.model<IFixture>("Fixt
 
 // PAYMENTS
 export interface IPayment extends Document {
-    convexId?: string;
     deviceId: string;
     userId?: string;
     plan: string;
@@ -338,7 +323,6 @@ export interface IPayment extends Document {
 
 const PaymentSchema = new Schema<IPayment>(
     {
-        convexId: String,
         deviceId: { type: String, index: true },
         userId: String,
         plan: { type: String, required: true },

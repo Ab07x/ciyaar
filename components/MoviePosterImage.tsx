@@ -4,6 +4,20 @@ import { useState } from "react";
 import { Film } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Optimize TMDB image URLs by replacing /original/ with sized versions.
+ * /original/ serves full-res images (1261x1892px, 400KB+).
+ * For poster cards displayed at ~320px wide, /w500/ is plenty.
+ */
+export function optimizeImageUrl(url: string | null | undefined, size: "poster" | "backdrop" = "poster"): string | null | undefined {
+  if (!url) return url;
+  if (url.includes("image.tmdb.org/t/p/original")) {
+    const tmdbSize = size === "backdrop" ? "w1280" : "w500";
+    return url.replace("/t/p/original", `/t/p/${tmdbSize}`);
+  }
+  return url;
+}
+
 interface MoviePosterImageProps {
   src: string | null | undefined;
   alt: string;
@@ -53,8 +67,10 @@ export function MoviePosterImage({
 
   const gradientColor = stringToColor(alt);
 
+  const optimizedSrc = optimizeImageUrl(src, "poster");
+
   // Show fallback if no src or error loading
-  if (!src || hasError) {
+  if (!optimizedSrc || hasError) {
     return (
       <div
         className={cn(
@@ -91,7 +107,7 @@ export function MoviePosterImage({
       )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={optimizedSrc}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
         decoding="async"

@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface ISeries extends Document {
-    convexId?: string;
     slug: string;
     tmdbId: number;
     imdbId?: string;
@@ -36,7 +35,6 @@ export interface ISeries extends Document {
 
 const SeriesSchema = new Schema<ISeries>(
     {
-        convexId: String,
         slug: { type: String, required: true, index: true },
         tmdbId: { type: Number, required: true, index: true },
         imdbId: String,
@@ -75,7 +73,6 @@ export const Series = mongoose.models.Series || mongoose.model<ISeries>("Series"
 
 // EPISODES
 export interface IEpisode extends Document {
-    convexId?: string;
     seriesId: string;
     seasonNumber: number;
     episodeNumber: number;
@@ -92,7 +89,6 @@ export interface IEpisode extends Document {
 
 const EpisodeSchema = new Schema<IEpisode>(
     {
-        convexId: String,
         seriesId: { type: String, required: true, index: true },
         seasonNumber: { type: Number, required: true },
         episodeNumber: { type: Number, required: true },

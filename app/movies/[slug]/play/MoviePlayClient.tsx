@@ -21,6 +21,7 @@ import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { PPVUnlockGate } from "@/components/PPVUnlockGate";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { RamadanBanner } from "@/components/RamadanBanner";
+import { optimizeImageUrl } from "@/components/MoviePosterImage";
 
 interface MoviePlayClientProps {
     slug: string;
@@ -162,7 +163,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                         {/* Background blur image */}
                         <div className="absolute inset-0">
                             <Image
-                                src={movie.backdropUrl || movie.posterUrl}
+                                src={optimizeImageUrl(movie.backdropUrl || movie.posterUrl, "backdrop") || movie.posterUrl}
                                 alt=""
                                 fill
                                 className="object-cover opacity-30 blur-md scale-105"
@@ -348,7 +349,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#333333] mb-2">
                                     {item.posterUrl ? (
                                         <Image
-                                            src={item.posterUrl}
+                                            src={optimizeImageUrl(item.posterUrl, "poster") || item.posterUrl}
                                             alt={item.title}
                                             fill
                                             className="object-cover group-hover:scale-105 transition-transform duration-300"

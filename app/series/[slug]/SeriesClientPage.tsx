@@ -6,6 +6,7 @@ import { useUser } from "@/providers/UserProvider";
 import { useState, useEffect, useRef, Suspense } from "react";
 import { AdSlot } from "@/components/AdSlot";
 import { cn } from "@/lib/utils";
+import { optimizeImageUrl } from "@/components/MoviePosterImage";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -141,7 +142,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
             {series.backdropUrl && (
                 <div className="absolute top-0 left-0 right-0 h-[50vh] overflow-hidden pointer-events-none">
                     <Image
-                        src={series.backdropUrl}
+                        src={optimizeImageUrl(series.backdropUrl, "backdrop") || series.backdropUrl}
                         alt=""
                         fill
                         className="object-cover opacity-20"
@@ -241,7 +242,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                             <div className="mb-8 flex flex-col md:flex-row gap-6 items-start">
                                 <div className="w-full md:w-1/3 max-w-[240px] aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl relative flex-shrink-0 mx-auto md:mx-0">
                                     {series.posterUrl ? (
-                                        <Image src={series.posterUrl} alt={series.title} fill className="object-cover" />
+                                        <Image src={optimizeImageUrl(series.posterUrl, "poster") || series.posterUrl} alt={series.title} fill className="object-cover" />
                                     ) : (
                                         <div className="w-full h-full bg-stadium-dark flex items-center justify-center">
                                             <Tv size={48} className="text-text-muted/30" />
@@ -437,7 +438,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                 <div className="flex gap-4 mb-4">
                                     {series.posterUrl && (
                                         <div className="relative w-20 h-30 flex-shrink-0">
-                                            <Image src={series.posterUrl} alt={series.title} width={80} height={120} className="rounded-lg object-cover" />
+                                            <Image src={optimizeImageUrl(series.posterUrl, "poster") || series.posterUrl} alt={series.title} width={80} height={120} className="rounded-lg object-cover" />
                                         </div>
                                     )}
                                     <div>

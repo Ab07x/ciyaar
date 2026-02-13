@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Play, Star, Lock, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { optimizeImageUrl } from "@/components/MoviePosterImage";
 
 interface MovieCardProps {
     id: string;
@@ -45,7 +46,7 @@ export function MovieCard({
                 <div className="relative w-full h-full">
                     {posterUrl && !imgError ? (
                         <Image
-                            src={posterUrl}
+                            src={optimizeImageUrl(posterUrl, "poster") || posterUrl}
                             alt={title}
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-110"

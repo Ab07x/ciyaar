@@ -2,7 +2,6 @@ import mongoose, { Schema, Document } from "mongoose";
 
 // USER
 export interface IUser extends Document {
-    convexId?: string;
     phoneOrId?: string;
     displayName?: string;
     avatarUrl?: string;
@@ -20,7 +19,6 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
     {
-        convexId: String,
         phoneOrId: String,
         displayName: String,
         avatarUrl: String,
@@ -42,7 +40,6 @@ export const User = mongoose.models.User || mongoose.model<IUser>("User", UserSc
 
 // DEVICE
 export interface IDevice extends Document {
-    convexId?: string;
     userId: string;
     deviceId: string;
     userAgent?: string;
@@ -51,7 +48,6 @@ export interface IDevice extends Document {
 
 const DeviceSchema = new Schema<IDevice>(
     {
-        convexId: String,
         userId: { type: String, required: true, index: true },
         deviceId: { type: String, required: true, index: true },
         userAgent: String,
@@ -64,7 +60,6 @@ export const Device = mongoose.models.Device || mongoose.model<IDevice>("Device"
 
 // SUBSCRIPTION
 export interface ISubscription extends Document {
-    convexId?: string;
     userId: string;
     plan: "match" | "weekly" | "monthly" | "yearly";
     matchId?: string;
@@ -77,7 +72,6 @@ export interface ISubscription extends Document {
 
 const SubscriptionSchema = new Schema<ISubscription>(
     {
-        convexId: String,
         userId: { type: String, required: true, index: true },
         plan: { type: String, enum: ["match", "weekly", "monthly", "yearly"], required: true },
         matchId: String,
@@ -94,7 +88,6 @@ export const Subscription = mongoose.models.Subscription || mongoose.model<ISubs
 
 // REDEMPTION
 export interface IRedemption extends Document {
-    convexId?: string;
     code: string;
     plan: "match" | "weekly" | "monthly" | "yearly";
     durationDays: number;
@@ -108,7 +101,6 @@ export interface IRedemption extends Document {
 
 const RedemptionSchema = new Schema<IRedemption>(
     {
-        convexId: String,
         code: { type: String, required: true, index: true },
         plan: { type: String, enum: ["match", "weekly", "monthly", "yearly"], required: true },
         durationDays: { type: Number, required: true },

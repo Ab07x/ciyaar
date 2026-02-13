@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMatch extends Document {
-    convexId?: string;
     slug: string;
     title: string;
     teamA: string;
@@ -36,7 +35,6 @@ export interface IMatch extends Document {
 
 const MatchSchema = new Schema<IMatch>(
     {
-        convexId: String,
         slug: { type: String, required: true, index: true },
         title: { type: String, required: true },
         teamA: { type: String, required: true },

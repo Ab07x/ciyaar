@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Play, Lock, Layers, Tv } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { optimizeImageUrl } from "@/components/MoviePosterImage";
 
 interface SeriesCardProps {
     id: string;
@@ -43,7 +44,7 @@ export function SeriesCard({
             <div className="aspect-[2/3] relative overflow-hidden bg-white/5">
                 {posterUrl ? (
                     <Image
-                        src={posterUrl}
+                        src={optimizeImageUrl(posterUrl, "poster") || posterUrl}
                         alt={title}
                         fill
                         sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12vw"

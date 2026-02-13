@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMovie extends Document {
-    convexId?: string;
     slug: string;
     tmdbId: number;
     imdbId?: string;
@@ -41,7 +40,6 @@ export interface IMovie extends Document {
 
 const MovieSchema = new Schema<IMovie>(
     {
-        convexId: String,
         slug: { type: String, required: true, index: true },
         tmdbId: { type: Number, required: true, index: true },
         imdbId: String,

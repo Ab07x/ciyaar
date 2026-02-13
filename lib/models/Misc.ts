@@ -2,7 +2,6 @@ import mongoose, { Schema, Document } from "mongoose";
 
 // PUSH SUBSCRIPTIONS
 export interface IPushSubscription extends Document {
-    convexId?: string;
     userId?: string;
     deviceId: string;
     endpoint: string;
@@ -16,7 +15,6 @@ export interface IPushSubscription extends Document {
 
 const PushSubscriptionSchema = new Schema<IPushSubscription>(
     {
-        convexId: String,
         userId: String,
         deviceId: { type: String, index: true },
         endpoint: { type: String, required: true, index: true },
@@ -34,7 +32,6 @@ export const PushSubscription = mongoose.models.PushSubscription || mongoose.mod
 
 // PROMO BANNERS
 export interface IPromoBanner extends Document {
-    convexId?: string;
     name: string;
     type: string;
     headline: string;
@@ -56,7 +53,6 @@ export interface IPromoBanner extends Document {
 
 const PromoBannerSchema = new Schema<IPromoBanner>(
     {
-        convexId: String,
         name: String,
         type: String,
         headline: String,
@@ -82,7 +78,6 @@ export const PromoBanner = mongoose.models.PromoBanner || mongoose.model<IPromoB
 
 // SHORTS
 export interface IShort extends Document {
-    convexId?: string;
     title: string;
     embedUrl: string;
     thumbnailUrl: string;
@@ -95,7 +90,6 @@ export interface IShort extends Document {
 
 const ShortSchema = new Schema<IShort>(
     {
-        convexId: String,
         title: String,
         embedUrl: String,
         thumbnailUrl: String,
@@ -112,7 +106,6 @@ export const Short = mongoose.models.Short || mongoose.model<IShort>("Short", Sh
 
 // HERO SLIDES
 export interface IHeroSlide extends Document {
-    convexId?: string;
     contentType: string;
     contentId?: string;
     title?: string;
@@ -129,7 +122,6 @@ export interface IHeroSlide extends Document {
 
 const HeroSlideSchema = new Schema<IHeroSlide>(
     {
-        convexId: String,
         contentType: String,
         contentId: String,
         title: String,
@@ -150,7 +142,6 @@ export const HeroSlide = mongoose.models.HeroSlide || mongoose.model<IHeroSlide>
 
 // MESSAGES (Live Chat)
 export interface IMessage extends Document {
-    convexId?: string;
     matchId: string;
     userId: string;
     nickname: string;
@@ -161,7 +152,6 @@ export interface IMessage extends Document {
 
 const MessageSchema = new Schema<IMessage>(
     {
-        convexId: String,
         matchId: { type: String, required: true, index: true },
         userId: { type: String, required: true },
         nickname: String,
@@ -178,7 +168,6 @@ export const Message = mongoose.models.Message || mongoose.model<IMessage>("Mess
 
 // PAGE VIEWS
 export interface IPageView extends Document {
-    convexId?: string;
     date: string;
     pageType: string;
     pageId?: string;
@@ -188,7 +177,6 @@ export interface IPageView extends Document {
 
 const PageViewSchema = new Schema<IPageView>(
     {
-        convexId: String,
         date: { type: String, index: true },
         pageType: { type: String, index: true },
         pageId: String,
@@ -204,7 +192,6 @@ export const PageView = mongoose.models.PageView || mongoose.model<IPageView>("P
 
 // SEARCH ANALYTICS
 export interface ISearchAnalytics extends Document {
-    convexId?: string;
     query: string;
     queryLower: string;
     resultsCount: number;
@@ -220,7 +207,6 @@ export interface ISearchAnalytics extends Document {
 
 const SearchAnalyticsSchema = new Schema<ISearchAnalytics>(
     {
-        convexId: String,
         query: String,
         queryLower: { type: String, index: true },
         resultsCount: Number,
@@ -240,7 +226,6 @@ export const SearchAnalytics = mongoose.models.SearchAnalytics || mongoose.model
 
 // CONTENT REQUESTS
 export interface IContentRequest extends Document {
-    convexId?: string;
     userId: string;
     tmdbId: number;
     type: string;
@@ -254,7 +239,6 @@ export interface IContentRequest extends Document {
 
 const ContentRequestSchema = new Schema<IContentRequest>(
     {
-        convexId: String,
         userId: String,
         tmdbId: Number,
         type: String,
@@ -274,7 +258,6 @@ export const ContentRequest = mongoose.models.ContentRequest || mongoose.model<I
 
 // Predictions
 const PredictionSchema = new Schema({
-    convexId: String,
     userId: { type: String, index: true },
     matchId: { type: String, index: true },
     prediction: String,
@@ -286,7 +269,6 @@ export const Prediction = mongoose.models.Prediction || mongoose.model("Predicti
 
 // Leaderboards
 const LeaderboardSchema = new Schema({
-    convexId: String,
     userId: { type: String, index: true },
     totalPoints: Number,
     weeklyPoints: Number,
@@ -302,7 +284,6 @@ export const Leaderboard = mongoose.models.Leaderboard || mongoose.model("Leader
 
 // Ad Impressions
 const AdImpressionSchema = new Schema({
-    convexId: String,
     userId: String,
     deviceId: { type: String, index: true },
     adType: String,
@@ -366,7 +347,6 @@ export const ContentRequestVote = mongoose.models.ContentRequestVote || mongoose
 
 // My List
 const UserMyListSchema = new Schema({
-    convexId: String,
     userId: { type: String, index: true },
     contentType: String,
     contentId: String,
@@ -377,7 +357,6 @@ export const UserMyList = mongoose.models.UserMyList || mongoose.model("UserMyLi
 
 // Watch Progress
 const UserWatchProgressSchema = new Schema({
-    convexId: String,
     userId: { type: String, index: true },
     contentType: String,
     contentId: String,

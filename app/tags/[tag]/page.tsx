@@ -3,6 +3,7 @@ import connectDB from "@/lib/mongodb";
 import { Movie } from "@/lib/models";
 import Link from "next/link";
 import { Film, ChevronLeft, Tag } from "lucide-react";
+import { optimizeImageUrl } from "@/components/MoviePosterImage";
 
 export const revalidate = 3600; // Revalidate every hour
 export const dynamicParams = true;
@@ -171,7 +172,7 @@ export default async function TagPage({ params }: PageProps) {
                                 {movie.posterUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img
-                                        src={movie.posterUrl}
+                                        src={optimizeImageUrl(movie.posterUrl, "poster") || movie.posterUrl}
                                         alt={`${movie.titleSomali || movie.title} Af Somali`}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         loading="lazy"

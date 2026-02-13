@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { optimizeImageUrl } from "@/components/MoviePosterImage";
 
 export default function SearchPage() {
     const [query, setQuery] = useState("");
@@ -181,7 +182,7 @@ export default function SearchPage() {
                                     className="bg-stadium-elevated border border-white/5 rounded-xl overflow-hidden active:scale-[0.98] transition-all"
                                 >
                                     <div className="aspect-[2/3] relative">
-                                        <Image src={movie.posterUrl} alt={movie.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
+                                        <Image src={optimizeImageUrl(movie.posterUrl, "poster") || movie.posterUrl} alt={movie.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
                                         {movie.isPremium && <span className="absolute top-2 right-2 bg-accent-gold text-black text-[10px] font-bold px-1.5 py-0.5 rounded">PRO</span>}
                                     </div>
                                     <div className="p-3">
@@ -209,7 +210,7 @@ export default function SearchPage() {
                                     className="bg-stadium-elevated border border-white/5 rounded-xl overflow-hidden active:scale-[0.98] transition-all"
                                 >
                                     <div className="aspect-[2/3] relative">
-                                        <Image src={show.posterUrl} alt={show.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
+                                        <Image src={optimizeImageUrl(show.posterUrl, "poster") || show.posterUrl} alt={show.title} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
                                     </div>
                                     <div className="p-3">
                                         <h3 className="text-sm font-bold text-white truncate">{show.title}</h3>
