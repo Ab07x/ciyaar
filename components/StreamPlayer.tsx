@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Play, Pause, Maximize, Minimize, Volume2, VolumeX, Volume1,
     Settings, RefreshCw, AlertCircle, Loader2, SkipForward, SkipBack,
-    ChevronUp, PictureInPicture2, X, Lock, Zap, Clock3
+    ChevronUp, PictureInPicture2, X, Lock, Zap, Clock3, MessageCircle
 } from "lucide-react";
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
@@ -171,7 +171,7 @@ export function StreamPlayer({
 
     // Landscape auto-fullscreen for mobile
     useEffect(() => {
-        if (!isMobile || streamType === "iframe") return;
+        if (!isMobile || streamType === "iframe" || conversionGate?.enabled) return;
 
         const handleOrientationChange = () => {
             const container = containerRef.current;
@@ -201,7 +201,7 @@ export function StreamPlayer({
             window.removeEventListener('orientationchange', handleOrientationChange);
             window.removeEventListener('resize', handleOrientationChange);
         };
-    }, [isMobile, isPlaying, streamType]);
+    }, [isMobile, isPlaying, streamType, conversionGate?.enabled]);
 
     // API-based data fetching
     const { data: resumePoint } = useSWR(
@@ -261,6 +261,28 @@ export function StreamPlayer({
         }
     }, [moviePreviewPersistenceKey, readPersistedPreviewElapsed]);
 
+    const activatePaywallLock = useCallback(() => {
+        const video = videoRef.current;
+        if (video && !video.paused) {
+            video.pause();
+        }
+        setShowPaywall(true);
+        setIsPlaying(false);
+
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => { });
+        }
+
+        const nativeVideo = videoRef.current as any;
+        if (nativeVideo?.webkitDisplayingFullscreen && typeof nativeVideo.webkitExitFullscreen === "function") {
+            try {
+                nativeVideo.webkitExitFullscreen();
+            } catch {
+                // Ignore iOS native fullscreen exit failures.
+            }
+        }
+    }, []);
+
     const startPreviewSession = useCallback(() => {
         if (!conversionGateEnabled) return;
         previewSessionStartedRef.current = true;
@@ -288,32 +310,21 @@ export function StreamPlayer({
         setPreviewRemainingSeconds(remainingSeconds);
 
         if (previewAccumulatedSecondsRef.current < moviePreviewLimit) return;
-
-        const video = videoRef.current;
-        if (video && !video.paused) {
-            video.pause();
-            setIsPlaying(false);
-        }
-        setShowPaywall(true);
+        activatePaywallLock();
     }, [
         conversionGateEnabled,
         moviePreviewPersistenceKey,
         moviePreviewLimit,
         readPersistedPreviewElapsed,
+        activatePaywallLock,
     ]);
 
     // Conversion gate: immediate lock when daily limit is reached.
     useEffect(() => {
         if (!conversionGateEnabled) return;
         if (!conversionGate?.reachedDailyLimit) return;
-
-        const video = videoRef.current;
-        if (video && !video.paused) {
-            video.pause();
-            setIsPlaying(false);
-        }
-        setShowPaywall(true);
-    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit]);
+        activatePaywallLock();
+    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit, activatePaywallLock]);
 
     // Free tier enforcement for live matches.
     useEffect(() => {
@@ -324,17 +335,8 @@ export function StreamPlayer({
         }
 
         if (currentTime < freePreviewLimit) return;
-
-        const video = videoRef.current;
-        if (video && !video.paused) {
-            video.pause();
-        }
-        setShowPaywall(true);
-        setIsPlaying(false);
-        if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => { });
-        }
-    }, [currentTime, isPremium, freePreviewLimit, trackParams?.contentType]);
+        activatePaywallLock();
+    }, [currentTime, isPremium, freePreviewLimit, trackParams?.contentType, activatePaywallLock]);
 
     // For iframe sources we cannot read media time reliably, so start preview session on mount.
     useEffect(() => {
@@ -374,15 +376,7 @@ export function StreamPlayer({
             writePersistedPreviewElapsed(elapsedSeconds);
             setPreviewRemainingSeconds(Math.max(0, Math.ceil(moviePreviewLimit - elapsedSeconds)));
             if (elapsedSeconds < moviePreviewLimit) return;
-
-            if (video && !video.paused) {
-                video.pause();
-            }
-            setShowPaywall(true);
-            setIsPlaying(false);
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(() => { });
-            }
+            activatePaywallLock();
         }, 500);
 
         return () => window.clearInterval(interval);
@@ -394,6 +388,7 @@ export function StreamPlayer({
         writePersistedPreviewElapsed,
         showPaywall,
         streamType,
+        activatePaywallLock,
     ]);
 
     // Aggressive conversion mode: send free users to pricing as soon as lock triggers.
@@ -827,6 +822,25 @@ export function StreamPlayer({
             if (video.buffered.length > 0) {
                 setBuffered(video.buffered.end(video.buffered.length - 1));
             }
+
+            // Hard lock from media clock (important for mobile/native fullscreen paths).
+            if (!conversionGateEnabled || conversionGate?.reachedDailyLimit || showPaywall) return;
+            if (!previewSessionStartedRef.current) return;
+
+            const now = Date.now();
+            const lastTick = previewTickAtMsRef.current ?? now;
+            const deltaSeconds = Math.max(0, (now - lastTick) / 1000);
+            if (deltaSeconds < 15 && !video.paused && !video.ended) {
+                previewAccumulatedSecondsRef.current += deltaSeconds * previewTimerMultiplier;
+            }
+            previewTickAtMsRef.current = now;
+
+            const elapsedSeconds = Math.max(previewAccumulatedSecondsRef.current, video.currentTime || 0);
+            writePersistedPreviewElapsed(elapsedSeconds);
+            setPreviewRemainingSeconds(Math.max(0, Math.ceil(moviePreviewLimit - elapsedSeconds)));
+            if (elapsedSeconds >= moviePreviewLimit) {
+                activatePaywallLock();
+            }
         };
         const handleDurationChange = () => setDuration(video.duration);
         const handleVolumeChange = () => {
@@ -851,7 +865,17 @@ export function StreamPlayer({
             video.removeEventListener("durationchange", handleDurationChange);
             video.removeEventListener("volumechange", handleVolumeChange);
         };
-    }, [startPreviewSession, streamType]);
+    }, [
+        startPreviewSession,
+        streamType,
+        conversionGateEnabled,
+        conversionGate?.reachedDailyLimit,
+        showPaywall,
+        previewTimerMultiplier,
+        moviePreviewLimit,
+        writePersistedPreviewElapsed,
+        activatePaywallLock,
+    ]);
 
     // Controls
     const togglePlay = () => {
@@ -884,6 +908,7 @@ export function StreamPlayer({
     };
 
     const toggleFullscreen = async () => {
+        if (conversionGateEnabled) return;
         const container = containerRef.current;
         if (!container) return;
 
@@ -1029,6 +1054,18 @@ export function StreamPlayer({
     const primaryPaywallCta = (isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO VIP HADDA" : "Unlock for $0.25";
     const previewQualityLabel = conversionGate?.qualityCap ? `${conversionGate.qualityCap}p` : "Free";
     const previewCountdownSeconds = Math.max(0, previewRemainingSeconds ?? Math.ceil(moviePreviewLimit));
+    const whatsappSupportNumber = String((settings as any)?.whatsappNumber || "+252618274188").replace(/\D/g, "");
+    const whatsappSupportHref = `https://wa.me/${whatsappSupportNumber}?text=${encodeURIComponent(
+        `Salaan Fanbroj, waxaan rabaa caawimaad sida aan u iibsado VIP. Content: ${conversionGate?.contentLabel || trackParams?.contentId || "movie"}`
+    )}`;
+    const paywallOverlayClass = "absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-3 sm:p-6 text-center";
+    const paywallCardClass = "w-full max-w-[22rem] sm:max-w-md animate-in fade-in zoom-in duration-300";
+    const paywallTitleClass = "text-xl sm:text-2xl font-black text-white mb-2";
+    const paywallMessageClass = "text-gray-300 text-sm sm:text-base mb-4 sm:mb-6";
+    const paywallButtonsClass = "flex flex-col gap-2.5 sm:gap-3";
+    const paywallPrimaryButtonClass = "w-full py-2.5 sm:py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
+    const paywallWhatsappButtonClass = "w-full py-2.5 sm:py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#1fb855] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
+    const paywallPlansButtonClass = "w-full py-2.5 sm:py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors text-sm sm:text-base";
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
@@ -1052,22 +1089,31 @@ export function StreamPlayer({
                     </div>
                 )}
                 {showPaywall && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-6 text-center">
-                        <div className="max-w-md animate-in fade-in zoom-in duration-300">
-                            <Lock className="w-16 h-16 text-accent-gold mx-auto mb-4" />
-                            <h3 className="text-2xl font-black text-white mb-2">{paywallTitle}</h3>
-                            <p className="text-gray-300 mb-6">{paywallMessage}</p>
-                            <div className="flex flex-col gap-3">
+                    <div className={paywallOverlayClass}>
+                        <div className={paywallCardClass}>
+                            <Lock className="w-12 h-12 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-3 sm:mb-4" />
+                            <h3 className={paywallTitleClass}>{paywallTitle}</h3>
+                            <p className={paywallMessageClass}>{paywallMessage}</p>
+                            <div className={paywallButtonsClass}>
                                 <a
                                     href={paywallHref}
-                                    className="w-full py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2"
+                                    className={paywallPrimaryButtonClass}
                                 >
                                     <Zap size={20} />
                                     {primaryPaywallCta}
                                 </a>
                                 <a
+                                    href={whatsappSupportHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={paywallWhatsappButtonClass}
+                                >
+                                    <MessageCircle size={20} />
+                                    WhatsApp Support
+                                </a>
+                                <a
                                     href={paywallHref}
-                                    className="w-full py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
+                                    className={paywallPlansButtonClass}
                                 >
                                     See All Plans
                                 </a>
@@ -1260,23 +1306,32 @@ export function StreamPlayer({
 
             {/* Paywall Overlay */}
             {showPaywall && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-6 text-center">
-                    <div className="max-w-md animate-in fade-in zoom-in duration-300">
-                        <Lock className="w-16 h-16 text-accent-gold mx-auto mb-4" />
-                        <h3 className="text-2xl font-black text-white mb-2">{paywallTitle}</h3>
-                        <p className="text-gray-300 mb-6">{paywallMessage}</p>
+                <div className={paywallOverlayClass}>
+                    <div className={paywallCardClass}>
+                        <Lock className="w-12 h-12 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-3 sm:mb-4" />
+                        <h3 className={paywallTitleClass}>{paywallTitle}</h3>
+                        <p className={paywallMessageClass}>{paywallMessage}</p>
 
-                        <div className="flex flex-col gap-3">
+                        <div className={paywallButtonsClass}>
                             <a
                                 href={paywallHref}
-                                className="w-full py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2"
+                                className={paywallPrimaryButtonClass}
                             >
                                 <Zap size={20} />
                                 {primaryPaywallCta}
                             </a>
                             <a
+                                href={whatsappSupportHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={paywallWhatsappButtonClass}
+                            >
+                                <MessageCircle size={20} />
+                                WhatsApp Support
+                            </a>
+                            <a
                                 href={paywallHref}
-                                className="w-full py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
+                                className={paywallPlansButtonClass}
                             >
                                 See All Plans
                             </a>
@@ -1426,7 +1481,7 @@ export function StreamPlayer({
                         )}
 
                         {/* Mobile Fullscreen FAB (Floating Action Button) */}
-                        {isMobile && isPlaying && (
+                        {isMobile && isPlaying && !conversionGateEnabled && (
                             <motion.button
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -1576,19 +1631,20 @@ export function StreamPlayer({
                                     <PictureInPicture2 size={20} />
                                 </button>
 
-                                {/* Fullscreen - Larger touch target for mobile */}
-                                <button
-                                    onClick={toggleFullscreen}
-                                    onTouchEnd={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleFullscreen();
-                                    }}
-                                    className="p-3 md:p-2 text-white hover:text-accent-green transition-colors active:scale-95 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-                                    aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-                                >
-                                    {isFullscreen ? <Minimize size={28} className="md:w-6 md:h-6" /> : <Maximize size={28} className="md:w-6 md:h-6" />}
-                                </button>
+                                {!conversionGateEnabled && (
+                                    <button
+                                        onClick={toggleFullscreen}
+                                        onTouchEnd={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleFullscreen();
+                                        }}
+                                        className="p-3 md:p-2 text-white hover:text-accent-green transition-colors active:scale-95 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                                    >
+                                        {isFullscreen ? <Minimize size={28} className="md:w-6 md:h-6" /> : <Maximize size={28} className="md:w-6 md:h-6" />}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </motion.div>
