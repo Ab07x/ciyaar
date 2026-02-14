@@ -25,6 +25,9 @@ export default function AdminSettingsPage() {
         maxDevicesWeekly: 2,
         maxDevicesMonthly: 3,
         maxDevicesYearly: 5,
+        freeMoviesPerDay: 2,
+        freeMoviePreviewMinutes: 26,
+        moviePreviewLockEnabled: true,
         // SEO Settings
         seoTagline: "",
         seoDescription: "",
@@ -53,6 +56,9 @@ export default function AdminSettingsPage() {
             maxDevicesWeekly: settings.maxDevicesWeekly,
             maxDevicesMonthly: settings.maxDevicesMonthly,
             maxDevicesYearly: settings.maxDevicesYearly,
+            freeMoviesPerDay: settings.freeMoviesPerDay ?? 2,
+            freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
+            moviePreviewLockEnabled: settings.moviePreviewLockEnabled ?? true,
             // SEO Settings
             seoTagline: (settings as any).seoTagline || "",
             seoDescription: (settings as any).seoDescription || "",
@@ -102,6 +108,44 @@ export default function AdminSettingsPage() {
                     <div className="flex items-center gap-3 pb-4 border-b border-border-subtle"><Settings size={24} className="text-text-muted" /><h3 className="font-bold">General</h3></div>
                     <div><label className="block text-sm text-text-secondary mb-2">Site Name</label><input value={formData.siteName} onChange={e => setFormData({ ...formData, siteName: e.target.value })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
                     <div><label className="block text-sm text-text-secondary mb-2">WhatsApp Number</label><input value={formData.whatsappNumber} onChange={e => setFormData({ ...formData, whatsappNumber: e.target.value })} placeholder="+252..." className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
+                    <div className="pt-2 border-t border-border-subtle space-y-3">
+                        <div className="flex items-center justify-between bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3">
+                            <div>
+                                <p className="text-sm font-semibold">Enable Preview Timer Lock</p>
+                                <p className="text-xs text-text-muted">Force lock after preview time and send free users to pricing.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, moviePreviewLockEnabled: !formData.moviePreviewLockEnabled })}
+                                className={`w-12 h-6 rounded-full relative transition-colors ${formData.moviePreviewLockEnabled ? "bg-accent-green" : "bg-border-strong"}`}
+                                aria-label="Toggle movie preview timer lock"
+                            >
+                                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.moviePreviewLockEnabled ? "right-1" : "left-1"}`} />
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs text-text-secondary mb-1">Preview Minutes</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={formData.freeMoviePreviewMinutes}
+                                    onChange={e => setFormData({ ...formData, freeMoviePreviewMinutes: parseInt(e.target.value) || 26 })}
+                                    className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-text-secondary mb-1">Free Movies / Day</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={formData.freeMoviesPerDay}
+                                    onChange={e => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 2 })}
+                                    className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-4">

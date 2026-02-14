@@ -2,9 +2,10 @@
 
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
     Play,
     Star,
@@ -29,9 +30,9 @@ interface MoviePlayClientProps {
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
-const DEFAULT_FREE_MOVIE_PREVIEW_MINUTES = 24;
+const DEFAULT_FREE_MOVIE_PREVIEW_MINUTES = 26;
 const DEFAULT_FREE_MOVIES_PER_DAY = 2;
-const FREE_MAX_QUALITY = 480;
+const FREE_MAX_QUALITY = 720;
 
 function parseQualityHeight(quality?: string): number | null {
     if (!quality) return null;
@@ -47,6 +48,7 @@ function isHdQuality(quality?: string): boolean {
 }
 
 export default function MoviePlayClient({ slug, preloadedMovie, preloadedSettings }: MoviePlayClientProps) {
+    const router = useRouter();
     const { data: movieResult } = useSWR(`/api/movies?slug=${slug}`, fetcher);
     const movie = movieResult || preloadedMovie;
 
@@ -78,16 +80,21 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
     const isUnlocked = !movie?.isPremium || isPremium || localUnlocked;
     const isPreviewMode = !!movie?.isPremium && !isPremium && !localUnlocked;
-    const freePreviewMinutes = Number(settings?.freeMoviePreviewMinutes) || DEFAULT_FREE_MOVIE_PREVIEW_MINUTES;
+    const freePreviewMinutesRaw = Number(settings?.freeMoviePreviewMinutes);
+    const freePreviewMinutes = Number.isFinite(freePreviewMinutesRaw) && freePreviewMinutesRaw > 0
+        ? freePreviewMinutesRaw
+        : DEFAULT_FREE_MOVIE_PREVIEW_MINUTES;
     const freeMoviesPerDay = Number(settings?.freeMoviesPerDay) || DEFAULT_FREE_MOVIES_PER_DAY;
+    const moviePreviewLockEnabled = settings?.moviePreviewLockEnabled !== false;
 
     const { data: freeLimitData, mutate: mutateFreeLimit } = useSWR(
         isPreviewMode && userId ? `/api/movies/free-limit?userId=${userId}&movieId=${slug}` : null,
         fetcher
     );
 
-    const hasFreeQualitySource = Array.isArray(movie?.embeds) && movie.embeds.some((embed: any) => !isHdQuality(embed?.quality));
-    const firstFreeEmbedIndex = Array.isArray(movie?.embeds)
+    const hasEmbeds = Array.isArray(movie?.embeds) && movie.embeds.length > 0;
+    const hasFreeQualitySource = hasEmbeds && movie.embeds.some((embed: any) => !isHdQuality(embed?.quality));
+    const firstFreeEmbedIndex = hasEmbeds
         ? movie.embeds.findIndex((embed: any) => !isHdQuality(embed?.quality))
         : -1;
     const effectiveEmbedIndex = isPreviewMode
@@ -98,6 +105,13 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
         : activeEmbedIndex;
     const effectiveEmbed = movie?.embeds?.[effectiveEmbedIndex];
     const dailyLimitReached = isPreviewMode && !!freeLimitData && !freeLimitData.allowed;
+    const pricingHref = `/pricing?src=movie-preview&content=movie&id=${encodeURIComponent(slug)}`;
+    const hardPricingLock = isPreviewMode && (dailyLimitReached || (hasEmbeds && !hasFreeQualitySource));
+
+    useEffect(() => {
+        if (!hardPricingLock) return;
+        router.replace(pricingHref);
+    }, [hardPricingLock, pricingHref, router]);
 
     const handleRedeem = async () => {
         if (!code.trim()) return;
@@ -164,6 +178,17 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914] mx-auto mb-3"></div>
                     <p className="text-gray-300 text-sm">Diyaarinaya Free Preview...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (hardPricingLock) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914] mx-auto mb-3"></div>
+                    <p className="text-gray-300 text-sm">Ku wareejinaya pricing...</p>
                 </div>
             </div>
         );
@@ -295,7 +320,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
                             <div className="w-full max-w-sm space-y-3">
                                 <Link
-                                    href="/pricing"
+                                    href={pricingHref}
                                     className="w-full py-4 md:py-5 bg-gradient-to-r from-[#E50914] to-[#ff3d47] hover:from-[#ff3d47] hover:to-[#E50914] text-white font-black rounded-xl text-center text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     <Crown size={22} />
@@ -314,8 +339,8 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                             </div>
                         </div>
                     </div>
-                ) : isPreviewMode && !hasFreeQualitySource ? (
-                    /* Quality Gate if no 480p source exists */
+                ) : isPreviewMode && hasEmbeds && !hasFreeQualitySource ? (
+                    /* Quality Gate if no 720p-or-lower source exists */
                     <div className="relative w-full aspect-video md:aspect-video bg-black rounded-2xl overflow-hidden border-4 border-[#E50914]">
                         <div className="absolute inset-0">
                             <Image
@@ -337,7 +362,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                             </h3>
                             <p className="text-gray-300 text-sm md:text-base mb-4 md:mb-6 text-center max-w-md">
                                 Filimkan waxaa lagu heli karaa kaliya tayada HD/4K.
-                                Free users waxaa loo ogolyahay 480p oo keliya.
+                                Free users waxaa loo ogolyahay ilaa 720p oo keliya.
                             </p>
 
                             <div className="w-full max-w-sm space-y-3 mb-4">
@@ -366,7 +391,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
                             <div className="w-full max-w-sm space-y-3">
                                 <Link
-                                    href="/pricing"
+                                    href={pricingHref}
                                     className="w-full py-4 md:py-5 bg-gradient-to-r from-[#E50914] to-[#ff3d47] hover:from-[#ff3d47] hover:to-[#E50914] text-white font-black rounded-xl text-center text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     <Crown size={22} />
@@ -406,16 +431,21 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 duration: movie.runtime ? movie.runtime * 60 : undefined
                             }}
                             conversionGate={{
-                                enabled: isPreviewMode,
+                                enabled: isPreviewMode && moviePreviewLockEnabled,
                                 previewSeconds: freePreviewMinutes * 60,
                                 reachedDailyLimit: dailyLimitReached,
                                 dailyLimit: freeMoviesPerDay,
                                 usedToday: Number(freeLimitData?.used || 0),
                                 qualityCap: FREE_MAX_QUALITY,
-                                ctaHref: "/pricing",
+                                ctaHref: pricingHref,
+                                forceRedirectOnLock: true,
+                                redirectDelayMs: 300,
                                 contentLabel: movie.titleSomali || movie.title,
                             }}
                             onPreviewStart={handlePreviewStart}
+                            onGateLocked={() => {
+                                router.replace(pricingHref);
+                            }}
                         />
                     </div>
                 ) : (
@@ -458,7 +488,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
                 {isPreviewMode && (
                     <p className="text-center text-xs text-yellow-300 mt-3">
-                        Free users: 480p kaliya • HD/1080p/4K waa VIP Only
+                        Free users: ilaa 720p • 1080p/4K waa VIP Only
                     </p>
                 )}
 
@@ -466,114 +496,118 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                 <RamadanBanner variant="player" className="mt-3" />
             </div>
 
-            {/* Action Buttons */}
-            <div className="max-w-7xl mx-auto px-4 mb-8">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {movie.trailerUrl ? (
-                        <a
-                            href={movie.trailerUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
-                        >
-                            <Play size={18} fill="currentColor" />
-                            TRAILER
-                        </a>
-                    ) : (
-                        <div className="h-12 bg-red-600/50 text-white/50 rounded-lg font-bold flex items-center justify-center gap-2 cursor-not-allowed">
-                            <Play size={18} fill="currentColor" />
-                            TRAILER
-                        </div>
-                    )}
-
-                    {movie.downloadUrl ? (
-                        <a
-                            href={movie.downloadUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
-                        >
-                            <Download size={18} />
-                            DOWNLOAD
-                        </a>
-                    ) : (
-                        <div className="h-12 bg-blue-600/50 text-white/50 rounded-lg font-bold flex items-center justify-center gap-2 cursor-not-allowed">
-                            <Download size={18} />
-                            DOWNLOAD
-                        </div>
-                    )}
-
-                    <MyListButton
-                        contentType="movie"
-                        contentId={slug}
-                        className="h-12 bg-[#333333] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
-                    />
-
-                    <MyListButton
-                        contentType="movie"
-                        contentId={slug}
-                        className="h-12 bg-[#9AE600] hover:bg-[#8AD500] text-black rounded-lg font-bold border-none"
-                        variant="icon"
-                    />
-                </div>
-            </div>
-
-            {/* You May Also Like */}
-            {relatedMovies.length > 0 && (
-                <div className="max-w-7xl mx-auto px-4 pb-12">
-                    <h2 className="text-white text-xl font-bold mb-4 uppercase tracking-wider">You May Also Like:</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {relatedMovies.slice(0, 5).map((item: any) => (
-                            <Link
-                                key={item._id || item.slug}
-                                href={`/movies/${item.slug}`}
-                                className="group block"
-                            >
-                                <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#333333] mb-2">
-                                    {item.posterUrl ? (
-                                        <Image
-                                            src={optimizeImageUrl(item.posterUrl, "poster") || item.posterUrl}
-                                            alt={item.title}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                            sizes="(max-width: 640px) 50vw, 20vw"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                            <Play size={32} />
-                                        </div>
-                                    )}
-                                    {item.rating && (
-                                        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
-                                            <Star size={10} className="text-[#E50914]" fill="currentColor" />
-                                            {item.rating.toFixed(1)}
-                                        </div>
-                                    )}
-                                    <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                        HD
-                                    </div>
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                        <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-2 py-1 md:px-4 md:py-2 rounded-full flex items-center gap-1 md:gap-2 text-xs md:text-sm shadow-lg transform scale-100 md:scale-90 md:group-hover:scale-100 transition-transform">
-                                            Daawo NOW
-                                            <Play size={14} className="md:w-4 md:h-4" fill="currentColor" />
-                                        </div>
-                                    </div>
+            {!isPreviewMode && (
+                <>
+                    {/* Action Buttons */}
+                    <div className="max-w-7xl mx-auto px-4 mb-8">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {movie.trailerUrl ? (
+                                <a
+                                    href={movie.trailerUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    <Play size={18} fill="currentColor" />
+                                    TRAILER
+                                </a>
+                            ) : (
+                                <div className="h-12 bg-red-600/50 text-white/50 rounded-lg font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+                                    <Play size={18} fill="currentColor" />
+                                    TRAILER
                                 </div>
-                                <h3 className="text-white text-sm font-medium truncate">
-                                    {item.titleSomali || item.title}
-                                </h3>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            )}
+                            )}
 
-            {/* Report Issue */}
-            <div className="max-w-7xl mx-auto px-4 pb-8">
-                <p className="text-center text-gray-500 text-sm">
-                    <a href="#" className="hover:text-[#E50914] transition-colors">REPORT AN ISSUE</a>
-                </p>
-            </div>
+                            {movie.downloadUrl ? (
+                                <a
+                                    href={movie.downloadUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    <Download size={18} />
+                                    DOWNLOAD
+                                </a>
+                            ) : (
+                                <div className="h-12 bg-blue-600/50 text-white/50 rounded-lg font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+                                    <Download size={18} />
+                                    DOWNLOAD
+                                </div>
+                            )}
+
+                            <MyListButton
+                                contentType="movie"
+                                contentId={slug}
+                                className="h-12 bg-[#333333] hover:bg-[#2a4a6c] text-white rounded-lg font-bold border-none"
+                            />
+
+                            <MyListButton
+                                contentType="movie"
+                                contentId={slug}
+                                className="h-12 bg-[#9AE600] hover:bg-[#8AD500] text-black rounded-lg font-bold border-none"
+                                variant="icon"
+                            />
+                        </div>
+                    </div>
+
+                    {/* You May Also Like */}
+                    {relatedMovies.length > 0 && (
+                        <div className="max-w-7xl mx-auto px-4 pb-12">
+                            <h2 className="text-white text-xl font-bold mb-4 uppercase tracking-wider">You May Also Like:</h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {relatedMovies.slice(0, 5).map((item: any) => (
+                                    <Link
+                                        key={item._id || item.slug}
+                                        href={`/movies/${item.slug}`}
+                                        className="group block"
+                                    >
+                                        <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#333333] mb-2">
+                                            {item.posterUrl ? (
+                                                <Image
+                                                    src={optimizeImageUrl(item.posterUrl, "poster") || item.posterUrl}
+                                                    alt={item.title}
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                    sizes="(max-width: 640px) 50vw, 20vw"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                    <Play size={32} />
+                                                </div>
+                                            )}
+                                            {item.rating && (
+                                                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                    <Star size={10} className="text-[#E50914]" fill="currentColor" />
+                                                    {item.rating.toFixed(1)}
+                                                </div>
+                                            )}
+                                            <div className="absolute bottom-2 left-2 bg-[#333333] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                                HD
+                                            </div>
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <div className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold px-2 py-1 md:px-4 md:py-2 rounded-full flex items-center gap-1 md:gap-2 text-xs md:text-sm shadow-lg transform scale-100 md:scale-90 md:group-hover:scale-100 transition-transform">
+                                                    Daawo NOW
+                                                    <Play size={14} className="md:w-4 md:h-4" fill="currentColor" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h3 className="text-white text-sm font-medium truncate">
+                                            {item.titleSomali || item.title}
+                                        </h3>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Report Issue */}
+                    <div className="max-w-7xl mx-auto px-4 pb-8">
+                        <p className="text-center text-gray-500 text-sm">
+                            <a href="#" className="hover:text-[#E50914] transition-colors">REPORT AN ISSUE</a>
+                        </p>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

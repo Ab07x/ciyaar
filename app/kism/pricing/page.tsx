@@ -13,7 +13,7 @@ export default function AdminPricingPage() {
     const [formData, setFormData] = useState({
         priceMatch: 0.2, priceWeekly: 1, priceMonthly: 3.5, priceYearly: 11,
         maxDevicesMatch: 1, maxDevicesWeekly: 2, maxDevicesMonthly: 3, maxDevicesYearly: 5,
-        freeMoviesPerDay: 2, freeMoviePreviewMinutes: 24,
+        freeMoviesPerDay: 2, freeMoviePreviewMinutes: 26, moviePreviewLockEnabled: true,
     });
 
     useEffect(() => {
@@ -27,7 +27,8 @@ export default function AdminPricingPage() {
             maxDevicesMonthly: settings.maxDevicesMonthly ?? 3,
             maxDevicesYearly: settings.maxDevicesYearly ?? 5,
             freeMoviesPerDay: settings.freeMoviesPerDay ?? 2,
-            freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 24,
+            freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
+            moviePreviewLockEnabled: settings.moviePreviewLockEnabled ?? true,
         });
     }, [settings]);
 
@@ -80,6 +81,20 @@ export default function AdminPricingPage() {
                     <h3 className="font-bold">Aggressive Paywall Settings</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 flex items-center justify-between bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3">
+                        <div>
+                            <label className="block text-sm font-semibold">Enable Preview Timer Lock</label>
+                            <p className="text-xs text-text-secondary">If OFF, free users won&apos;t be timed out by preview minutes.</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, moviePreviewLockEnabled: !formData.moviePreviewLockEnabled })}
+                            className={`w-12 h-6 rounded-full relative transition-colors ${formData.moviePreviewLockEnabled ? "bg-accent-green" : "bg-border-strong"}`}
+                            aria-label="Toggle movie preview lock"
+                        >
+                            <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.moviePreviewLockEnabled ? "right-1" : "left-1"}`} />
+                        </button>
+                    </div>
                     <div>
                         <label className="block text-sm text-text-secondary mb-2">Free Movies / Day</label>
                         <input
@@ -94,9 +109,9 @@ export default function AdminPricingPage() {
                         <label className="block text-sm text-text-secondary mb-2">Free Preview Minutes</label>
                         <input
                             type="number"
-                            min={5}
+                            min={1}
                             value={formData.freeMoviePreviewMinutes}
-                            onChange={(e) => setFormData({ ...formData, freeMoviePreviewMinutes: parseInt(e.target.value) || 24 })}
+                            onChange={(e) => setFormData({ ...formData, freeMoviePreviewMinutes: parseInt(e.target.value) || 26 })}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         />
                     </div>

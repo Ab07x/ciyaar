@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Play, Pause, Maximize, Minimize, Volume2, VolumeX, Volume1,
     Settings, RefreshCw, AlertCircle, Loader2, SkipForward, SkipBack,
-    ChevronUp, PictureInPicture2, X, Lock, Zap
+    ChevronUp, PictureInPicture2, X, Lock, Zap, Clock3
 } from "lucide-react";
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
@@ -49,8 +49,11 @@ interface StreamPlayerProps {
         qualityCap?: number;
         ctaHref?: string;
         contentLabel?: string;
+        forceRedirectOnLock?: boolean;
+        redirectDelayMs?: number;
     };
     onPreviewStart?: () => void;
+    onGateLocked?: () => void;
 }
 
 interface QualityLevel {
@@ -116,6 +119,7 @@ export function StreamPlayer({
     trackParams,
     conversionGate,
     onPreviewStart,
+    onGateLocked,
 }: StreamPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<any>(null);
@@ -206,14 +210,34 @@ export function StreamPlayer({
     const { isPremium } = useUser();
 
     const [showPaywall, setShowPaywall] = useState(false);
-    const [iframePreviewStartMs, setIframePreviewStartMs] = useState<number | null>(null);
     const hasTriggeredPreviewStartRef = useRef(false);
+    const hasNotifiedGateLockRef = useRef(false);
+    const hasRedirectedOnGateRef = useRef(false);
+    const previewSessionStartedRef = useRef(false);
+    const previewAccumulatedSecondsRef = useRef(0);
+    const previewTickAtMsRef = useRef<number | null>(null);
+    const [previewRemainingSeconds, setPreviewRemainingSeconds] = useState<number | null>(null);
 
     // Explicitly cast settings to any to avoid TS errors with new schema fields not yet picked up
     const freePreviewLimit = ((settings as any)?.freeMatchPreviewMinutes || 15) * 60; // default 15 mins
-    const moviePreviewLimit = conversionGate?.previewSeconds || (((settings as any)?.freeMoviePreviewMinutes || 24) * 60);
+    const moviePreviewLimit = conversionGate?.previewSeconds || (((settings as any)?.freeMoviePreviewMinutes || 26) * 60);
     const conversionGateEnabled = !!conversionGate?.enabled && !isPremium;
     const qualityCap = conversionGate?.qualityCap || 0;
+
+    const startPreviewSession = useCallback(() => {
+        if (!conversionGateEnabled) return;
+        previewSessionStartedRef.current = true;
+        previewTickAtMsRef.current = Date.now();
+        setPreviewRemainingSeconds((prev) => {
+            if (prev !== null) return prev;
+            return Math.max(0, Math.ceil(moviePreviewLimit - previewAccumulatedSecondsRef.current));
+        });
+
+        if (!hasTriggeredPreviewStartRef.current) {
+            hasTriggeredPreviewStartRef.current = true;
+            onPreviewStart?.();
+        }
+    }, [conversionGateEnabled, moviePreviewLimit, onPreviewStart]);
 
     // Conversion gate: immediate lock when daily limit is reached.
     useEffect(() => {
@@ -249,51 +273,92 @@ export function StreamPlayer({
         }
     }, [currentTime, isPremium, freePreviewLimit, trackParams?.contentType]);
 
-    // Free preview enforcement for premium movies/episodes using media time.
+    // For iframe sources we cannot read media time reliably, so start preview session on mount.
     useEffect(() => {
         if (!conversionGateEnabled) return;
         if (conversionGate?.reachedDailyLimit) return;
-        if (streamType === "iframe") return;
+        if (streamType !== "iframe") return;
+        startPreviewSession();
+    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit, streamType, startPreviewSession]);
 
-        if (currentTime < moviePreviewLimit) return;
-        const video = videoRef.current;
-        if (video && !video.paused) {
-            video.pause();
-        }
-        setShowPaywall(true);
-        setIsPlaying(false);
-        if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => { });
-        }
-    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit, currentTime, moviePreviewLimit, streamType]);
-
-    // Free preview fallback for iframe-based sources (wall-clock timer).
+    // Unified movie preview enforcement:
+    // - media time lock (for direct video/HLS)
+    // - accumulated playback time lock (prevents server-switch reset bypass)
     useEffect(() => {
-        if (!conversionGateEnabled || streamType !== "iframe") {
-            setIframePreviewStartMs(null);
-            return;
-        }
+        if (!conversionGateEnabled) return;
         if (conversionGate?.reachedDailyLimit) return;
-        if (iframePreviewStartMs !== null) return;
+        if (!previewSessionStartedRef.current) return;
+        if (showPaywall) return;
 
-        const start = Date.now();
-        setIframePreviewStartMs(start);
-        if (!hasTriggeredPreviewStartRef.current) {
-            hasTriggeredPreviewStartRef.current = true;
-            onPreviewStart?.();
-        }
-    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit, iframePreviewStartMs, onPreviewStart, streamType]);
+        const interval = window.setInterval(() => {
+            const now = Date.now();
+            const video = videoRef.current;
+            const canAccumulate = streamType === "iframe"
+                ? true
+                : !!video && !video.paused && !video.ended;
 
-    useEffect(() => {
-        if (!conversionGateEnabled || streamType !== "iframe" || iframePreviewStartMs === null) return;
-        const interval = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - iframePreviewStartMs) / 1000);
-            if (elapsed >= moviePreviewLimit) {
-                setShowPaywall(true);
+            if (canAccumulate) {
+                const lastTick = previewTickAtMsRef.current ?? now;
+                const deltaSeconds = Math.max(0, (now - lastTick) / 1000);
+                if (deltaSeconds < 15) {
+                    previewAccumulatedSecondsRef.current += deltaSeconds;
+                }
             }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [conversionGateEnabled, iframePreviewStartMs, moviePreviewLimit, streamType]);
+            previewTickAtMsRef.current = now;
+
+            const mediaSeconds = streamType === "iframe" ? 0 : (video?.currentTime || 0);
+            const elapsedSeconds = Math.max(previewAccumulatedSecondsRef.current, mediaSeconds);
+            setPreviewRemainingSeconds(Math.max(0, Math.ceil(moviePreviewLimit - elapsedSeconds)));
+            if (elapsedSeconds < moviePreviewLimit) return;
+
+            if (video && !video.paused) {
+                video.pause();
+            }
+            setShowPaywall(true);
+            setIsPlaying(false);
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
+        }, 500);
+
+        return () => window.clearInterval(interval);
+    }, [
+        conversionGateEnabled,
+        conversionGate?.reachedDailyLimit,
+        moviePreviewLimit,
+        showPaywall,
+        streamType,
+    ]);
+
+    // Aggressive conversion mode: send free users to pricing as soon as lock triggers.
+    useEffect(() => {
+        if (!showPaywall || !conversionGateEnabled) return;
+
+        if (!hasNotifiedGateLockRef.current) {
+            hasNotifiedGateLockRef.current = true;
+            onGateLocked?.();
+        }
+
+        if (!conversionGate?.forceRedirectOnLock) return;
+        if (hasRedirectedOnGateRef.current) return;
+
+        hasRedirectedOnGateRef.current = true;
+        const paywallTarget = conversionGate?.ctaHref || "/pricing";
+        const delayMs = Math.max(0, Number(conversionGate?.redirectDelayMs ?? 350));
+
+        const redirectTimer = window.setTimeout(() => {
+            window.location.assign(paywallTarget);
+        }, delayMs);
+
+        return () => window.clearTimeout(redirectTimer);
+    }, [
+        showPaywall,
+        conversionGateEnabled,
+        conversionGate?.forceRedirectOnLock,
+        conversionGate?.redirectDelayMs,
+        conversionGate?.ctaHref,
+        onGateLocked,
+    ]);
 
     // Controls timeout
     const controlsTimeoutRef = useRef<any>(null);
@@ -474,9 +539,20 @@ export function StreamPlayer({
     }, [source]);
 
     useEffect(() => {
-        hasTriggeredPreviewStartRef.current = false;
-        setShowPaywall(false);
-        setIframePreviewStartMs(null);
+        if (!conversionGateEnabled) {
+            hasTriggeredPreviewStartRef.current = false;
+            hasNotifiedGateLockRef.current = false;
+            hasRedirectedOnGateRef.current = false;
+            previewSessionStartedRef.current = false;
+            previewAccumulatedSecondsRef.current = 0;
+            previewTickAtMsRef.current = null;
+            setPreviewRemainingSeconds(null);
+            setShowPaywall(false);
+            return;
+        }
+
+        // Keep consumed preview time across server switches; only refresh the tick anchor.
+        previewTickAtMsRef.current = Date.now();
     }, [resolvedUrl, conversionGateEnabled]);
 
     // Initialize HLS.js
@@ -554,7 +630,7 @@ export function StreamPlayer({
                                     hls.currentLevel = maxAllowedIndex;
                                 }
                             } else {
-                                // If no 480p tier exists, force the lowest quality level.
+                                // If no 720p-or-lower tier exists, force the lowest quality level.
                                 hls.autoLevelCapping = 0;
                                 hls.currentLevel = 0;
                             }
@@ -671,10 +747,7 @@ export function StreamPlayer({
 
         const handlePlay = () => {
             setIsPlaying(true);
-            if (conversionGateEnabled && !hasTriggeredPreviewStartRef.current) {
-                hasTriggeredPreviewStartRef.current = true;
-                onPreviewStart?.();
-            }
+            startPreviewSession();
         };
         const handlePause = () => setIsPlaying(false);
         const handleWaiting = () => setIsBuffering(true);
@@ -712,7 +785,7 @@ export function StreamPlayer({
             video.removeEventListener("durationchange", handleDurationChange);
             video.removeEventListener("volumechange", handleVolumeChange);
         };
-    }, [conversionGateEnabled, onPreviewStart, streamType]);
+    }, [startPreviewSession, streamType]);
 
     // Controls
     const togglePlay = () => {
@@ -888,6 +961,8 @@ export function StreamPlayer({
             ? `Si aad u sii wadato daawashada "${conversionGate?.contentLabel || "filimkan"}": Upgrade to VIP 💎`
             : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`;
     const primaryPaywallCta = isMoviePreviewPaywall ? "IIBSO VIP HADDA" : "Unlock for $0.25";
+    const previewQualityLabel = conversionGate?.qualityCap ? `${conversionGate.qualityCap}p` : "Free";
+    const previewCountdownSeconds = Math.max(0, previewRemainingSeconds ?? Math.ceil(moviePreviewLimit));
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
@@ -902,6 +977,14 @@ export function StreamPlayer({
                     scrolling="no"
                     allow="autoplay; encrypted-media; picture-in-picture"
                 />
+                {conversionGateEnabled && !showPaywall && (
+                    <div className="absolute top-3 left-3 z-40 pointer-events-none">
+                        <div className="flex items-center gap-1.5 bg-black/70 border border-yellow-400/40 text-yellow-200 px-3 py-1.5 rounded-full text-xs font-black">
+                            <Clock3 size={13} />
+                            <span>{previewQualityLabel} Timer: {formatTime(previewCountdownSeconds)}</span>
+                        </div>
+                    </div>
+                )}
                 {showPaywall && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-6 text-center">
                         <div className="max-w-md animate-in fade-in zoom-in duration-300">
@@ -962,6 +1045,15 @@ export function StreamPlayer({
                 }}
                 onContextMenu={(e) => e.preventDefault()}
             />
+
+            {conversionGateEnabled && !showPaywall && (
+                <div className="absolute top-3 left-3 z-40 pointer-events-none">
+                    <div className="flex items-center gap-1.5 bg-black/70 border border-yellow-400/40 text-yellow-200 px-3 py-1.5 rounded-full text-xs font-black">
+                        <Clock3 size={13} />
+                        <span>{previewQualityLabel} Timer: {formatTime(previewCountdownSeconds)}</span>
+                    </div>
+                </div>
+            )}
 
             {/* Buffer Indicator */}
             <BufferIndicator isBuffering={isBuffering && !isLoading} />
