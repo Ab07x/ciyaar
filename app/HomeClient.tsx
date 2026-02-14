@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
 import { RamadanBanner } from "@/components/RamadanBanner";
+import { TelegramBanner, TelegramFloatingButton } from "@/components/TelegramBanner";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -304,6 +305,9 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
         ) : null;
       })()}
 
+      {/* TELEGRAM PROMO BANNER */}
+      <TelegramBanner />
+
       {/* MUSALSAL (SERIES) SECTION */}
       {(() => {
         const seriesList = Array.isArray(seriesData) ? seriesData : [];
@@ -530,6 +534,8 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
           </Link>
         </div>
       </section>
+      {/* Telegram Floating Button */}
+      <TelegramFloatingButton />
     </div>
   );
 }

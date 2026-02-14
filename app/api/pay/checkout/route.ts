@@ -77,6 +77,11 @@ export async function POST(request: NextRequest) {
 
         const authToken = Buffer.from(`${username}:${password}`).toString("base64");
 
+        // Webhook URL for Sifalo Pay to notify us when payment is completed
+        const webhookUrl = process.env.NODE_ENV === "development"
+            ? "http://localhost:3000/api/pay/webhook"
+            : "https://fanbroj.net/api/pay/webhook";
+
         const sifaloRes = await fetch("https://api.sifalopay.com/gateway/", {
             method: "POST",
             headers: {
@@ -88,6 +93,8 @@ export async function POST(request: NextRequest) {
                 gateway: "checkout",
                 currency: "USD",
                 return_url: returnUrl,
+                callback_url: webhookUrl,
+                order_id: orderId,
             }),
         });
 

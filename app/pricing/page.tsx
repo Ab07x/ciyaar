@@ -244,41 +244,49 @@ export default function PricingPage() {
                                     </span>
                                 ))}
                             </div>
-                        </div>
-
-                        {/* Redeem Code */}
-                        <div className="bg-black/60 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
-                            <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                                <Gift size={20} className="text-yellow-400" />
-                                Haysataa Code?
-                            </h3>
-                            <p className="text-gray-400 text-sm mb-4">Isticmaal code-kaaga si aad Premium u hesho bilaash!</p>
-                            <div className="flex gap-3">
-                                <input
-                                    type="text"
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                    placeholder="ABCD1234"
-                                    className="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white uppercase tracking-wider focus:outline-none focus:border-accent-green"
-                                />
-                                <button
-                                    onClick={handleRedeem}
-                                    disabled={loading || !code.trim()}
-                                    className="bg-accent-green text-black px-6 py-3 rounded-xl font-bold hover:bg-accent-green/90 transition-colors disabled:opacity-50"
-                                >
-                                    {loading ? "..." : "Isticmaal"}
-                                </button>
+                            {/* M-Pesa Direct Payment */}
+                            <div className="mt-4 p-4 bg-green-600/10 border border-green-600/20 rounded-xl text-center">
+                                <p className="text-sm text-green-400 font-bold mb-1">📱 M-Pesa Direct</p>
+                                <p className="text-lg font-black text-white tracking-wider">0797415296</p>
+                                <p className="text-xs text-gray-400 mt-1">Lacagta u dir numbarkaan, kadib naga soo wac WhatsApp</p>
                             </div>
-
-                            {redemptionResult && (
-                                <div className={`mt-4 p-4 rounded-xl ${redemptionResult.success
-                                    ? "bg-accent-green/20 text-accent-green"
-                                    : "bg-accent-red/20 text-accent-red"
-                                    }`}>
-                                    {redemptionResult.success ? redemptionResult.message : redemptionResult.error}
-                                </div>
-                            )}
                         </div>
+
+                        {/* Redeem Code - Hidden for premium users */}
+                        {!isPremium && (
+                            <div className="bg-black/60 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
+                                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                    <Gift size={20} className="text-yellow-400" />
+                                    Haysataa Code?
+                                </h3>
+                                <p className="text-gray-400 text-sm mb-4">Isticmaal code-kaaga si aad Premium u hesho bilaash!</p>
+                                <div className="flex gap-3">
+                                    <input
+                                        type="text"
+                                        value={code}
+                                        onChange={(e) => setCode(e.target.value.toUpperCase())}
+                                        placeholder="ABCD1234"
+                                        className="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white uppercase tracking-wider focus:outline-none focus:border-accent-green"
+                                    />
+                                    <button
+                                        onClick={handleRedeem}
+                                        disabled={loading || !code.trim()}
+                                        className="bg-accent-green text-black px-6 py-3 rounded-xl font-bold hover:bg-accent-green/90 transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? "..." : "Isticmaal"}
+                                    </button>
+                                </div>
+
+                                {redemptionResult && (
+                                    <div className={`mt-4 p-4 rounded-xl ${redemptionResult.success
+                                        ? "bg-accent-green/20 text-accent-green"
+                                        : "bg-accent-red/20 text-accent-red"
+                                        }`}>
+                                        {redemptionResult.success ? redemptionResult.message : redemptionResult.error}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

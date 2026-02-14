@@ -246,6 +246,7 @@ const ContentRequestSchema = new Schema<IContentRequest>(
         posterUrl: String,
         year: String,
         votes: { type: Number, default: 0 },
+        voters: [String],
         status: { type: String, index: true },
         createdAt: Number,
     },

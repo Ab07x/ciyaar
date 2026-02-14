@@ -319,6 +319,8 @@ export interface IPayment extends Document {
     subscriptionId?: string;
     createdAt: number;
     verifiedAt?: number;
+    completedAt?: number;
+    failedAt?: number;
 }
 
 const PaymentSchema = new Schema<IPayment>(
@@ -338,6 +340,8 @@ const PaymentSchema = new Schema<IPayment>(
         subscriptionId: String,
         createdAt: { type: Number, required: true },
         verifiedAt: Number,
+        completedAt: Number,
+        failedAt: Number,
     },
     { timestamps: false }
 );

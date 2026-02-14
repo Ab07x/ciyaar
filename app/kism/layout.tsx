@@ -41,6 +41,7 @@ const navItems = [
     { href: "/kism/hero", label: "Hero Slider", icon: Image },
     { href: "/kism/categories", label: "Categories", icon: Palette },
     { href: "/kism/codes", label: "Codes", icon: Ticket },
+    { href: "/kism/subscribers", label: "Subscribers", icon: Smartphone },
     { href: "/kism/ppv", label: "PPV", icon: CreditCard },
     { href: "/kism/notifications", label: "Notifications", icon: Bell },
     { href: "/kism/pricing", label: "Pricing", icon: DollarSign },
