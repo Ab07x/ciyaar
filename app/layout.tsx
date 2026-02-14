@@ -55,7 +55,7 @@ export function generateMetadata(): Metadata {
       siteName: "Fanproj – Fanbroj.net",
       images: [
         {
-          url: "/og-image.jpg",
+          url: "/og-preview.png",
           width: 1200,
           height: 630,
           alt: "Fanproj - Daawo Hindi Af Somali Cusub | Filimaan & Ciyaar Live",
@@ -66,7 +66,7 @@ export function generateMetadata(): Metadata {
       card: "summary_large_image",
       title: "Fanproj – Hindi Af Somali Cusub 2026 | Fanbroj TV",
       description: "Daawo filimaha Hindi Af Somali cusub oo bilaash ah HD. Fanproj NXT, Astaan Films, Saafi Films & ciyaaraha live.",
-      images: ["/og-image.jpg"],
+      images: ["/og-preview.png"],
     },
     icons: {
       icon: [

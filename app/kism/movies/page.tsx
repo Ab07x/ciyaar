@@ -5,25 +5,81 @@ import Link from "next/link";
 import { Plus, Edit, Trash2, Film, Crown, Eye, Search, Check, X, ChevronLeft, ChevronRight, Bell, Loader2 } from "lucide-react";
 import { useState } from "react";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const ADMIN_MOVIES_KEY = "/api/movies?allPages=true";
 const ITEMS_PER_PAGE = 35;
+const FILTER_OPTIONS: Array<"all" | "published" | "draft" | "premium" | "dubbed"> = ["all", "published", "draft", "premium", "dubbed"];
+
+interface AdminMovie {
+    _id: string;
+    slug: string;
+    title: string;
+    titleSomali?: string;
+    releaseDate?: string;
+    views?: number;
+    genres?: string[];
+    posterUrl?: string;
+    isPremium?: boolean;
+    isDubbed?: boolean;
+    isTop10?: boolean;
+    top10Order?: number;
+    isPublished?: boolean;
+}
+
+async function fetchAllMovies() {
+    const pageSize = 200;
+    let page = 1;
+    let total = Infinity;
+    const movies: AdminMovie[] = [];
+
+    while (movies.length < total) {
+        const res = await fetch(`/api/movies?page=${page}&pageSize=${pageSize}`, { cache: "no-store" });
+        if (!res.ok) {
+            throw new Error("Failed to fetch movies");
+        }
+
+        const data = await res.json();
+        const pageMovies: AdminMovie[] = Array.isArray(data?.movies) ? data.movies : [];
+        movies.push(...pageMovies);
+
+        if (typeof data?.total === "number") {
+            total = data.total;
+        }
+
+        if (pageMovies.length < pageSize) {
+            break;
+        }
+
+        page += 1;
+    }
+
+    return { movies, total: Number.isFinite(total) ? total : movies.length };
+}
 
 export default function AdminMoviesPage() {
-    const { data: movieData } = useSWR("/api/movies?limit=500", fetcher);
-    const movies = movieData?.movies || movieData || [];
+    const { data: movieData } = useSWR<{ movies: AdminMovie[]; total: number }>(ADMIN_MOVIES_KEY, fetchAllMovies);
+    const movies: AdminMovie[] = movieData?.movies || [];
 
     const [filter, setFilter] = useState<"all" | "published" | "draft" | "premium" | "dubbed">("all");
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pushingId, setPushingId] = useState<string | null>(null);
 
+    if (!movieData) {
+        return (
+            <div className="flex items-center justify-center min-h-[40vh] gap-3 text-text-muted">
+                <Loader2 size={22} className="animate-spin" />
+                <span>Loading movies...</span>
+            </div>
+        );
+    }
+
     const handleDelete = async (id: string) => {
         if (!confirm("Delete this movie?")) return;
         await fetch(`/api/movies?id=${id}`, { method: "DELETE" });
-        mutate("/api/movies?limit=500");
+        mutate(ADMIN_MOVIES_KEY);
     };
 
-    const handleSendPush = async (movie: any) => {
+    const handleSendPush = async (movie: AdminMovie) => {
         if (!confirm(`Send push notification for "${movie.titleSomali || movie.title}"?`)) return;
         setPushingId(movie._id);
         try {
@@ -58,13 +114,13 @@ export default function AdminMoviesPage() {
         setPushingId(null);
     };
 
-    const filtered = movies?.filter((m: any) => {
+    const filtered = movies?.filter((m: AdminMovie) => {
         if (filter === "published") return m.isPublished;
         if (filter === "draft") return !m.isPublished;
         if (filter === "premium") return m.isPremium;
         if (filter === "dubbed") return m.isDubbed;
         return true;
-    }).filter((m: any) =>
+    }).filter((m: AdminMovie) =>
         m.title.toLowerCase().includes(search.toLowerCase()) ||
         m.titleSomali?.toLowerCase().includes(search.toLowerCase())
     );
@@ -103,10 +159,10 @@ export default function AdminMoviesPage() {
 
             <div className="flex flex-wrap gap-4 items-center">
                 <div className="flex gap-2">
-                    {["all", "published", "draft", "premium", "dubbed"].map((f) => (
+                    {FILTER_OPTIONS.map((f) => (
                         <button
                             key={f}
-                            onClick={() => handleFilterChange(f as any)}
+                            onClick={() => handleFilterChange(f)}
                             className={`px-3 py-1 rounded-full text-sm capitalize ${filter === f
                                 ? "bg-accent-green text-black font-bold"
                                 : "bg-stadium-hover text-text-secondary"
@@ -128,7 +184,7 @@ export default function AdminMoviesPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-4">
-                {paginatedMovies?.map((movie: any) => (
+                {paginatedMovies?.map((movie: AdminMovie) => (
                     <div
                         key={movie._id}
                         className="bg-stadium-elevated border border-border-strong rounded-xl overflow-hidden group"
