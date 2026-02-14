@@ -16,7 +16,6 @@ import {
     Clock,
     Calendar,
     Play,
-    Lock,
     MessageSquare,
     Tv,
     ChevronDown,
@@ -28,6 +27,9 @@ import { StreamPlayer } from "@/components/StreamPlayer";
 import { ContentCarousel } from "@/components/ContentCarousel";
 import { generateTVSchema } from "@/lib/seo/schema";
 import { ShareableWidget } from "@/components/ShareableWidget";
+
+const DEFAULT_FREE_SERIES_PREVIEW_MINUTES = 26;
+const DEFAULT_FREE_SERIES_TIMER_SPEED_MULTIPLIER = 12;
 
 function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
     const params = useParams();
@@ -54,14 +56,10 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
         fetcher
     );
 
-    const { isPremium, redeemCode } = useUser();
+    const { isPremium } = useUser();
     const hasTracked = useRef(false);
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
-    const [code, setCode] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [localUnlocked, setLocalUnlocked] = useState(false);
     const [showInterstitial, setShowInterstitial] = useState(true);
     const [adCompleted, setAdCompleted] = useState(false);
 
@@ -133,20 +131,21 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
         activeEpisode = episodesBySeason[currentSeasonNumber].find((e: any) => e.episodeNumber === currentEpisodeNumber);
     }
 
-    const isLocked = series.isPremium && !isPremium && !localUnlocked;
+    const isPreviewMode = !!series.isPremium && !isPremium;
     const activeEmbed = activeEpisode?.embeds?.[activeEmbedIndex];
-
-    const handleRedeem = async () => {
-        if (!code.trim()) return;
-        setLoading(true);
-        setError("");
-        const result = await redeemCode(code.trim());
-        setLoading(false);
-        if (result.success) setLocalUnlocked(true);
-        else setError(result.error || "Code qaldan");
-    };
-
-    const whatsappLink = `https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo musalsalka ${series.title}`;
+    const freePreviewMinutesRaw = Number(settings?.freeMoviePreviewMinutes);
+    const freePreviewMinutes = Number.isFinite(freePreviewMinutesRaw) && freePreviewMinutesRaw > 0
+        ? Math.min(DEFAULT_FREE_SERIES_PREVIEW_MINUTES, freePreviewMinutesRaw)
+        : DEFAULT_FREE_SERIES_PREVIEW_MINUTES;
+    const freeTimerSpeedMultiplierRaw = Number(settings?.freeMovieTimerSpeedMultiplier);
+    const freeTimerSpeedMultiplier = Number.isFinite(freeTimerSpeedMultiplierRaw) && freeTimerSpeedMultiplierRaw > 0
+        ? Math.max(DEFAULT_FREE_SERIES_TIMER_SPEED_MULTIPLIER, freeTimerSpeedMultiplierRaw)
+        : DEFAULT_FREE_SERIES_TIMER_SPEED_MULTIPLIER;
+    const pricingHref = `/pricing?src=series-preview&content=series&id=${encodeURIComponent(slug)}`;
+    const whatsappNumber = String(settings?.whatsappNumber || "+252618274188").replace(/\D/g, "");
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        `Salaan Fanbroj, waxaan rabaa caawimaad sida aan u iibsado VIP. Musalsal: ${series.titleSomali || series.title}`
+    )}`;
 
     const handleEpisodeClick = (s: number, e: number) => {
         router.push(`/series/${slug}?s=${s}&e=${e}`);
@@ -154,8 +153,8 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Show interstitial ad for ALL non-premium users (free/guest) before viewing content
-    if (!isPremium && showInterstitial && !adCompleted) {
+    // Show interstitial ad for non-preview free users.
+    if (!isPremium && !isPreviewMode && showInterstitial && !adCompleted) {
         return (
             <PremiumAdInterstitial
                 movieTitle={series.title}
@@ -200,52 +199,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                         {/* Player Stage - Only shown if an episode is selected */}
                         {activeEpisode ? (
                             <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-6 relative">
-                                {isLocked ? (
-                                    /* Premium Lock */
-                                    <div className="aspect-video w-full flex items-center justify-center p-2 sm:p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated overflow-y-auto">
-                                        <div className="bg-stadium-dark border-2 border-accent-gold rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md text-center my-auto">
-                                            <div className="w-10 h-10 sm:w-14 sm:h-14 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                                                <Crown size={20} className="sm:hidden text-accent-gold" />
-                                                <Crown size={28} className="hidden sm:block text-accent-gold" />
-                                            </div>
-                                            <h3 className="text-lg sm:text-xl font-bold text-accent-gold mb-1 sm:mb-2">PREMIUM SERIES</h3>
-                                            <p className="text-text-secondary text-sm sm:text-base mb-3 sm:mb-4">Musalsalkan waxaa u baahan subscription</p>
-                                            <div className="space-y-2 sm:space-y-3">
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={code}
-                                                        onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                                        placeholder="CODE"
-                                                        className="flex-1 bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 sm:px-4 sm:py-3 uppercase text-center tracking-wider text-sm"
-                                                    />
-                                                    <button
-                                                        onClick={handleRedeem}
-                                                        disabled={loading}
-                                                        className="px-4 py-2 sm:px-6 sm:py-3 bg-accent-green text-black font-bold rounded-lg text-sm"
-                                                    >
-                                                        {loading ? "..." : "Fur"}
-                                                    </button>
-                                                </div>
-                                                {error && <p className="text-accent-red text-xs sm:text-sm">{error}</p>}
-                                                <div className="flex gap-2 sm:gap-3">
-                                                    <Link href="/pricing" className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-accent-gold text-black font-bold rounded-lg text-center text-sm">
-                                                        Iibso
-                                                    </Link>
-                                                    <a
-                                                        href={whatsappLink}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-1 sm:gap-2 text-sm"
-                                                    >
-                                                        <MessageSquare size={16} />
-                                                        WhatsApp
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : activeEmbed?.url ? (
+                                {activeEmbed?.url ? (
                                     <div className="aspect-video w-full relative">
                                         <StreamPlayer
                                             source={{
@@ -260,6 +214,15 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                                 contentId: `${slug}-s${activeEpisode.seasonNumber}-e${activeEpisode.episodeNumber}`,
                                                 seriesId: slug,
                                                 duration: activeEpisode.runtime ? activeEpisode.runtime * 60 : undefined
+                                            }}
+                                            conversionGate={{
+                                                enabled: isPreviewMode,
+                                                previewSeconds: freePreviewMinutes * 60,
+                                                reachedDailyLimit: false,
+                                                timerSpeedMultiplier: freeTimerSpeedMultiplier,
+                                                ctaHref: pricingHref,
+                                                forceRedirectOnLock: false,
+                                                contentLabel: `${series.titleSomali || series.title} S${activeEpisode.seasonNumber}E${activeEpisode.episodeNumber}`,
                                             }}
                                         />
                                     </div>
@@ -284,11 +247,6 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                         <div className="absolute top-2 left-2 flex items-center gap-1 bg-accent-gold px-2 py-0.5 rounded text-xs font-bold text-black z-10">
                                             <Crown size={10} />
                                             PREMIUM
-                                        </div>
-                                    )}
-                                    {isLocked && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-                                            <Lock size={48} className="text-white/80" />
                                         </div>
                                     )}
                                 </div>
@@ -346,7 +304,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                         )}
 
                         {/* Embed switcher if watching and unlocked */}
-                        {activeEpisode && !isLocked && activeEpisode.embeds && activeEpisode.embeds.length > 1 && (
+                        {activeEpisode && activeEpisode.embeds && activeEpisode.embeds.length > 1 && (
                             <div className="flex flex-wrap gap-2 mb-6">
                                 {activeEpisode.embeds.map((embed: any, i: number) => (
                                     <button
@@ -363,6 +321,12 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                     </button>
                                 ))}
                             </div>
+                        )}
+
+                        {activeEpisode && isPreviewMode && (
+                            <p className="text-center text-xs text-yellow-300 mt-3 mb-6">
+                                Free Preview: {freePreviewMinutes} daqiiqo • Timer x{freeTimerSpeedMultiplier}
+                            </p>
                         )}
 
                         {/* Title Info when watching */}
@@ -423,11 +387,6 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Play size={20} className="text-white fill-current" />
                                             </div>
-                                            {isLocked && (
-                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                    <Lock size={16} className="text-white/70" />
-                                                </div>
-                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-1">
@@ -534,6 +493,40 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                     </div>
                 </div>
             </div>
+
+            {activeEpisode && isPreviewMode && (
+                <>
+                    <div className="hidden sm:block h-24" aria-hidden />
+                    <div className="hidden sm:block fixed inset-x-0 bottom-3 z-[60] px-3 sm:px-4">
+                        <div className="max-w-3xl mx-auto bg-[#061a2d]/95 border border-[#1b4d86] rounded-2xl shadow-2xl backdrop-blur-md p-3 sm:p-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white font-black text-sm sm:text-base">Need help buying VIP?</p>
+                                    <p className="text-gray-300 text-xs sm:text-sm">Support-ka WhatsApp ayaa ku caawinaya sida loo iibsado premium.</p>
+                                </div>
+                                <div className="flex gap-2 sm:gap-3">
+                                    <Link
+                                        href={pricingHref}
+                                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        <Crown size={16} />
+                                        IIBSO VIP
+                                    </Link>
+                                    <a
+                                        href={whatsappLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1fb855] text-white font-black text-sm flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        <MessageSquare size={16} />
+                                        WhatsApp
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
             {/* JSON-LD Schema for Rich Snippets */}
             <script
                 type="application/ld+json"

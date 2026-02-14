@@ -212,6 +212,7 @@ export function StreamPlayer({
     const { isPremium } = useUser();
 
     const [showPaywall, setShowPaywall] = useState(false);
+    const [isGateHardLocked, setIsGateHardLocked] = useState(false);
     const hasTriggeredPreviewStartRef = useRef(false);
     const hasNotifiedGateLockRef = useRef(false);
     const hasRedirectedOnGateRef = useRef(false);
@@ -226,9 +227,9 @@ export function StreamPlayer({
     const conversionGateEnabled = !!conversionGate?.enabled && !isPremium;
     const qualityCap = conversionGate?.qualityCap || 0;
     const moviePreviewPersistenceKey = conversionGateEnabled
-        && trackParams?.contentType === "movie"
+        && (trackParams?.contentType === "movie" || trackParams?.contentType === "episode")
         && trackParams?.contentId
-        ? `fanbroj:movie-preview-elapsed:${trackParams.contentId}`
+        ? `fanbroj:preview-elapsed:${trackParams.contentType}:${trackParams.contentId}`
         : null;
     const previewTimerMultiplierRaw = Number(
         conversionGate?.timerSpeedMultiplier
@@ -266,8 +267,22 @@ export function StreamPlayer({
         if (video && !video.paused) {
             video.pause();
         }
+        if (video) {
+            video.controls = false;
+            video.disablePictureInPicture = true;
+        }
         setShowPaywall(true);
+        setIsGateHardLocked(true);
         setIsPlaying(false);
+
+        const hls = hlsRef.current as any;
+        if (hls && typeof hls.stopLoad === "function") {
+            try {
+                hls.stopLoad();
+            } catch {
+                // Ignore HLS stop errors.
+            }
+        }
 
         if (document.fullscreenElement) {
             document.exitFullscreen().catch(() => { });
@@ -609,12 +624,35 @@ export function StreamPlayer({
             previewTickAtMsRef.current = null;
             setPreviewRemainingSeconds(null);
             setShowPaywall(false);
+            setIsGateHardLocked(false);
             return;
         }
 
         // Keep consumed preview time across server switches; only refresh the tick anchor.
         previewTickAtMsRef.current = Date.now();
     }, [resolvedUrl, conversionGateEnabled]);
+
+    // Prevent iOS native fullscreen for free preview users (fullscreen can bypass overlays).
+    useEffect(() => {
+        if (!conversionGateEnabled || streamType === "iframe") return;
+        const video = videoRef.current as any;
+        if (!video) return;
+
+        const handleNativeFullscreenStart = () => {
+            if (typeof video.webkitExitFullscreen === "function") {
+                try {
+                    video.webkitExitFullscreen();
+                } catch {
+                    // Ignore iOS native fullscreen exit failures.
+                }
+            }
+        };
+
+        video.addEventListener("webkitbeginfullscreen", handleNativeFullscreenStart);
+        return () => {
+            video.removeEventListener("webkitbeginfullscreen", handleNativeFullscreenStart);
+        };
+    }, [conversionGateEnabled, streamType]);
 
     // Initialize HLS.js
     useEffect(() => {
@@ -807,6 +845,10 @@ export function StreamPlayer({
         if (!video || streamType === "iframe") return;
 
         const handlePlay = () => {
+            if (showPaywall || isGateHardLocked) {
+                video.pause();
+                return;
+            }
             setIsPlaying(true);
             startPreviewSession();
         };
@@ -868,6 +910,7 @@ export function StreamPlayer({
     }, [
         startPreviewSession,
         streamType,
+        isGateHardLocked,
         conversionGateEnabled,
         conversionGate?.reachedDailyLimit,
         showPaywall,
@@ -877,8 +920,33 @@ export function StreamPlayer({
         activatePaywallLock,
     ]);
 
+    // While locked, aggressively pause any resumed playback (iOS fullscreen/native controls bypass guard).
+    useEffect(() => {
+        if (!showPaywall || !conversionGateEnabled) return;
+
+        const interval = window.setInterval(() => {
+            const video = videoRef.current as any;
+            if (!video) return;
+
+            if (!video.paused) {
+                video.pause();
+            }
+
+            if (video.webkitDisplayingFullscreen && typeof video.webkitExitFullscreen === "function") {
+                try {
+                    video.webkitExitFullscreen();
+                } catch {
+                    // Ignore iOS native fullscreen exit failures.
+                }
+            }
+        }, 250);
+
+        return () => window.clearInterval(interval);
+    }, [showPaywall, conversionGateEnabled]);
+
     // Controls
     const togglePlay = () => {
+        if (showPaywall || isGateHardLocked) return;
         const video = videoRef.current;
         if (!video) return;
         if (video.paused) {
@@ -933,6 +1001,7 @@ export function StreamPlayer({
     };
 
     const togglePiP = async () => {
+        if (conversionGateEnabled) return;
         const video = videoRef.current;
         if (!video) return;
 
@@ -948,6 +1017,7 @@ export function StreamPlayer({
     };
 
     const seekForward = () => {
+        if (showPaywall || isGateHardLocked) return;
         const video = videoRef.current;
         if (!video) return;
         video.currentTime = Math.min(duration, video.currentTime + 10);
@@ -955,6 +1025,7 @@ export function StreamPlayer({
     };
 
     const seekBackward = () => {
+        if (showPaywall || isGateHardLocked) return;
         const video = videoRef.current;
         if (!video) return;
         video.currentTime = Math.max(0, video.currentTime - 10);
@@ -968,6 +1039,7 @@ export function StreamPlayer({
     };
 
     const handleSeek = (time: number) => {
+        if (showPaywall || isGateHardLocked) return;
         const video = videoRef.current;
         if (!video) return;
         video.currentTime = time;
@@ -1010,6 +1082,7 @@ export function StreamPlayer({
     // Double-tap handler for mobile seek
     const handleVideoAreaClick = (e: React.MouseEvent | React.TouchEvent) => {
         if (streamType === "iframe") return;
+        if (showPaywall || isGateHardLocked) return;
 
         const now = Date.now();
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -1058,28 +1131,33 @@ export function StreamPlayer({
     const whatsappSupportHref = `https://wa.me/${whatsappSupportNumber}?text=${encodeURIComponent(
         `Salaan Fanbroj, waxaan rabaa caawimaad sida aan u iibsado VIP. Content: ${conversionGate?.contentLabel || trackParams?.contentId || "movie"}`
     )}`;
-    const paywallOverlayClass = "absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-3 sm:p-6 text-center";
-    const paywallCardClass = "w-full max-w-[22rem] sm:max-w-md animate-in fade-in zoom-in duration-300";
-    const paywallTitleClass = "text-xl sm:text-2xl font-black text-white mb-2";
-    const paywallMessageClass = "text-gray-300 text-sm sm:text-base mb-4 sm:mb-6";
+    const paywallOverlayClass = "absolute inset-0 bg-black/92 z-50 p-2 sm:p-6 overflow-y-auto";
+    const paywallCardWrapClass = "min-h-full flex items-start sm:items-center justify-center";
+    const paywallCardClass = "w-full max-w-[22rem] sm:max-w-md rounded-xl sm:rounded-2xl border border-white/15 bg-black/65 backdrop-blur-md p-3 sm:p-5 animate-in fade-in zoom-in duration-300 text-center";
+    const paywallTitleClass = "text-lg sm:text-2xl leading-tight font-black text-white mb-2";
+    const paywallMessageClass = "text-gray-300 text-sm sm:text-base leading-snug mb-3 sm:mb-5";
     const paywallButtonsClass = "flex flex-col gap-2.5 sm:gap-3";
     const paywallPrimaryButtonClass = "w-full py-2.5 sm:py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
     const paywallWhatsappButtonClass = "w-full py-2.5 sm:py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#1fb855] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
-    const paywallPlansButtonClass = "w-full py-2.5 sm:py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors text-sm sm:text-base";
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
         if (!resolvedUrl) return <div className={cn("stream-player relative bg-black aspect-video rounded-xl overflow-hidden animate-pulse", className)} />;
+        const iframeBlockedByPaywall = conversionGateEnabled && showPaywall;
 
         return (
             <div className={cn("stream-player relative bg-black aspect-video rounded-xl overflow-hidden", className)}>
-                <iframe
-                    src={resolvedUrl}
-                    className="absolute inset-0 w-full h-full border-0"
-                    allowFullScreen
-                    scrolling="no"
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                />
+                {!iframeBlockedByPaywall ? (
+                    <iframe
+                        src={resolvedUrl}
+                        className="absolute inset-0 w-full h-full border-0"
+                        allowFullScreen={!conversionGateEnabled}
+                        scrolling="no"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                    />
+                ) : (
+                    <div className="absolute inset-0 bg-black" />
+                )}
                 {conversionGateEnabled && !showPaywall && (
                     <div className="absolute top-3 left-3 z-40 pointer-events-none">
                         <div className="flex items-center gap-1.5 bg-black/70 border border-yellow-400/40 text-yellow-200 px-3 py-1.5 rounded-full text-xs font-black">
@@ -1090,33 +1168,29 @@ export function StreamPlayer({
                 )}
                 {showPaywall && (
                     <div className={paywallOverlayClass}>
-                        <div className={paywallCardClass}>
-                            <Lock className="w-12 h-12 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-3 sm:mb-4" />
-                            <h3 className={paywallTitleClass}>{paywallTitle}</h3>
-                            <p className={paywallMessageClass}>{paywallMessage}</p>
-                            <div className={paywallButtonsClass}>
-                                <a
-                                    href={paywallHref}
-                                    className={paywallPrimaryButtonClass}
-                                >
-                                    <Zap size={20} />
-                                    {primaryPaywallCta}
-                                </a>
-                                <a
-                                    href={whatsappSupportHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={paywallWhatsappButtonClass}
-                                >
-                                    <MessageCircle size={20} />
-                                    WhatsApp Support
-                                </a>
-                                <a
-                                    href={paywallHref}
-                                    className={paywallPlansButtonClass}
-                                >
-                                    See All Plans
-                                </a>
+                        <div className={paywallCardWrapClass}>
+                            <div className={paywallCardClass}>
+                                <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
+                                <h3 className={paywallTitleClass}>{paywallTitle}</h3>
+                                <p className={paywallMessageClass}>{paywallMessage}</p>
+                                <div className={paywallButtonsClass}>
+                                    <a
+                                        href={paywallHref}
+                                        className={paywallPrimaryButtonClass}
+                                    >
+                                        <Zap size={20} />
+                                        {primaryPaywallCta}
+                                    </a>
+                                    <a
+                                        href={whatsappSupportHref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={paywallWhatsappButtonClass}
+                                    >
+                                        <MessageCircle size={20} />
+                                        WhatsApp Support
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1142,10 +1216,10 @@ export function StreamPlayer({
                 playsInline
                 controls={false}
                 controlsList="nodownload nofullscreen noremoteplayback"
-                disablePictureInPicture={false}
+                disablePictureInPicture={conversionGateEnabled}
                 webkit-playsinline="true"
                 x5-playsinline="true"
-                x-webkit-airplay="allow"
+                x-webkit-airplay={conversionGateEnabled ? "deny" : "allow"}
                 preload="metadata"
                 className="absolute inset-0 w-full h-full object-contain"
                 style={{
@@ -1171,7 +1245,7 @@ export function StreamPlayer({
             <BufferIndicator isBuffering={isBuffering && !isLoading} />
 
             {/* Mobile Gestures - Swipe for seek/volume */}
-            {isMobile && (
+            {isMobile && !showPaywall && (
                 <MobileGestures
                     videoRef={videoRef}
                     onSeek={handleSeek}
@@ -1307,34 +1381,30 @@ export function StreamPlayer({
             {/* Paywall Overlay */}
             {showPaywall && (
                 <div className={paywallOverlayClass}>
-                    <div className={paywallCardClass}>
-                        <Lock className="w-12 h-12 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-3 sm:mb-4" />
-                        <h3 className={paywallTitleClass}>{paywallTitle}</h3>
-                        <p className={paywallMessageClass}>{paywallMessage}</p>
+                    <div className={paywallCardWrapClass}>
+                        <div className={paywallCardClass}>
+                            <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
+                            <h3 className={paywallTitleClass}>{paywallTitle}</h3>
+                            <p className={paywallMessageClass}>{paywallMessage}</p>
 
-                        <div className={paywallButtonsClass}>
-                            <a
-                                href={paywallHref}
-                                className={paywallPrimaryButtonClass}
-                            >
-                                <Zap size={20} />
-                                {primaryPaywallCta}
-                            </a>
-                            <a
-                                href={whatsappSupportHref}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={paywallWhatsappButtonClass}
-                            >
-                                <MessageCircle size={20} />
-                                WhatsApp Support
-                            </a>
-                            <a
-                                href={paywallHref}
-                                className={paywallPlansButtonClass}
-                            >
-                                See All Plans
-                            </a>
+                            <div className={paywallButtonsClass}>
+                                <a
+                                    href={paywallHref}
+                                    className={paywallPrimaryButtonClass}
+                                >
+                                    <Zap size={20} />
+                                    {primaryPaywallCta}
+                                </a>
+                                <a
+                                    href={whatsappSupportHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={paywallWhatsappButtonClass}
+                                >
+                                    <MessageCircle size={20} />
+                                    WhatsApp Support
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1342,7 +1412,7 @@ export function StreamPlayer({
 
             {/* Controls Overlay */}
             <AnimatePresence>
-                {showControls && (
+                {showControls && !showPaywall && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
