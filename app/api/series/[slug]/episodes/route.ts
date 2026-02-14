@@ -5,11 +5,11 @@ import { Series, Episode } from "@/lib/models";
 // GET /api/series/[slug]/episodes — get episodes for a series
 export async function GET(
     req: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
         await connectDB();
-        const { slug } = params;
+        const { slug } = await params;
 
         // Find the series first to get its ID
         const series = await Series.findOne({ slug }).lean();
@@ -21,7 +21,15 @@ export async function GET(
             .sort({ seasonNumber: 1, episodeNumber: 1 })
             .lean();
 
-        return NextResponse.json(episodes, {
+        // Group by season to match SeriesClientPage expectation.
+        const groupedEpisodes = episodes.reduce((acc: Record<number, any[]>, ep: any) => {
+            const season = Number(ep?.seasonNumber) || 1;
+            if (!acc[season]) acc[season] = [];
+            acc[season].push(ep);
+            return acc;
+        }, {});
+
+        return NextResponse.json(groupedEpisodes, {
             headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
         });
     } catch (error) {

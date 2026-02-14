@@ -5,11 +5,11 @@ import { Series, Episode } from "@/lib/models";
 // GET /api/series/[slug] — get a single series by slug with episodes
 export async function GET(
     req: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
         await connectDB();
-        const { slug } = params;
+        const { slug } = await params;
 
         const series = await Series.findOne({ slug }).lean();
         if (!series) {
