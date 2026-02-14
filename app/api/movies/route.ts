@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
         ]);
 
         return NextResponse.json({ movies, total, page, pageSize: limitNum }, {
-            headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" },
+            headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10" },
         });
     } catch (error) {
         console.error("GET /api/movies error:", error);
