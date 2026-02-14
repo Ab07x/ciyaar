@@ -22,60 +22,43 @@ interface PlayerStageProps {
         summary?: string | null;
         thumbnailUrl?: string | null;
     };
-    settings: { whatsappNumber: string; };
+    settings: {
+        whatsappNumber: string;
+        freeMoviePreviewMinutes?: number;
+        freeMovieTimerSpeedMultiplier?: number;
+    };
     className?: string;
 }
 
 // Background image for loading state
 const LOADING_POSTER = "/img/Gemini_Generated_Image_w45vpxw45vpxw45v.png";
+const DEFAULT_FREE_MATCH_PREVIEW_MINUTES = 26;
+const DEFAULT_FREE_MATCH_TIMER_SPEED_MULTIPLIER = 12;
 
 export function PlayerStage({ match, settings, className }: PlayerStageProps) {
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
-    const { isPremium, redeemCode } = useUser();
-    const [code, setCode] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [localUnlocked, setLocalUnlocked] = useState(false);
+    const { isPremium } = useUser();
     const [isTimerFinished, setIsTimerFinished] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
-    const isUnlocked = !match.isPremium || isPremium || localUnlocked;
+    const isPreviewMode = !!match.isPremium && !isPremium;
+    const freePreviewMinutesRaw = Number(settings?.freeMoviePreviewMinutes);
+    const freePreviewMinutes = Number.isFinite(freePreviewMinutesRaw) && freePreviewMinutesRaw > 0
+        ? Math.min(DEFAULT_FREE_MATCH_PREVIEW_MINUTES, freePreviewMinutesRaw)
+        : DEFAULT_FREE_MATCH_PREVIEW_MINUTES;
+    const freeTimerSpeedMultiplierRaw = Number(settings?.freeMovieTimerSpeedMultiplier);
+    const freeTimerSpeedMultiplier = Number.isFinite(freeTimerSpeedMultiplierRaw) && freeTimerSpeedMultiplierRaw > 0
+        ? Math.max(DEFAULT_FREE_MATCH_TIMER_SPEED_MULTIPLIER, freeTimerSpeedMultiplierRaw)
+        : DEFAULT_FREE_MATCH_TIMER_SPEED_MULTIPLIER;
+    const pricingHref = `/pricing?src=match-preview&content=match&id=${encodeURIComponent(match._id)}&plan=match`;
+    const whatsappNumber = String(settings?.whatsappNumber || "+252618274188").replace(/\D/g, "");
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        `Salaan Fanbroj, waxaan rabaa Match Pass/VIP si aan u sii daawado ciyaar live. Match: ${match._id}`
+    )}`;
 
     const handleRefresh = () => {
         setRefreshKey(prev => prev + 1);
     };
-
-    const handleRedeem = async () => {
-        if (!code.trim()) return;
-        setLoading(true); setError("");
-        const result = await redeemCode(code.trim(), match._id);
-        setLoading(false);
-        if (result.success) setLocalUnlocked(true);
-        else setError(result.error || "Code qaldan");
-    };
-
-    // Premium Lock
-    if (match.isPremium && !isUnlocked) {
-        const phone = settings?.whatsappNumber || "";
-        const whatsappLink = `https://wa.me/${phone.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo match ${match._id}`;
-        return (
-            <div className={cn("player-stage bg-stadium-elevated flex items-center justify-center p-4", className)}>
-                <div className="bg-stadium-dark border-2 border-accent-gold rounded-2xl p-8 max-w-md text-center">
-                    <div className="w-16 h-16 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-4"><Crown size={32} className="text-accent-gold" /></div>
-                    <h3 className="text-2xl font-bold text-accent-gold mb-2">PREMIUM</h3>
-                    <p className="text-text-secondary mb-6">Ciyaartan waxaa u baahan subscription</p>
-                    <div className="space-y-4">
-                        <div className="flex gap-2"><input type="text" value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="CODE" className="flex-1 bg-stadium-elevated border border-border-subtle rounded-lg px-4 py-3 uppercase text-center tracking-wider" /><button onClick={handleRedeem} disabled={loading} className="px-6 py-3 bg-accent-green text-black font-bold rounded-lg">{loading ? "..." : "Fur"}</button></div>
-                        {error && <p className="text-accent-red text-sm">{error}</p>}
-                        <div className="flex gap-3">
-                            <Link href="/pricing" className="flex-1 px-4 py-3 bg-accent-gold text-black font-bold rounded-lg text-center">Iibso</Link>
-                            <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-2"><MessageSquare size={18} />WhatsApp</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     // Upcoming
     if (match.status === "upcoming") {
@@ -117,18 +100,41 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
                         loadingPoster={match.thumbnailUrl || LOADING_POSTER}
                         showRefreshMessage={true}
                         className="absolute inset-0"
+                        trackParams={{
+                            contentType: "match",
+                            contentId: match._id,
+                        }}
+                        conversionGate={{
+                            enabled: isPreviewMode,
+                            previewSeconds: freePreviewMinutes * 60,
+                            reachedDailyLimit: false,
+                            timerSpeedMultiplier: freeTimerSpeedMultiplier,
+                            ctaHref: pricingHref,
+                            forceRedirectOnLock: false,
+                            contentLabel: "ciyaartan live",
+                            paywallTitle: "Waqtiga free-ga ee ciyaartan wuu dhammaaday",
+                            paywallMessage: "Si aad u sii wadato daawashada ciyaarta tooska ah, iibso Match Pass ama VIP hadda.",
+                            primaryCtaLabel: "IIBSO MATCH PASS",
+                            whatsappMessage: "Salaan Fanbroj, waxaan rabaa Match Pass si aan u sii daawado ciyaartan live.",
+                        }}
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full text-text-muted">Lama hayo linkiyadii ciyaarta.</div>
                 )}
             </div>
 
+            {isPreviewMode && (
+                <p className="text-center text-xs text-yellow-300 -mt-1">
+                    Free Preview: {freePreviewMinutes} daqiiqo • Timer x{freeTimerSpeedMultiplier}
+                </p>
+            )}
+
             {/* Refresh Button & Server Switcher */}
             <div className="flex flex-wrap gap-3 items-center justify-between">
-                {/* Refresh Button - Easy access - Reloads the page */}
+                {/* Refresh Button - Quick stream re-init */}
                 <button
                     type="button"
-                    onClick={() => window.location.reload()}
+                    onClick={handleRefresh}
                     className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-xl hover:from-green-500 hover:to-green-600 transition-all active:scale-95 shadow-lg"
                 >
                     <RefreshCw size={18} />
@@ -144,7 +150,7 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
                             <button
                                 key={index}
                                 type="button"
-                                onClick={() => window.location.reload()}
+                                onClick={() => setActiveEmbedIndex(index)}
                                 className={cn(
                                     "px-4 py-2 text-sm font-semibold rounded-md border transition-all",
                                     activeEmbedIndex === index
@@ -158,6 +164,33 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
                     </div>
                 )}
             </div>
+
+            {isPreviewMode && (
+                <div className="bg-[#061a2d]/95 border border-[#1b4d86] rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-white font-black text-sm sm:text-base">Ciyaarta sii wad?</p>
+                        <p className="text-gray-300 text-xs sm:text-sm">Iibso Match Pass ama nala hadal WhatsApp si isla markiiba laguu furo.</p>
+                    </div>
+                    <div className="flex gap-2 sm:gap-3">
+                        <Link
+                            href={pricingHref}
+                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <Crown size={16} />
+                            MATCH PASS
+                        </Link>
+                        <a
+                            href={whatsappLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1fb855] text-white font-black text-sm flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <MessageSquare size={16} />
+                            WhatsApp
+                        </a>
+                    </div>
+                </div>
+            )}
 
             {/* Help Message */}
             <div className="bg-gradient-to-r from-[#1a3a5c] to-[#0d1b2a] border border-[#2a4a6c] rounded-xl p-4 flex items-start gap-3">

@@ -17,6 +17,7 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { ConnectionIndicator } from "@/components/mobile/OfflineIndicator";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { AggressivePushBanner } from "@/components/AggressivePushBanner";
+import { SitewideOfferBar } from "@/components/SitewideOfferBar";
 
 // SEO-optimized metadata targeting top search keywords
 export function generateMetadata(): Metadata {
@@ -180,6 +181,7 @@ export default function RootLayout({
                 <ToastProvider>
                   {/* Header */}
                   <Navbar />
+                  <SitewideOfferBar />
 
                   <main className="min-h-[calc(100vh-4rem)] pb-32 md:pb-0">
                     {children}

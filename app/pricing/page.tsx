@@ -11,19 +11,23 @@ import { PricingCards } from "@/components/PricingCards";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 const freeVsPremium = [
-    { feature: "Xayeysiis (Ads)", free: "Aad u badan ❌", premium: "Maya ✅", premiumGood: true },
-    { feature: "Filimada AF Somali", free: "5 kaliya", premium: "724+ dhammaan", premiumGood: true },
-    { feature: "Ciyaaraha Premium", free: "Maya", premium: "Haa ✅", premiumGood: true },
-    { feature: "Sawirka (Quality)", free: "480p", premium: "1080p / 4K", premiumGood: true },
-    { feature: "Sugitaan (Buffer)", free: "Dheer", premium: "Degdeg", premiumGood: true },
-    { feature: "Qalab (Devices)", free: "1 kaliya", premium: "Ilaa 5 qalab", premiumGood: true },
-    { feature: "WhatsApp Taageero", free: "Maya", premium: "24/7 ✅", premiumGood: true },
-    { feature: "Filimada cusub", free: "Sugitaan", premium: "Marka hore", premiumGood: true },
+    { feature: "Xayeysiis", free: "Joojin badan", premium: "Bilaa xayeysiis", premiumGood: true },
+    { feature: "Maktabadda filimada", free: "Kooban", premium: "724+ cinwaan", premiumGood: true },
+    { feature: "Sports Live", free: "Qaar kaliya", premium: "Dhacdooyinka waaweyn oo dhan", premiumGood: true },
+    { feature: "Tayada muuqaalka", free: "480p", premium: "1080p / 4K", premiumGood: true },
+    { feature: "Xawaare daawasho", free: "Buffer badan", premium: "Degdeg oo deggan", premiumGood: true },
+    { feature: "Qalabka la oggol yahay", free: "1 qalab", premium: "Ilaa 5 qalab", premiumGood: true },
+    { feature: "Taageero degdeg ah", free: "Maya", premium: "WhatsApp 24/7", premiumGood: true },
+    { feature: "Filimada cusub", free: "Dib ayaad uga helaysaa", premium: "Marka la soo daayo", premiumGood: true },
 ];
+
+const RAMADAN_START_ISO = "2026-02-16T00:00:00";
+const RAMADAN_END_ISO = "2026-03-17T23:59:59";
 
 function RamadanCountdown() {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-    const ramadanStart = new Date("2026-02-28T00:00:00").getTime();
+    const ramadanStart = new Date(RAMADAN_START_ISO).getTime();
+    const ramadanEnd = new Date(RAMADAN_END_ISO).getTime();
 
     useEffect(() => {
         const tick = () => {
@@ -45,18 +49,19 @@ function RamadanCountdown() {
         return () => clearInterval(id);
     }, []);
 
-    const isRamadan = Date.now() >= ramadanStart;
+    const nowTs = Date.now();
+    const isRamadan = nowTs >= ramadanStart && nowTs <= ramadanEnd;
 
     return (
         <div className="bg-gradient-to-r from-emerald-900/40 via-green-800/30 to-emerald-900/40 border border-emerald-500/20 rounded-2xl p-6 md:p-8 text-center backdrop-blur-sm mb-8">
             <div className="text-3xl mb-2">🌙</div>
             <h3 className="text-xl md:text-2xl font-black text-yellow-400 mb-1">
-                {isRamadan ? "RAMADAN KARIIM!" : "ISU DIYAARI RAMADAN!"}
+                {isRamadan ? "RAMADAN KARIIM 2026" : "Ramadan wuxuu bilaabanayaa 16 Febraayo 2026"}
             </h3>
             <p className="text-sm text-emerald-300 mb-4">
                 {isRamadan
-                    ? "Ku raaxayso 724+ filim AF Somali — Qiimo yaab leh!"
-                    : "Iibso Premium si aad Ramadan ugu raaxaysto 724+ filim AF Somali"}
+                    ? "Qorshaha Premium hadda fur oo ku daawo filim iyo ciyaar live bilaa xayeysiis."
+                    : "Ha sugin habeenka koowaad. Hadda qaado Premium si aad Ramadan u gasho adigoo diyaar ah."}
             </p>
             {!isRamadan && (
                 <div className="flex items-center justify-center gap-3 md:gap-5">
@@ -163,17 +168,17 @@ export default function PricingPage() {
             {showExitOffer && !isPremium && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="w-full max-w-md rounded-2xl border border-yellow-500/40 bg-[#101723] p-6 shadow-2xl">
-                        <p className="text-yellow-400 text-xs font-black uppercase tracking-wider mb-2">Special Offer</p>
-                        <h2 className="text-2xl font-black text-white mb-2">Sug daqiiqad!</h2>
+                        <p className="text-yellow-400 text-xs font-black uppercase tracking-wider mb-2">Offer-ka Maanta</p>
+                        <h2 className="text-2xl font-black text-white mb-2">Ka hor intaadan bixin...</h2>
                         <p className="text-gray-300 mb-5">
-                            Hel <span className="text-green-400 font-black">+7 maalmood bilaash</span> marka aad iibsato Monthly maanta 🌙
+                            Qaado <span className="text-green-400 font-black">Monthly +7 maalmood bilaash</span> maanta oo kaliya.
                         </p>
                         <div className="space-y-3">
                             <button
                                 onClick={activateExitOffer}
                                 className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-400 text-black font-black hover:brightness-110 transition-all"
                             >
-                                Haa, i sii offer-ka
+                                Haa, i dhaqaaji offer-ka
                             </button>
                             <button
                                 onClick={() => setShowExitOffer(false)}
@@ -205,7 +210,7 @@ export default function PricingPage() {
                         <div className="flex items-center gap-3 flex-1 justify-center">
                             <Moon size={16} className="animate-pulse" />
                             <p className="text-sm font-bold text-center">
-                                🌙 Isu Diyaari Ramadan! Iibso Premium — <span className="underline">724+ filim AF Somali</span> • WhatsApp Support • Xayeysiis la&apos;aan
+                                Ramadan 2026 (16 Feb) | Premium hadda qaado: Filim + Sports Live, bilaa xayeysiis, WhatsApp 24/7
                             </p>
                             <Flame size={16} className="animate-pulse" />
                         </div>
@@ -233,20 +238,18 @@ export default function PricingPage() {
                     {/* Ramadan Badge */}
                     <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/30 to-amber-500/20 text-yellow-400 px-5 py-2 rounded-full text-sm font-black mb-6 border border-yellow-500/20 animate-pulse">
                         <Moon size={16} />
-                        RAMADAN 2026 SPECIAL
+                        RAMADAN 2026 SALES CAMPAIGN
                         <Sparkles size={16} />
                     </div>
 
                     <h1 className="text-4xl md:text-5xl xl:text-6xl font-black mb-4 leading-tight">
-                        <span className="text-yellow-400">🌙 Ramadan</span> ku Raaxayso<br />
-                        <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">724+ Filim AF Somali</span>
+                        <span className="text-yellow-400">Ramadan 2026</span> u gal adigoo Premium ah<br />
+                        <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">Filim + Sports Live, Bilaa Xayeysiis</span>
                     </h1>
 
                     <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
-                        Qoyska oo dhan wada daawashada filimada iyo ciyaaraha —{" "}
-                        <span className="text-green-400 font-bold">bilaa xayeysiis</span>,{" "}
-                        <span className="text-blue-400 font-bold">HD/4K quality</span>,{" "}
-                        <span className="text-yellow-400 font-bold">qiimo yaab leh</span>
+                        Hal qorshe, hal lacag-bixin, daawasho deggan.
+                        Qoyskaaga u fur content-ka aad rabtaan adigoon buffering iyo ads ku daalin.
                     </p>
 
                     {/* Stats Row */}
@@ -255,28 +258,28 @@ export default function PricingPage() {
                             <Film size={20} className="text-green-400" />
                             <div>
                                 <p className="text-2xl font-black text-white">724+</p>
-                                <p className="text-xs text-gray-400">Filimad</p>
+                                <p className="text-xs text-gray-400">Filim & Musalsal</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 text-center">
                             <Tv size={20} className="text-blue-400" />
                             <div>
                                 <p className="text-2xl font-black text-white">100+</p>
-                                <p className="text-xs text-gray-400">Ciyaaraha toos</p>
+                                <p className="text-xs text-gray-400">Sports Live</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 text-center">
                             <Users size={20} className="text-yellow-400" />
                             <div>
                                 <p className="text-2xl font-black text-white">5000+</p>
-                                <p className="text-xs text-gray-400">Macaamiil</p>
+                                <p className="text-xs text-gray-400">Macaamiil firfircoon</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 text-center">
                             <Star size={20} className="text-yellow-400" fill="currentColor" />
                             <div>
                                 <p className="text-2xl font-black text-white">4.8</p>
-                                <p className="text-xs text-gray-400">Rating</p>
+                                <p className="text-xs text-gray-400">Qiimeyn</p>
                             </div>
                         </div>
                     </div>
@@ -298,9 +301,9 @@ export default function PricingPage() {
                         {/* Secure Payment Badge */}
                         <div className="bg-green-600/10 border border-green-600/20 rounded-2xl p-8 text-center mb-8 backdrop-blur-sm">
                             <ShieldCheck size={48} className="text-green-500 mx-auto mb-4" />
-                            <h3 className="text-2xl font-bold mb-2">Lacag bixin ammaan ah 🔒</h3>
+                            <h3 className="text-2xl font-bold mb-2">Lacag-bixin ammaan ah oo degdeg ah 🔒</h3>
                             <p className="text-text-secondary mb-4">
-                                Ku bixi EVC Plus, eDahab, Zaad, Sahal, Card, Apple Pay, ama M-Pesa
+                                Hababka ugu badan ee aad isticmaashaan waa diyaar: EVC Plus, eDahab, Zaad, Sahal, Card, Apple Pay, iyo M-Pesa.
                             </p>
                             <div className="flex flex-wrap justify-center gap-2">
                                 {["EVC Plus", "Zaad", "Sahal", "eDahab", "Card", "Apple Pay", "M-Pesa"].map((m) => (
@@ -313,7 +316,7 @@ export default function PricingPage() {
                             <div className="mt-4 p-4 bg-green-600/10 border border-green-600/20 rounded-xl text-center">
                                 <p className="text-sm text-green-400 font-bold mb-1">📱 M-Pesa Direct</p>
                                 <p className="text-lg font-black text-white tracking-wider">0797415296</p>
-                                <p className="text-xs text-gray-400 mt-1">Lacagta u dir numbarkaan, kadib naga soo wac WhatsApp</p>
+                                <p className="text-xs text-gray-400 mt-1">Lacagta u dir lambarkan, kadibna WhatsApp noogu soo dir caddeynta.</p>
                             </div>
                         </div>
 
@@ -322,9 +325,9 @@ export default function PricingPage() {
                             <div className="bg-black/60 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
                                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                                     <Gift size={20} className="text-yellow-400" />
-                                    Haysataa Code?
+                                    Haysataa code hadiyad ah?
                                 </h3>
-                                <p className="text-gray-400 text-sm mb-4">Isticmaal code-kaaga si aad Premium u hesho bilaash!</p>
+                                <p className="text-gray-400 text-sm mb-4">Halkan ku geli code-ka si Premium-ku isla markiiba kuu furmo.</p>
                                 <div className="flex gap-3">
                                     <input
                                         type="text"
@@ -361,9 +364,9 @@ export default function PricingPage() {
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-black mb-2">
-                            FREE vs <span className="text-yellow-400">PREMIUM</span>
+                            Bilaash vs <span className="text-yellow-400">Premium</span>
                         </h2>
-                        <p className="text-gray-400">Maxaa ku jira Premium? Wax badan!</p>
+                        <p className="text-gray-400">Farqiga ugu weyn halkaan ka eeg si aad go'aan degdeg ah u gaarto.</p>
                     </div>
 
                     <div className="max-w-3xl mx-auto overflow-hidden rounded-2xl border border-white/10 bg-black/60 backdrop-blur-sm">
@@ -403,10 +406,10 @@ export default function PricingPage() {
                         <div className="max-w-2xl mx-auto bg-gradient-to-r from-[#25D366]/20 to-[#128C7E]/10 border border-[#25D366]/30 rounded-2xl p-8 text-center">
                             <MessageCircle size={40} className="text-[#25D366] mx-auto mb-4" />
                             <h3 className="text-2xl font-bold text-white mb-2">
-                                Su&apos;aalo? Naga soo wac WhatsApp!
+                                Su&apos;aal ama caawin degdeg ah?
                             </h3>
                             <p className="text-gray-300 mb-4">
-                                Iibso Premium si aad u hesho <span className="text-[#25D366] font-bold">24/7 WhatsApp taageero degdeg ah</span>
+                                Kooxda WhatsApp waxay kaa caawinayaan doorashada plan-ka iyo lacag-bixinta.
                             </p>
                             <a
                                 href="https://wa.me/252618274188?text=Asc%2C%20waxaan%20rabaa%20macluumaad%20ku%20saabsan%20Premium%20%F0%9F%8C%99"
@@ -415,7 +418,7 @@ export default function PricingPage() {
                                 className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold px-8 py-3 rounded-full text-lg transition-all transform hover:scale-105"
                             >
                                 <MessageCircle size={20} fill="white" />
-                                WhatsApp — Naga Weydiiso
+                                WhatsApp Support
                             </a>
                         </div>
                     </div>
@@ -426,14 +429,14 @@ export default function PricingPage() {
             <section className="py-12 text-center">
                 <div className="container mx-auto px-4 max-w-4xl">
                     <h2 className="text-2xl md:text-4xl font-bold text-white mb-6">
-                        🌙 Ramadan waa waqtiga ugu fiican ee la daawado filimaha qoyska
+                        Ramadan 2026 wuxuu bilaabanayaa 16 Febraayo
                     </h2>
                     <p className="text-lg md:text-xl text-gray-300 mb-4">
-                        <span className="text-green-400 font-bold italic">724+ filim AF Somali</span> iyo{" "}
-                        <span className="text-blue-400 font-bold italic">100+ ciyaaraha toos</span> — Sanad buuxa ku raaxee qoyskaaga
+                        Hadda qaado Monthly ama Yearly si habeen walba aad u haysato daawasho deggan:
+                        <span className="text-green-400 font-bold italic"> filim, musalsal iyo sports live</span>.
                     </p>
                     <p className="text-xl md:text-2xl text-white font-medium mt-8">
-                        Waa ku mahadsan tahay taageeradaada. 💚
+                        Qorshahaaga maanta fur, daawashadaaduna ha noqoto mid aan kala go' lahayn.
                     </p>
                 </div>
             </section>

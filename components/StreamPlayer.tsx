@@ -50,6 +50,10 @@ interface StreamPlayerProps {
         timerSpeedMultiplier?: number;
         ctaHref?: string;
         contentLabel?: string;
+        paywallTitle?: string;
+        paywallMessage?: string;
+        primaryCtaLabel?: string;
+        whatsappMessage?: string;
         forceRedirectOnLock?: boolean;
         redirectDelayMs?: number;
     };
@@ -227,7 +231,7 @@ export function StreamPlayer({
     const conversionGateEnabled = !!conversionGate?.enabled && !isPremium;
     const qualityCap = conversionGate?.qualityCap || 0;
     const moviePreviewPersistenceKey = conversionGateEnabled
-        && (trackParams?.contentType === "movie" || trackParams?.contentType === "episode")
+        && (trackParams?.contentType === "movie" || trackParams?.contentType === "episode" || trackParams?.contentType === "match")
         && trackParams?.contentId
         ? `fanbroj:preview-elapsed:${trackParams.contentType}:${trackParams.contentId}`
         : null;
@@ -344,6 +348,7 @@ export function StreamPlayer({
     // Free tier enforcement for live matches.
     useEffect(() => {
         if (trackParams?.contentType !== "match") return;
+        if (conversionGateEnabled) return;
         if (isPremium) {
             setShowPaywall(false);
             return;
@@ -351,7 +356,7 @@ export function StreamPlayer({
 
         if (currentTime < freePreviewLimit) return;
         activatePaywallLock();
-    }, [currentTime, isPremium, freePreviewLimit, trackParams?.contentType, activatePaywallLock]);
+    }, [currentTime, isPremium, freePreviewLimit, trackParams?.contentType, conversionGateEnabled, activatePaywallLock]);
 
     // For iframe sources we cannot read media time reliably, so start preview session on mount.
     useEffect(() => {
@@ -1114,22 +1119,24 @@ export function StreamPlayer({
     const paywallHref = conversionGate?.ctaHref || "/pricing";
     const isDailyCapPaywall = conversionGateEnabled && !!conversionGate?.reachedDailyLimit;
     const isMoviePreviewPaywall = conversionGateEnabled && !isDailyCapPaywall;
-    const paywallTitle = isDailyCapPaywall
+    const paywallTitle = conversionGate?.paywallTitle || (isDailyCapPaywall
         ? "Xadka FREE-ga maanta waa dhammaaday 🚫"
         : isMoviePreviewPaywall
             ? "Preview-ga bilaashka ah waa dhammaaday"
-            : "Free Preview Ended";
-    const paywallMessage = isDailyCapPaywall
+            : "Free Preview Ended");
+    const paywallMessage = conversionGate?.paywallMessage || (isDailyCapPaywall
         ? `Waxaad isticmaashay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 3} free views maanta. VIP hadda fur si aad u daawato si aan xad lahayn.`
         : isMoviePreviewPaywall
             ? `Si aad u sii wadato daawashada "${conversionGate?.contentLabel || "filimkan"}": Upgrade to VIP 💎`
-            : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`;
-    const primaryPaywallCta = (isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO VIP HADDA" : "Unlock for $0.25";
+            : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`);
+    const primaryPaywallCta = conversionGate?.primaryCtaLabel || ((isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO VIP HADDA" : "Unlock for $0.25");
     const previewQualityLabel = conversionGate?.qualityCap ? `${conversionGate.qualityCap}p` : "Free";
     const previewCountdownSeconds = Math.max(0, previewRemainingSeconds ?? Math.ceil(moviePreviewLimit));
     const whatsappSupportNumber = String((settings as any)?.whatsappNumber || "+252618274188").replace(/\D/g, "");
+    const whatsappSupportMessage = conversionGate?.whatsappMessage
+        || `Salaan Fanbroj, waxaan rabaa caawimaad sida aan u iibsado VIP. Content: ${conversionGate?.contentLabel || trackParams?.contentId || "movie"}`;
     const whatsappSupportHref = `https://wa.me/${whatsappSupportNumber}?text=${encodeURIComponent(
-        `Salaan Fanbroj, waxaan rabaa caawimaad sida aan u iibsado VIP. Content: ${conversionGate?.contentLabel || trackParams?.contentId || "movie"}`
+        whatsappSupportMessage
     )}`;
     const paywallOverlayClass = "absolute inset-0 bg-black/92 z-50 p-2 sm:p-6 overflow-y-auto";
     const paywallCardWrapClass = "min-h-full flex items-start sm:items-center justify-center";

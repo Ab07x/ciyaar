@@ -66,9 +66,9 @@ const TIER_MULTIPLIERS: Record<GeoTier, number> = {
 // Ramadan countdown
 function getRamadanCountdown(): { days: number; isRamadan: boolean; isPreRamadan: boolean } {
   const now = new Date();
-  // Ramadan 2026 is approximately Feb 18 - Mar 19
-  const ramadanStart = new Date("2026-02-28");
-  const ramadanEnd = new Date("2026-03-30");
+  // Campaign covers full Ramadan month (Feb 16, 2026 - Mar 17, 2026)
+  const ramadanStart = new Date("2026-02-16T00:00:00");
+  const ramadanEnd = new Date("2026-03-17T23:59:59");
 
   const isRamadan = now >= ramadanStart && now <= ramadanEnd;
   const daysUntil = Math.ceil((ramadanStart.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -106,7 +106,7 @@ const plans: PricingPlan[] = [
     duration: "1 match",
     durationSomali: "Ciyaar 1",
     icon: Zap,
-    features: ["1 ciyaar toos ah", "HD sawir wanaagsan", "Xayeysiis la'aan", "1 qalab"],
+    features: ["1 ciyaar live", "HD quality", "Bilaa xayeysiis inta plan-ku socdo", "1 qalab"],
     color: "text-blue-400",
     bgGradient: "from-blue-500/20 to-blue-600/5",
     maxDevices: 1,
@@ -120,7 +120,7 @@ const plans: PricingPlan[] = [
     duration: "7 days",
     durationSomali: "7 maalmood",
     icon: Calendar,
-    features: ["Dhammaan ciyaaraha", "Dhammaan filimada", "HD sawir wanaagsan", "2 qalab"],
+    features: ["Ciyaaro live oo dhan", "Maktabad filimo & musalsal", "HD quality", "2 qalab"],
     color: "text-orange-400",
     bgGradient: "from-orange-500/20 to-orange-600/5",
     maxDevices: 2,
@@ -134,9 +134,9 @@ const plans: PricingPlan[] = [
     duration: "30 days",
     durationSomali: "30 maalmood",
     icon: CalendarDays,
-    features: ["Dhammaan ciyaaraha", "724+ filimad AF Somali", "HD/4K sawir heer sare", "3 qalab", "WhatsApp taageero degdeg ah"],
+    features: ["Ciyaaro live oo dhan", "724+ filim & musalsal AF Somali", "HD/4K tayo sare", "3 qalab", "Taageero degdeg ah"],
     popular: true,
-    ramadanBonus: "🌙 Ramadan: +7 maalmood bilaash!",
+    ramadanBonus: "Bonus Ramadan: +7 maalmood bilaash",
     color: "text-green-400",
     bgGradient: "from-green-500/20 to-green-600/5",
     maxDevices: 3,
@@ -150,10 +150,10 @@ const plans: PricingPlan[] = [
     duration: "365 days",
     durationSomali: "Sanad buuxa",
     icon: Crown,
-    features: ["Dhammaan ciyaaraha", "724+ filimad AF Somali", "4K sawir heer sare", "5 qalab", "WhatsApp VIP taageero", "Waxyaabo cusub marka hore"],
+    features: ["Ciyaaro live oo dhan", "724+ filim & musalsal AF Somali", "4K tayo sare", "5 qalab", "VIP WhatsApp support", "Waxyaabaha cusub marka hore"],
     bestValue: true,
     savings: "Qiimo dhimis 45%",
-    ramadanBonus: "🌙 Ramadan: +30 maalmood BILAASH!",
+    ramadanBonus: "Bonus Ramadan: +30 maalmood bilaash",
     color: "text-yellow-400",
     bgGradient: "from-yellow-500/20 to-yellow-600/5",
     maxDevices: 5,
@@ -292,16 +292,16 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
             <div className="relative z-10 p-6 md:p-8 text-center">
               <div className="inline-flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-1.5 rounded-full text-xs font-black mb-3 uppercase tracking-wider">
                 <Moon size={14} />
-                {ramadan.isRamadan ? "RAMADAN MUBARAK 🌙" : `${ramadan.days} MAALMOOD AYAA RAMADAN KA HARAY`}
+                {ramadan.isRamadan ? "RAMADAN 2026 OFFER LIVE" : `${ramadan.days} maalmood ayaa ka haray (16 Feb 2026)`}
               </div>
               <h3 className="text-2xl md:text-3xl font-black text-white mb-2">
                 {ramadan.isRamadan
-                  ? "🌙 Ramadan Offer — Qiimo Gaar Ah!"
-                  : "🌙 Isu Diyaari Ramadan — Qiimo Yaab Leh!"}
+                  ? "Ramadan Offer-ka ugu culus wuu socdaa"
+                  : "Diyaar-garoowga Ramadan ayaa socda"}
               </h3>
               <p className="text-gray-300 text-sm md:text-base max-w-2xl mx-auto mb-4">
-                Ramadan filimada iyo ciyaaraha ku daawashada qoyska buuxa — Iibso hadda{" "}
-                <span className="text-yellow-400 font-bold">si aad maalmaha Ramadan ugu raaxaysto 724+ filim AF Somali</span>
+                Hadda fur qorshahaaga si aad u hesho daawasho joogto ah:
+                <span className="text-yellow-400 font-bold"> filim, musalsal iyo sports live bilaa xayeysiis.</span>
               </p>
               <div className="flex items-center justify-center gap-6 text-sm">
                 <div className="flex items-center gap-1.5 text-green-400">
@@ -310,7 +310,7 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                 </div>
                 <div className="flex items-center gap-1.5 text-yellow-400">
                   <Flame size={14} />
-                  <span className="font-bold">89</span> qof oo hadda iibsanaya
+                  <span className="font-bold">80+</span> qof ayaa saacadihii u dambeeyay iibsaday
                 </div>
               </div>
             </div>
@@ -350,21 +350,21 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
         {/* Header with social proof */}
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
-            Dooro Plan-ka Kula Habboon
+            Dooro qorshe ku habboon adiga
           </h2>
           <p className="text-gray-400 text-lg mb-4">
-            724+ filim AF Somali • Ciyaaraha tooska ah • Qiimo jaban
+            Qiime cad, unlock degdeg ah, iyo taageero toos ah.
           </p>
           {geoInfo && geoInfo.tier === "tier3" && (
             <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold animate-pulse">
               <Gift size={16} />
-              🇸🇴 Qiimo gaar ah oo dadka Soomaaliyeed u diyaarsan!
+              🇸🇴 Qiime loo habeeyay macaamiisha Soomaaliya
             </div>
           )}
           {geoInfo && geoInfo.tier === "tier2" && geoInfo.country === "KE" && (
             <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold">
               <Phone size={16} />
-              🇰🇪 M-Pesa payment available!
+              🇰🇪 Kenya: M-Pesa waa diyaar
             </div>
           )}
         </div>
@@ -411,17 +411,17 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                 {!isCurrent && plan.popular && (
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-600 to-emerald-500 text-white text-xs font-bold text-center py-1.5 flex items-center justify-center gap-1 shadow-sm uppercase tracking-wide">
                     <Sparkles size={12} />
-                    Ugu Badan Ee La Iibsado 🔥
+                    Most Chosen 🔥
                   </div>
                 )}
                 {!isCurrent && plan.bestValue && !isYearlyFocus && (
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold text-center py-1.5 uppercase tracking-wide">
-                    ⭐ Qiimaha Ugu Fiican
+                    ⭐ Best Value
                   </div>
                 )}
                 {isYearlyFocus && (
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400 text-black text-xs font-black text-center py-2 uppercase tracking-wider">
-                    💰 YEARLY DEAL: SAVE {yearlySavingsPercent}% NOW
+                    Yearly Deal: Save {yearlySavingsPercent}% Now
                   </div>
                 )}
 
@@ -463,7 +463,7 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-gray-500 text-sm line-through">${originalPrice.toFixed(2)}</span>
                         <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-bold">
-                          -30% Ramadan
+                          -30% Ramadan Offer
                         </span>
                       </div>
                     )}
@@ -475,11 +475,11 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                     {plan.id === "yearly" && (
                       <div className="mt-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
                         <p className="text-sm font-black text-yellow-300">
-                          Sanadkii {(geoInfo?.currencySymbol || "$")}{price.toFixed(2)} = {(geoInfo?.currencySymbol || "$")}{yearlyEquivalentMonthly.toFixed(2)} bishii
+                          Sanadkii {(geoInfo?.currencySymbol || "$")}{price.toFixed(2)} = {(geoInfo?.currencySymbol || "$")}{yearlyEquivalentMonthly.toFixed(2)} bishii.
                         </p>
                         <p className="text-xs text-yellow-100/80 mt-1">
                           Isbarbardhig: Monthly {(geoInfo?.currencySymbol || "$")}{monthlyPlanPrice.toFixed(2)} x 12 = {(geoInfo?.currencySymbol || "$")}{(monthlyPlanPrice * 12).toFixed(2)}.
-                          Waxaad badbaadinaysaa {(geoInfo?.currencySymbol || "$")}{yearlySavingsAmount.toFixed(2)} sanadkii.
+                          Badbaadin toos ah: {(geoInfo?.currencySymbol || "$")}{yearlySavingsAmount.toFixed(2)} sanadkii.
                         </p>
                       </div>
                     )}
@@ -535,11 +535,11 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                     )}
                     <span>
                       {isCurrent
-                        ? "✓ Qorshahaaga"
+                        ? "✓ Qorshahaaga hadda"
                         : loadingPlan === plan.id
-                          ? "Sugayo..."
+                          ? "Fadlan sug..."
                           : plan.id === "yearly"
-                            ? "💎 Iibso Yearly Hadda"
+                            ? "💎 Iibso Yearly - Save More"
                             : "💳 Iibso Hadda"}
                     </span>
                   </button>
@@ -548,7 +548,7 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                   {!isCurrent && plan.popular && (
                     <p className="text-center text-xs text-gray-500 mt-2 flex items-center justify-center gap-1">
                       <Clock size={10} />
-                      <span>12 qof oo saacadan iibsaday</span>
+                      <span>Qorshahan dad badan ayaa maanta doortay</span>
                     </p>
                   )}
                 </div>
@@ -568,11 +568,11 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                 <h4 className="font-bold text-white text-lg flex items-center gap-2">
                   🇰🇪 M-Pesa Payment
                 </h4>
-                <p className="text-green-400 text-sm">Lipa na M-Pesa — Rahisi na Haraka!</p>
+                <p className="text-green-400 text-sm">Bixi si toos ah, activation degdeg ah.</p>
               </div>
             </div>
             <div className="bg-black/40 rounded-xl p-4 mb-4">
-              <p className="text-gray-300 text-sm mb-2">Send payment to:</p>
+              <p className="text-gray-300 text-sm mb-2">Lacagta ku dir:</p>
               <div className="flex items-center justify-between bg-green-500/10 rounded-lg p-3 border border-green-500/20">
                 <div>
                   <p className="text-green-400 font-bold text-xl tracking-wider">0797415296</p>
@@ -590,9 +590,9 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
               </div>
             </div>
             <div className="space-y-2 text-sm text-gray-400">
-              <p>1. Copy the number above and send your payment via M-Pesa</p>
-              <p>2. Screenshot the confirmation and send to WhatsApp: <a href="https://wa.me/252618274188" className="text-green-400 font-bold hover:underline">+252 618 274 188</a></p>
-              <p>3. Your Premium will be activated within 5 minutes! ✅</p>
+              <p>1. Lambarka kore ku dir lacagta M-Pesa/Airtel Money.</p>
+              <p>2. Caddeynta lacag-bixinta ku soo dir WhatsApp: <a href="https://wa.me/252618274188" className="text-green-400 font-bold hover:underline">+252 618 274 188</a></p>
+              <p>3. Premium-kaaga waxaa la furi doonaa 5 daqiiqo gudahood. ✅</p>
             </div>
           </div>
         )}
@@ -601,27 +601,27 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
         <div className="mt-8 p-6 bg-gradient-to-r from-gray-900 to-gray-800 border border-white/10 rounded-2xl max-w-3xl mx-auto shadow-2xl">
           <h4 className="font-bold text-white text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
             <ShieldCheck className="text-green-500" size={20} />
-            Sida Loo Bixiyo Lacagta
+            Sida Lacag-bixintu u Shaqeyso
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div className="flex gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">1</span>
-                <p className="text-gray-300 text-sm">Dooro plan-ka aad rabto oo riix <strong className="text-white">&quot;Iibso Hadda&quot;</strong></p>
+                <p className="text-gray-300 text-sm">Dooro qorshaha aad rabto oo riix <strong className="text-white">&quot;Iibso Hadda&quot;</strong>.</p>
               </div>
               <div className="flex gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">2</span>
-                <p className="text-gray-300 text-sm">Waxaad aadi doontaa bogga lacag bixinta — ku bixi <strong className="text-white">EVC, eDahab, Zaad, ama Card</strong></p>
+                <p className="text-gray-300 text-sm">Bogga lacag-bixinta ka dooro habka aad rabto: <strong className="text-white">EVC, eDahab, Zaad, Sahal, Card, Apple Pay</strong>.</p>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-500 text-sm font-bold">3</span>
-                <p className="text-gray-300 text-sm">Marka lacagta la bixiyo, Premium-kaaga <strong className="text-green-400">wuu kuu shaqeyn doonaa isla markiiba!</strong> ✅</p>
+                <p className="text-gray-300 text-sm">Marka lacagtu gasho, Premium-kaaga <strong className="text-green-400">si toos ah ayuu u shaqeynayaa!</strong> ✅</p>
               </div>
               <div className="flex gap-3 items-start">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold flex-shrink-0">💡</span>
-                <p className="text-gray-400 text-xs">Ma u baahnid inaad code sugto — lacagta markay tagto wax walba way kuu furmayaan automatic ahaan.</p>
+                <p className="text-gray-400 text-xs">Badanaa code looma baahna; unlock-ku waa automatic marka lacagtu xaqiijanto.</p>
               </div>
             </div>
           </div>
@@ -634,8 +634,8 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                   <MessageCircle size={20} className="text-[#25D366]" />
                 </div>
                 <div>
-                  <p className="text-white text-sm font-bold">Macaamiisha Premium-ka waxay helaan taageero WhatsApp 24/7</p>
-                  <p className="text-gray-400 text-xs">Su&apos;aal? Mushkilad? Naga soo wac WhatsApp — waan ku caawin doonaa!</p>
+                  <p className="text-white text-sm font-bold">Macaamiisha Premium waxay helaan taageero WhatsApp 24/7</p>
+                  <p className="text-gray-400 text-xs">Su'aal ku saabsan lacag-bixin ama activation? Halkaan naga soo qor.</p>
                 </div>
               </div>
               <a
@@ -645,7 +645,7 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
                 className="flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all transform hover:scale-105 whitespace-nowrap"
               >
                 <MessageCircle size={16} fill="white" />
-                WhatsApp Premium Support
+                WhatsApp Support
               </a>
             </div>
           </div>
@@ -674,8 +674,8 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
               ))}
             </div>
             <div className="text-left">
-              <p className="text-white text-sm font-bold">{viewerCount}+ subscribers</p>
-              <p className="text-gray-500 text-xs">from 15+ countries</p>
+              <p className="text-white text-sm font-bold">{viewerCount}+ users online today</p>
+              <p className="text-gray-500 text-xs">active from multiple countries</p>
             </div>
             <div className="flex gap-0.5">
               {[...Array(5)].map((_, i) => (
