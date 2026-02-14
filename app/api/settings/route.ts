@@ -11,6 +11,8 @@ const DEFAULTS = {
     priceWeekly: 1.50,
     priceMonthly: 3,
     priceYearly: 20,
+    freeMoviesPerDay: 2,
+    freeMoviePreviewMinutes: 24,
     maxDevicesMatch: 1,
     maxDevicesWeekly: 2,
     maxDevicesMonthly: 3,

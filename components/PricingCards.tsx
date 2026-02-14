@@ -169,7 +169,12 @@ const planRanks: Record<string, number> = {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-export function PricingCards({ className }: { className?: string }) {
+interface PricingCardsProps {
+  className?: string;
+  monthlyBonusDays?: number;
+}
+
+export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsProps) {
   const { data: settings } = useSWR("/api/settings", fetcher);
   const { deviceId } = useUser();
   const { data: subDetails } = useSWR(
@@ -235,9 +240,15 @@ export function PricingCards({ className }: { className?: string }) {
     return Math.round(price * 1.4 * 100) / 100;
   }, [getPrice]);
 
+  const displayPlans = ["monthly", "yearly", "weekly", "match"]
+    .map((id) => plans.find((plan) => plan.id === id))
+    .filter(Boolean) as PricingPlan[];
+
   const handlePayment = async (plan: PricingPlan) => {
     if (loadingPlan) return;
     setLoadingPlan(plan.id);
+
+    const appliedBonusDays = plan.id === "monthly" ? Math.max(0, Math.min(7, monthlyBonusDays)) : 0;
 
     try {
       const res = await fetch("/api/pay/checkout", {
@@ -246,6 +257,8 @@ export function PricingCards({ className }: { className?: string }) {
         body: JSON.stringify({
           plan: plan.id,
           deviceId: deviceId || "unknown",
+          offerBonusDays: appliedBonusDays,
+          offerCode: appliedBonusDays > 0 ? "EXIT_INTENT_MONTHLY_7D" : undefined,
         }),
       });
 
@@ -358,20 +371,31 @@ export function PricingCards({ className }: { className?: string }) {
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {plans.map((plan) => {
+          {displayPlans.map((plan) => {
             const price = getPrice(plan);
             const originalPrice = getOriginalPrice(plan);
             const Icon = plan.icon;
             const isCurrent = currentPlanId === plan.id;
             const isUpgrade = !isCurrent && (planRanks[plan.id] || 0) > currentRank;
+            const isYearlyFocus = !isCurrent && plan.id === "yearly";
             const showRamadanBonus = (ramadan.isPreRamadan || ramadan.isRamadan) && plan.ramadanBonus;
+            const monthlyPlanPrice = getPrice(plans.find((p) => p.id === "monthly") || plans[2]);
+            const yearlyEquivalentMonthly = plan.id === "yearly" ? price / 12 : 0;
+            const yearlySavingsAmount = plan.id === "yearly" ? Math.max(0, monthlyPlanPrice * 12 - price) : 0;
+            const yearlySavingsPercent = plan.id === "yearly" && monthlyPlanPrice > 0
+              ? Math.max(0, Math.round((yearlySavingsAmount / (monthlyPlanPrice * 12)) * 100))
+              : 0;
+            const monthlyOfferActive = plan.id === "monthly" && monthlyBonusDays > 0;
 
             return (
               <div
                 key={plan.id}
+                id={`plan-card-${plan.id}`}
                 className={`relative flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${isCurrent
                   ? "border-accent-green ring-2 ring-accent-green/20 bg-gray-900/90 shadow-accent-green/10 font-bold"
-                  : plan.popular
+                  : isYearlyFocus
+                    ? "border-yellow-300 ring-4 ring-yellow-400/35 bg-gradient-to-b from-yellow-900/30 via-gray-900/90 to-gray-900/90 shadow-yellow-500/20 lg:scale-[1.05] z-20"
+                    : plan.popular
                     ? "border-green-500/50 ring-2 ring-green-500/20 shadow-green-900/20 bg-gray-900/80"
                     : plan.bestValue
                       ? "border-yellow-500/50 ring-2 ring-yellow-500/20 shadow-yellow-900/20 bg-gray-900/60"
@@ -390,9 +414,14 @@ export function PricingCards({ className }: { className?: string }) {
                     Ugu Badan Ee La Iibsado 🔥
                   </div>
                 )}
-                {!isCurrent && plan.bestValue && (
+                {!isCurrent && plan.bestValue && !isYearlyFocus && (
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold text-center py-1.5 uppercase tracking-wide">
                     ⭐ Qiimaha Ugu Fiican
+                  </div>
+                )}
+                {isYearlyFocus && (
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400 text-black text-xs font-black text-center py-2 uppercase tracking-wider">
+                    💰 YEARLY DEAL: SAVE {yearlySavingsPercent}% NOW
                   </div>
                 )}
 
@@ -416,6 +445,11 @@ export function PricingCards({ className }: { className?: string }) {
                       {plan.ramadanBonus}
                     </div>
                   )}
+                  {monthlyOfferActive && (
+                    <div className="mb-4 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-green-300 text-xs font-black">
+                      🔥 Exit Offer Active: +{monthlyBonusDays} maalmood BILAASH ah maanta
+                    </div>
+                  )}
 
                   {/* Price with crossed-out original */}
                   <div className="mb-4">
@@ -437,6 +471,17 @@ export function PricingCards({ className }: { className?: string }) {
                       <span className="inline-block bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded-md mt-2">
                         {plan.savings}
                       </span>
+                    )}
+                    {plan.id === "yearly" && (
+                      <div className="mt-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                        <p className="text-sm font-black text-yellow-300">
+                          Sanadkii {(geoInfo?.currencySymbol || "$")}{price.toFixed(2)} = {(geoInfo?.currencySymbol || "$")}{yearlyEquivalentMonthly.toFixed(2)} bishii
+                        </p>
+                        <p className="text-xs text-yellow-100/80 mt-1">
+                          Isbarbardhig: Monthly {(geoInfo?.currencySymbol || "$")}{monthlyPlanPrice.toFixed(2)} x 12 = {(geoInfo?.currencySymbol || "$")}{(monthlyPlanPrice * 12).toFixed(2)}.
+                          Waxaad badbaadinaysaa {(geoInfo?.currencySymbol || "$")}{yearlySavingsAmount.toFixed(2)} sanadkii.
+                        </p>
+                      </div>
                     )}
                   </div>
 
@@ -489,7 +534,13 @@ export function PricingCards({ className }: { className?: string }) {
                       <Wallet size={18} />
                     )}
                     <span>
-                      {isCurrent ? "✓ Qorshahaaga" : loadingPlan === plan.id ? "Sugayo..." : "💳 Iibso Hadda"}
+                      {isCurrent
+                        ? "✓ Qorshahaaga"
+                        : loadingPlan === plan.id
+                          ? "Sugayo..."
+                          : plan.id === "yearly"
+                            ? "💎 Iibso Yearly Hadda"
+                            : "💳 Iibso Hadda"}
                     </span>
                   </button>
 
@@ -584,7 +635,7 @@ export function PricingCards({ className }: { className?: string }) {
                 </div>
                 <div>
                   <p className="text-white text-sm font-bold">Macaamiisha Premium-ka waxay helaan taageero WhatsApp 24/7</p>
-                  <p className="text-gray-400 text-xs">Su'aal? Mushkilad? Naga soo wac WhatsApp — waan ku caawin doonaa!</p>
+                  <p className="text-gray-400 text-xs">Su&apos;aal? Mushkilad? Naga soo wac WhatsApp — waan ku caawin doonaa!</p>
                 </div>
               </div>
               <a

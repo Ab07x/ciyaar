@@ -69,7 +69,9 @@ export async function POST(request: NextRequest) {
             if (device) {
                 const userId = device.userId || device._id;
                 const plan = payment.plan as "match" | "weekly" | "monthly" | "yearly";
-                const durationDays = PLAN_DURATIONS[plan] || 30;
+                const baseDurationDays = PLAN_DURATIONS[plan] || 30;
+                const bonusDays = Math.max(0, Number(payment.bonusDays) || 0);
+                const durationDays = baseDurationDays + bonusDays;
                 const maxDevices = PLAN_DEVICES[plan] || 1;
 
                 // Create subscription

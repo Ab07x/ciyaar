@@ -89,6 +89,9 @@ export default function PricingPage() {
     const [loading, setLoading] = useState(false);
     const hasTracked = useRef(false);
     const [showNotification, setShowNotification] = useState(true);
+    const [showExitOffer, setShowExitOffer] = useState(false);
+    const [exitOfferAccepted, setExitOfferAccepted] = useState(false);
+    const [exitOfferSeen, setExitOfferSeen] = useState(false);
 
     useEffect(() => {
         if (!hasTracked.current) {
@@ -100,6 +103,41 @@ export default function PricingPage() {
             }).catch(() => { });
         }
     }, []);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const seen = window.sessionStorage.getItem("fanbroj_exit_offer_seen") === "1";
+        const accepted = window.sessionStorage.getItem("fanbroj_exit_offer_accepted") === "1";
+        setExitOfferSeen(seen);
+        setExitOfferAccepted(accepted);
+    }, []);
+
+    useEffect(() => {
+        if (isPremium || exitOfferSeen) return;
+
+        const onMouseOut = (event: MouseEvent) => {
+            const leavingFromTop = event.clientY <= 0;
+            if (!leavingFromTop) return;
+            setShowExitOffer(true);
+            setExitOfferSeen(true);
+            if (typeof window !== "undefined") {
+                window.sessionStorage.setItem("fanbroj_exit_offer_seen", "1");
+            }
+        };
+
+        window.addEventListener("mouseout", onMouseOut);
+        return () => window.removeEventListener("mouseout", onMouseOut);
+    }, [isPremium, exitOfferSeen]);
+
+    const activateExitOffer = () => {
+        setExitOfferAccepted(true);
+        setShowExitOffer(false);
+        if (typeof window !== "undefined") {
+            window.sessionStorage.setItem("fanbroj_exit_offer_accepted", "1");
+        }
+        const monthlyCard = document.getElementById("plan-card-monthly");
+        monthlyCard?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
 
     const handleRedeem = async () => {
         if (!code.trim()) return;
@@ -121,6 +159,33 @@ export default function PricingPage() {
 
     return (
         <div className="min-h-screen relative">
+            {/* Exit Intent Offer Modal */}
+            {showExitOffer && !isPremium && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-yellow-500/40 bg-[#101723] p-6 shadow-2xl">
+                        <p className="text-yellow-400 text-xs font-black uppercase tracking-wider mb-2">Special Offer</p>
+                        <h2 className="text-2xl font-black text-white mb-2">Sug daqiiqad!</h2>
+                        <p className="text-gray-300 mb-5">
+                            Hel <span className="text-green-400 font-black">+7 maalmood bilaash</span> marka aad iibsato Monthly maanta 🌙
+                        </p>
+                        <div className="space-y-3">
+                            <button
+                                onClick={activateExitOffer}
+                                className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-400 text-black font-black hover:brightness-110 transition-all"
+                            >
+                                Haa, i sii offer-ka
+                            </button>
+                            <button
+                                onClick={() => setShowExitOffer(false)}
+                                className="w-full py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all"
+                            >
+                                Maya, waan ka gudbayaa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Full Page Background */}
             <div className="fixed inset-0 -z-10">
                 <Image
@@ -224,7 +289,7 @@ export default function PricingPage() {
             </section>
 
             {/* Plans Grid */}
-            <PricingCards />
+            <PricingCards monthlyBonusDays={exitOfferAccepted ? 7 : 0} />
 
             {/* CTA Section */}
             <section className="py-12 bg-black/60 backdrop-blur-sm border-y border-white/10">

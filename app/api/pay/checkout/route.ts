@@ -2,26 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Settings, Payment } from "@/lib/models";
 
-// Plan duration mapping (days)
-const PLAN_DURATIONS: Record<string, number> = {
-    match: 1,
-    weekly: 7,
-    monthly: 30,
-    yearly: 365,
-};
-
-const PLAN_DEVICES: Record<string, number> = {
-    match: 1,
-    weekly: 2,
-    monthly: 3,
-    yearly: 5,
-};
-
 export async function POST(request: NextRequest) {
     try {
         await connectDB();
         const body = await request.json();
-        const { plan, deviceId } = body;
+        const { plan, deviceId, offerBonusDays, offerCode } = body;
 
         if (!plan || !deviceId) {
             return NextResponse.json(
@@ -41,6 +26,8 @@ export async function POST(request: NextRequest) {
         const settings = await Settings.findOne().lean() as any;
         const priceKey = `price${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
         const baseAmount = settings?.[priceKey] || 0;
+        const bonusDays = plan === "monthly" ? Math.min(7, Math.max(0, Number(offerBonusDays) || 0)) : 0;
+        const normalizedOfferCode = bonusDays > 0 ? String(offerCode || "MONTHLY_EXIT_7D") : "";
 
         if (!baseAmount || baseAmount <= 0) {
             return NextResponse.json(
@@ -129,6 +116,8 @@ export async function POST(request: NextRequest) {
             sifaloKey: key,
             sifaloToken: token,
             status: "pending",
+            bonusDays,
+            offerCode: normalizedOfferCode || undefined,
             createdAt: Date.now(),
         });
 

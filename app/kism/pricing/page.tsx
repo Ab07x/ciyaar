@@ -13,6 +13,7 @@ export default function AdminPricingPage() {
     const [formData, setFormData] = useState({
         priceMatch: 0.2, priceWeekly: 1, priceMonthly: 3.5, priceYearly: 11,
         maxDevicesMatch: 1, maxDevicesWeekly: 2, maxDevicesMonthly: 3, maxDevicesYearly: 5,
+        freeMoviesPerDay: 2, freeMoviePreviewMinutes: 24,
     });
 
     useEffect(() => {
@@ -25,6 +26,8 @@ export default function AdminPricingPage() {
             maxDevicesWeekly: settings.maxDevicesWeekly ?? 2,
             maxDevicesMonthly: settings.maxDevicesMonthly ?? 3,
             maxDevicesYearly: settings.maxDevicesYearly ?? 5,
+            freeMoviesPerDay: settings.freeMoviesPerDay ?? 2,
+            freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 24,
         });
     }, [settings]);
 
@@ -68,6 +71,35 @@ export default function AdminPricingPage() {
                         <div key={plan}><label className="block text-sm text-text-secondary mb-2">{plan}</label>
                             <input type="number" min={1} value={(formData as any)[`maxDevices${plan}`]} onChange={(e) => setFormData({ ...formData, [`maxDevices${plan}`]: parseInt(e.target.value) || 1 })} className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3" /></div>
                     ))}
+                </div>
+            </div>
+
+            <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6 space-y-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-border-subtle">
+                    <DollarSign size={24} className="text-accent-red" />
+                    <h3 className="font-bold">Aggressive Paywall Settings</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm text-text-secondary mb-2">Free Movies / Day</label>
+                        <input
+                            type="number"
+                            min={1}
+                            value={formData.freeMoviesPerDay}
+                            onChange={(e) => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 2 })}
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-text-secondary mb-2">Free Preview Minutes</label>
+                        <input
+                            type="number"
+                            min={5}
+                            value={formData.freeMoviePreviewMinutes}
+                            onChange={(e) => setFormData({ ...formData, freeMoviePreviewMinutes: parseInt(e.target.value) || 24 })}
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

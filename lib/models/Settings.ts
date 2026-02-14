@@ -33,6 +33,8 @@ export interface ISettings extends Document {
     sitemapEnabled?: boolean;
     footballApiKey?: string;
     freeMovieOfWeek?: string;
+    freeMoviesPerDay?: number;
+    freeMoviePreviewMinutes?: number;
     freeMatchPreviewMinutes?: number;
     trialDays?: number;
 }
@@ -70,6 +72,8 @@ const SettingsSchema = new Schema<ISettings>(
         sitemapEnabled: Boolean,
         footballApiKey: String,
         freeMovieOfWeek: String,
+        freeMoviesPerDay: Number,
+        freeMoviePreviewMinutes: Number,
         freeMatchPreviewMinutes: Number,
         trialDays: Number,
     },
@@ -316,6 +320,8 @@ export interface IPayment extends Document {
     sifaloSid?: string;
     status: string;
     paymentType?: string;
+    bonusDays?: number;
+    offerCode?: string;
     subscriptionId?: string;
     createdAt: number;
     verifiedAt?: number;
@@ -337,6 +343,8 @@ const PaymentSchema = new Schema<IPayment>(
         sifaloSid: String,
         status: { type: String, required: true, index: true },
         paymentType: String,
+        bonusDays: Number,
+        offerCode: String,
         subscriptionId: String,
         createdAt: { type: Number, required: true },
         verifiedAt: Number,

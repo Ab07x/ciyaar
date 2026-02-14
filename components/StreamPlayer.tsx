@@ -40,6 +40,17 @@ interface StreamPlayerProps {
         seriesId?: string;
         duration?: number;
     };
+    conversionGate?: {
+        enabled: boolean;
+        previewSeconds?: number;
+        reachedDailyLimit?: boolean;
+        dailyLimit?: number;
+        usedToday?: number;
+        qualityCap?: number;
+        ctaHref?: string;
+        contentLabel?: string;
+    };
+    onPreviewStart?: () => void;
 }
 
 interface QualityLevel {
@@ -102,7 +113,9 @@ export function StreamPlayer({
     nextEpisodeTitle,
     onNextEpisode,
     showRefreshMessage = false,
-    trackParams
+    trackParams,
+    conversionGate,
+    onPreviewStart,
 }: StreamPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<any>(null);
@@ -193,30 +206,94 @@ export function StreamPlayer({
     const { isPremium } = useUser();
 
     const [showPaywall, setShowPaywall] = useState(false);
+    const [iframePreviewStartMs, setIframePreviewStartMs] = useState<number | null>(null);
+    const hasTriggeredPreviewStartRef = useRef(false);
+
     // Explicitly cast settings to any to avoid TS errors with new schema fields not yet picked up
     const freePreviewLimit = ((settings as any)?.freeMatchPreviewMinutes || 15) * 60; // default 15 mins
+    const moviePreviewLimit = conversionGate?.previewSeconds || (((settings as any)?.freeMoviePreviewMinutes || 24) * 60);
+    const conversionGateEnabled = !!conversionGate?.enabled && !isPremium;
+    const qualityCap = conversionGate?.qualityCap || 0;
 
-    // Free Tier Enforcement
+    // Conversion gate: immediate lock when daily limit is reached.
+    useEffect(() => {
+        if (!conversionGateEnabled) return;
+        if (!conversionGate?.reachedDailyLimit) return;
+
+        const video = videoRef.current;
+        if (video && !video.paused) {
+            video.pause();
+            setIsPlaying(false);
+        }
+        setShowPaywall(true);
+    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit]);
+
+    // Free tier enforcement for live matches.
     useEffect(() => {
         if (trackParams?.contentType !== "match") return;
         if (isPremium) {
-            setShowPaywall(false); // Hide if they become premium
+            setShowPaywall(false);
             return;
         }
 
-        const video = videoRef.current;
-        if (!video) return;
+        if (currentTime < freePreviewLimit) return;
 
-        // Check time limit
-        if (currentTime >= freePreviewLimit) {
+        const video = videoRef.current;
+        if (video && !video.paused) {
             video.pause();
-            setShowPaywall(true);
-            setIsPlaying(false);
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(() => { });
-            }
+        }
+        setShowPaywall(true);
+        setIsPlaying(false);
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => { });
         }
     }, [currentTime, isPremium, freePreviewLimit, trackParams?.contentType]);
+
+    // Free preview enforcement for premium movies/episodes using media time.
+    useEffect(() => {
+        if (!conversionGateEnabled) return;
+        if (conversionGate?.reachedDailyLimit) return;
+        if (streamType === "iframe") return;
+
+        if (currentTime < moviePreviewLimit) return;
+        const video = videoRef.current;
+        if (video && !video.paused) {
+            video.pause();
+        }
+        setShowPaywall(true);
+        setIsPlaying(false);
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => { });
+        }
+    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit, currentTime, moviePreviewLimit, streamType]);
+
+    // Free preview fallback for iframe-based sources (wall-clock timer).
+    useEffect(() => {
+        if (!conversionGateEnabled || streamType !== "iframe") {
+            setIframePreviewStartMs(null);
+            return;
+        }
+        if (conversionGate?.reachedDailyLimit) return;
+        if (iframePreviewStartMs !== null) return;
+
+        const start = Date.now();
+        setIframePreviewStartMs(start);
+        if (!hasTriggeredPreviewStartRef.current) {
+            hasTriggeredPreviewStartRef.current = true;
+            onPreviewStart?.();
+        }
+    }, [conversionGateEnabled, conversionGate?.reachedDailyLimit, iframePreviewStartMs, onPreviewStart, streamType]);
+
+    useEffect(() => {
+        if (!conversionGateEnabled || streamType !== "iframe" || iframePreviewStartMs === null) return;
+        const interval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - iframePreviewStartMs) / 1000);
+            if (elapsed >= moviePreviewLimit) {
+                setShowPaywall(true);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [conversionGateEnabled, iframePreviewStartMs, moviePreviewLimit, streamType]);
 
     // Controls timeout
     const controlsTimeoutRef = useRef<any>(null);
@@ -396,6 +473,12 @@ export function StreamPlayer({
         setStreamType(type || detectStreamType(url));
     }, [source]);
 
+    useEffect(() => {
+        hasTriggeredPreviewStartRef.current = false;
+        setShowPaywall(false);
+        setIframePreviewStartMs(null);
+    }, [resolvedUrl, conversionGateEnabled]);
+
     // Initialize HLS.js
     useEffect(() => {
         if (!resolvedUrl || streamType !== "m3u8") return;
@@ -462,6 +545,21 @@ export function StreamPlayer({
                         }));
                         setQualities(levels);
 
+                        if (conversionGateEnabled && qualityCap > 0 && levels.length > 0) {
+                            const allowedLevels = levels.filter((level) => level.height <= qualityCap);
+                            if (allowedLevels.length > 0) {
+                                const maxAllowedIndex = Math.max(...allowedLevels.map((level) => level.index));
+                                hls.autoLevelCapping = maxAllowedIndex;
+                                if (hls.currentLevel > maxAllowedIndex) {
+                                    hls.currentLevel = maxAllowedIndex;
+                                }
+                            } else {
+                                // If no 480p tier exists, force the lowest quality level.
+                                hls.autoLevelCapping = 0;
+                                hls.currentLevel = 0;
+                            }
+                        }
+
                         // Always require user interaction to play (show play button)
                         setNeedsUserInteraction(true);
                         setShowControls(true);
@@ -525,7 +623,7 @@ export function StreamPlayer({
                 hlsRef.current = null;
             }
         };
-    }, [resolvedUrl, streamType, onError, onReady]);
+    }, [resolvedUrl, streamType, onError, onReady, conversionGateEnabled, qualityCap]);
 
     // Handle native video
     useEffect(() => {
@@ -571,7 +669,13 @@ export function StreamPlayer({
         const video = videoRef.current;
         if (!video || streamType === "iframe") return;
 
-        const handlePlay = () => setIsPlaying(true);
+        const handlePlay = () => {
+            setIsPlaying(true);
+            if (conversionGateEnabled && !hasTriggeredPreviewStartRef.current) {
+                hasTriggeredPreviewStartRef.current = true;
+                onPreviewStart?.();
+            }
+        };
         const handlePause = () => setIsPlaying(false);
         const handleWaiting = () => setIsBuffering(true);
         const handlePlaying = () => {
@@ -608,7 +712,7 @@ export function StreamPlayer({
             video.removeEventListener("durationchange", handleDurationChange);
             video.removeEventListener("volumechange", handleVolumeChange);
         };
-    }, [streamType]);
+    }, [conversionGateEnabled, onPreviewStart, streamType]);
 
     // Controls
     const togglePlay = () => {
@@ -770,6 +874,20 @@ export function StreamPlayer({
     };
 
     const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
+    const paywallHref = conversionGate?.ctaHref || "/pricing";
+    const isDailyCapPaywall = conversionGateEnabled && !!conversionGate?.reachedDailyLimit;
+    const isMoviePreviewPaywall = conversionGateEnabled && !isDailyCapPaywall;
+    const paywallTitle = isDailyCapPaywall
+        ? "Waxaad gaartay xadka daawashada maanta 👀"
+        : isMoviePreviewPaywall
+            ? "Preview-ga bilaashka ah waa dhammaaday"
+            : "Free Preview Ended";
+    const paywallMessage = isDailyCapPaywall
+        ? `Waxaad daawatay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 2} filim maanta. Hel VIP si aad u sii wadato hadda.`
+        : isMoviePreviewPaywall
+            ? `Si aad u sii wadato daawashada "${conversionGate?.contentLabel || "filimkan"}": Upgrade to VIP 💎`
+            : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`;
+    const primaryPaywallCta = isMoviePreviewPaywall ? "IIBSO VIP HADDA" : "Unlock for $0.25";
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
@@ -784,6 +902,30 @@ export function StreamPlayer({
                     scrolling="no"
                     allow="autoplay; encrypted-media; picture-in-picture"
                 />
+                {showPaywall && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-6 text-center">
+                        <div className="max-w-md animate-in fade-in zoom-in duration-300">
+                            <Lock className="w-16 h-16 text-accent-gold mx-auto mb-4" />
+                            <h3 className="text-2xl font-black text-white mb-2">{paywallTitle}</h3>
+                            <p className="text-gray-300 mb-6">{paywallMessage}</p>
+                            <div className="flex flex-col gap-3">
+                                <a
+                                    href={paywallHref}
+                                    className="w-full py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Zap size={20} />
+                                    {primaryPaywallCta}
+                                </a>
+                                <a
+                                    href={paywallHref}
+                                    className="w-full py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
+                                >
+                                    See All Plans
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -963,22 +1105,19 @@ export function StreamPlayer({
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50 p-6 text-center">
                     <div className="max-w-md animate-in fade-in zoom-in duration-300">
                         <Lock className="w-16 h-16 text-accent-gold mx-auto mb-4" />
-                        <h3 className="text-2xl font-black text-white mb-2">Free Preview Ended</h3>
-                        <p className="text-gray-300 mb-6">
-                            You've watched the free {Math.floor(freePreviewLimit / 60)} minutes of this match.
-                            Upgrade to Premium to continue watching live!
-                        </p>
+                        <h3 className="text-2xl font-black text-white mb-2">{paywallTitle}</h3>
+                        <p className="text-gray-300 mb-6">{paywallMessage}</p>
 
                         <div className="flex flex-col gap-3">
                             <a
-                                href="/pricing"
+                                href={paywallHref}
                                 className="w-full py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2"
                             >
                                 <Zap size={20} />
-                                Unlock for $0.25
+                                {primaryPaywallCta}
                             </a>
                             <a
-                                href="/pricing"
+                                href={paywallHref}
                                 className="w-full py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
                             >
                                 See All Plans
@@ -1075,18 +1214,32 @@ export function StreamPlayer({
                                                 >
                                                     Auto
                                                 </button>
-                                                {qualities.map((q) => (
-                                                    <button
-                                                        key={q.index}
-                                                        onClick={() => changeQuality(q.index)}
-                                                        className={cn(
-                                                            "w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors",
-                                                            currentQuality === q.index ? "text-accent-green" : "text-white"
-                                                        )}
-                                                    >
-                                                        {q.height}p
-                                                    </button>
-                                                ))}
+                                                {qualities.map((q) => {
+                                                    const isLockedQuality = conversionGateEnabled && qualityCap > 0 && q.height > qualityCap;
+                                                    return (
+                                                        <button
+                                                            key={q.index}
+                                                            onClick={() => {
+                                                                if (isLockedQuality) {
+                                                                    if (conversionGate?.ctaHref) {
+                                                                        window.location.href = conversionGate.ctaHref;
+                                                                    }
+                                                                    return;
+                                                                }
+                                                                changeQuality(q.index);
+                                                            }}
+                                                            className={cn(
+                                                                "w-full px-4 py-2 text-left text-sm transition-colors",
+                                                                isLockedQuality
+                                                                    ? "text-yellow-300/70 hover:bg-yellow-500/10"
+                                                                    : "hover:bg-white/10",
+                                                                currentQuality === q.index ? "text-accent-green" : "text-white"
+                                                            )}
+                                                        >
+                                                            {isLockedQuality ? `🔒 ${q.height}p (VIP)` : `${q.height}p`}
+                                                        </button>
+                                                    );
+                                                })}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
