@@ -28,7 +28,7 @@ export default function AdminSettingsPage() {
         freeMoviesPerDay: 3,
         freeMoviePreviewMinutes: 26,
         moviePreviewLockEnabled: true,
-        freeMovieTimerSpeedMultiplier: 8,
+        freeMovieTimerSpeedMultiplier: 12,
         // SEO Settings
         seoTagline: "",
         seoDescription: "",
@@ -59,8 +59,8 @@ export default function AdminSettingsPage() {
             maxDevicesYearly: settings.maxDevicesYearly,
             freeMoviesPerDay: Math.max(3, settings.freeMoviesPerDay ?? 3),
             freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
-            moviePreviewLockEnabled: settings.moviePreviewLockEnabled ?? true,
-            freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 8,
+            moviePreviewLockEnabled: true,
+            freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 12,
             // SEO Settings
             seoTagline: (settings as any).seoTagline || "",
             seoDescription: (settings as any).seoDescription || "",
@@ -113,16 +113,16 @@ export default function AdminSettingsPage() {
                     <div className="pt-2 border-t border-border-subtle space-y-3">
                         <div className="flex items-center justify-between bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3">
                             <div>
-                                <p className="text-sm font-semibold">Enable Preview Timer Lock</p>
-                                <p className="text-xs text-text-muted">Force lock after preview time and send free users to pricing.</p>
+                                <p className="text-sm font-semibold">Preview Timer Lock (Forced)</p>
+                                <p className="text-xs text-text-muted">Always ON for free users on premium movies.</p>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setFormData({ ...formData, moviePreviewLockEnabled: !formData.moviePreviewLockEnabled })}
-                                className={`w-12 h-6 rounded-full relative transition-colors ${formData.moviePreviewLockEnabled ? "bg-accent-green" : "bg-border-strong"}`}
-                                aria-label="Toggle movie preview timer lock"
+                                disabled
+                                className="w-12 h-6 rounded-full relative bg-accent-green/80 cursor-not-allowed"
+                                aria-label="Preview timer lock is forced on"
                             >
-                                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.moviePreviewLockEnabled ? "right-1" : "left-1"}`} />
+                                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white" />
                             </button>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -140,10 +140,10 @@ export default function AdminSettingsPage() {
                                 <label className="block text-xs text-text-secondary mb-1">Timer Speed (x)</label>
                                 <input
                                     type="number"
-                                    min={1}
+                                    min={12}
                                     step="0.1"
                                     value={formData.freeMovieTimerSpeedMultiplier}
-                                    onChange={e => setFormData({ ...formData, freeMovieTimerSpeedMultiplier: parseFloat(e.target.value) || 8 })}
+                                    onChange={e => setFormData({ ...formData, freeMovieTimerSpeedMultiplier: Math.max(12, parseFloat(e.target.value) || 12) })}
                                     className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
                                 />
                             </div>

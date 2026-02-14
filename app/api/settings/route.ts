@@ -14,7 +14,7 @@ const DEFAULTS = {
     freeMoviesPerDay: 3,
     freeMoviePreviewMinutes: 26,
     moviePreviewLockEnabled: true,
-    freeMovieTimerSpeedMultiplier: 8,
+    freeMovieTimerSpeedMultiplier: 12,
     maxDevicesMatch: 1,
     maxDevicesWeekly: 2,
     maxDevicesMonthly: 3,

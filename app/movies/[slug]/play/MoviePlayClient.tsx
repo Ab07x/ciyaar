@@ -2,16 +2,13 @@
 
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
     Play,
     Star,
     Download,
-    Crown,
-    MessageSquare,
     AlertCircle,
     ChevronLeft,
 } from "lucide-react";
@@ -31,25 +28,9 @@ interface MoviePlayClientProps {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 const DEFAULT_FREE_MOVIE_PREVIEW_MINUTES = 26;
-const DEFAULT_FREE_MOVIES_PER_DAY = 3;
-const DEFAULT_FREE_MOVIE_TIMER_SPEED_MULTIPLIER = 8;
-const FREE_MAX_QUALITY = 720;
-
-function parseQualityHeight(quality?: string): number | null {
-    if (!quality) return null;
-    const match = quality.match(/(\d{3,4})p/i);
-    if (!match) return null;
-    return Number(match[1]);
-}
-
-function isHdQuality(quality?: string): boolean {
-    const height = parseQualityHeight(quality);
-    if (!height) return true; // Unknown labels are treated as HD for stricter monetization.
-    return height > FREE_MAX_QUALITY;
-}
+const DEFAULT_FREE_MOVIE_TIMER_SPEED_MULTIPLIER = 12;
 
 export default function MoviePlayClient({ slug, preloadedMovie, preloadedSettings }: MoviePlayClientProps) {
-    const router = useRouter();
     const { data: movieResult } = useSWR(`/api/movies?slug=${slug}`, fetcher);
     const movie = movieResult || preloadedMovie;
 
@@ -61,7 +42,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
         fetcher
     );
 
-    const { isPremium, redeemCode, userId, isLoading: isUserLoading } = useUser();
+    const { isPremium, userId } = useUser();
 
     // PPV Access Check
     const { data: ppvAccess } = useSWR(
@@ -69,138 +50,28 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
         fetcher
     );
 
-    const previewSessionIdRef = useRef(`pv-${slug}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
-    const [previewConsumedKey, setPreviewConsumedKey] = useState<string | null>(null);
-
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
-    const [code, setCode] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [localUnlocked, setLocalUnlocked] = useState(false);
     const [showInterstitial, setShowInterstitial] = useState(true);
     const [adCompleted, setAdCompleted] = useState(false);
 
-    const isUnlocked = !movie?.isPremium || isPremium || localUnlocked;
-    const isPreviewMode = !!movie?.isPremium && !isPremium && !localUnlocked;
+    const isUnlocked = !movie?.isPremium || isPremium;
+    const isPreviewMode = !!movie?.isPremium && !isPremium;
     const freePreviewMinutesRaw = Number(settings?.freeMoviePreviewMinutes);
     const freePreviewMinutes = Number.isFinite(freePreviewMinutesRaw) && freePreviewMinutesRaw > 0
-        ? freePreviewMinutesRaw
+        ? Math.min(DEFAULT_FREE_MOVIE_PREVIEW_MINUTES, freePreviewMinutesRaw)
         : DEFAULT_FREE_MOVIE_PREVIEW_MINUTES;
-    const freeMoviesPerDaySetting = Number(settings?.freeMoviesPerDay);
-    const freeMoviesPerDay = Number.isFinite(freeMoviesPerDaySetting) && freeMoviesPerDaySetting > 0
-        ? Math.max(DEFAULT_FREE_MOVIES_PER_DAY, Math.floor(freeMoviesPerDaySetting))
-        : DEFAULT_FREE_MOVIES_PER_DAY;
-    const moviePreviewLockEnabled = settings?.moviePreviewLockEnabled !== false;
     const freeTimerSpeedMultiplierRaw = Number(settings?.freeMovieTimerSpeedMultiplier);
     const freeTimerSpeedMultiplier = Number.isFinite(freeTimerSpeedMultiplierRaw) && freeTimerSpeedMultiplierRaw > 0
-        ? freeTimerSpeedMultiplierRaw
+        ? Math.max(DEFAULT_FREE_MOVIE_TIMER_SPEED_MULTIPLIER, freeTimerSpeedMultiplierRaw)
         : DEFAULT_FREE_MOVIE_TIMER_SPEED_MULTIPLIER;
-
-    const { data: freeLimitData, mutate: mutateFreeLimit } = useSWR(
-        isPreviewMode && userId
-            ? `/api/movies/free-limit?userId=${userId}&movieId=${slug}&sessionId=${encodeURIComponent(previewSessionIdRef.current)}`
-            : null,
-        fetcher
-    );
-
-    const hasEmbeds = Array.isArray(movie?.embeds) && movie.embeds.length > 0;
-    const hasFreeQualitySource = hasEmbeds && movie.embeds.some((embed: any) => !isHdQuality(embed?.quality));
-    const firstFreeEmbedIndex = hasEmbeds
-        ? movie.embeds.findIndex((embed: any) => !isHdQuality(embed?.quality))
-        : -1;
-    const effectiveEmbedIndex = isPreviewMode
-        && hasFreeQualitySource
-        && isHdQuality(movie?.embeds?.[activeEmbedIndex]?.quality)
-        && firstFreeEmbedIndex >= 0
-        ? firstFreeEmbedIndex
-        : activeEmbedIndex;
+    const effectiveEmbedIndex = activeEmbedIndex;
     const effectiveEmbed = movie?.embeds?.[effectiveEmbedIndex];
-    const dailyLimitReached = isPreviewMode && !!freeLimitData && !freeLimitData.allowed;
     const pricingHref = `/pricing?src=movie-preview&content=movie&id=${encodeURIComponent(slug)}`;
-    const hardPricingLock = isPreviewMode && (dailyLimitReached || (hasEmbeds && !hasFreeQualitySource));
-
-    useEffect(() => {
-        if (!hardPricingLock) return;
-        router.replace(pricingHref);
-    }, [hardPricingLock, pricingHref, router]);
-
-    const handleRedeem = async () => {
-        if (!code.trim()) return;
-        setLoading(true);
-        setError("");
-        const result = await redeemCode(code.trim());
-        setLoading(false);
-        if (result.success) setLocalUnlocked(true);
-        else setError(result.error || "Code qaldan");
-    };
-
-    const whatsappNumber = settings?.whatsappNumber || "252618274188";
-    const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo film ${movie?.title || "film"}`;
-
-    const handlePreviewStart = async () => {
-        const sessionKey = `${userId || "anon"}:${previewSessionIdRef.current}`;
-        if (!isPreviewMode || !userId || previewConsumedKey === sessionKey) return;
-        setPreviewConsumedKey(sessionKey);
-        try {
-            await fetch("/api/movies/free-limit", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, movieId: slug, sessionId: previewSessionIdRef.current }),
-            });
-            mutateFreeLimit();
-        } catch (consumeError) {
-            console.error("Failed to consume free preview slot:", consumeError);
-        }
-    };
 
     if (!movie || !settings) {
         return (
             <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914]"></div>
-            </div>
-        );
-    }
-
-    if (isPreviewMode && isUserLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914] mx-auto mb-3"></div>
-                    <p className="text-gray-300 text-sm">Hubinaya xadka daawashada...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (isPreviewMode && !userId) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914] mx-auto mb-3"></div>
-                    <p className="text-gray-300 text-sm">Diyaarinaya akoonka daawashada...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (isPreviewMode && userId && !freeLimitData) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914] mx-auto mb-3"></div>
-                    <p className="text-gray-300 text-sm">Diyaarinaya Free Preview...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (hardPricingLock) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px] bg-[#020D18]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#E50914] mx-auto mb-3"></div>
-                    <p className="text-gray-300 text-sm">Ku wareejinaya pricing...</p>
-                </div>
             </div>
         );
     }
@@ -279,152 +150,6 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                             )}
                         </div>
                     </PPVUnlockGate>
-                ) : isPreviewMode && dailyLimitReached ? (
-                    /* Daily Free Limit Lock */
-                    <div className="relative w-full aspect-video md:aspect-video bg-black rounded-2xl overflow-hidden border-4 border-[#E50914]">
-                        <div className="absolute inset-0">
-                            <Image
-                                src={optimizeImageUrl(movie.backdropUrl || movie.posterUrl, "backdrop") || movie.posterUrl}
-                                alt=""
-                                fill
-                                className="object-cover opacity-30 blur-md scale-105"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/50" />
-                        </div>
-
-                        <div className="absolute inset-0 flex flex-col justify-center items-center p-4 md:p-8 overflow-y-auto">
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#E50914] to-[#ff6b6b] rounded-full flex items-center justify-center mb-3 md:mb-4 shadow-lg shadow-red-500/30 animate-pulse">
-                                <Crown size={32} className="text-white md:w-10 md:h-10" />
-                            </div>
-
-                            <h3 className="text-xl md:text-3xl font-black text-white mb-1 md:mb-2 text-center">
-                                XADKA MAANTA WAA DHAMMAADAY 👀
-                            </h3>
-                            <p className="text-gray-300 text-sm md:text-base mb-4 md:mb-6 text-center max-w-md">
-                                Waxaad daawatay {freeLimitData?.used || freeMoviesPerDay}/{freeLimitData?.dailyLimit || freeMoviesPerDay} filim maanta.
-                                Hel VIP si aad u sii wadato daawashada hadda.
-                            </p>
-
-                            <div className="w-full max-w-sm space-y-3 mb-4">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={code}
-                                        onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                        placeholder="GELI CODE-KAAGA"
-                                        className="flex-1 bg-white/10 border-2 border-white/20 focus:border-[#9AE600] rounded-xl px-4 py-3 md:py-4 uppercase text-center tracking-widest text-white placeholder-white/40 font-bold text-base"
-                                    />
-                                    <button
-                                        onClick={handleRedeem}
-                                        disabled={loading || !code.trim()}
-                                        className="px-6 md:px-8 py-3 md:py-4 bg-[#9AE600] hover:bg-[#8AD500] text-black font-black rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base"
-                                    >
-                                        {loading ? "..." : "FUR"}
-                                    </button>
-                                </div>
-                                {error && (
-                                    <p className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg">
-                                        ⚠️ {error}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="w-full max-w-sm space-y-3">
-                                <Link
-                                    href={pricingHref}
-                                    className="w-full py-4 md:py-5 bg-gradient-to-r from-[#E50914] to-[#ff3d47] hover:from-[#ff3d47] hover:to-[#E50914] text-white font-black rounded-xl text-center text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    <Crown size={22} />
-                                    IIBSO VIP HADDA
-                                </Link>
-
-                                <a
-                                    href={whatsappLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-4 md:py-5 bg-[#25D366] hover:bg-[#1fb855] text-white font-black rounded-xl flex items-center justify-center gap-2 text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    <MessageSquare size={22} />
-                                    LA XIRIIR WHATSAPP
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                ) : isPreviewMode && hasEmbeds && !hasFreeQualitySource ? (
-                    /* Quality Gate if no 720p-or-lower source exists */
-                    <div className="relative w-full aspect-video md:aspect-video bg-black rounded-2xl overflow-hidden border-4 border-[#E50914]">
-                        <div className="absolute inset-0">
-                            <Image
-                                src={optimizeImageUrl(movie.backdropUrl || movie.posterUrl, "backdrop") || movie.posterUrl}
-                                alt=""
-                                fill
-                                className="object-cover opacity-30 blur-md scale-105"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/50" />
-                        </div>
-
-                        <div className="absolute inset-0 flex flex-col justify-center items-center p-4 md:p-8 overflow-y-auto">
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#E50914] to-[#ff6b6b] rounded-full flex items-center justify-center mb-3 md:mb-4 shadow-lg shadow-red-500/30 animate-pulse">
-                                <Crown size={32} className="text-white md:w-10 md:h-10" />
-                            </div>
-
-                            <h3 className="text-xl md:text-3xl font-black text-white mb-1 md:mb-2 text-center">
-                                HD (VIP ONLY)
-                            </h3>
-                            <p className="text-gray-300 text-sm md:text-base mb-4 md:mb-6 text-center max-w-md">
-                                Filimkan waxaa lagu heli karaa kaliya tayada HD/4K.
-                                Free users waxaa loo ogolyahay ilaa 720p oo keliya.
-                            </p>
-
-                            <div className="w-full max-w-sm space-y-3 mb-4">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={code}
-                                        onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                        placeholder="GELI CODE-KAAGA"
-                                        className="flex-1 bg-white/10 border-2 border-white/20 focus:border-[#9AE600] rounded-xl px-4 py-3 md:py-4 uppercase text-center tracking-widest text-white placeholder-white/40 font-bold text-base"
-                                    />
-                                    <button
-                                        onClick={handleRedeem}
-                                        disabled={loading || !code.trim()}
-                                        className="px-6 md:px-8 py-3 md:py-4 bg-[#9AE600] hover:bg-[#8AD500] text-black font-black rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base"
-                                    >
-                                        {loading ? "..." : "FUR"}
-                                    </button>
-                                </div>
-                                {error && (
-                                    <p className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg">
-                                        ⚠️ {error}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="w-full max-w-sm space-y-3">
-                                <Link
-                                    href={pricingHref}
-                                    className="w-full py-4 md:py-5 bg-gradient-to-r from-[#E50914] to-[#ff3d47] hover:from-[#ff3d47] hover:to-[#E50914] text-white font-black rounded-xl text-center text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    <Crown size={22} />
-                                    FUR HD VIP
-                                </Link>
-
-                                <a
-                                    href={whatsappLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-4 md:py-5 bg-[#25D366] hover:bg-[#1fb855] text-white font-black rounded-xl flex items-center justify-center gap-2 text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    <MessageSquare size={22} />
-                                    LA XIRIIR WHATSAPP
-                                </a>
-                            </div>
-
-                            <p className="text-white/50 text-xs md:text-sm mt-4 text-center">
-                                ✨ 1080p/4K + Unlimited daawasho + Xayeysiis la&apos;aan
-                            </p>
-                        </div>
-                    </div>
                 ) : effectiveEmbed?.url ? (
                     /* Video Player */
                     <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border-4 border-[#333333]">
@@ -442,21 +167,13 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 duration: movie.runtime ? movie.runtime * 60 : undefined
                             }}
                             conversionGate={{
-                                enabled: isPreviewMode && moviePreviewLockEnabled,
+                                enabled: isPreviewMode,
                                 previewSeconds: freePreviewMinutes * 60,
-                                reachedDailyLimit: dailyLimitReached,
-                                dailyLimit: Number(freeLimitData?.dailyLimit || freeMoviesPerDay),
-                                usedToday: Number(freeLimitData?.used || 0),
-                                qualityCap: FREE_MAX_QUALITY,
+                                reachedDailyLimit: false,
                                 timerSpeedMultiplier: freeTimerSpeedMultiplier,
                                 ctaHref: pricingHref,
-                                forceRedirectOnLock: true,
-                                redirectDelayMs: 300,
+                                forceRedirectOnLock: false,
                                 contentLabel: movie.titleSomali || movie.title,
-                            }}
-                            onPreviewStart={handlePreviewStart}
-                            onGateLocked={() => {
-                                router.replace(pricingHref);
                             }}
                         />
                     </div>
@@ -474,24 +191,18 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                 {(isUnlocked || isPreviewMode) && movie.embeds?.length > 1 && (
                     <div className="flex flex-wrap gap-2 mt-4 justify-center">
                         {movie.embeds.map((embed: any, i: number) => {
-                            const lockedHd = isPreviewMode && isHdQuality(embed?.quality);
                             return (
                                 <button
                                     key={i}
                                     onClick={() => {
-                                        if (lockedHd) return;
                                         setActiveEmbedIndex(i);
                                     }}
-                                    disabled={lockedHd}
                                     className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all ${effectiveEmbedIndex === i
                                         ? "bg-[#9AE600] text-black border-[#9AE600]"
-                                        : lockedHd
-                                            ? "bg-[#2a2a2a] text-gray-400 border-[#444] cursor-not-allowed"
-                                            : "bg-[#333333] text-white border-[#2a4a6c] hover:border-[#E50914]"
+                                        : "bg-[#333333] text-white border-[#2a4a6c] hover:border-[#E50914]"
                                         }`}
                                 >
                                     {embed.label} {embed.quality && `(${embed.quality})`}
-                                    {lockedHd && " - HD (VIP Only)"}
                                 </button>
                             );
                         })}
@@ -500,7 +211,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
                 {isPreviewMode && (
                     <p className="text-center text-xs text-yellow-300 mt-3">
-                        Free users: ilaa 720p • 1080p/4K waa VIP Only
+                        Free Preview: {freePreviewMinutes} daqiiqo • Timer x{freeTimerSpeedMultiplier}
                     </p>
                 )}
 

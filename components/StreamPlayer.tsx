@@ -65,7 +65,7 @@ interface QualityLevel {
 }
 
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
-const PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT = 8;
+const PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT = 12;
 
 // Helper: Detect stream type from URL
 function detectStreamType(url: string): "m3u8" | "mpd" | "iframe" | "video" {
@@ -225,6 +225,11 @@ export function StreamPlayer({
     const moviePreviewLimit = conversionGate?.previewSeconds || (((settings as any)?.freeMoviePreviewMinutes || 26) * 60);
     const conversionGateEnabled = !!conversionGate?.enabled && !isPremium;
     const qualityCap = conversionGate?.qualityCap || 0;
+    const moviePreviewPersistenceKey = conversionGateEnabled
+        && trackParams?.contentType === "movie"
+        && trackParams?.contentId
+        ? `fanbroj:movie-preview-elapsed:${trackParams.contentId}`
+        : null;
     const previewTimerMultiplierRaw = Number(
         conversionGate?.timerSpeedMultiplier
         || (settings as any)?.freeMovieTimerSpeedMultiplier
@@ -233,6 +238,28 @@ export function StreamPlayer({
     const previewTimerMultiplier = Number.isFinite(previewTimerMultiplierRaw) && previewTimerMultiplierRaw > 0
         ? previewTimerMultiplierRaw
         : PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT;
+
+    const readPersistedPreviewElapsed = useCallback(() => {
+        if (!moviePreviewPersistenceKey || typeof window === "undefined") return 0;
+        try {
+            const storedValue = window.localStorage.getItem(moviePreviewPersistenceKey);
+            const parsedValue = Number(storedValue || 0);
+            return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0;
+        } catch {
+            return 0;
+        }
+    }, [moviePreviewPersistenceKey]);
+
+    const writePersistedPreviewElapsed = useCallback((elapsedSeconds: number) => {
+        if (!moviePreviewPersistenceKey || typeof window === "undefined") return;
+        try {
+            const currentStored = readPersistedPreviewElapsed();
+            const nextValue = Math.max(currentStored, elapsedSeconds);
+            window.localStorage.setItem(moviePreviewPersistenceKey, String(nextValue));
+        } catch {
+            // Ignore storage failures (private mode / quota limits).
+        }
+    }, [moviePreviewPersistenceKey, readPersistedPreviewElapsed]);
 
     const startPreviewSession = useCallback(() => {
         if (!conversionGateEnabled) return;
@@ -248,6 +275,32 @@ export function StreamPlayer({
             onPreviewStart?.();
         }
     }, [conversionGateEnabled, moviePreviewLimit, onPreviewStart]);
+
+    useEffect(() => {
+        if (!conversionGateEnabled) return;
+        if (!moviePreviewPersistenceKey) return;
+
+        const persistedElapsed = readPersistedPreviewElapsed();
+        if (persistedElapsed <= 0) return;
+
+        previewAccumulatedSecondsRef.current = Math.max(previewAccumulatedSecondsRef.current, persistedElapsed);
+        const remainingSeconds = Math.max(0, Math.ceil(moviePreviewLimit - previewAccumulatedSecondsRef.current));
+        setPreviewRemainingSeconds(remainingSeconds);
+
+        if (previewAccumulatedSecondsRef.current < moviePreviewLimit) return;
+
+        const video = videoRef.current;
+        if (video && !video.paused) {
+            video.pause();
+            setIsPlaying(false);
+        }
+        setShowPaywall(true);
+    }, [
+        conversionGateEnabled,
+        moviePreviewPersistenceKey,
+        moviePreviewLimit,
+        readPersistedPreviewElapsed,
+    ]);
 
     // Conversion gate: immediate lock when daily limit is reached.
     useEffect(() => {
@@ -318,6 +371,7 @@ export function StreamPlayer({
 
             const mediaSeconds = streamType === "iframe" ? 0 : (video?.currentTime || 0);
             const elapsedSeconds = Math.max(previewAccumulatedSecondsRef.current, mediaSeconds);
+            writePersistedPreviewElapsed(elapsedSeconds);
             setPreviewRemainingSeconds(Math.max(0, Math.ceil(moviePreviewLimit - elapsedSeconds)));
             if (elapsedSeconds < moviePreviewLimit) return;
 
@@ -337,6 +391,7 @@ export function StreamPlayer({
         conversionGate?.reachedDailyLimit,
         moviePreviewLimit,
         previewTimerMultiplier,
+        writePersistedPreviewElapsed,
         showPaywall,
         streamType,
     ]);

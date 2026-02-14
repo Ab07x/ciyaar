@@ -13,7 +13,7 @@ export default function AdminPricingPage() {
     const [formData, setFormData] = useState({
         priceMatch: 0.2, priceWeekly: 1, priceMonthly: 3.5, priceYearly: 11,
         maxDevicesMatch: 1, maxDevicesWeekly: 2, maxDevicesMonthly: 3, maxDevicesYearly: 5,
-        freeMoviesPerDay: 3, freeMoviePreviewMinutes: 26, moviePreviewLockEnabled: true, freeMovieTimerSpeedMultiplier: 8,
+        freeMoviesPerDay: 3, freeMoviePreviewMinutes: 26, moviePreviewLockEnabled: true, freeMovieTimerSpeedMultiplier: 12,
     });
 
     useEffect(() => {
@@ -28,8 +28,8 @@ export default function AdminPricingPage() {
             maxDevicesYearly: settings.maxDevicesYearly ?? 5,
             freeMoviesPerDay: Math.max(3, settings.freeMoviesPerDay ?? 3),
             freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
-            moviePreviewLockEnabled: settings.moviePreviewLockEnabled ?? true,
-            freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 8,
+            moviePreviewLockEnabled: true,
+            freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 12,
         });
     }, [settings]);
 
@@ -84,16 +84,16 @@ export default function AdminPricingPage() {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2 flex items-center justify-between bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3">
                         <div>
-                            <label className="block text-sm font-semibold">Enable Preview Timer Lock</label>
-                            <p className="text-xs text-text-secondary">If OFF, free users won&apos;t be timed out by preview minutes.</p>
+                            <label className="block text-sm font-semibold">Preview Timer Lock (Forced)</label>
+                            <p className="text-xs text-text-secondary">Always ON for free users on premium movies.</p>
                         </div>
                         <button
                             type="button"
-                            onClick={() => setFormData({ ...formData, moviePreviewLockEnabled: !formData.moviePreviewLockEnabled })}
-                            className={`w-12 h-6 rounded-full relative transition-colors ${formData.moviePreviewLockEnabled ? "bg-accent-green" : "bg-border-strong"}`}
-                            aria-label="Toggle movie preview lock"
+                            disabled
+                            className="w-12 h-6 rounded-full relative bg-accent-green/80 cursor-not-allowed"
+                            aria-label="Preview timer lock is forced on"
                         >
-                            <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.moviePreviewLockEnabled ? "right-1" : "left-1"}`} />
+                            <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white" />
                         </button>
                     </div>
                     <div>
@@ -120,10 +120,10 @@ export default function AdminPricingPage() {
                         <label className="block text-sm text-text-secondary mb-2">Timer Speed (x)</label>
                         <input
                             type="number"
-                            min={1}
+                            min={12}
                             step="0.1"
                             value={formData.freeMovieTimerSpeedMultiplier}
-                            onChange={(e) => setFormData({ ...formData, freeMovieTimerSpeedMultiplier: parseFloat(e.target.value) || 8 })}
+                            onChange={(e) => setFormData({ ...formData, freeMovieTimerSpeedMultiplier: Math.max(12, parseFloat(e.target.value) || 12) })}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         />
                     </div>
