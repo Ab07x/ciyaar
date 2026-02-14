@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Crown, Clock, Monitor, ChevronRight, LogOut, Home } from "lucide-react";
 
@@ -11,24 +11,28 @@ interface LocalSubscription {
 }
 
 export default function DashboardPage() {
-    const [subscription, setSubscription] = useState<LocalSubscription | null>(null);
-    const [deviceId, setDeviceId] = useState<string>("");
+    const [subscription] = useState<LocalSubscription | null>(() => {
+        if (typeof window === "undefined") return null;
+        const storedSub = window.localStorage.getItem("fanbroj_subscription");
+        if (!storedSub) return null;
+        try {
+            return JSON.parse(storedSub);
+        } catch {
+            return null;
+        }
+    });
+    const [deviceId] = useState<string>(() => {
+        if (typeof window === "undefined") return "";
+        return window.localStorage.getItem("fanbroj_device_id") || "";
+    });
+    const [nowMs, setNowMs] = useState(() => Date.now());
+    const hasTrackedYearlyNudgeRef = useRef(false);
 
     useEffect(() => {
-        // Load subscription from localStorage
-        const storedSub = localStorage.getItem("fanbroj_subscription");
-        if (storedSub) {
-            try {
-                setSubscription(JSON.parse(storedSub));
-            } catch {
-                // Invalid data
-            }
-        }
-
-        const storedDeviceId = localStorage.getItem("fanbroj_device_id");
-        if (storedDeviceId) {
-            setDeviceId(storedDeviceId);
-        }
+        const interval = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 60000);
+        return () => window.clearInterval(interval);
     }, []);
 
     const handleLogout = () => {
@@ -36,10 +40,41 @@ export default function DashboardPage() {
         window.location.href = "/login";
     };
 
-    const isExpired = subscription ? subscription.expiresAt < Date.now() : true;
+    const isExpired = subscription ? subscription.expiresAt < nowMs : true;
     const daysRemaining = subscription
-        ? Math.max(0, Math.ceil((subscription.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)))
+        ? Math.max(0, Math.ceil((subscription.expiresAt - nowMs) / (1000 * 60 * 60 * 24)))
         : 0;
+    const daysSinceActivation = subscription
+        ? Math.max(0, Math.floor((nowMs - subscription.activatedAt) / (1000 * 60 * 60 * 24)))
+        : 0;
+    const shouldShowYearlyUpgradeNudge = !!subscription
+        && !isExpired
+        && subscription.plan === "monthly"
+        && daysSinceActivation >= 7;
+    const showExpiryReminder = !!subscription && !isExpired && daysRemaining <= 3;
+
+    useEffect(() => {
+        if (!shouldShowYearlyUpgradeNudge) return;
+        if (hasTrackedYearlyNudgeRef.current) return;
+        hasTrackedYearlyNudgeRef.current = true;
+        const dayKey = new Date().toISOString().slice(0, 10);
+        const dedupeKey = `fanbroj:yearly-nudge:${dayKey}`;
+        if (typeof window !== "undefined" && window.localStorage.getItem(dedupeKey) === "1") return;
+        if (typeof window !== "undefined") window.localStorage.setItem(dedupeKey, "1");
+        fetch("/api/analytics/conversion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                eventName: "yearly_upgrade_prompt_shown",
+                deviceId: typeof window !== "undefined" ? window.localStorage.getItem("fanbroj_device_id") || undefined : undefined,
+                pageType: "dashboard",
+                plan: "monthly",
+                metadata: { daysSinceActivation },
+                createdAt: Date.now(),
+            }),
+            keepalive: true,
+        }).catch(() => { });
+    }, [daysSinceActivation, shouldShowYearlyUpgradeNudge]);
 
     const formatDate = (timestamp: number) => {
         return new Date(timestamp).toLocaleDateString("en-US", {
@@ -80,6 +115,53 @@ export default function DashboardPage() {
 
             <main className="container mx-auto px-4 py-8 max-w-2xl">
                 <h1 className="text-2xl font-bold mb-8">Xisaabtaada</h1>
+
+                {shouldShowYearlyUpgradeNudge && (
+                    <div className="rounded-2xl border border-accent-gold/40 bg-accent-gold/10 p-4 mb-6">
+                        <p className="text-sm text-accent-gold font-black mb-1">Upgrade Offer</p>
+                        <p className="text-sm text-white mb-3">
+                            Waxaad 7+ maalmood isticmaalaysay Monthly. U bood Yearly si aad u badbaadiso lacagta sanadkii.
+                        </p>
+                        <Link
+                            href="/pricing?src=yearly-upgrade&from=dashboard"
+                            onClick={() => {
+                                fetch("/api/analytics/conversion", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        eventName: "yearly_upgrade_prompt_clicked",
+                                        deviceId: typeof window !== "undefined" ? window.localStorage.getItem("fanbroj_device_id") || undefined : undefined,
+                                        pageType: "dashboard",
+                                        plan: "yearly",
+                                        source: "dashboard_nudge",
+                                        createdAt: Date.now(),
+                                    }),
+                                    keepalive: true,
+                                }).catch(() => { });
+                            }}
+                            className="inline-flex items-center gap-2 rounded-xl bg-accent-gold px-4 py-2 text-black font-black hover:bg-accent-gold/90 transition-colors"
+                        >
+                            U Bood Yearly
+                            <ChevronRight size={16} />
+                        </Link>
+                    </div>
+                )}
+
+                {showExpiryReminder && (
+                    <div className="rounded-2xl border border-accent-red/40 bg-accent-red/10 p-4 mb-6">
+                        <p className="text-sm text-accent-red font-black mb-1">Renewal Reminder</p>
+                        <p className="text-sm text-white mb-3">
+                            VIP-gaaga wuu dhamaanayaa {daysRemaining} maalmood gudahood. Cusboonaysii hadda si daawashadaadu uusan u istaagin.
+                        </p>
+                        <Link
+                            href="/pricing?src=renewal-reminder"
+                            className="inline-flex items-center gap-2 rounded-xl bg-accent-red px-4 py-2 text-white font-black hover:bg-accent-red/90 transition-colors"
+                        >
+                            Cusboonaysii Hadda
+                            <ChevronRight size={16} />
+                        </Link>
+                    </div>
+                )}
 
                 {/* Subscription Card */}
                 <div className={`rounded-2xl border p-6 mb-6 ${!subscription || isExpired

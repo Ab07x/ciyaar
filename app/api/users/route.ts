@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
-import { User, Device, Subscription, Redemption } from "@/lib/models";
+import { User, Device, Subscription } from "@/lib/models";
+
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
 // GET /api/users?deviceId=xxx — get or check user
 export async function GET(req: NextRequest) {
@@ -111,8 +113,41 @@ export async function PUT(req: NextRequest) {
     try {
         await connectDB();
         const body = await req.json();
-        const { id, ...updates } = body;
+        const { id, username, ...restUpdates } = body;
         if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return NextResponse.json({ error: "Invalid user id" }, { status: 400 });
+        }
+
+        const updates: Record<string, unknown> = { ...restUpdates };
+
+        if (typeof username === "string") {
+            const cleanUsername = username.trim();
+            if (!USERNAME_REGEX.test(cleanUsername)) {
+                return NextResponse.json(
+                    {
+                        error: "Username must be 3-20 chars and use only letters, numbers, or underscore.",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const usernameLower = cleanUsername.toLowerCase();
+            const existing = await User.findOne({
+                usernameLower,
+                _id: { $ne: id },
+            })
+                .select("_id")
+                .lean();
+
+            if (existing) {
+                return NextResponse.json({ error: "Username already taken." }, { status: 409 });
+            }
+
+            updates.username = cleanUsername;
+            updates.usernameLower = usernameLower;
+            updates.displayName = cleanUsername;
+        }
 
         const user = await User.findByIdAndUpdate(id, updates, { new: true }).lean();
         return NextResponse.json(user);

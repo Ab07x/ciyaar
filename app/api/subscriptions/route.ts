@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Subscription, Redemption, User, Device } from "@/lib/models";
+import { Subscription, Device } from "@/lib/models";
+
+const SUBSCRIPTION_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
+type LeanSubscription = {
+    expiresAt: number;
+    maxDevices: number;
+};
 
 // GET /api/subscriptions?userId=xxx — check active subscription
 export async function GET(req: NextRequest) {
@@ -32,15 +38,19 @@ export async function GET(req: NextRequest) {
         const subscription = await Subscription.findOne({
             userId: targetUserId,
             status: "active",
-            expiresAt: { $gt: now },
-        }).lean();
+            expiresAt: { $gt: now - SUBSCRIPTION_GRACE_PERIOD_MS },
+        }).lean<LeanSubscription | null>();
 
         if (subscription) {
+            const isGracePeriod = subscription.expiresAt <= now;
+            const graceEndsAt = subscription.expiresAt + SUBSCRIPTION_GRACE_PERIOD_MS;
             // Get all devices for this user
             const devices = await Device.find({ userId: targetUserId }).lean();
             return NextResponse.json({
                 active: true,
                 subscription,
+                isGracePeriod,
+                graceEndsAt,
                 devices,
                 deviceCount: devices.length,
                 maxDevices: subscription.maxDevices,
@@ -49,7 +59,7 @@ export async function GET(req: NextRequest) {
 
         // Check for expired subscriptions and mark them
         await Subscription.updateMany(
-            { userId: targetUserId, status: "active", expiresAt: { $lt: now } },
+            { userId: targetUserId, status: "active", expiresAt: { $lt: now - SUBSCRIPTION_GRACE_PERIOD_MS } },
             { status: "expired" }
         );
 

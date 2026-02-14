@@ -3,6 +3,8 @@ import mongoose, { Schema, Document } from "mongoose";
 // USER
 export interface IUser extends Document {
     phoneOrId?: string;
+    username?: string;
+    usernameLower?: string;
     displayName?: string;
     avatarUrl?: string;
     trialExpiresAt?: number;
@@ -20,6 +22,8 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>(
     {
         phoneOrId: String,
+        username: { type: String, index: true },
+        usernameLower: { type: String, unique: true, sparse: true, index: true },
         displayName: String,
         avatarUrl: String,
         trialExpiresAt: Number,

@@ -1,17 +1,47 @@
 "use client";
 
+import { useState } from "react";
 import { useUser } from "@/providers/UserProvider";
 import { Tv, Search, User, LogOut, Home, PlayCircle, Crown, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 
 export default function TVProfilePage() {
-    const { userId, isPremium, logout } = useUser();
-    const router = useRouter();
+    const { userId, isPremium, logout, username, updateUsername } = useUser();
+    const [usernameInput, setUsernameInput] = useState("");
+    const [hasEditedUsername, setHasEditedUsername] = useState(false);
+    const [isSavingUsername, setIsSavingUsername] = useState(false);
+    const [usernameFeedback, setUsernameFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     const handleLogout = () => {
         logout();
+    };
+
+    const handleSaveUsername = async () => {
+        if (!userId) return;
+        const currentInput = (hasEditedUsername ? usernameInput : (username || "")).trim();
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(currentInput)) {
+            setUsernameFeedback({
+                type: "error",
+                text: "Username waa inuu ahaadaa 3-20 xaraf: letters, numbers ama underscore.",
+            });
+            return;
+        }
+
+        setIsSavingUsername(true);
+        setUsernameFeedback(null);
+        const result = await updateUsername(currentInput);
+        if (result.success) {
+            setUsernameInput(currentInput);
+            setHasEditedUsername(false);
+            setUsernameFeedback({ type: "success", text: "Username-kaaga waa la keydiyay." });
+        } else {
+            setUsernameFeedback({
+                type: "error",
+                text: result.error || "Username lama keydin. Isku day mar kale.",
+            });
+        }
+        setIsSavingUsername(false);
     };
 
     return (
@@ -67,12 +97,46 @@ export default function TVProfilePage() {
                             <div className="bg-zinc-900/80 backdrop-blur border border-white/10 rounded-3xl p-8">
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-orange-600 rounded-full flex items-center justify-center text-3xl font-black">
-                                        U
+                                        {(username?.[0] || "U").toUpperCase()}
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-bold">User</h2>
+                                        <h2 className="text-2xl font-bold">{username ? `@${username}` : "User"}</h2>
                                         <p className="text-white/60">Premium Account</p>
                                     </div>
+                                </div>
+
+                                {/* Username Editor */}
+                                <div className="mb-6">
+                                    <p className="text-xs uppercase tracking-wider text-white/50 font-bold mb-2">Custom Username</p>
+                                    <div className="flex gap-2">
+                                        <div className="flex-1 flex items-center bg-black/30 border border-white/15 rounded-xl px-3 py-2.5">
+                                            <span className="text-white/40 mr-2">@</span>
+                                            <input
+                                                type="text"
+                                                value={hasEditedUsername ? usernameInput : (username || "")}
+                                                onChange={(e) => {
+                                                    setHasEditedUsername(true);
+                                                    setUsernameInput(e.target.value.replace(/\s+/g, ""));
+                                                }}
+                                                placeholder="username"
+                                                maxLength={20}
+                                                className="w-full bg-transparent outline-none text-white placeholder:text-white/30"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveUsername}
+                                            disabled={isSavingUsername || (hasEditedUsername ? usernameInput.trim().length : (username || "").trim().length) < 3}
+                                            className="px-4 py-2.5 bg-green-500 text-black font-bold rounded-xl hover:bg-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isSavingUsername ? "Saving..." : "Save"}
+                                        </button>
+                                    </div>
+                                    {usernameFeedback && (
+                                        <p className={`mt-2 text-xs font-bold ${usernameFeedback.type === "success" ? "text-green-400" : "text-red-400"}`}>
+                                            {usernameFeedback.text}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Subscription Status */}

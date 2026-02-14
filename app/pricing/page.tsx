@@ -88,15 +88,35 @@ function RamadanCountdown() {
 
 export default function PricingPage() {
     const { data: settings } = useSWR("/api/settings", fetcher);
-    const { deviceId, redeemCode, isPremium } = useUser();
+    const { deviceId, userId, redeemCode, isPremium } = useUser();
     const [code, setCode] = useState("");
     const [redemptionResult, setRedemptionResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const hasTracked = useRef(false);
+    const conversionSessionIdRef = useRef(`pricing:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`);
     const [showNotification, setShowNotification] = useState(true);
     const [showExitOffer, setShowExitOffer] = useState(false);
     const [exitOfferAccepted, setExitOfferAccepted] = useState(false);
     const [exitOfferSeen, setExitOfferSeen] = useState(false);
+
+    const trackConversionEvent = (eventName: string, metadata?: Record<string, unknown>) => {
+        if (typeof window === "undefined") return;
+        const payload = {
+            eventName,
+            userId: userId || undefined,
+            deviceId: deviceId || undefined,
+            sessionId: conversionSessionIdRef.current,
+            pageType: "pricing",
+            metadata,
+            createdAt: Date.now(),
+        };
+        fetch("/api/analytics/conversion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            keepalive: true,
+        }).catch(() => { });
+    };
 
     useEffect(() => {
         if (!hasTracked.current) {
@@ -106,8 +126,19 @@ export default function PricingPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "pageview", pageType: "pricing", date: new Date().toISOString().split("T")[0] }),
             }).catch(() => { });
+
+            const dayKey = new Date().toISOString().slice(0, 10);
+            const counterKey = `fanbroj:conversion:pricing_visit:${dayKey}`;
+            try {
+                const current = Number(window.localStorage.getItem(counterKey) || 0);
+                const next = Number.isFinite(current) ? current + 1 : 1;
+                window.localStorage.setItem(counterKey, String(next));
+                trackConversionEvent("pricing_visit", { visitsToday: next });
+            } catch {
+                trackConversionEvent("pricing_visit");
+            }
         }
-    }, []);
+    }, [deviceId, userId]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -135,6 +166,10 @@ export default function PricingPage() {
     }, [isPremium, exitOfferSeen]);
 
     const activateExitOffer = () => {
+        trackConversionEvent("cta_clicked", {
+            ctaType: "exit_offer_accept",
+            destination: "#plan-card-monthly",
+        });
         setExitOfferAccepted(true);
         setShowExitOffer(false);
         if (typeof window !== "undefined") {
@@ -154,6 +189,9 @@ export default function PricingPage() {
             setRedemptionResult(result);
             if (result.success) {
                 setCode("");
+                setTimeout(() => {
+                    window.location.assign("/");
+                }, 800);
             }
         } catch (error) {
             setRedemptionResult({ success: false, error: "Wax qalad ah ayaa dhacay" });

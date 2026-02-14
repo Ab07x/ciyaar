@@ -4,14 +4,21 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import useSWR from "swr";
 import { getDeviceId, getUserAgent } from "@/lib/device";
 
+type GenericResponse = { success?: boolean; error?: string; [key: string]: unknown };
+type UserProfile = { username?: string; displayName?: string; [key: string]: unknown };
+type UserSubscription = Record<string, unknown>;
+
 interface UserContextType {
     deviceId: string;
     userId: string | null;
+    username: string | null;
+    profile: UserProfile | null;
     isLoading: boolean;
     isPremium: boolean;
-    subscription: any;
+    subscription: UserSubscription | null;
     checkMatchAccess: (matchId: string) => boolean;
-    redeemCode: (code: string, matchId?: string) => Promise<any>;
+    redeemCode: (code: string, matchId?: string) => Promise<GenericResponse>;
+    updateUsername: (username: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
 }
 
@@ -56,17 +63,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
         (url: string) => fetch(url).then((r) => r.json()),
         { refreshInterval: 30000 } // Check every 30s
     );
+    const {
+        data: profileData,
+        mutate: mutateProfile,
+    } = useSWR(
+        userId ? `/api/users?userId=${userId}` : null,
+        (url: string) => fetch(url).then((r) => r.json())
+    );
 
-    const subscription = subData?.subscription || null;
+    const subscription = (subData?.subscription || null) as UserSubscription | null;
     const isPremium = subData?.active ?? false;
+    const username = (profileData?.username || profileData?.displayName || null) as string | null;
 
-    const checkMatchAccess = (matchId: string) => {
+    const checkMatchAccess = (_matchId: string) => {
+        void _matchId;
         if (!userId) return false;
         if (isPremium) return true;
         return false;
     };
 
-    const redeemCode = async (code: string, matchId?: string) => {
+    const redeemCode = async (code: string, _matchId?: string): Promise<GenericResponse> => {
+        void _matchId;
         if (!deviceId) return { success: false, error: "Device not initialized" };
 
         try {
@@ -94,18 +111,41 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
 
             return result;
-        } catch (error) {
+        } catch {
+            return { success: false, error: "Network error" };
+        }
+    };
+
+    const updateUsername = async (nextUsername: string) => {
+        if (!userId) return { success: false, error: "User not found" };
+
+        try {
+            const res = await fetch("/api/users", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: userId,
+                    username: nextUsername,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                return { success: false, error: data?.error || "Failed to update username" };
+            }
+
+            mutateProfile(data, false);
+            return { success: true };
+        } catch {
             return { success: false, error: "Network error" };
         }
     };
 
     const logout = () => {
         if (typeof window !== "undefined") {
-            localStorage.removeItem("fanbroj_device_id");
+            // Keep device id so user can always recover/login on this same device.
             localStorage.removeItem("fanbroj_subscription");
-            setDeviceId("");
             setUserId(null);
-            window.location.href = "/";
+            window.location.href = "/login";
         }
     };
 
@@ -114,11 +154,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
             value={{
                 deviceId,
                 userId,
+                username,
+                profile: profileData || null,
                 isLoading: !isInitialized || (userId !== null && subData === undefined),
                 isPremium,
                 subscription,
                 checkMatchAccess,
                 redeemCode,
+                updateUsername,
                 logout,
             }}
         >

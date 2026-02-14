@@ -190,6 +190,46 @@ PageViewSchema.index({ date: 1, pageType: 1 });
 
 export const PageView = mongoose.models.PageView || mongoose.model<IPageView>("PageView", PageViewSchema, "page_views");
 
+// CONVERSION EVENTS
+export interface IConversionEvent extends Document {
+    eventName: string;
+    userId?: string;
+    deviceId?: string;
+    sessionId?: string;
+    pageType?: string;
+    contentType?: string;
+    contentId?: string;
+    plan?: string;
+    source?: string;
+    metadata?: Record<string, unknown>;
+    date: string;
+    createdAt: number;
+}
+
+const ConversionEventSchema = new Schema<IConversionEvent>(
+    {
+        eventName: { type: String, required: true, index: true },
+        userId: { type: String, index: true },
+        deviceId: { type: String, index: true },
+        sessionId: String,
+        pageType: String,
+        contentType: String,
+        contentId: String,
+        plan: String,
+        source: String,
+        metadata: Schema.Types.Mixed,
+        date: { type: String, index: true },
+        createdAt: { type: Number, index: true },
+    },
+    { timestamps: false }
+);
+
+ConversionEventSchema.index({ eventName: 1, createdAt: -1 });
+ConversionEventSchema.index({ userId: 1, createdAt: -1 });
+ConversionEventSchema.index({ deviceId: 1, createdAt: -1 });
+
+export const ConversionEvent = mongoose.models.ConversionEvent || mongoose.model<IConversionEvent>("ConversionEvent", ConversionEventSchema, "conversion_events");
+
 // SEARCH ANALYTICS
 export interface ISearchAnalytics extends Document {
     query: string;

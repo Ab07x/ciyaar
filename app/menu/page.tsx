@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import {
     UserCircle,
-    Settings,
     Download,
     Globe,
     LogOut,
@@ -17,15 +16,11 @@ import {
     Bell,
     Shield,
     Activity,
-    CreditCard,
-    Smartphone,
-    Share2,
     Info,
     CheckCircle2,
     Zap
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
 import { format } from "date-fns";
 import { ReferralCard } from "@/components/ReferralCard";
@@ -35,9 +30,12 @@ import { ReferralCard } from "@/components/ReferralCard";
  * Design Ethos: "Stadium Noir" - Dark gradients, glassmorphism, and bold accents.
  */
 export default function MenuPage() {
-    const router = useRouter();
-    const { userId, isPremium, subscription, isLoading, logout } = useUser();
+    const { userId, isPremium, subscription, isLoading, logout, username, updateUsername } = useUser();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [usernameInput, setUsernameInput] = useState("");
+    const [hasEditedUsername, setHasEditedUsername] = useState(false);
+    const [isSavingUsername, setIsSavingUsername] = useState(false);
+    const [usernameFeedback, setUsernameFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     // Navigation sections
     const mainNav = [
@@ -71,6 +69,36 @@ export default function MenuPage() {
             }
         }
     };
+
+    const handleSaveUsername = async () => {
+        if (!userId) return;
+        const currentInput = (hasEditedUsername ? usernameInput : (username || "")).trim();
+        const cleaned = currentInput;
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(cleaned)) {
+            setUsernameFeedback({
+                type: "error",
+                text: "Username waa inuu ahaadaa 3-20 xaraf: letters, numbers ama underscore.",
+            });
+            return;
+        }
+
+        setIsSavingUsername(true);
+        setUsernameFeedback(null);
+        const result = await updateUsername(cleaned);
+        if (result.success) {
+            setUsernameInput(cleaned);
+            setHasEditedUsername(false);
+            setUsernameFeedback({ type: "success", text: "Username-kaaga waa la keydiyay." });
+        } else {
+            setUsernameFeedback({
+                type: "error",
+                text: result.error || "Username lama keydin. Isku day mar kale.",
+            });
+        }
+        setIsSavingUsername(false);
+    };
+
+    const avatarLetter = (username?.[0] || "U").toUpperCase();
 
     // Determine user status UI
     let statusConfig = {
@@ -118,7 +146,11 @@ export default function MenuPage() {
                         : 'from-accent-green/50 to-blue-500/50'
                         }`}>
                         <div className="w-20 h-20 rounded-full bg-stadium-elevated flex items-center justify-center border-2 border-black/20">
-                            <statusConfig.icon size={40} className={statusConfig.theme === 'premium' ? 'text-accent-gold' : 'text-accent-green'} />
+                            {username ? (
+                                <span className={`text-3xl font-black ${statusConfig.theme === 'premium' ? 'text-accent-gold' : 'text-accent-green'}`}>{avatarLetter}</span>
+                            ) : (
+                                <statusConfig.icon size={40} className={statusConfig.theme === 'premium' ? 'text-accent-gold' : 'text-accent-green'} />
+                            )}
                         </div>
                         {statusConfig.badge && (
                             <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-black ${statusConfig.theme === 'premium' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black' : 'bg-stadium-elevated text-accent-green'
@@ -133,6 +165,11 @@ export default function MenuPage() {
                             {statusConfig.label}
                         </h1>
                         <p className="text-sm font-medium text-text-muted">{statusConfig.sub}</p>
+                        {userId && (
+                            <p className="text-xs font-bold text-accent-green/90">
+                                {username ? `@${username}` : "Username weli lama dejin"}
+                            </p>
+                        )}
                     </div>
 
                     {statusConfig.theme !== 'premium' && (
@@ -153,6 +190,44 @@ export default function MenuPage() {
                     <div className="relative overflow-hidden rounded-3xl group">
                         <div className="absolute inset-0 bg-gradient-to-br from-accent-green/20 via-blue-500/10 to-transparent transition-opacity group-hover:opacity-80" />
                         <ReferralCard />
+                    </div>
+                )}
+
+                {userId && (
+                    <div className="bg-stadium-elevated/70 border border-white/10 rounded-3xl p-5 md:p-6">
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-text-secondary">Custom Username</h3>
+                            <span className="text-[11px] text-text-muted">3-20 xaraf • A-Z 0-9 _</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex items-center bg-stadium-dark border border-border-subtle rounded-xl px-3 py-2.5 flex-1">
+                                <span className="text-text-muted mr-2">@</span>
+                                <input
+                                    type="text"
+                                    value={hasEditedUsername ? usernameInput : (username || "")}
+                                    onChange={(e) => {
+                                        setHasEditedUsername(true);
+                                        setUsernameInput(e.target.value.replace(/\s+/g, ""));
+                                    }}
+                                    placeholder="magacaaga"
+                                    maxLength={20}
+                                    className="w-full bg-transparent outline-none text-white placeholder:text-text-muted"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSaveUsername}
+                                disabled={isSavingUsername || (hasEditedUsername ? usernameInput.trim().length : (username || "").trim().length) < 3}
+                                className="px-4 py-2.5 rounded-xl bg-accent-green text-black font-black disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+                            >
+                                {isSavingUsername ? "Saving..." : "Save Username"}
+                            </button>
+                        </div>
+                        {usernameFeedback && (
+                            <p className={`mt-2 text-xs font-bold ${usernameFeedback.type === "success" ? "text-accent-green" : "text-red-400"}`}>
+                                {usernameFeedback.text}
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -237,7 +312,7 @@ function MenuSection({ title, children }: { title: string, children: React.React
 
 interface MenuLinkProps {
     label: string;
-    icon: any;
+    icon: React.ElementType;
     href: string;
     color?: string;
     subLabel?: string;

@@ -24,12 +24,15 @@ export default function LoginPage() {
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ success: boolean; message?: string; error?: string; plan?: string; expiresAt?: string } | null>(null);
-    const [deviceId, setDeviceId] = useState("");
-    const { isPremium } = useUser();
+    const [deviceId] = useState<string>(() => getDeviceId());
+    const { isPremium, isLoading: userLoading } = useUser();
 
     useEffect(() => {
-        setDeviceId(getDeviceId());
-    }, []);
+        // Device-based auth: if this device already has active premium, don't keep user on login page.
+        if (!userLoading && isPremium) {
+            router.replace("/");
+        }
+    }, [isPremium, userLoading, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,8 +68,9 @@ export default function LoginPage() {
                     router.push("/");
                 }, 2000);
             }
-        } catch (err: any) {
-            setResult({ success: false, error: err.message || "Khalad dhacay" });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Khalad dhacay";
+            setResult({ success: false, error: message });
         }
 
         setLoading(false);

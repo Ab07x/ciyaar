@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Payment, Device, Subscription } from "@/lib/models";
+import { Payment, Device, Subscription, ConversionEvent } from "@/lib/models";
 
 // Plan duration mapping (days)
 const PLAN_DURATIONS: Record<string, number> = {
@@ -98,6 +98,28 @@ export async function POST(request: NextRequest) {
                     }
                 );
 
+                try {
+                    await ConversionEvent.create({
+                        eventName: "purchase_completed",
+                        userId: String(userId),
+                        deviceId: payment.deviceId,
+                        pageType: "payment",
+                        plan,
+                        source: "webhook",
+                        metadata: {
+                            orderId: payment.orderId,
+                            sid: sid || payment.sifaloSid,
+                            paymentType: payment_type || body.payment_type || "unknown",
+                            durationDays,
+                            bonusDays,
+                        },
+                        date: new Date().toISOString().slice(0, 10),
+                        createdAt: Date.now(),
+                    });
+                } catch (eventError) {
+                    console.error("Webhook conversion event write failed:", eventError);
+                }
+
                 console.log(`Webhook: Payment ${payment.orderId} verified, subscription created for user ${userId}`);
             } else {
                 // No device found, still mark payment as success
@@ -110,6 +132,24 @@ export async function POST(request: NextRequest) {
                         completedAt: Date.now(),
                     }
                 );
+                try {
+                    await ConversionEvent.create({
+                        eventName: "purchase_completed",
+                        deviceId: payment.deviceId,
+                        pageType: "payment",
+                        plan: payment.plan,
+                        source: "webhook_no_device",
+                        metadata: {
+                            orderId: payment.orderId,
+                            sid: sid || payment.sifaloSid,
+                            paymentType: payment_type || body.payment_type || "unknown",
+                        },
+                        date: new Date().toISOString().slice(0, 10),
+                        createdAt: Date.now(),
+                    });
+                } catch (eventError) {
+                    console.error("Webhook conversion event write failed:", eventError);
+                }
                 console.log(`Webhook: Payment ${payment.orderId} marked as success but no device found for deviceId ${payment.deviceId}`);
             }
         } else if (status === "failed" || status === "declined" || status === "cancelled") {

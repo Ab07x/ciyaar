@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Payment, Device, Subscription } from "@/lib/models";
+import { Payment, Device, Subscription, ConversionEvent } from "@/lib/models";
 
 // Plan duration mapping (days)
 const PLAN_DURATIONS: Record<string, number> = {
@@ -152,6 +152,27 @@ export async function POST(request: NextRequest) {
                     completedAt: Date.now(),
                 }
             );
+
+            try {
+                await ConversionEvent.create({
+                    eventName: "purchase_completed",
+                    userId: String(userId),
+                    deviceId,
+                    pageType: "payment",
+                    plan,
+                    source: "verify_api",
+                    metadata: {
+                        orderId: payment.orderId,
+                        sid: verifySid,
+                        bonusDays,
+                        durationDays,
+                    },
+                    date: new Date().toISOString().slice(0, 10),
+                    createdAt: Date.now(),
+                });
+            } catch (eventError) {
+                console.error("Verify conversion event write failed:", eventError);
+            }
 
             return NextResponse.json({
                 success: true,

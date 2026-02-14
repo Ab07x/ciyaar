@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import { Redemption, Subscription, User, Device } from "@/lib/models";
 
@@ -30,32 +31,44 @@ export async function POST(req: NextRequest) {
 
         // Find or create user
         let device = await Device.findOne({ deviceId });
-        let user;
+        let user = null;
 
-        if (device) {
+        if (device && mongoose.Types.ObjectId.isValid(device.userId)) {
             user = await User.findById(device.userId);
         }
 
+        const now = Date.now();
+
         if (!user) {
             // Create new user
-            const now = Date.now();
             user = await User.create({
                 createdAt: now,
                 referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
                 referralCount: 0,
             });
 
-            if (!device) {
+            // If there is a stale device row, re-bind it to the new user.
+            if (device) {
+                device.userId = user._id.toString();
+                device.lastSeenAt = now;
+                await device.save();
+            } else {
                 device = await Device.create({
                     userId: user._id.toString(),
                     deviceId,
                     lastSeenAt: now,
                 });
             }
+        } else if (device) {
+            // Keep device-user mapping fresh for valid returning users.
+            if (device.userId !== user._id.toString()) {
+                device.userId = user._id.toString();
+            }
+            device.lastSeenAt = now;
+            await device.save();
         }
 
         // Mark code as used
-        const now = Date.now();
         redemption.usedByUserId = user._id.toString();
         redemption.usedAt = now;
         await redemption.save();

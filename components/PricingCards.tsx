@@ -22,7 +22,6 @@ import {
   Users,
   Moon,
   Flame,
-  Globe,
   Phone,
 } from "lucide-react";
 
@@ -176,7 +175,7 @@ interface PricingCardsProps {
 
 export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsProps) {
   const { data: settings } = useSWR("/api/settings", fetcher);
-  const { deviceId } = useUser();
+  const { deviceId, userId } = useUser();
   const { data: subDetails } = useSWR(
     deviceId ? `/api/subscriptions?deviceId=${deviceId}` : null,
     fetcher
@@ -188,6 +187,7 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [geoInfo, setGeoInfo] = useState<GeoInfo | null>(null);
   const [viewerCount, setViewerCount] = useState(0);
+  const [conversionSessionId] = useState(() => `pricing-cards:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`);
   const ramadan = getRamadanCountdown();
 
   // Detect user's country
@@ -249,6 +249,39 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
     setLoadingPlan(plan.id);
 
     const appliedBonusDays = plan.id === "monthly" ? Math.max(0, Math.min(7, monthlyBonusDays)) : 0;
+    const trackEvent = (eventName: string, metadata?: Record<string, unknown>) => {
+      fetch("/api/analytics/conversion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName,
+          userId: userId || undefined,
+          deviceId: deviceId || undefined,
+          sessionId: conversionSessionId,
+          pageType: "pricing",
+          plan: plan.id,
+          source: "pricing_cards",
+          metadata,
+          createdAt: Date.now(),
+        }),
+        keepalive: true,
+      }).catch(() => { });
+    };
+
+    trackEvent("cta_clicked", {
+      ctaType: "pricing_buy_now",
+      plan: plan.id,
+      amount: getPrice(plan),
+      geoTier: geoInfo?.tier || "unknown",
+      bonusDays: appliedBonusDays,
+    });
+    trackEvent("purchase_started", {
+      plan: plan.id,
+      amount: getPrice(plan),
+      geoTier: geoInfo?.tier || "unknown",
+      bonusDays: appliedBonusDays,
+      exitOfferApplied: appliedBonusDays > 0,
+    });
 
     try {
       const res = await fetch("/api/pay/checkout", {
@@ -269,7 +302,7 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
       } else {
         alert(data.error || "Khalad ayaa dhacay. Fadlan isku day mar kale.");
       }
-    } catch (err) {
+    } catch {
       alert("Khalad ayaa dhacay. Fadlan hubso internetkaaga.");
     } finally {
       setLoadingPlan(null);

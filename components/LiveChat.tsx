@@ -14,26 +14,27 @@ interface LiveChatProps {
 }
 
 export function LiveChat({ matchId, className }: LiveChatProps) {
-    const { userId, isPremium } = useUser();
+    const { userId, isPremium, username } = useUser();
     const { data: messages, mutate: refreshMessages } = useSWR(
         `/api/messages?matchId=${matchId}&limit=100`,
         fetcher,
         { refreshInterval: 3000 } // Poll every 3 seconds for live chat
     );
 
-    const [nickname, setNickname] = useState<string>("");
-    const [isSettingNickname, setIsSettingNickname] = useState(true);
+    const [nickname, setNickname] = useState<string>(() => {
+        if (typeof window === "undefined") return "";
+        return localStorage.getItem("fanbroj_nickname") || "";
+    });
     const [newMessage, setNewMessage] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
+    const activeNickname = nickname.trim() || (username || "").trim();
+    const isSettingNickname = !activeNickname;
 
-    // Load nickname from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("fanbroj_nickname");
-        if (saved) {
-            setNickname(saved);
-            setIsSettingNickname(false);
+        if (!nickname.trim() && username?.trim()) {
+            localStorage.setItem("fanbroj_nickname", username.trim());
         }
-    }, []);
+    }, [nickname, username]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -46,13 +47,12 @@ export function LiveChat({ matchId, className }: LiveChatProps) {
         e.preventDefault();
         if (nickname.trim()) {
             localStorage.setItem("fanbroj_nickname", nickname.trim());
-            setIsSettingNickname(false);
         }
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !userId || !nickname) return;
+        if (!newMessage.trim() || !userId || !activeNickname) return;
 
         try {
             const content = newMessage.trim();
@@ -63,7 +63,7 @@ export function LiveChat({ matchId, className }: LiveChatProps) {
                 body: JSON.stringify({
                     matchId,
                     userId,
-                    nickname,
+                    nickname: activeNickname,
                     content,
                     isPremium,
                 }),

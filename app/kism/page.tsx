@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import {
     PlayCircle,
     Calendar,
-    Lock,
     Users,
     FileText,
     Ticket,
@@ -14,7 +13,6 @@ import {
     Film,
     Tv,
     Eye,
-    Crown,
     ArrowUp,
     ArrowDown,
     BarChart3,
@@ -176,7 +174,6 @@ export default function AdminDashboard() {
     const { data: matchData, mutate: mutateMatches } = useSWR("/api/matches", fetcher);
     const { data: postData, mutate: mutatePosts } = useSWR("/api/posts", fetcher);
     const { data: codeStats, mutate: mutateCodes } = useSWR("/api/redemptions?stats=true", fetcher);
-    const { data: settings } = useSWR("/api/settings", fetcher);
     const { data: analyticsStats, mutate: mutateAnalytics } = useSWR("/api/analytics/dashboard", fetcher);
     const { data: moviesData, mutate: mutateMovies } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher);
     const { data: seriesData, mutate: mutateSeries } = useSWR("/api/series", fetcher);
@@ -264,6 +261,22 @@ export default function AdminDashboard() {
     };
 
     const todayVsYesterday = analyticsStats ? getPercentChange(analyticsStats.today, analyticsStats.yesterday) : 0;
+    const conversionFunnel = analyticsStats?.conversionFunnel;
+    const funnelCounts = conversionFunnel?.counts || {
+        preview_started: 0,
+        preview_locked: 0,
+        paywall_shown: 0,
+        cta_clicked: 0,
+        purchase_started: 0,
+        purchase_completed: 0,
+    };
+    const funnelRates = conversionFunnel?.rates || {
+        lockRate: 0,
+        ctaRateFromLock: 0,
+        startRateFromCta: 0,
+        completionRateFromStart: 0,
+        endToEndRate: 0,
+    };
 
     const handleSeedAnalytics = async () => {
         await fetch("/api/analytics/seed", { method: "POST" });
@@ -393,6 +406,72 @@ export default function AdminDashboard() {
                     ))}
                 </div>
             )}
+
+            {/* Conversion Funnel */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-stadium-elevated border border-border-strong rounded-xl p-6"
+            >
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold flex items-center gap-2">
+                        <TrendingUp size={18} className="text-accent-gold" />
+                        Conversion Funnel ({conversionFunnel?.windowDays || 7}d)
+                    </h3>
+                    <span className="text-xs text-text-muted">
+                        High-intent users: {Number(conversionFunnel?.highIntentUsers || 0).toLocaleString()}
+                    </span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                    <div className="rounded-lg border border-border-subtle bg-stadium-hover p-3">
+                        <p className="text-[11px] text-text-muted uppercase">Preview Start</p>
+                        <p className="text-xl font-black">{(funnelCounts.preview_started || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-stadium-hover p-3">
+                        <p className="text-[11px] text-text-muted uppercase">Preview Lock</p>
+                        <p className="text-xl font-black">{(funnelCounts.preview_locked || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-stadium-hover p-3">
+                        <p className="text-[11px] text-text-muted uppercase">Paywall Shown</p>
+                        <p className="text-xl font-black">{(funnelCounts.paywall_shown || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-stadium-hover p-3">
+                        <p className="text-[11px] text-text-muted uppercase">CTA Clicked</p>
+                        <p className="text-xl font-black">{(funnelCounts.cta_clicked || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-stadium-hover p-3">
+                        <p className="text-[11px] text-text-muted uppercase">Checkout Start</p>
+                        <p className="text-xl font-black">{(funnelCounts.purchase_started || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-stadium-hover p-3">
+                        <p className="text-[11px] text-text-muted uppercase">Paid</p>
+                        <p className="text-xl font-black text-accent-green">{(funnelCounts.purchase_completed || 0).toLocaleString()}</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div className="rounded-lg border border-border-subtle bg-black/20 p-2.5">
+                        <p className="text-[11px] text-text-muted uppercase">Lock Rate</p>
+                        <p className="text-sm font-bold">{funnelRates.lockRate}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-black/20 p-2.5">
+                        <p className="text-[11px] text-text-muted uppercase">CTA/Lock</p>
+                        <p className="text-sm font-bold">{funnelRates.ctaRateFromLock}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-black/20 p-2.5">
+                        <p className="text-[11px] text-text-muted uppercase">Start/CTA</p>
+                        <p className="text-sm font-bold">{funnelRates.startRateFromCta}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-black/20 p-2.5">
+                        <p className="text-[11px] text-text-muted uppercase">Paid/Start</p>
+                        <p className="text-sm font-bold">{funnelRates.completionRateFromStart}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border-subtle bg-black/20 p-2.5">
+                        <p className="text-[11px] text-text-muted uppercase">End-to-End</p>
+                        <p className="text-sm font-bold text-accent-green">{funnelRates.endToEndRate}%</p>
+                    </div>
+                </div>
+            </motion.div>
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

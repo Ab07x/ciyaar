@@ -21,6 +21,7 @@ export {
     HeroSlide,
     Message,
     PageView,
+    ConversionEvent,
     SearchAnalytics,
     ContentRequest,
     Prediction,

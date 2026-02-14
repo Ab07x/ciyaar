@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Settings, Payment } from "@/lib/models";
+import { Settings, Payment, ConversionEvent } from "@/lib/models";
 
 export async function POST(request: NextRequest) {
     try {
@@ -120,6 +120,27 @@ export async function POST(request: NextRequest) {
             offerCode: normalizedOfferCode || undefined,
             createdAt: Date.now(),
         });
+
+        try {
+            await ConversionEvent.create({
+                eventName: "purchase_started",
+                deviceId,
+                pageType: "pricing",
+                plan,
+                source: "checkout_api",
+                metadata: {
+                    baseAmount,
+                    totalAmount,
+                    bonusDays,
+                    offerCode: normalizedOfferCode || undefined,
+                    orderId,
+                },
+                date: new Date().toISOString().slice(0, 10),
+                createdAt: Date.now(),
+            });
+        } catch (eventError) {
+            console.error("Checkout conversion event write failed:", eventError);
+        }
 
         // Build checkout URL
         const checkoutUrl = `https://pay.sifalo.com/checkout/?key=${key}&token=${token}`;

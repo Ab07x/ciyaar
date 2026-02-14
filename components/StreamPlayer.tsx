@@ -70,6 +70,38 @@ interface QualityLevel {
 
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT = 12;
+const DAILY_CONVERSION_PREFIX = "fanbroj:conversion";
+type HighIntentReason = "watch_streak" | "pricing_repeat" | "lock_repeat" | null;
+
+function getUtcDateKey(now = Date.now()) {
+    return new Date(now).toISOString().slice(0, 10);
+}
+
+function dailyCounterKey(counter: string, dateKey = getUtcDateKey()) {
+    return `${DAILY_CONVERSION_PREFIX}:${counter}:${dateKey}`;
+}
+
+function readDailyCounter(counter: string, dateKey = getUtcDateKey()) {
+    if (typeof window === "undefined") return 0;
+    try {
+        const value = Number(window.localStorage.getItem(dailyCounterKey(counter, dateKey)) || 0);
+        return Number.isFinite(value) && value > 0 ? value : 0;
+    } catch {
+        return 0;
+    }
+}
+
+function incrementDailyCounter(counter: string, delta = 1, dateKey = getUtcDateKey()) {
+    if (typeof window === "undefined") return 0;
+    try {
+        const current = readDailyCounter(counter, dateKey);
+        const next = Math.max(0, current + delta);
+        window.localStorage.setItem(dailyCounterKey(counter, dateKey), String(next));
+        return next;
+    } catch {
+        return 0;
+    }
+}
 
 // Helper: Detect stream type from URL
 function detectStreamType(url: string): "m3u8" | "mpd" | "iframe" | "video" {
@@ -130,7 +162,7 @@ export function StreamPlayer({
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const { userId } = useUser();
+    const { userId, deviceId, isPremium } = useUser();
 
     // State
     const [isPlaying, setIsPlaying] = useState(false);
@@ -213,7 +245,6 @@ export function StreamPlayer({
         (url: string) => fetch(url).then(r => r.json()).then(d => d.position || 0)
     );
     const { data: settings } = useSWR("/api/settings", (url: string) => fetch(url).then(r => r.json()));
-    const { isPremium } = useUser();
 
     const [showPaywall, setShowPaywall] = useState(false);
     const [isGateHardLocked, setIsGateHardLocked] = useState(false);
@@ -223,7 +254,60 @@ export function StreamPlayer({
     const previewSessionStartedRef = useRef(false);
     const previewAccumulatedSecondsRef = useRef(0);
     const previewTickAtMsRef = useRef<number | null>(null);
+    const previewSessionIdRef = useRef(`preview:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`);
+    const hasTrackedPreviewStartEventRef = useRef(false);
+    const hasTrackedPaywallShownEventRef = useRef(false);
+    const hasTrackedLockEventRef = useRef(false);
+    const hasTrackedHighIntentEventRef = useRef(false);
     const [previewRemainingSeconds, setPreviewRemainingSeconds] = useState<number | null>(null);
+    const [highIntentReason, setHighIntentReason] = useState<HighIntentReason>(null);
+
+    const evaluateHighIntentReason = useCallback((): HighIntentReason => {
+        const previewStartsToday = readDailyCounter("preview_started");
+        const pricingVisitsToday = readDailyCounter("pricing_visit");
+        const locksToday = readDailyCounter("preview_locked");
+
+        if (previewStartsToday >= 2) return "watch_streak";
+        if (pricingVisitsToday >= 2) return "pricing_repeat";
+        if (locksToday >= 2) return "lock_repeat";
+        return null;
+    }, []);
+
+    const trackConversionEvent = useCallback((eventName: string, metadata?: Record<string, unknown>) => {
+        if (typeof window === "undefined") return;
+        if (!eventName) return;
+
+        const payload = {
+            eventName,
+            userId: userId || undefined,
+            deviceId: deviceId || undefined,
+            sessionId: previewSessionIdRef.current || undefined,
+            pageType: "player",
+            contentType: trackParams?.contentType,
+            contentId: trackParams?.contentId,
+            metadata,
+            createdAt: Date.now(),
+        };
+
+        const body = JSON.stringify(payload);
+
+        try {
+            if (navigator.sendBeacon) {
+                const blob = new Blob([body], { type: "application/json" });
+                navigator.sendBeacon("/api/analytics/conversion", blob);
+                return;
+            }
+        } catch {
+            // Fall back to fetch below.
+        }
+
+        fetch("/api/analytics/conversion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body,
+            keepalive: true,
+        }).catch(() => { });
+    }, [deviceId, trackParams?.contentId, trackParams?.contentType, userId]);
 
     // Explicitly cast settings to any to avoid TS errors with new schema fields not yet picked up
     const freePreviewLimit = ((settings as any)?.freeMatchPreviewMinutes || 15) * 60; // default 15 mins
@@ -243,6 +327,11 @@ export function StreamPlayer({
     const previewTimerMultiplier = Number.isFinite(previewTimerMultiplierRaw) && previewTimerMultiplierRaw > 0
         ? previewTimerMultiplierRaw
         : PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT;
+
+    useEffect(() => {
+        const base = `${trackParams?.contentType || "content"}:${trackParams?.contentId || "unknown"}`;
+        previewSessionIdRef.current = `${base}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`;
+    }, [trackParams?.contentId, trackParams?.contentType]);
 
     const readPersistedPreviewElapsed = useCallback(() => {
         if (!moviePreviewPersistenceKey || typeof window === "undefined") return 0;
@@ -313,9 +402,19 @@ export function StreamPlayer({
 
         if (!hasTriggeredPreviewStartRef.current) {
             hasTriggeredPreviewStartRef.current = true;
+            incrementDailyCounter("preview_started");
+            if (!hasTrackedPreviewStartEventRef.current) {
+                hasTrackedPreviewStartEventRef.current = true;
+                trackConversionEvent("preview_started", {
+                    qualityCap,
+                    previewSeconds: moviePreviewLimit,
+                    timerMultiplier: previewTimerMultiplier,
+                    sourceType: streamType,
+                });
+            }
             onPreviewStart?.();
         }
-    }, [conversionGateEnabled, moviePreviewLimit, onPreviewStart]);
+    }, [conversionGateEnabled, moviePreviewLimit, onPreviewStart, previewTimerMultiplier, qualityCap, streamType, trackConversionEvent]);
 
     useEffect(() => {
         if (!conversionGateEnabled) return;
@@ -415,6 +514,39 @@ export function StreamPlayer({
     useEffect(() => {
         if (!showPaywall || !conversionGateEnabled) return;
 
+        const lockType = conversionGate?.reachedDailyLimit ? "daily_limit" : "preview_time";
+        let lockCountToday = readDailyCounter("preview_locked");
+
+        if (!hasTrackedLockEventRef.current) {
+            hasTrackedLockEventRef.current = true;
+            lockCountToday = incrementDailyCounter("preview_locked");
+            trackConversionEvent("preview_locked", {
+                lockType,
+                lockCountToday,
+                dailyLimit: conversionGate?.dailyLimit,
+                usedToday: conversionGate?.usedToday,
+            });
+            if (lockCountToday >= 2) {
+                trackConversionEvent("lock_repeat_user", { lockCountToday, lockType });
+            }
+        }
+
+        const currentReason = lockCountToday >= 2 ? "lock_repeat" : evaluateHighIntentReason();
+        setHighIntentReason(currentReason);
+
+        if (!hasTrackedPaywallShownEventRef.current) {
+            hasTrackedPaywallShownEventRef.current = true;
+            trackConversionEvent("paywall_shown", {
+                lockType,
+                ctaHref: conversionGate?.ctaHref || "/pricing",
+            });
+        }
+
+        if (currentReason && !hasTrackedHighIntentEventRef.current) {
+            hasTrackedHighIntentEventRef.current = true;
+            trackConversionEvent("high_intent_user", { reason: currentReason, lockType });
+        }
+
         if (!hasNotifiedGateLockRef.current) {
             hasNotifiedGateLockRef.current = true;
             onGateLocked?.();
@@ -435,9 +567,14 @@ export function StreamPlayer({
     }, [
         showPaywall,
         conversionGateEnabled,
+        conversionGate?.reachedDailyLimit,
+        conversionGate?.dailyLimit,
+        conversionGate?.usedToday,
         conversionGate?.forceRedirectOnLock,
         conversionGate?.redirectDelayMs,
         conversionGate?.ctaHref,
+        evaluateHighIntentReason,
+        trackConversionEvent,
         onGateLocked,
     ]);
 
@@ -624,12 +761,17 @@ export function StreamPlayer({
             hasTriggeredPreviewStartRef.current = false;
             hasNotifiedGateLockRef.current = false;
             hasRedirectedOnGateRef.current = false;
+            hasTrackedPreviewStartEventRef.current = false;
+            hasTrackedPaywallShownEventRef.current = false;
+            hasTrackedLockEventRef.current = false;
+            hasTrackedHighIntentEventRef.current = false;
             previewSessionStartedRef.current = false;
             previewAccumulatedSecondsRef.current = 0;
             previewTickAtMsRef.current = null;
             setPreviewRemainingSeconds(null);
             setShowPaywall(false);
             setIsGateHardLocked(false);
+            setHighIntentReason(null);
             return;
         }
 
@@ -1119,17 +1261,31 @@ export function StreamPlayer({
     const paywallHref = conversionGate?.ctaHref || "/pricing";
     const isDailyCapPaywall = conversionGateEnabled && !!conversionGate?.reachedDailyLimit;
     const isMoviePreviewPaywall = conversionGateEnabled && !isDailyCapPaywall;
-    const paywallTitle = conversionGate?.paywallTitle || (isDailyCapPaywall
+    const basePaywallTitle = conversionGate?.paywallTitle || (isDailyCapPaywall
         ? "Xadka FREE-ga maanta waa dhammaaday 🚫"
         : isMoviePreviewPaywall
             ? "Preview-ga bilaashka ah waa dhammaaday"
             : "Free Preview Ended");
-    const paywallMessage = conversionGate?.paywallMessage || (isDailyCapPaywall
+    const basePaywallMessage = conversionGate?.paywallMessage || (isDailyCapPaywall
         ? `Waxaad isticmaashay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 3} free views maanta. VIP hadda fur si aad u daawato si aan xad lahayn.`
         : isMoviePreviewPaywall
             ? `Si aad u sii wadato daawashada "${conversionGate?.contentLabel || "filimkan"}": Upgrade to VIP 💎`
             : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`);
-    const primaryPaywallCta = conversionGate?.primaryCtaLabel || ((isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO VIP HADDA" : "Unlock for $0.25");
+    const highIntentNudge = highIntentReason === "watch_streak"
+        ? "Waxaad daawatay 2+ content 24 saac gudahood. VIP ayaa kuu fiican si daawashadu u socoto."
+        : highIntentReason === "pricing_repeat"
+            ? "Waxaad booqatay pricing dhowr jeer. Hadda fur VIP oo si toos ah u daawo."
+            : highIntentReason === "lock_repeat"
+                ? "Waxaad gaartay lock dhowr jeer maanta. Fur VIP si aan laguu joojin mar kale."
+                : "";
+    const paywallTitle = highIntentReason ? "Waxaad tahay user firfircoon 👀" : basePaywallTitle;
+    const paywallMessage = highIntentNudge
+        ? `${basePaywallMessage} ${highIntentNudge}`
+        : basePaywallMessage;
+    const primaryPaywallCta = conversionGate?.primaryCtaLabel
+        || (highIntentReason
+            ? "FUR VIP HADDA"
+            : (isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO VIP HADDA" : "Unlock for $0.25");
     const previewQualityLabel = conversionGate?.qualityCap ? `${conversionGate.qualityCap}p` : "Free";
     const previewCountdownSeconds = Math.max(0, previewRemainingSeconds ?? Math.ceil(moviePreviewLimit));
     const whatsappSupportNumber = String((settings as any)?.whatsappNumber || "+252618274188").replace(/\D/g, "");
@@ -1146,6 +1302,22 @@ export function StreamPlayer({
     const paywallButtonsClass = "flex flex-col gap-2.5 sm:gap-3";
     const paywallPrimaryButtonClass = "w-full py-2.5 sm:py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
     const paywallWhatsappButtonClass = "w-full py-2.5 sm:py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#1fb855] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
+    const handlePrimaryPaywallClick = useCallback(() => {
+        trackConversionEvent("cta_clicked", {
+            ctaType: "primary_upgrade",
+            destination: paywallHref,
+            lockType: isDailyCapPaywall ? "daily_limit" : "preview_time",
+            intent: highIntentReason || "normal",
+        });
+    }, [highIntentReason, isDailyCapPaywall, paywallHref, trackConversionEvent]);
+    const handleWhatsappPaywallClick = useCallback(() => {
+        trackConversionEvent("cta_clicked", {
+            ctaType: "whatsapp_support",
+            destination: whatsappSupportHref,
+            lockType: isDailyCapPaywall ? "daily_limit" : "preview_time",
+            intent: highIntentReason || "normal",
+        });
+    }, [highIntentReason, isDailyCapPaywall, trackConversionEvent, whatsappSupportHref]);
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
@@ -1180,9 +1352,15 @@ export function StreamPlayer({
                                 <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
                                 <h3 className={paywallTitleClass}>{paywallTitle}</h3>
                                 <p className={paywallMessageClass}>{paywallMessage}</p>
+                                {highIntentReason && (
+                                    <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
+                                        Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
+                                    </p>
+                                )}
                                 <div className={paywallButtonsClass}>
                                     <a
                                         href={paywallHref}
+                                        onClick={handlePrimaryPaywallClick}
                                         className={paywallPrimaryButtonClass}
                                     >
                                         <Zap size={20} />
@@ -1192,6 +1370,7 @@ export function StreamPlayer({
                                         href={whatsappSupportHref}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        onClick={handleWhatsappPaywallClick}
                                         className={paywallWhatsappButtonClass}
                                     >
                                         <MessageCircle size={20} />
@@ -1393,10 +1572,16 @@ export function StreamPlayer({
                             <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
                             <h3 className={paywallTitleClass}>{paywallTitle}</h3>
                             <p className={paywallMessageClass}>{paywallMessage}</p>
+                            {highIntentReason && (
+                                <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
+                                    Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
+                                </p>
+                            )}
 
                             <div className={paywallButtonsClass}>
                                 <a
                                     href={paywallHref}
+                                    onClick={handlePrimaryPaywallClick}
                                     className={paywallPrimaryButtonClass}
                                 >
                                     <Zap size={20} />
@@ -1406,6 +1591,7 @@ export function StreamPlayer({
                                     href={whatsappSupportHref}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    onClick={handleWhatsappPaywallClick}
                                     className={paywallWhatsappButtonClass}
                                 >
                                     <MessageCircle size={20} />
@@ -1511,6 +1697,12 @@ export function StreamPlayer({
                                                             key={q.index}
                                                             onClick={() => {
                                                                 if (isLockedQuality) {
+                                                                    trackConversionEvent("cta_clicked", {
+                                                                        ctaType: "quality_upgrade",
+                                                                        destination: conversionGate?.ctaHref || "/pricing",
+                                                                        requestedQuality: q.height,
+                                                                        cap: qualityCap || null,
+                                                                    });
                                                                     if (conversionGate?.ctaHref) {
                                                                         window.location.href = conversionGate.ctaHref;
                                                                     }
