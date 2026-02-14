@@ -25,9 +25,10 @@ export default function AdminSettingsPage() {
         maxDevicesWeekly: 2,
         maxDevicesMonthly: 3,
         maxDevicesYearly: 5,
-        freeMoviesPerDay: 2,
+        freeMoviesPerDay: 3,
         freeMoviePreviewMinutes: 26,
         moviePreviewLockEnabled: true,
+        freeMovieTimerSpeedMultiplier: 8,
         // SEO Settings
         seoTagline: "",
         seoDescription: "",
@@ -56,9 +57,10 @@ export default function AdminSettingsPage() {
             maxDevicesWeekly: settings.maxDevicesWeekly,
             maxDevicesMonthly: settings.maxDevicesMonthly,
             maxDevicesYearly: settings.maxDevicesYearly,
-            freeMoviesPerDay: settings.freeMoviesPerDay ?? 2,
+            freeMoviesPerDay: Math.max(3, settings.freeMoviesPerDay ?? 3),
             freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
             moviePreviewLockEnabled: settings.moviePreviewLockEnabled ?? true,
+            freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 8,
             // SEO Settings
             seoTagline: (settings as any).seoTagline || "",
             seoDescription: (settings as any).seoDescription || "",
@@ -135,12 +137,23 @@ export default function AdminSettingsPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-text-secondary mb-1">Free Movies / Day</label>
+                                <label className="block text-xs text-text-secondary mb-1">Timer Speed (x)</label>
                                 <input
                                     type="number"
                                     min={1}
+                                    step="0.1"
+                                    value={formData.freeMovieTimerSpeedMultiplier}
+                                    onChange={e => setFormData({ ...formData, freeMovieTimerSpeedMultiplier: parseFloat(e.target.value) || 8 })}
+                                    className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-text-secondary mb-1">Free Movies / Day</label>
+                                <input
+                                    type="number"
+                                    min={3}
                                     value={formData.freeMoviesPerDay}
-                                    onChange={e => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 2 })}
+                                    onChange={e => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 3 })}
                                     className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-2"
                                 />
                             </div>

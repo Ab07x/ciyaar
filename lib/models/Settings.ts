@@ -36,6 +36,7 @@ export interface ISettings extends Document {
     freeMoviesPerDay?: number;
     freeMoviePreviewMinutes?: number;
     moviePreviewLockEnabled?: boolean;
+    freeMovieTimerSpeedMultiplier?: number;
     freeMatchPreviewMinutes?: number;
     trialDays?: number;
 }
@@ -76,6 +77,7 @@ const SettingsSchema = new Schema<ISettings>(
         freeMoviesPerDay: Number,
         freeMoviePreviewMinutes: Number,
         moviePreviewLockEnabled: { type: Boolean, default: true },
+        freeMovieTimerSpeedMultiplier: Number,
         freeMatchPreviewMinutes: Number,
         trialDays: Number,
     },

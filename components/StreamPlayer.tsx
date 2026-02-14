@@ -47,6 +47,7 @@ interface StreamPlayerProps {
         dailyLimit?: number;
         usedToday?: number;
         qualityCap?: number;
+        timerSpeedMultiplier?: number;
         ctaHref?: string;
         contentLabel?: string;
         forceRedirectOnLock?: boolean;
@@ -64,6 +65,7 @@ interface QualityLevel {
 }
 
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+const PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT = 8;
 
 // Helper: Detect stream type from URL
 function detectStreamType(url: string): "m3u8" | "mpd" | "iframe" | "video" {
@@ -223,6 +225,14 @@ export function StreamPlayer({
     const moviePreviewLimit = conversionGate?.previewSeconds || (((settings as any)?.freeMoviePreviewMinutes || 26) * 60);
     const conversionGateEnabled = !!conversionGate?.enabled && !isPremium;
     const qualityCap = conversionGate?.qualityCap || 0;
+    const previewTimerMultiplierRaw = Number(
+        conversionGate?.timerSpeedMultiplier
+        || (settings as any)?.freeMovieTimerSpeedMultiplier
+        || PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT
+    );
+    const previewTimerMultiplier = Number.isFinite(previewTimerMultiplierRaw) && previewTimerMultiplierRaw > 0
+        ? previewTimerMultiplierRaw
+        : PREVIEW_TIMER_DRAIN_MULTIPLIER_DEFAULT;
 
     const startPreviewSession = useCallback(() => {
         if (!conversionGateEnabled) return;
@@ -301,7 +311,7 @@ export function StreamPlayer({
                 const lastTick = previewTickAtMsRef.current ?? now;
                 const deltaSeconds = Math.max(0, (now - lastTick) / 1000);
                 if (deltaSeconds < 15) {
-                    previewAccumulatedSecondsRef.current += deltaSeconds;
+                    previewAccumulatedSecondsRef.current += deltaSeconds * previewTimerMultiplier;
                 }
             }
             previewTickAtMsRef.current = now;
@@ -326,6 +336,7 @@ export function StreamPlayer({
         conversionGateEnabled,
         conversionGate?.reachedDailyLimit,
         moviePreviewLimit,
+        previewTimerMultiplier,
         showPaywall,
         streamType,
     ]);
@@ -951,16 +962,16 @@ export function StreamPlayer({
     const isDailyCapPaywall = conversionGateEnabled && !!conversionGate?.reachedDailyLimit;
     const isMoviePreviewPaywall = conversionGateEnabled && !isDailyCapPaywall;
     const paywallTitle = isDailyCapPaywall
-        ? "Waxaad gaartay xadka daawashada maanta 👀"
+        ? "Xadka FREE-ga maanta waa dhammaaday 🚫"
         : isMoviePreviewPaywall
             ? "Preview-ga bilaashka ah waa dhammaaday"
             : "Free Preview Ended";
     const paywallMessage = isDailyCapPaywall
-        ? `Waxaad daawatay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 2} filim maanta. Hel VIP si aad u sii wadato hadda.`
+        ? `Waxaad isticmaashay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 3} free views maanta. VIP hadda fur si aad u daawato si aan xad lahayn.`
         : isMoviePreviewPaywall
             ? `Si aad u sii wadato daawashada "${conversionGate?.contentLabel || "filimkan"}": Upgrade to VIP 💎`
             : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`;
-    const primaryPaywallCta = isMoviePreviewPaywall ? "IIBSO VIP HADDA" : "Unlock for $0.25";
+    const primaryPaywallCta = (isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO VIP HADDA" : "Unlock for $0.25";
     const previewQualityLabel = conversionGate?.qualityCap ? `${conversionGate.qualityCap}p` : "Free";
     const previewCountdownSeconds = Math.max(0, previewRemainingSeconds ?? Math.ceil(moviePreviewLimit));
 
@@ -981,7 +992,7 @@ export function StreamPlayer({
                     <div className="absolute top-3 left-3 z-40 pointer-events-none">
                         <div className="flex items-center gap-1.5 bg-black/70 border border-yellow-400/40 text-yellow-200 px-3 py-1.5 rounded-full text-xs font-black">
                             <Clock3 size={13} />
-                            <span>{previewQualityLabel} Timer: {formatTime(previewCountdownSeconds)}</span>
+                            <span>{previewQualityLabel} Timer x{previewTimerMultiplier}: {formatTime(previewCountdownSeconds)}</span>
                         </div>
                     </div>
                 )}
@@ -1050,7 +1061,7 @@ export function StreamPlayer({
                 <div className="absolute top-3 left-3 z-40 pointer-events-none">
                     <div className="flex items-center gap-1.5 bg-black/70 border border-yellow-400/40 text-yellow-200 px-3 py-1.5 rounded-full text-xs font-black">
                         <Clock3 size={13} />
-                        <span>{previewQualityLabel} Timer: {formatTime(previewCountdownSeconds)}</span>
+                        <span>{previewQualityLabel} Timer x{previewTimerMultiplier}: {formatTime(previewCountdownSeconds)}</span>
                     </div>
                 </div>
             )}

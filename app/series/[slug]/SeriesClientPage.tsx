@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useMemo } from "react";
 import { AdSlot } from "@/components/AdSlot";
 import { cn } from "@/lib/utils";
 import { optimizeImageUrl } from "@/components/MoviePosterImage";
@@ -65,6 +65,29 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
     const [showInterstitial, setShowInterstitial] = useState(true);
     const [adCompleted, setAdCompleted] = useState(false);
 
+    const episodesBySeason = useMemo(() => {
+        const raw = episodesData as any;
+        if (!raw) return {} as Record<number, any[]>;
+
+        // Backward compatible: accept flat episode arrays or already-grouped objects.
+        if (Array.isArray(raw)) {
+            return raw.reduce((acc: Record<number, any[]>, ep: any) => {
+                const season = Number(ep?.seasonNumber) || 1;
+                if (!acc[season]) acc[season] = [];
+                acc[season].push(ep);
+                return acc;
+            }, {});
+        }
+
+        const grouped: Record<number, any[]> = {};
+        Object.entries(raw).forEach(([seasonKey, value]) => {
+            const season = Number(seasonKey);
+            if (!Number.isFinite(season)) return;
+            grouped[season] = Array.isArray(value) ? (value as any[]) : [];
+        });
+        return grouped;
+    }, [episodesData]);
+
     // Track page view once on mount
     useEffect(() => {
         if (!hasTracked.current && series) {
@@ -84,6 +107,15 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
         }
     }, [seasonParam]);
 
+    useEffect(() => {
+        if (seasonParam) return;
+        const seasons = Object.keys(episodesBySeason).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+        if (seasons.length === 0) return;
+        if ((episodesBySeason[activeSeason] || []).length === 0) {
+            setActiveSeason(seasons[0]);
+        }
+    }, [activeSeason, episodesBySeason, seasonParam]);
+
     if (!series || !settings || !episodesData) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -97,8 +129,8 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
     const currentSeasonNumber = seasonParam ? parseInt(seasonParam) : null;
 
     let activeEpisode = null;
-    if (currentSeasonNumber && currentEpisodeNumber && (episodesData as any)[currentSeasonNumber]) {
-        activeEpisode = (episodesData as any)[currentSeasonNumber].find((e: any) => e.episodeNumber === currentEpisodeNumber);
+    if (currentSeasonNumber && currentEpisodeNumber && Array.isArray(episodesBySeason[currentSeasonNumber])) {
+        activeEpisode = episodesBySeason[currentSeasonNumber].find((e: any) => e.episodeNumber === currentEpisodeNumber);
     }
 
     const isLocked = series.isPremium && !isPremium && !localUnlocked;
@@ -286,11 +318,12 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
 
                                     {/* Action Buttons */}
                                     <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                                        {Object.keys(episodesData).length > 0 && (
+                                        {Object.keys(episodesBySeason).length > 0 && (
                                             <button
                                                 onClick={() => {
-                                                    const firstS = Object.keys(episodesData).sort()[0];
-                                                    const firstE = (episodesData as any)[Number(firstS)][0];
+                                                    const firstS = Object.keys(episodesBySeason).map(Number).sort((a, b) => a - b)[0];
+                                                    const firstE = episodesBySeason[firstS]?.[0];
+                                                    if (!firstE) return;
                                                     handleEpisodeClick(Number(firstS), firstE.episodeNumber);
                                                 }}
                                                 className="px-6 py-3 bg-accent-green text-black font-bold rounded-xl flex items-center gap-2 hover:brightness-110 transition-all"
@@ -358,7 +391,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                         onChange={(e) => setActiveSeason(Number(e.target.value))}
                                         className="appearance-none bg-stadium-elevated border border-border-strong rounded-lg pl-4 pr-10 py-2 font-bold focus:outline-none focus:border-accent-green transition-colors cursor-pointer"
                                     >
-                                        {Object.keys(episodesData).sort().map(s => (
+                                        {Object.keys(episodesBySeason).map(Number).sort((a, b) => a - b).map((s) => (
                                             <option key={s} value={s}>Season {s}</option>
                                         ))}
                                     </select>
@@ -367,7 +400,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {(episodesData as any)[activeSeason]?.map((ep: any) => (
+                                {(episodesBySeason[activeSeason] || [])?.map((ep: any) => (
                                     <button
                                         key={ep._id}
                                         onClick={() => handleEpisodeClick(ep.seasonNumber, ep.episodeNumber)}
@@ -420,7 +453,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                     </button>
                                 ))}
 
-                                {(!(episodesData as any)[activeSeason] || (episodesData as any)[activeSeason].length === 0) && (
+                                {(!(episodesBySeason[activeSeason]) || episodesBySeason[activeSeason].length === 0) && (
                                     <div className="col-span-full py-12 text-center text-text-muted bg-stadium-elevated/50 rounded-xl border border-dashed border-border-subtle">
                                         No episodes found for Season {activeSeason}
                                     </div>

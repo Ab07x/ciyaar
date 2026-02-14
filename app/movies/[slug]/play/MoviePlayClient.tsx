@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,8 @@ interface MoviePlayClientProps {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 const DEFAULT_FREE_MOVIE_PREVIEW_MINUTES = 26;
-const DEFAULT_FREE_MOVIES_PER_DAY = 2;
+const DEFAULT_FREE_MOVIES_PER_DAY = 3;
+const DEFAULT_FREE_MOVIE_TIMER_SPEED_MULTIPLIER = 8;
 const FREE_MAX_QUALITY = 720;
 
 function parseQualityHeight(quality?: string): number | null {
@@ -68,6 +69,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
         fetcher
     );
 
+    const previewSessionIdRef = useRef(`pv-${slug}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
     const [previewConsumedKey, setPreviewConsumedKey] = useState<string | null>(null);
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
@@ -84,11 +86,20 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     const freePreviewMinutes = Number.isFinite(freePreviewMinutesRaw) && freePreviewMinutesRaw > 0
         ? freePreviewMinutesRaw
         : DEFAULT_FREE_MOVIE_PREVIEW_MINUTES;
-    const freeMoviesPerDay = Number(settings?.freeMoviesPerDay) || DEFAULT_FREE_MOVIES_PER_DAY;
+    const freeMoviesPerDaySetting = Number(settings?.freeMoviesPerDay);
+    const freeMoviesPerDay = Number.isFinite(freeMoviesPerDaySetting) && freeMoviesPerDaySetting > 0
+        ? Math.max(DEFAULT_FREE_MOVIES_PER_DAY, Math.floor(freeMoviesPerDaySetting))
+        : DEFAULT_FREE_MOVIES_PER_DAY;
     const moviePreviewLockEnabled = settings?.moviePreviewLockEnabled !== false;
+    const freeTimerSpeedMultiplierRaw = Number(settings?.freeMovieTimerSpeedMultiplier);
+    const freeTimerSpeedMultiplier = Number.isFinite(freeTimerSpeedMultiplierRaw) && freeTimerSpeedMultiplierRaw > 0
+        ? freeTimerSpeedMultiplierRaw
+        : DEFAULT_FREE_MOVIE_TIMER_SPEED_MULTIPLIER;
 
     const { data: freeLimitData, mutate: mutateFreeLimit } = useSWR(
-        isPreviewMode && userId ? `/api/movies/free-limit?userId=${userId}&movieId=${slug}` : null,
+        isPreviewMode && userId
+            ? `/api/movies/free-limit?userId=${userId}&movieId=${slug}&sessionId=${encodeURIComponent(previewSessionIdRef.current)}`
+            : null,
         fetcher
     );
 
@@ -127,14 +138,14 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Waxaan rabaa inaan furo film ${movie?.title || "film"}`;
 
     const handlePreviewStart = async () => {
-        const sessionKey = `${slug}:${userId || "anon"}:${isPreviewMode ? "preview" : "open"}`;
+        const sessionKey = `${userId || "anon"}:${previewSessionIdRef.current}`;
         if (!isPreviewMode || !userId || previewConsumedKey === sessionKey) return;
         setPreviewConsumedKey(sessionKey);
         try {
             await fetch("/api/movies/free-limit", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, movieId: slug }),
+                body: JSON.stringify({ userId, movieId: slug, sessionId: previewSessionIdRef.current }),
             });
             mutateFreeLimit();
         } catch (consumeError) {
@@ -290,7 +301,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 XADKA MAANTA WAA DHAMMAADAY 👀
                             </h3>
                             <p className="text-gray-300 text-sm md:text-base mb-4 md:mb-6 text-center max-w-md">
-                                Waxaad daawatay {freeLimitData?.used || freeMoviesPerDay}/{freeMoviesPerDay} filim maanta.
+                                Waxaad daawatay {freeLimitData?.used || freeMoviesPerDay}/{freeLimitData?.dailyLimit || freeMoviesPerDay} filim maanta.
                                 Hel VIP si aad u sii wadato daawashada hadda.
                             </p>
 
@@ -434,9 +445,10 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                                 enabled: isPreviewMode && moviePreviewLockEnabled,
                                 previewSeconds: freePreviewMinutes * 60,
                                 reachedDailyLimit: dailyLimitReached,
-                                dailyLimit: freeMoviesPerDay,
+                                dailyLimit: Number(freeLimitData?.dailyLimit || freeMoviesPerDay),
                                 usedToday: Number(freeLimitData?.used || 0),
                                 qualityCap: FREE_MAX_QUALITY,
+                                timerSpeedMultiplier: freeTimerSpeedMultiplier,
                                 ctaHref: pricingHref,
                                 forceRedirectOnLock: true,
                                 redirectDelayMs: 300,

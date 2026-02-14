@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Settings, UserWatchProgress } from "@/lib/models";
 
-const DEFAULT_DAILY_LIMIT = 2;
+const DEFAULT_DAILY_LIMIT = 3;
+const LEGACY_CONTENT_TYPE = "movie_preview";
+const SESSION_CONTENT_TYPE = "movie_preview_session";
+
+interface IPreviewUsageRow {
+    contentId?: string;
+    sessionId?: string;
+    updatedAt?: number;
+}
 
 function getUtcDayBounds(nowMs: number) {
     const date = new Date(nowMs);
@@ -13,22 +21,46 @@ function getUtcDayBounds(nowMs: number) {
 }
 
 async function getDailyLimit() {
-    const settings = await Settings.findOne().lean() as { freeMoviesPerDay?: number } | null;
-    const configured = Number(settings?.freeMoviesPerDay || 0);
-    return configured > 0 ? configured : DEFAULT_DAILY_LIMIT;
+    const settings = await Settings.findOne()
+        .select("freeMoviesPerDay")
+        .lean<{ freeMoviesPerDay?: number }>();
+    const configuredLimit = Number(settings?.freeMoviesPerDay);
+
+    if (Number.isFinite(configuredLimit) && configuredLimit >= 1) {
+        return Math.max(DEFAULT_DAILY_LIMIT, Math.floor(configuredLimit));
+    }
+
+    // Aggressive monetization policy default:
+    // free users get exactly 3 premium preview sessions, 4th is locked.
+    return DEFAULT_DAILY_LIMIT;
 }
 
-async function getTodayPreviewStats(userId: string, start: number, end: number) {
+async function getTodayPreviewRows(userId: string, start: number, end: number) {
     const rows = await UserWatchProgress.find({
         userId,
-        contentType: "movie_preview",
+        contentType: { $in: [SESSION_CONTENT_TYPE, LEGACY_CONTENT_TYPE] },
         updatedAt: { $gte: start, $lt: end },
     })
-        .select("contentId updatedAt")
-        .lean() as Array<{ contentId?: string }>;
+        .select("contentId sessionId updatedAt")
+        .lean() as IPreviewUsageRow[];
+    return rows;
+}
 
-    const watchedMovieIds = Array.from(new Set(rows.map((row) => row.contentId).filter(Boolean))) as string[];
-    return watchedMovieIds;
+function getUsedCount(rows: IPreviewUsageRow[]) {
+    const unique = new Set<string>();
+    rows.forEach((row) => {
+        if (row.sessionId) {
+            unique.add(`session:${row.sessionId}`);
+            return;
+        }
+        if (row.contentId) {
+            // Legacy rows (before session-tracking) still count toward daily usage.
+            unique.add(`legacy:${row.contentId}`);
+            return;
+        }
+        unique.add(`legacy-time:${row.updatedAt || 0}`);
+    });
+    return unique.size;
 }
 
 // GET /api/movies/free-limit?userId=xxx&movieId=slug
@@ -37,7 +69,7 @@ export async function GET(req: NextRequest) {
         await connectDB();
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get("userId");
-        const movieId = searchParams.get("movieId");
+        const sessionId = String(searchParams.get("sessionId") || "").trim();
 
         if (!userId) {
             return NextResponse.json({ error: "userId required" }, { status: 400 });
@@ -46,20 +78,21 @@ export async function GET(req: NextRequest) {
         const now = Date.now();
         const { start, end, dateKey } = getUtcDayBounds(now);
         const dailyLimit = await getDailyLimit();
-        const watchedMovieIds = await getTodayPreviewStats(userId, start, end);
+        const rows = await getTodayPreviewRows(userId, start, end);
 
-        const used = watchedMovieIds.length;
-        const alreadyWatched = movieId ? watchedMovieIds.includes(movieId) : false;
-        const allowed = alreadyWatched || used < dailyLimit;
+        const used = getUsedCount(rows);
+        const alreadyConsumedSession = !!sessionId && rows.some((row) => row.sessionId === sessionId);
+        const allowed = used < dailyLimit || alreadyConsumedSession;
         const remaining = Math.max(0, dailyLimit - used);
 
         return NextResponse.json({
             allowed,
-            alreadyWatched,
+            alreadyWatched: alreadyConsumedSession,
             used,
             remaining,
             dailyLimit,
             dateKey,
+            locked: !allowed,
         });
     } catch (error) {
         console.error("GET /api/movies/free-limit error:", error);
@@ -67,13 +100,14 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// POST /api/movies/free-limit { userId, movieId }
+// POST /api/movies/free-limit { userId, movieId, sessionId }
 export async function POST(req: NextRequest) {
     try {
         await connectDB();
         const body = await req.json();
         const userId = String(body?.userId || "");
         const movieId = String(body?.movieId || "");
+        const sessionId = String(body?.sessionId || "").trim();
 
         if (!userId || !movieId) {
             return NextResponse.json({ error: "userId and movieId are required" }, { status: 400 });
@@ -82,12 +116,24 @@ export async function POST(req: NextRequest) {
         const now = Date.now();
         const { start, end, dateKey } = getUtcDayBounds(now);
         const dailyLimit = await getDailyLimit();
-        const watchedMovieIds = await getTodayPreviewStats(userId, start, end);
+        const rows = await getTodayPreviewRows(userId, start, end);
+        const used = getUsedCount(rows);
+        const normalizedSessionId = sessionId || `${movieId}:${now}`;
+        const alreadyConsumedSession = rows.some((row) => row.sessionId === normalizedSessionId);
 
-        const alreadyWatched = watchedMovieIds.includes(movieId);
-        const used = watchedMovieIds.length;
+        if (alreadyConsumedSession) {
+            return NextResponse.json({
+                allowed: true,
+                alreadyWatched: true,
+                used,
+                remaining: Math.max(0, dailyLimit - used),
+                dailyLimit,
+                dateKey,
+                locked: used >= dailyLimit,
+            });
+        }
 
-        if (!alreadyWatched && used >= dailyLimit) {
+        if (used >= dailyLimit) {
             return NextResponse.json({
                 allowed: false,
                 alreadyWatched: false,
@@ -95,39 +141,31 @@ export async function POST(req: NextRequest) {
                 remaining: 0,
                 dailyLimit,
                 dateKey,
+                locked: true,
             });
         }
 
-        if (!alreadyWatched) {
-            await UserWatchProgress.create({
-                userId,
-                contentType: "movie_preview",
-                contentId: movieId,
-                progressSeconds: 0,
-                durationSeconds: 0,
-                isFinished: false,
-                updatedAt: now,
-            });
-        } else {
-            await UserWatchProgress.updateMany(
-                {
-                    userId,
-                    contentType: "movie_preview",
-                    contentId: movieId,
-                    updatedAt: { $gte: start, $lt: end },
-                },
-                { updatedAt: now }
-            );
-        }
+        await UserWatchProgress.create({
+            userId,
+            contentType: SESSION_CONTENT_TYPE,
+            contentId: movieId,
+            sessionId: normalizedSessionId,
+            progressSeconds: 0,
+            durationSeconds: 0,
+            isFinished: false,
+            updatedAt: now,
+            dateKey,
+        });
 
-        const nextUsed = alreadyWatched ? used : used + 1;
+        const nextUsed = used + 1;
         return NextResponse.json({
             allowed: true,
-            alreadyWatched,
+            alreadyWatched: false,
             used: nextUsed,
             remaining: Math.max(0, dailyLimit - nextUsed),
             dailyLimit,
             dateKey,
+            locked: nextUsed >= dailyLimit,
         });
     } catch (error) {
         console.error("POST /api/movies/free-limit error:", error);

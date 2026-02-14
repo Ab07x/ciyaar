@@ -13,7 +13,7 @@ export default function AdminPricingPage() {
     const [formData, setFormData] = useState({
         priceMatch: 0.2, priceWeekly: 1, priceMonthly: 3.5, priceYearly: 11,
         maxDevicesMatch: 1, maxDevicesWeekly: 2, maxDevicesMonthly: 3, maxDevicesYearly: 5,
-        freeMoviesPerDay: 2, freeMoviePreviewMinutes: 26, moviePreviewLockEnabled: true,
+        freeMoviesPerDay: 3, freeMoviePreviewMinutes: 26, moviePreviewLockEnabled: true, freeMovieTimerSpeedMultiplier: 8,
     });
 
     useEffect(() => {
@@ -26,9 +26,10 @@ export default function AdminPricingPage() {
             maxDevicesWeekly: settings.maxDevicesWeekly ?? 2,
             maxDevicesMonthly: settings.maxDevicesMonthly ?? 3,
             maxDevicesYearly: settings.maxDevicesYearly ?? 5,
-            freeMoviesPerDay: settings.freeMoviesPerDay ?? 2,
+            freeMoviesPerDay: Math.max(3, settings.freeMoviesPerDay ?? 3),
             freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
             moviePreviewLockEnabled: settings.moviePreviewLockEnabled ?? true,
+            freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 8,
         });
     }, [settings]);
 
@@ -99,9 +100,9 @@ export default function AdminPricingPage() {
                         <label className="block text-sm text-text-secondary mb-2">Free Movies / Day</label>
                         <input
                             type="number"
-                            min={1}
+                            min={3}
                             value={formData.freeMoviesPerDay}
-                            onChange={(e) => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 2 })}
+                            onChange={(e) => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 3 })}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         />
                     </div>
@@ -112,6 +113,17 @@ export default function AdminPricingPage() {
                             min={1}
                             value={formData.freeMoviePreviewMinutes}
                             onChange={(e) => setFormData({ ...formData, freeMoviePreviewMinutes: parseInt(e.target.value) || 26 })}
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-text-secondary mb-2">Timer Speed (x)</label>
+                        <input
+                            type="number"
+                            min={1}
+                            step="0.1"
+                            value={formData.freeMovieTimerSpeedMultiplier}
+                            onChange={(e) => setFormData({ ...formData, freeMovieTimerSpeedMultiplier: parseFloat(e.target.value) || 8 })}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         />
                     </div>

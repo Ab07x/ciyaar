@@ -7,6 +7,7 @@ import { StreamPlayer } from "@/components/StreamPlayer";
 function EmbedContent() {
     const searchParams = useSearchParams();
     const url = searchParams.get("url");
+    const requestedType = searchParams.get("type");
     const poster = searchParams.get("poster") || "/bgcdn.webp";
 
     if (!url) {
@@ -19,13 +20,23 @@ function EmbedContent() {
 
     // Auto-fix HTTP to HTTPS if needed to prevent Mixed Content errors
     const secureUrl = url.startsWith("http://") ? url.replace("http://", "https://") : url;
+    const detectedType = (() => {
+        if (requestedType === "m3u8" || requestedType === "mpd" || requestedType === "iframe" || requestedType === "video" || requestedType === "auto") {
+            return requestedType;
+        }
+        const normalized = secureUrl.toLowerCase();
+        if (normalized.includes(".m3u8")) return "m3u8";
+        if (normalized.includes(".mpd")) return "mpd";
+        if (normalized.includes(".mp4") || normalized.includes(".webm") || normalized.includes(".ogg")) return "video";
+        return "auto";
+    })();
 
     return (
         <div className="fixed inset-0 bg-black">
             <StreamPlayer
                 source={{
                     url: secureUrl,
-                    type: "m3u8"
+                    type: detectedType as "m3u8" | "mpd" | "iframe" | "video" | "auto"
                 }}
                 poster={poster}
                 className="w-full h-full rounded-none"
