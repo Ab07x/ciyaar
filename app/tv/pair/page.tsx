@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Loader2, Smartphone, Tv, AlertTriangle } from "lucide-react";
@@ -25,7 +25,7 @@ function formatRemaining(expiresAt: number): string {
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export default function TVPairPage() {
+function TVPairContent() {
     const searchParams = useSearchParams();
     const code = useMemo(() => normalizeCode(searchParams.get("code")), [searchParams]);
     const { deviceId, userId, isLoading } = useUser();
@@ -206,5 +206,17 @@ export default function TVPairPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function TVPairPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#040b16] text-white flex items-center justify-center">
+                <Loader2 className="animate-spin text-green-500" size={32} />
+            </div>
+        }>
+            <TVPairContent />
+        </Suspense>
     );
 }

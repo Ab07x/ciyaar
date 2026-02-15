@@ -1,13 +1,13 @@
 "use client";
 
 import useSWR from "swr";
-import { type ComponentType, useMemo } from "react";
+import { Suspense, type ComponentType, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
 import { MovieCard } from "@/components/MovieCard";
 import { SeriesCard } from "@/components/SeriesCard";
 import { MatchCard } from "@/components/MatchCard";
-import { BookmarkPlus, FolderHeart, Heart, ListVideo, Plus } from "lucide-react";
+import { BookmarkPlus, FolderHeart, Heart, ListVideo, Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -60,7 +60,7 @@ function normalizeTab(raw: string | null): ListTab {
     return "mylist";
 }
 
-export default function MyListPage() {
+function MyListContent() {
     const { userId } = useUser();
     const searchParams = useSearchParams();
     const currentTab = useMemo(() => normalizeTab(searchParams.get("tab")), [searchParams]);
@@ -152,5 +152,17 @@ export default function MyListPage() {
                 })}
             </div>
         </div>
+    );
+}
+
+export default function MyListPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#040b16] text-white flex items-center justify-center">
+                <Loader2 className="animate-spin text-green-500" size={32} />
+            </div>
+        }>
+            <MyListContent />
+        </Suspense>
     );
 }

@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Find the code
-        const redemption = await Redemption.findOne({ code: code.toUpperCase() });
+        const redemption = await Redemption.findOne({ code: code.toUpperCase(), revokedAt: null });
         if (!redemption) {
-            return NextResponse.json({ error: "Invalid code" }, { status: 404 });
+            return NextResponse.json({ error: "Invalid or revoked code" }, { status: 404 });
         }
 
         // Check if already used

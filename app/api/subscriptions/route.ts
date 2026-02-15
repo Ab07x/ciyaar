@@ -3,6 +3,11 @@ import connectDB from "@/lib/mongodb";
 import { Subscription, Device, Redemption, Payment } from "@/lib/models";
 
 const SUBSCRIPTION_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
+
+function isAdminAuthenticated(req: NextRequest): boolean {
+    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
+}
+
 type LeanSubscription = {
     _id: string;
     userId: string;
@@ -122,9 +127,13 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// POST /api/subscriptions — create subscription (usually via code redemption)
+// POST /api/subscriptions — create subscription (admin only)
 export async function POST(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const body = await req.json();
         const { userId, plan, durationDays, maxDevices, codeId, matchId } = body;
