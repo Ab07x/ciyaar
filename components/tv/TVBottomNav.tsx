@@ -21,7 +21,7 @@ export default function TVBottomNav() {
     const pathname = usePathname();
 
     return (
-        <nav className="fixed bottom-4 left-1/2 z-[120] -translate-x-1/2">
+        <nav className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2">
             <div className="flex items-center gap-2 rounded-2xl border border-white/15 bg-black/75 px-3 py-2 backdrop-blur-xl shadow-2xl">
                 {navItems.map((item) => {
                     const Icon = item.icon;

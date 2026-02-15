@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR, { mutate } from "swr";
-import { Check, Heart, Loader2, Plus, Crown } from "lucide-react";
+import { Check, Loader2, Plus, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/providers/ToastProvider";
 import { useState } from "react";
@@ -13,13 +13,22 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 interface MyListButtonProps {
     contentType: "movie" | "series" | "match";
     contentId: string;
+    listType?: "mylist" | "favourites" | "watch_later";
     className?: string;
     variant?: "icon" | "full";
 }
 
-export function MyListButton({ contentType, contentId, className, variant = "full" }: MyListButtonProps) {
+export function MyListButton({
+    contentType,
+    contentId,
+    listType = "mylist",
+    className,
+    variant = "full",
+}: MyListButtonProps) {
     const { userId, isPremium } = useUser();
-    const swrKey = userId ? `/api/mylist?action=check&userId=${userId}&contentType=${contentType}&contentId=${contentId}` : null;
+    const swrKey = userId
+        ? `/api/mylist?action=check&userId=${userId}&contentType=${contentType}&contentId=${contentId}&listType=${listType}`
+        : null;
     const { data: listData } = useSWR(swrKey, fetcher);
     const isListed = listData?.isListed ?? false;
 
@@ -50,7 +59,7 @@ export function MyListButton({ contentType, contentId, className, variant = "ful
             const res = await fetch("/api/mylist", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, contentType, contentId }),
+                body: JSON.stringify({ userId, contentType, contentId, listType }),
             });
             const result = await res.json();
             if (result.action === "added") {

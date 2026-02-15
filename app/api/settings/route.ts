@@ -11,7 +11,7 @@ const DEFAULTS = {
     priceWeekly: 1.50,
     priceMonthly: 3,
     priceYearly: 20,
-    freeMoviesPerDay: 3,
+    freeMoviesPerDay: 2,
     freeMoviePreviewMinutes: 26,
     moviePreviewLockEnabled: true,
     freeMovieTimerSpeedMultiplier: 12,

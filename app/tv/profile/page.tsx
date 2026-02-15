@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useUser } from "@/providers/UserProvider";
-import { User, Crown, Calendar, Clock } from "lucide-react";
+import { User, Crown, Calendar, Clock, Heart, CreditCard } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -146,13 +146,25 @@ export default function TVProfilePage() {
                                         icon={<Clock size={20} />}
                                         title="Continue Watching"
                                         description="Resume your movies and series"
-                                        link="/mylist"
+                                        link="/mylist?tab=watch_later"
                                     />
                                     <ActivityItem
                                         icon={<Calendar size={20} />}
                                         title="Watch History"
                                         description="View all content you've watched"
-                                        link="/mylist"
+                                        link="/history"
+                                    />
+                                    <ActivityItem
+                                        icon={<Heart size={20} />}
+                                        title="Favourites"
+                                        description="Your saved favourite content"
+                                        link="/mylist?tab=favourites"
+                                    />
+                                    <ActivityItem
+                                        icon={<CreditCard size={20} />}
+                                        title="Payments History"
+                                        description="View premium payment records"
+                                        link="/payments"
                                     />
                                 </div>
                             </div>

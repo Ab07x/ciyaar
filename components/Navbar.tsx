@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Crown, CreditCard, List, Zap, MessageSquare } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Film, Tv, Crown, CreditCard, List, Zap, MessageSquare } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
@@ -12,6 +12,29 @@ import { Logo } from "./Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { NotificationBell } from "./NotificationBell";
+
+function TvBrandIcon({ size = 18, className }: { size?: number; className?: string }) {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            width={size}
+            height={size}
+            className={className}
+            aria-hidden="true"
+        >
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+            <path d="M8 3h8" />
+            <path d="M12 11v6" />
+            <path d="m15 14-6 3 6 3Z" />
+        </svg>
+    );
+}
 
 export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,7 +58,7 @@ export function Navbar() {
         { href: "/ciyaar", label: t("nav.matches"), icon: Trophy, color: "text-[#9AE600]" },
         { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-[#E50914]" },
         { href: "/series", label: t("nav.series"), icon: Tv, color: "text-[#DC2626]" },
-        { href: "/tv", label: "TV", icon: Radio, color: "text-[#3B82F6]" },
+        { href: "/tv", label: "TV", icon: TvBrandIcon, color: "text-[#3B82F6]" },
         { href: "/requests", label: "Codso", icon: MessageSquare, color: "text-[#3B82F6]" },
         { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[#E50914]" },
     ];

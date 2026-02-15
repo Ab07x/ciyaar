@@ -9,7 +9,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
-type MovieListResponse = TVMovie[] | { movies?: TVMovie[] };
+type MovieListResponse = TVMovie[] | {
+    movies?: TVMovie[];
+    total?: number;
+    page?: number;
+    pageSize?: number;
+};
 type PairSessionStatus = "pending" | "paired" | "expired" | "cancelled";
 type PairSessionState = {
     code: string;
@@ -17,12 +22,34 @@ type PairSessionState = {
     expiresAt: number;
     pollIntervalMs: number;
 };
+type PageChip = number | "ellipsis-left" | "ellipsis-right";
 
 function formatCountdown(totalSeconds: number): string {
     const safe = Math.max(0, totalSeconds);
     const minutes = Math.floor(safe / 60);
     const seconds = safe % 60;
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function buildPageChips(currentPage: number, totalPages: number): PageChip[] {
+    if (totalPages <= 7) {
+        return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const chips: PageChip[] = [1];
+
+    if (currentPage <= 3) {
+        chips.push(2, 3, 4, "ellipsis-right", totalPages);
+        return chips;
+    }
+
+    if (currentPage >= totalPages - 2) {
+        chips.push("ellipsis-left", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+        return chips;
+    }
+
+    chips.push("ellipsis-left", currentPage - 1, currentPage, currentPage + 1, "ellipsis-right", totalPages);
+    return chips;
 }
 
 function TVPageContent() {
@@ -34,13 +61,27 @@ function TVPageContent() {
     const [pairError, setPairError] = useState<string | null>(null);
     const [isPairLoading, setIsPairLoading] = useState(false);
     const [clockNow, setClockNow] = useState(() => Date.now());
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 20;
 
     const fetcher = (url: string) => fetch(url).then((r) => r.json());
-    const { data: moviesResponse } = useSWR<MovieListResponse>("/api/movies?isPublished=true&limit=50", fetcher);
+    const { data: moviesResponse } = useSWR<MovieListResponse>(
+        `/api/movies?isPublished=true&page=${currentPage}&pageSize=${pageSize}`,
+        fetcher
+    );
 
     const movies = Array.isArray(moviesResponse) ? moviesResponse : (moviesResponse?.movies || []);
+    const totalMovies = Array.isArray(moviesResponse) ? movies.length : Number(moviesResponse?.total || movies.length);
+    const totalPages = Math.max(1, Math.ceil(totalMovies / pageSize));
+    const pageChips = useMemo(() => buildPageChips(currentPage, totalPages), [currentPage, totalPages]);
     const featuredMovie = movies[0];
     const shouldShowPairOverlay = !isGuest && !isPremium && !isLoading;
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
 
     const createPairSession = useCallback(async () => {
         if (!deviceId) return;
@@ -231,7 +272,7 @@ function TVPageContent() {
                             </p>
                             <div className="flex gap-4">
                                 <Link
-                                    href={`/tv/movies/${featuredMovie.slug}`}
+                                    href={`/tv/movies/${featuredMovie.slug}/play`}
                                     className="bg-white text-black px-8 py-3 rounded-xl font-bold text-xl flex items-center gap-2 hover:bg-gray-200 focus:bg-red-600 focus:text-white focus:outline-none transition-colors"
                                 >
                                     <Play fill="currentColor" /> Play Now
@@ -268,6 +309,63 @@ function TVPageContent() {
                             ))}
                         </div>
                     </div>
+
+                    {totalMovies > 0 && (
+                        <div className="mt-2 flex flex-col items-center gap-4">
+                            <p className="text-sm text-white/65">
+                                Page {currentPage} / {totalPages} • {totalMovies} movies
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                                    disabled={currentPage <= 1}
+                                    className="rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    Prev
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage >= totalPages}
+                                    className="rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                            {totalPages > 1 && (
+                                <div className="flex flex-wrap items-center justify-center gap-2">
+                                    {pageChips.map((chip, index) => {
+                                        if (chip === "ellipsis-left" || chip === "ellipsis-right") {
+                                            return (
+                                                <span
+                                                    key={`${chip}-${index}`}
+                                                    className="px-2 text-sm text-white/45"
+                                                >
+                                                    ...
+                                                </span>
+                                            );
+                                        }
+
+                                        const isActiveChip = chip === currentPage;
+                                        return (
+                                            <button
+                                                key={`page-${chip}`}
+                                                type="button"
+                                                onClick={() => setCurrentPage(chip)}
+                                                className={`min-w-9 rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors ${isActiveChip
+                                                    ? "border-red-500 bg-red-600 text-white"
+                                                    : "border-white/20 bg-white/10 text-white/85 hover:bg-white/20"
+                                                    }`}
+                                            >
+                                                {chip}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </section>
 
             </main>

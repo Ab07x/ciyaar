@@ -4,6 +4,19 @@ import connectDB from "@/lib/mongodb";
 import { User, Device, Subscription } from "@/lib/models";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
+type UserPlainRecord = Record<string, unknown>;
+type UserLike = UserPlainRecord | { toObject: () => UserPlainRecord } | null;
+
+function sanitizeUser(user: UserLike) {
+    if (!user) return null;
+    const plain = typeof user === "object" && "toObject" in user && typeof user.toObject === "function"
+        ? user.toObject()
+        : user;
+    const { passwordHash, passwordSalt, ...safe } = plain;
+    void passwordHash;
+    void passwordSalt;
+    return safe;
+}
 
 // GET /api/users?deviceId=xxx — get or check user
 export async function GET(req: NextRequest) {
@@ -16,7 +29,7 @@ export async function GET(req: NextRequest) {
 
         if (referralCode) {
             const user = await User.findOne({ referralCode }).lean();
-            return NextResponse.json(user || null);
+            return NextResponse.json(sanitizeUser(user as UserLike));
         }
 
         if (userId) {
@@ -24,7 +37,7 @@ export async function GET(req: NextRequest) {
                 return NextResponse.json(null);
             }
             const user = await User.findById(userId).lean();
-            return NextResponse.json(user || null);
+            return NextResponse.json(sanitizeUser(user as UserLike));
         }
 
         if (deviceId) {
@@ -32,7 +45,7 @@ export async function GET(req: NextRequest) {
             const device = await Device.findOne({ deviceId }).lean();
             if (device) {
                 const user = await User.findById(device.userId).lean();
-                return NextResponse.json(user || null);
+                return NextResponse.json(sanitizeUser(user as UserLike));
             }
             return NextResponse.json(null);
         }
@@ -73,7 +86,11 @@ export async function POST(req: NextRequest) {
                         status: "active",
                     }).lean();
 
-                    return NextResponse.json({ user, subscription, isNew: false });
+                    return NextResponse.json({
+                        user: sanitizeUser(user as UserLike),
+                        subscription,
+                        isNew: false,
+                    });
                 }
             }
             // Invalid or missing user — delete stale device and create fresh below
@@ -101,7 +118,14 @@ export async function POST(req: NextRequest) {
             lastSeenAt: now,
         });
 
-        return NextResponse.json({ user, subscription: null, isNew: true }, { status: 201 });
+        return NextResponse.json(
+            {
+                user: sanitizeUser(user as UserLike),
+                subscription: null,
+                isNew: true,
+            },
+            { status: 201 }
+        );
     } catch (error) {
         console.error("POST /api/users error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -150,7 +174,7 @@ export async function PUT(req: NextRequest) {
         }
 
         const user = await User.findByIdAndUpdate(id, updates, { new: true }).lean();
-        return NextResponse.json(user);
+        return NextResponse.json(sanitizeUser(user as UserLike));
     } catch (error) {
         console.error("PUT /api/users error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

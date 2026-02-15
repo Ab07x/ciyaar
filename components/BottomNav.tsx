@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Trophy, Search, Heart, Menu, Zap, Play } from "lucide-react";
+import { Home, Trophy, Tv, Heart, Menu, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -43,6 +43,11 @@ export function BottomNav() {
             label: "Ciyaar",
             href: "/ciyaar",
             icon: Trophy,
+        },
+        {
+            label: "TV",
+            href: "/tv",
+            icon: Tv,
         },
         {
             label: "Shorts",

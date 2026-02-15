@@ -97,7 +97,7 @@ export default function TVMovieDetailPage() {
 
                 <div className="flex gap-6">
                     <Link
-                        href={`/movies/${movie.slug}/play`}
+                        href={`/tv/movies/${movie.slug}/play`}
                         className="flex items-center gap-3 px-10 py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold text-2xl transition-all hover:scale-105 focus:bg-white focus:text-black focus:ring-4 focus:ring-red-600 focus:outline-none"
                     >
                         <Play fill="currentColor" size={32} />

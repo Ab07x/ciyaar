@@ -56,17 +56,27 @@ export default function LoginPage() {
             setResult(response);
 
             if (response.success) {
-                // Store subscription info in localStorage
-                localStorage.setItem("fanbroj_subscription", JSON.stringify({
-                    plan: response.plan,
-                    expiresAt: response.expiresAt,
-                    activatedAt: Date.now(),
-                }));
+                const isTrialCode = Boolean(response.trial);
 
-                // Redirect to home after 2 seconds
+                if (isTrialCode) {
+                    localStorage.removeItem("fanbroj_subscription");
+                } else {
+                    // Store subscription info in localStorage
+                    localStorage.setItem("fanbroj_subscription", JSON.stringify({
+                        plan: response.plan,
+                        expiresAt: response.expiresAt,
+                        activatedAt: Date.now(),
+                    }));
+                }
+
+                const nextHref = isTrialCode && response.trialMovieId
+                    ? `/movies/${response.trialMovieId}/play`
+                    : "/";
+
+                // Redirect after success message
                 setTimeout(() => {
-                    router.push("/");
-                }, 2000);
+                    router.push(nextHref);
+                }, 1500);
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Khalad dhacay";

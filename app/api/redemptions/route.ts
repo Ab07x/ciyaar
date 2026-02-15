@@ -18,14 +18,24 @@ export async function GET(req: NextRequest) {
             const available = total - used - revoked;
 
             // By plan
-            const matchCount = await Redemption.countDocuments({ plan: "match", usedByUserId: null, revokedAt: null });
+            const trialCount = await Redemption.countDocuments({
+                trialHours: { $gt: 0 },
+                usedByUserId: null,
+                revokedAt: null,
+            });
+            const matchCount = await Redemption.countDocuments({
+                plan: "match",
+                trialHours: { $in: [null, 0] },
+                usedByUserId: null,
+                revokedAt: null,
+            });
             const weeklyCount = await Redemption.countDocuments({ plan: "weekly", usedByUserId: null, revokedAt: null });
             const monthlyCount = await Redemption.countDocuments({ plan: "monthly", usedByUserId: null, revokedAt: null });
             const yearlyCount = await Redemption.countDocuments({ plan: "yearly", usedByUserId: null, revokedAt: null });
 
             return NextResponse.json({
                 total, used, revoked, available,
-                byPlan: { match: matchCount, weekly: weeklyCount, monthly: monthlyCount, yearly: yearlyCount },
+                byPlan: { trial: trialCount, match: matchCount, weekly: weeklyCount, monthly: monthlyCount, yearly: yearlyCount },
             });
         }
 
@@ -51,17 +61,31 @@ export async function POST(req: NextRequest) {
         const source = String(body.source || "manual");
         const paymentOrderId = body.paymentOrderId ? String(body.paymentOrderId) : undefined;
         const note = body.note ? String(body.note) : undefined;
+        const requestedTrialHours = Number(body.trialHours || 0);
+        const trialHours = [1, 2, 4].includes(requestedTrialHours) ? requestedTrialHours : 0;
+        const trialMovieId = String(body.trialMovieId || "").trim();
+        const trialMovieTitle = String(body.trialMovieTitle || "").trim();
+
+        if (trialHours > 0 && !trialMovieId) {
+            return NextResponse.json(
+                { error: "trialMovieId is required when trialHours is set." },
+                { status: 400 }
+            );
+        }
 
         const codes: string[] = [];
         for (let i = 0; i < count; i++) {
             const code = await generateUniqueRedemptionCode();
             await Redemption.create({
                 code,
-                plan: body.plan || "monthly",
-                durationDays: body.durationDays || 30,
-                maxDevices: body.maxDevices || 3,
+                plan: body.plan || (trialHours > 0 ? "match" : "monthly"),
+                durationDays: body.durationDays || (trialHours > 0 ? 1 : 30),
+                maxDevices: body.maxDevices || (trialHours > 0 ? 1 : 3),
                 source,
                 paymentOrderId,
+                trialHours: trialHours > 0 ? trialHours : undefined,
+                trialMovieId: trialHours > 0 ? trialMovieId : undefined,
+                trialMovieTitle: trialHours > 0 ? trialMovieTitle || undefined : undefined,
                 note,
                 createdAt: now,
             });

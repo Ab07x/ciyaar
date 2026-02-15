@@ -228,7 +228,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                     </div>
                                 ) : (
                                     <div className="aspect-video w-full flex items-center justify-center bg-stadium-dark">
-                                        <p className="text-text-muted">Lama hayo embed links</p>
+                                        <p className="text-text-muted">Adeeggan wali lama heli karo. Dhawaan ayuu furmi doonaa.</p>
                                     </div>
                                 )}
                             </div>
@@ -436,7 +436,7 @@ function SeriesWatchContent({ initialSeries }: { initialSeries?: any }) {
                                     <div>
                                         <div className="flex items-start justify-between gap-2">
                                             <h3 className="font-bold mb-1 line-clamp-2">{series.titleSomali || series.title}</h3>
-                                            <MyListButton contentType="series" contentId={slug} variant="icon" />
+                                            <MyListButton contentType="series" contentId={slug} listType="watch_later" variant="icon" />
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-text-secondary">
                                             <Star size={12} className="text-accent-gold" /> {series.rating?.toFixed(1) || "N/A"}

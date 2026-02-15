@@ -3,6 +3,10 @@ import mongoose, { Schema, Document } from "mongoose";
 // USER
 export interface IUser extends Document {
     phoneOrId?: string;
+    email?: string;
+    emailLower?: string;
+    passwordHash?: string;
+    passwordSalt?: string;
     username?: string;
     usernameLower?: string;
     displayName?: string;
@@ -22,6 +26,10 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>(
     {
         phoneOrId: String,
+        email: { type: String, index: true },
+        emailLower: { type: String, unique: true, sparse: true, index: true },
+        passwordHash: String,
+        passwordSalt: String,
         username: { type: String, index: true },
         usernameLower: { type: String, unique: true, sparse: true, index: true },
         displayName: String,
@@ -41,6 +49,37 @@ const UserSchema = new Schema<IUser>(
 );
 
 export const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema, "users");
+
+// USER SESSION
+export interface IUserSession extends Document {
+    userId: string;
+    tokenHash: string;
+    deviceId?: string;
+    ip?: string;
+    userAgent?: string;
+    createdAt: number;
+    lastSeenAt: number;
+    expiresAt: number;
+    revokedAt?: number;
+}
+
+const UserSessionSchema = new Schema<IUserSession>(
+    {
+        userId: { type: String, required: true, index: true },
+        tokenHash: { type: String, required: true, unique: true, index: true },
+        deviceId: { type: String, index: true },
+        ip: String,
+        userAgent: String,
+        createdAt: { type: Number, required: true },
+        lastSeenAt: { type: Number, required: true },
+        expiresAt: { type: Number, required: true, index: true },
+        revokedAt: Number,
+    },
+    { timestamps: false }
+);
+
+export const UserSession =
+    mongoose.models.UserSession || mongoose.model<IUserSession>("UserSession", UserSessionSchema, "user_sessions");
 
 // DEVICE
 export interface IDevice extends Document {
@@ -96,8 +135,11 @@ export interface IRedemption extends Document {
     plan: "match" | "weekly" | "monthly" | "yearly";
     durationDays: number;
     maxDevices: number;
-    source?: "manual" | "auto_payment" | "whatsapp";
+    source?: "manual" | "auto_payment" | "whatsapp" | "trial_whatsapp" | "trial_admin";
     paymentOrderId?: string;
+    trialHours?: number;
+    trialMovieId?: string;
+    trialMovieTitle?: string;
     note?: string;
     expiresAt?: number;
     usedByUserId?: string;
@@ -114,6 +156,9 @@ const RedemptionSchema = new Schema<IRedemption>(
         maxDevices: { type: Number, required: true },
         source: { type: String, index: true },
         paymentOrderId: { type: String, index: true },
+        trialHours: Number,
+        trialMovieId: String,
+        trialMovieTitle: String,
         note: String,
         expiresAt: Number,
         usedByUserId: String,

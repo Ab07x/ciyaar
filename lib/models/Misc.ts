@@ -419,11 +419,13 @@ export const ContentRequestVote = mongoose.models.ContentRequestVote || mongoose
 // My List
 const UserMyListSchema = new Schema({
     userId: { type: String, index: true },
+    listType: { type: String, index: true, default: "mylist" },
     contentType: String,
     contentId: String,
     addedAt: Number,
 }, { timestamps: false, strict: false });
 UserMyListSchema.index({ userId: 1, contentType: 1, contentId: 1 });
+UserMyListSchema.index({ userId: 1, listType: 1, contentType: 1, contentId: 1 });
 export const UserMyList = mongoose.models.UserMyList || mongoose.model("UserMyList", UserMyListSchema, "user_mylist");
 
 // Watch Progress
@@ -438,3 +440,16 @@ const UserWatchProgressSchema = new Schema({
     updatedAt: Number,
 }, { timestamps: false, strict: false });
 export const UserWatchProgress = mongoose.models.UserWatchProgress || mongoose.model("UserWatchProgress", UserWatchProgressSchema, "user_watch_progress");
+
+// User Movie Trials (single-movie, limited-hour access for free/test users)
+const UserMovieTrialSchema = new Schema({
+    userId: { type: String, index: true },
+    movieId: { type: String, index: true },
+    codeId: String,
+    code: String,
+    trialHours: Number,
+    grantedAt: Number,
+    expiresAt: { type: Number, index: true },
+}, { timestamps: false, strict: false });
+UserMovieTrialSchema.index({ userId: 1, movieId: 1, expiresAt: -1 });
+export const UserMovieTrial = mongoose.models.UserMovieTrial || mongoose.model("UserMovieTrial", UserMovieTrialSchema, "user_movie_trials");

@@ -8,8 +8,8 @@ export type { IMatch } from "./Match";
 export { Series, Episode } from "./Series";
 export type { ISeries, IEpisode } from "./Series";
 
-export { User, Device, Subscription, Redemption } from "./User";
-export type { IUser, IDevice, ISubscription, IRedemption } from "./User";
+export { User, UserSession, Device, Subscription, Redemption } from "./User";
+export type { IUser, IUserSession, IDevice, ISubscription, IRedemption } from "./User";
 
 export { Settings, Ad, Post, Channel, Category, League, Fixture, Payment } from "./Settings";
 export type { ISettings, IAd, IPost, IChannel, ICategory, ILeague, IFixture, IPayment } from "./Settings";
@@ -43,4 +43,5 @@ export {
     ContentRequestVote,
     UserMyList,
     UserWatchProgress,
+    UserMovieTrial,
 } from "./Misc";

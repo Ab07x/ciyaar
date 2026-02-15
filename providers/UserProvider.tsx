@@ -26,6 +26,7 @@ interface UserContextType {
     deviceId: string;
     userId: string | null;
     username: string | null;
+    email: string | null;
     profile: UserProfile | null;
     isLoading: boolean;
     isPremium: boolean;
@@ -33,6 +34,8 @@ interface UserContextType {
     checkMatchAccess: (matchId: string) => boolean;
     redeemCode: (code: string, matchId?: string) => Promise<GenericResponse>;
     updateUsername: (username: string) => Promise<{ success: boolean; error?: string }>;
+    signupWithEmail: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+    loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
 }
 
@@ -50,17 +53,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
             setDeviceId(id);
 
             try {
-                const res = await fetch("/api/users", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        deviceId: id,
-                        userAgent: getUserAgent(),
-                    }),
+                // 1) Try cookie session first for email-auth users.
+                const sessionRes = await fetch(`/api/auth/session?deviceId=${encodeURIComponent(id)}`, {
+                    cache: "no-store",
                 });
-                const data = await res.json();
-                if (data?.user?._id) {
-                    setUserId(data.user._id);
+                const sessionData = await sessionRes.json();
+                if (sessionData?.authenticated && sessionData?.user?._id) {
+                    setUserId(sessionData.user._id);
+                } else {
+                    // 2) Fallback to device-based anonymous account.
+                    const res = await fetch("/api/users", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            deviceId: id,
+                            userAgent: getUserAgent(),
+                        }),
+                    });
+                    const data = await res.json();
+                    if (data?.user?._id) {
+                        setUserId(data.user._id);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to init user:", error);
@@ -98,6 +111,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const subscription = (subData?.subscription || null) as UserSubscription | null;
     const isPremium = subData?.active ?? false;
     const username = (profileData?.username || profileData?.displayName || null) as string | null;
+    const email = (profileData?.email || null) as string | null;
 
     // Persist premium login/session state until expiry, and drop to login when session is no longer valid.
     useEffect(() => {
@@ -194,10 +208,68 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const signupWithEmail = async (email: string, password: string, displayName?: string) => {
+        if (!deviceId) return { success: false, error: "Device not initialized" };
+        try {
+            const res = await fetch("/api/auth/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    displayName,
+                    deviceId,
+                    userAgent: getUserAgent(),
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data?.success) {
+                return { success: false, error: data?.error || "Signup failed" };
+            }
+
+            if (data?.user?._id) {
+                setUserId(data.user._id);
+                mutateProfile(data.user, false);
+            }
+            return { success: true };
+        } catch {
+            return { success: false, error: "Network error" };
+        }
+    };
+
+    const loginWithEmail = async (email: string, password: string) => {
+        if (!deviceId) return { success: false, error: "Device not initialized" };
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    deviceId,
+                    userAgent: getUserAgent(),
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data?.success) {
+                return { success: false, error: data?.error || "Login failed" };
+            }
+
+            if (data?.user?._id) {
+                setUserId(data.user._id);
+                mutateProfile(data.user, false);
+            }
+            return { success: true };
+        } catch {
+            return { success: false, error: "Network error" };
+        }
+    };
+
     const logout = () => {
         if (typeof window !== "undefined") {
             // Keep device id so user can always recover/login on this same device.
             localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
+            fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
             setUserId(null);
             window.location.href = "/login";
         }
@@ -209,6 +281,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 deviceId,
                 userId,
                 username,
+                email,
                 profile: profileData || null,
                 isLoading: !isInitialized || (deviceId !== "" && subData === undefined),
                 isPremium,
@@ -216,6 +289,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 checkMatchAccess,
                 redeemCode,
                 updateUsername,
+                signupWithEmail,
+                loginWithEmail,
                 logout,
             }}
         >

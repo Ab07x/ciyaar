@@ -3,6 +3,27 @@ import connectDB from "@/lib/mongodb";
 import { Device, TVPairSession } from "@/lib/models";
 
 const PAIR_SESSION_TTL_MS = 10 * 60 * 1000;
+const DEFAULT_PUBLIC_ORIGIN = "https://fanbroj.net";
+
+function normalizeOrigin(origin: string): string {
+    const trimmed = origin.trim().replace(/\/+$/, "");
+    if (!trimmed) return DEFAULT_PUBLIC_ORIGIN;
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        return trimmed;
+    }
+    return `https://${trimmed}`;
+}
+
+function getPublicPairOrigin(): string {
+    const configured = process.env.PUBLIC_SITE_URL
+        || process.env.NEXT_PUBLIC_SITE_URL
+        || process.env.SITE_URL
+        || "";
+    if (configured) {
+        return normalizeOrigin(configured);
+    }
+    return DEFAULT_PUBLIC_ORIGIN;
+}
 
 function generatePairCode(length = 8): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -55,7 +76,7 @@ export async function POST(req: NextRequest) {
             .lean<{ code: string; createdAt: number; expiresAt: number } | null>();
 
         if (existing) {
-            const pairUrl = `${req.nextUrl.origin}/tv/pair?code=${encodeURIComponent(existing.code)}`;
+            const pairUrl = `${getPublicPairOrigin()}/tv/pair?code=${encodeURIComponent(existing.code)}`;
             return NextResponse.json({
                 success: true,
                 code: existing.code,
@@ -78,7 +99,7 @@ export async function POST(req: NextRequest) {
             expiresAt,
         });
 
-        const pairUrl = `${req.nextUrl.origin}/tv/pair?code=${encodeURIComponent(code)}`;
+        const pairUrl = `${getPublicPairOrigin()}/tv/pair?code=${encodeURIComponent(code)}`;
 
         return NextResponse.json({
             success: true,

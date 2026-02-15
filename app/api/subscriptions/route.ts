@@ -44,7 +44,9 @@ export async function GET(req: NextRequest) {
             userId: targetUserId,
             status: "active",
             expiresAt: { $gt: now - SUBSCRIPTION_GRACE_PERIOD_MS },
-        }).lean<LeanSubscription | null>();
+        })
+            .sort({ expiresAt: -1, createdAt: -1 })
+            .lean<LeanSubscription | null>();
 
         if (subscription) {
             const isGracePeriod = subscription.expiresAt <= now;
@@ -94,18 +96,18 @@ export async function GET(req: NextRequest) {
                 }
             }
 
-                return NextResponse.json({
-                    active: true,
-                    subscription,
-                    isGracePeriod,
-                    graceEndsAt,
-                    devices,
-                    code,
-                    now,
-                    deviceCount: devices.length,
-                    maxDevices: subscription.maxDevices,
-                });
-            }
+            return NextResponse.json({
+                active: true,
+                subscription,
+                isGracePeriod,
+                graceEndsAt,
+                devices,
+                code,
+                now,
+                deviceCount: devices.length,
+                maxDevices: subscription.maxDevices,
+            });
+        }
 
         // Check for expired subscriptions and mark them
         await Subscription.updateMany(

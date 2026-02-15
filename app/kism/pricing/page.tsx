@@ -13,7 +13,7 @@ export default function AdminPricingPage() {
     const [formData, setFormData] = useState({
         priceMatch: 0.2, priceWeekly: 1, priceMonthly: 3.5, priceYearly: 11,
         maxDevicesMatch: 1, maxDevicesWeekly: 2, maxDevicesMonthly: 3, maxDevicesYearly: 5,
-        freeMoviesPerDay: 3, freeMoviePreviewMinutes: 26, moviePreviewLockEnabled: true, freeMovieTimerSpeedMultiplier: 12,
+        freeMoviesPerDay: 2, freeMoviePreviewMinutes: 26, moviePreviewLockEnabled: true, freeMovieTimerSpeedMultiplier: 12,
     });
 
     useEffect(() => {
@@ -26,7 +26,7 @@ export default function AdminPricingPage() {
             maxDevicesWeekly: settings.maxDevicesWeekly ?? 2,
             maxDevicesMonthly: settings.maxDevicesMonthly ?? 3,
             maxDevicesYearly: settings.maxDevicesYearly ?? 5,
-            freeMoviesPerDay: Math.max(3, settings.freeMoviesPerDay ?? 3),
+            freeMoviesPerDay: Math.max(2, settings.freeMoviesPerDay ?? 2),
             freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
             moviePreviewLockEnabled: true,
             freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 12,
@@ -100,9 +100,9 @@ export default function AdminPricingPage() {
                         <label className="block text-sm text-text-secondary mb-2">Free Movies / Day</label>
                         <input
                             type="number"
-                            min={3}
+                            min={2}
                             value={formData.freeMoviesPerDay}
-                            onChange={(e) => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 3 })}
+                            onChange={(e) => setFormData({ ...formData, freeMoviesPerDay: parseInt(e.target.value) || 2 })}
                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         />
                     </div>

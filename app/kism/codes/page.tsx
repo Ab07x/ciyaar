@@ -13,14 +13,24 @@ const planOptions = [
     { value: "yearly", label: "Sannadkiiba", days: 365 },
 ];
 
+const trialHourOptions = [
+    { value: 1, label: "1 Hour" },
+    { value: 2, label: "2 Hours" },
+    { value: 4, label: "4 Hours" },
+];
+
 export default function AdminCodesPage() {
     const { data: codes, mutate } = useSWR("/api/redemptions", fetcher);
     const { data: stats, mutate: mutateStats } = useSWR("/api/redemptions?stats=true", fetcher);
 
     const [showModal, setShowModal] = useState(false);
+    const [codeType, setCodeType] = useState<"subscription" | "movie_trial">("subscription");
     const [plan, setPlan] = useState<"match" | "weekly" | "monthly" | "yearly">("weekly");
     const [count, setCount] = useState(10);
     const [customMaxDevices, setCustomMaxDevices] = useState(1);
+    const [trialHours, setTrialHours] = useState<1 | 2 | 4>(2);
+    const [trialMovieId, setTrialMovieId] = useState("");
+    const [trialMovieTitle, setTrialMovieTitle] = useState("");
     const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
     const [filter, setFilter] = useState<"all" | "unused" | "used" | "revoked">("all");
@@ -30,17 +40,26 @@ export default function AdminCodesPage() {
     const [whatsAppReply, setWhatsAppReply] = useState("");
 
     const handleGenerate = async () => {
+        if (codeType === "movie_trial" && !trialMovieId.trim()) {
+            alert("Fadlan geli Movie ID / slug si trial code loo sameeyo.");
+            return;
+        }
+
         const planOption = planOptions.find(p => p.value === plan);
-        const maxDevices = customMaxDevices;
+        const maxDevices = codeType === "movie_trial" ? 1 : customMaxDevices;
 
         const res = await fetch("/api/redemptions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                plan,
+                plan: codeType === "movie_trial" ? "match" : plan,
                 count,
-                durationDays: planOption?.days || 7,
+                durationDays: codeType === "movie_trial" ? 1 : (planOption?.days || 7),
                 maxDevices,
+                trialHours: codeType === "movie_trial" ? trialHours : undefined,
+                trialMovieId: codeType === "movie_trial" ? trialMovieId.trim() : undefined,
+                trialMovieTitle: codeType === "movie_trial" ? trialMovieTitle.trim() || undefined : undefined,
+                source: codeType === "movie_trial" ? "trial_admin" : "manual",
             }),
         });
         const newCodes = await res.json();
@@ -65,12 +84,14 @@ export default function AdminCodesPage() {
         if (!codes) return;
 
         const csv = [
-            ["Code", "Plan", "Duration Days", "Max Devices", "Used", "Revoked", "Created"],
+            ["Code", "Plan", "Duration", "Max Devices", "Trial Hours", "Trial Movie", "Used", "Revoked", "Created"],
             ...codes.map((c: any) => [
                 c.code,
-                c.plan,
-                c.durationDays,
+                c.trialHours ? "movie_trial" : c.plan,
+                c.trialHours ? `${c.trialHours} hours` : `${c.durationDays} days`,
                 c.maxDevices,
+                c.trialHours || "",
+                c.trialMovieId || "",
                 c.usedByUserId ? "Yes" : "No",
                 c.revokedAt ? "Yes" : "No",
                 new Date(c.createdAt).toISOString(),
@@ -86,23 +107,43 @@ export default function AdminCodesPage() {
     };
 
     const handleWhatsAppGenerate = async () => {
+        if (codeType === "movie_trial" && !trialMovieId.trim()) {
+            alert("Fadlan geli Movie ID / slug si trial code loo sameeyo.");
+            return;
+        }
+
         const planOption = planOptions.find(p => p.value === plan);
-        const maxDevices = customMaxDevices;
+        const maxDevices = codeType === "movie_trial" ? 1 : customMaxDevices;
 
         const res = await fetch("/api/redemptions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                plan,
+                plan: codeType === "movie_trial" ? "match" : plan,
                 count: 1,
-                durationDays: planOption?.days || 7,
+                durationDays: codeType === "movie_trial" ? 1 : (planOption?.days || 7),
                 maxDevices,
+                trialHours: codeType === "movie_trial" ? trialHours : undefined,
+                trialMovieId: codeType === "movie_trial" ? trialMovieId.trim() : undefined,
+                trialMovieTitle: codeType === "movie_trial" ? trialMovieTitle.trim() || undefined : undefined,
+                source: codeType === "movie_trial" ? "trial_whatsapp" : "whatsapp",
             }),
         });
         const newCodes = await res.json();
         const code = newCodes[0];
-        const link = `https://fanbroj.net/pricing?redeem=${code}`;
-        const reply = `Mahadsanid! Waa kan code-kaaga *${planOption?.label}*:
+        const link = `https://fanbroj.net/login`;
+        const trialLabelMovie = trialMovieTitle.trim() || trialMovieId.trim();
+        const reply = codeType === "movie_trial"
+            ? `Mahadsanid! Waa kan TRIAL code-kaaga:
+
+Code: *${code}*
+
+Trial: *${trialHours} saac*
+Movie: *${trialLabelMovie}* (hal filim)
+
+Isticmaal halkan: ${link}
+Markaad geliso code-ka, si toos ah ayuu kuu furayaa filimka trial-ka.`
+            : `Mahadsanid! Waa kan code-kaaga *${planOption?.label}*:
 
 Code: *${code}*
 
@@ -151,7 +192,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => { setShowWhatsAppModal(true); setWhatsAppReply(""); setGeneratedCodes([]); }}
+                        onClick={() => { setShowWhatsAppModal(true); setWhatsAppReply(""); setGeneratedCodes([]); setCodeType("subscription"); }}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold flex items-center gap-2 hover:bg-green-700"
                     >
                         <MessageSquare size={18} />
@@ -165,7 +206,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                         Export CSV
                     </button>
                     <button
-                        onClick={() => { setShowModal(true); setGeneratedCodes([]); }}
+                        onClick={() => { setShowModal(true); setGeneratedCodes([]); setCodeType("subscription"); }}
                         className="px-4 py-2 bg-accent-green text-black rounded-lg font-bold flex items-center gap-2"
                     >
                         <Plus size={18} />
@@ -195,7 +236,7 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                     </div>
                     <div className="bg-stadium-elevated border border-border-strong p-4 rounded-xl">
                         <div className="text-sm font-bold">
-                            M:{stats.byPlan?.match} W:{stats.byPlan?.weekly} M:{stats.byPlan?.monthly} Y:{stats.byPlan?.yearly}
+                            T:{stats.byPlan?.trial || 0} M:{stats.byPlan?.match} W:{stats.byPlan?.weekly} M:{stats.byPlan?.monthly} Y:{stats.byPlan?.yearly}
                         </div>
                         <div className="text-xs text-text-muted uppercase">By Plan</div>
                     </div>
@@ -236,8 +277,12 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                         {filteredCodes?.map((code: any) => (
                             <tr key={code._id} className="border-b border-border-subtle last:border-0">
                                 <td className="px-4 py-3 font-mono font-bold">{code.code}</td>
-                                <td className="px-4 py-3 capitalize">{code.plan}</td>
-                                <td className="px-4 py-3">{code.durationDays} maalmood</td>
+                                <td className="px-4 py-3 capitalize">
+                                    {code.trialHours ? "movie_trial" : code.plan}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {code.trialHours ? `${code.trialHours} saac (${code.trialMovieId || "movie"})` : `${code.durationDays} maalmood`}
+                                </td>
                                 <td className="px-4 py-3">{code.maxDevices}</td>
                                 <td className="px-4 py-3">
                                     {code.revokedAt ? (
@@ -283,6 +328,18 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                         {generatedCodes.length === 0 ? (
                             <div className="space-y-4">
                                 <div>
+                                    <label className="block text-sm text-text-secondary mb-2">Code Type</label>
+                                    <select
+                                        value={codeType}
+                                        onChange={(e) => setCodeType(e.target.value as "subscription" | "movie_trial")}
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    >
+                                        <option value="subscription">Subscription Code</option>
+                                        <option value="movie_trial">Movie Trial Code (1 movie)</option>
+                                    </select>
+                                </div>
+
+                                <div>
                                     <label className="block text-sm text-text-secondary mb-2">Plan</label>
                                     <select
                                         value={plan}
@@ -302,6 +359,43 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                     </select>
                                 </div>
 
+                                {codeType === "movie_trial" && (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm text-text-secondary mb-2">Trial Hours</label>
+                                            <select
+                                                value={trialHours}
+                                                onChange={(e) => setTrialHours(Number(e.target.value) as 1 | 2 | 4)}
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            >
+                                                {trialHourOptions.map((opt) => (
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-text-secondary mb-2">Movie Slug / ID</label>
+                                            <input
+                                                type="text"
+                                                value={trialMovieId}
+                                                onChange={(e) => setTrialMovieId(e.target.value)}
+                                                placeholder="tusaale: andaaz-af-somali"
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-text-secondary mb-2">Movie Title (Optional)</label>
+                                            <input
+                                                type="text"
+                                                value={trialMovieTitle}
+                                                onChange={(e) => setTrialMovieTitle(e.target.value)}
+                                                placeholder="Tusaale: Andaaz Af Somali"
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
                                 <div>
                                     <label className="block text-sm text-text-secondary mb-2">Tirada Codes</label>
                                     <input
@@ -318,10 +412,11 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                     <label className="block text-sm text-text-secondary mb-2">Max Devices (Devices-ka la ogolyahay)</label>
                                     <input
                                         type="number"
-                                        value={customMaxDevices}
+                                        value={codeType === "movie_trial" ? 1 : customMaxDevices}
                                         onChange={(e) => setCustomMaxDevices(Number(e.target.value))}
                                         min={1}
                                         max={10}
+                                        disabled={codeType === "movie_trial"}
                                         className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                     />
                                 </div>
@@ -371,6 +466,18 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                         {!whatsAppReply ? (
                             <div className="space-y-4">
                                 <div>
+                                    <label className="block text-sm text-text-secondary mb-2">Code Type</label>
+                                    <select
+                                        value={codeType}
+                                        onChange={(e) => setCodeType(e.target.value as "subscription" | "movie_trial")}
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    >
+                                        <option value="subscription">Subscription Code</option>
+                                        <option value="movie_trial">Movie Trial Code (1 movie)</option>
+                                    </select>
+                                </div>
+
+                                <div>
                                     <label className="block text-sm text-text-secondary mb-2">Customer Plan</label>
                                     <select
                                         value={plan}
@@ -392,14 +499,52 @@ Ama gal pricing page-ka oo dooro "Redeem Code".`;
                                     </select>
                                 </div>
 
+                                {codeType === "movie_trial" && (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm text-text-secondary mb-2">Trial Hours</label>
+                                            <select
+                                                value={trialHours}
+                                                onChange={(e) => setTrialHours(Number(e.target.value) as 1 | 2 | 4)}
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            >
+                                                {trialHourOptions.map((opt) => (
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-text-secondary mb-2">Movie Slug / ID</label>
+                                            <input
+                                                type="text"
+                                                value={trialMovieId}
+                                                onChange={(e) => setTrialMovieId(e.target.value)}
+                                                placeholder="tusaale: andaaz-af-somali"
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-text-secondary mb-2">Movie Title (Optional)</label>
+                                            <input
+                                                type="text"
+                                                value={trialMovieTitle}
+                                                onChange={(e) => setTrialMovieTitle(e.target.value)}
+                                                placeholder="Tusaale: Andaaz Af Somali"
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
                                 <div>
                                     <label className="block text-sm text-text-secondary mb-2">Max Devices</label>
                                     <input
                                         type="number"
-                                        value={customMaxDevices}
+                                        value={codeType === "movie_trial" ? 1 : customMaxDevices}
                                         onChange={(e) => setCustomMaxDevices(Number(e.target.value))}
                                         min={1}
                                         max={10}
+                                        disabled={codeType === "movie_trial"}
                                         className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                     />
                                 </div>

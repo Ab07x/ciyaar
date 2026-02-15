@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Settings, UserWatchProgress } from "@/lib/models";
 
-const DEFAULT_DAILY_LIMIT = 3;
+const DEFAULT_DAILY_LIMIT = 2;
 const LEGACY_CONTENT_TYPE = "movie_preview";
 const SESSION_CONTENT_TYPE = "movie_preview_session";
 
@@ -31,7 +31,7 @@ async function getDailyLimit() {
     }
 
     // Aggressive monetization policy default:
-    // free users get exactly 3 premium preview sessions, 4th is locked.
+    // free users get exactly 2 premium preview sessions, 3rd is locked.
     return DEFAULT_DAILY_LIMIT;
 }
 

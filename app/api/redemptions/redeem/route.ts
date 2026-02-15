@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
-import { Redemption, Subscription, User, Device } from "@/lib/models";
+import { Redemption, Subscription, User, Device, UserMovieTrial } from "@/lib/models";
 
 // POST /api/redemptions/redeem — redeem a code
 export async function POST(req: NextRequest) {
@@ -72,6 +72,32 @@ export async function POST(req: NextRequest) {
         redemption.usedByUserId = user._id.toString();
         redemption.usedAt = now;
         await redemption.save();
+
+        const trialHours = Number((redemption as { trialHours?: number }).trialHours || 0);
+        const trialMovieId = String((redemption as { trialMovieId?: string }).trialMovieId || "").trim();
+
+        // Movie trial codes grant single-movie access for limited hours (no full premium subscription).
+        if (trialHours > 0 && trialMovieId) {
+            const trialExpiresAt = now + trialHours * 60 * 60 * 1000;
+            await UserMovieTrial.create({
+                userId: user._id.toString(),
+                movieId: trialMovieId,
+                codeId: redemption._id.toString(),
+                code: redemption.code,
+                trialHours,
+                grantedAt: now,
+                expiresAt: trialExpiresAt,
+            });
+
+            return NextResponse.json({
+                success: true,
+                trial: true,
+                trialHours,
+                trialMovieId,
+                expiresAt: trialExpiresAt,
+                message: `Trial la furay: ${trialHours} saac oo filimkan ah (${trialMovieId}).`,
+            });
+        }
 
         // Create subscription
         const expiresAt = now + redemption.durationDays * 24 * 60 * 60 * 1000;

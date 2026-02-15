@@ -7,8 +7,7 @@ import { LiveBadge } from "@/components/ui/LiveBadge";
 import Link from "next/link";
 
 import { MoviePosterImage, optimizeImageUrl } from "@/components/MoviePosterImage";
-import { ContentCarousel } from "@/components/ContentCarousel";
-import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp, Film } from "lucide-react";
+import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
@@ -123,6 +122,42 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
     <div className="min-h-screen bg-[#020D18]">
       {/* Ramadan Banner */}
       <RamadanBanner variant="full" />
+
+      {/* TV Quick Access */}
+      <section className="max-w-7xl mx-auto px-4 pt-4">
+        <Link
+          href="/tv"
+          className="group flex items-center justify-between gap-4 rounded-2xl border border-[#3B82F6]/35 bg-gradient-to-r from-[#0a1a2b] via-[#10243a] to-[#0f1e30] px-4 py-3 shadow-lg shadow-[#3B82F6]/10 transition-all hover:border-[#60A5FA] hover:shadow-[#3B82F6]/25"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#3B82F6]/20 text-[#93C5FD] ring-1 ring-[#3B82F6]/40">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+                aria-hidden="true"
+              >
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                <path d="M8 3h8" />
+                <path d="M12 11v6" />
+                <path d="m15 14-6 3 6 3Z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-white">Fanbroj TV</p>
+              <p className="text-xs text-[#c7d6ea]">Hal taabasho ku fur TV mode-ga (QR Login + Big Screen).</p>
+            </div>
+          </div>
+          <span className="rounded-lg bg-[#3B82F6] px-3 py-1.5 text-xs font-black uppercase text-white transition-colors group-hover:bg-[#2563EB]">
+            Open TV
+          </span>
+        </Link>
+      </section>
 
       {/* HERO SLIDER - Lookmovie Style */}
       {currentHero && (

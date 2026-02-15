@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -26,13 +26,28 @@ interface MoviePlayClientProps {
     slug: string;
     preloadedMovie?: any;
     preloadedSettings?: any;
+    uiMode?: "web" | "tv";
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 const DEFAULT_FREE_MOVIE_PREVIEW_MINUTES = 26;
 const DEFAULT_FREE_MOVIE_TIMER_SPEED_MULTIPLIER = 12;
+const DEFAULT_FREE_MOVIES_PER_DAY = 2;
 
-export default function MoviePlayClient({ slug, preloadedMovie, preloadedSettings }: MoviePlayClientProps) {
+type FreeLimitResponse = {
+    allowed?: boolean;
+    alreadyWatched?: boolean;
+    used?: number;
+    dailyLimit?: number;
+    locked?: boolean;
+};
+
+export default function MoviePlayClient({
+    slug,
+    preloadedMovie,
+    preloadedSettings,
+    uiMode = "web",
+}: MoviePlayClientProps) {
     const { data: movieResult } = useSWR(`/api/movies?slug=${slug}`, fetcher);
     const movie = movieResult || preloadedMovie;
 
@@ -45,6 +60,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     );
 
     const { isPremium, userId } = useUser();
+    const isTvMode = uiMode === "tv";
 
     // PPV Access Check
     const { data: ppvAccess } = useSWR(
@@ -55,9 +71,23 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
     const [showInterstitial, setShowInterstitial] = useState(true);
     const [adCompleted, setAdCompleted] = useState(false);
+    const hasMarkedSessionRef = useRef(false);
 
-    const isUnlocked = !movie?.isPremium || isPremium;
-    const isPreviewMode = !!movie?.isPremium && !isPremium;
+    const sessionId = useMemo(
+        () => `movie:${slug}:${new Date().toISOString().slice(0, 10)}`,
+        [slug]
+    );
+
+    const { data: trialAccess } = useSWR(
+        userId && movie?.isPremium && !isPremium
+            ? `/api/movies/trial-access?userId=${encodeURIComponent(userId)}&movieId=${encodeURIComponent(slug)}`
+            : null,
+        fetcher
+    );
+    const hasMovieTrialAccess = Boolean(trialAccess?.active);
+
+    const isUnlocked = !movie?.isPremium || isPremium || hasMovieTrialAccess;
+    const isPreviewMode = !!movie?.isPremium && !isPremium && !hasMovieTrialAccess;
     const freePreviewMinutesRaw = Number(settings?.freeMoviePreviewMinutes);
     const freePreviewMinutes = Number.isFinite(freePreviewMinutesRaw) && freePreviewMinutesRaw > 0
         ? Math.min(DEFAULT_FREE_MOVIE_PREVIEW_MINUTES, freePreviewMinutesRaw)
@@ -69,10 +99,56 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
     const effectiveEmbedIndex = activeEmbedIndex;
     const effectiveEmbed = movie?.embeds?.[effectiveEmbedIndex];
     const pricingHref = `/pricing?src=movie-preview&content=movie&id=${encodeURIComponent(slug)}`;
+    const movieDetailsHref = isTvMode ? `/tv/movies/${slug}` : `/movies/${slug}`;
     const whatsappNumber = String(settings?.whatsappNumber || "+252618274188").replace(/\D/g, "");
     const whatsappSupportHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
         `Salaan Fanbroj, waxaan rabaa caawimaad sida aan u iibsan karo VIP. Filim: ${movie?.titleSomali || movie?.title || slug}`
     )}`;
+    const shouldCheckFreeLimit = Boolean(userId && isPreviewMode);
+    const { data: freeLimitData, mutate: mutateFreeLimit } = useSWR<FreeLimitResponse>(
+        shouldCheckFreeLimit
+            ? `/api/movies/free-limit?userId=${encodeURIComponent(userId!)}&movieId=${encodeURIComponent(slug)}&sessionId=${encodeURIComponent(sessionId)}`
+            : null,
+        fetcher,
+        { revalidateOnFocus: false }
+    );
+
+    useEffect(() => {
+        hasMarkedSessionRef.current = false;
+    }, [sessionId]);
+
+    const freeLimitChecked = !shouldCheckFreeLimit || Boolean(freeLimitData);
+    const freeLimitUsed = Math.max(0, Number(freeLimitData?.used || 0));
+    const freeLimitDailyLimit = Math.max(1, Number(freeLimitData?.dailyLimit || DEFAULT_FREE_MOVIES_PER_DAY));
+    const isDailyLimitLocked = shouldCheckFreeLimit
+        && freeLimitChecked
+        && (Boolean(freeLimitData?.locked) || freeLimitData?.allowed === false);
+
+    useEffect(() => {
+        if (!shouldCheckFreeLimit || !freeLimitData || !userId) return;
+
+        if (!freeLimitData.allowed || freeLimitData.alreadyWatched || hasMarkedSessionRef.current) {
+            return;
+        }
+
+        hasMarkedSessionRef.current = true;
+        fetch("/api/movies/free-limit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId,
+                movieId: slug,
+                sessionId,
+            }),
+        })
+            .then((res) => res.json())
+            .then((next: FreeLimitResponse) => {
+                mutateFreeLimit(next, { revalidate: false });
+            })
+            .catch(() => {
+                hasMarkedSessionRef.current = false;
+            });
+    }, [freeLimitData, mutateFreeLimit, sessionId, shouldCheckFreeLimit, slug, userId]);
 
     if (!movie || !settings) {
         return (
@@ -107,7 +183,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
             <div className="max-w-7xl mx-auto px-4 mb-4">
                 <div className="flex items-center gap-4">
                     <Link
-                        href={`/movies/${slug}`}
+                        href={movieDetailsHref}
                         className="p-2 bg-[#333333] hover:bg-[#2a4a6c] rounded-lg transition-colors"
                     >
                         <ChevronLeft size={20} className="text-white" />
@@ -175,7 +251,9 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                             conversionGate={{
                                 enabled: isPreviewMode,
                                 previewSeconds: freePreviewMinutes * 60,
-                                reachedDailyLimit: false,
+                                reachedDailyLimit: isDailyLimitLocked,
+                                dailyLimit: freeLimitDailyLimit,
+                                usedToday: freeLimitUsed,
                                 timerSpeedMultiplier: freeTimerSpeedMultiplier,
                                 ctaHref: pricingHref,
                                 forceRedirectOnLock: false,
@@ -188,7 +266,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                     <div className="relative w-full aspect-video bg-black rounded-2xl flex items-center justify-center border-4 border-[#333333]">
                         <div className="text-center">
                             <AlertCircle size={48} className="mx-auto text-gray-500 mb-2" />
-                            <p className="text-gray-400">Lama hayo embed links</p>
+                            <p className="text-gray-400">Adeeggan wali lama heli karo. Dhawaan ayuu furmi doonaa.</p>
                         </div>
                     </div>
                 )}
@@ -217,7 +295,13 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
 
                 {isPreviewMode && (
                     <p className="text-center text-xs text-yellow-300 mt-3">
-                        Free Preview: {freePreviewMinutes} daqiiqo • Timer x{freeTimerSpeedMultiplier}
+                        Free Preview: {freePreviewMinutes} daqiiqo • Timer x{freeTimerSpeedMultiplier} • Daily limit {freeLimitUsed}/{freeLimitDailyLimit}
+                    </p>
+                )}
+
+                {hasMovieTrialAccess && !isPremium && (
+                    <p className="text-center text-xs text-green-300 mt-3">
+                        Trial Active: {Number(trialAccess?.trialHours || 0)} saac • Filimkan oo keliya
                     </p>
                 )}
 
@@ -273,6 +357,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                             contentType="movie"
                             contentId={slug}
                             className="h-12 bg-[#9AE600] hover:bg-[#8AD500] text-black rounded-lg font-bold border-none"
+                            listType="watch_later"
                             variant="icon"
                         />
                     </div>
@@ -286,7 +371,7 @@ export default function MoviePlayClient({ slug, preloadedMovie, preloadedSetting
                             {relatedMovies.slice(0, 5).map((item: any) => (
                                 <Link
                                     key={item._id || item.slug}
-                                    href={`/movies/${item.slug}`}
+                                    href={isTvMode ? `/tv/movies/${item.slug}` : `/movies/${item.slug}`}
                                     className="group block"
                                 >
                                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#333333] mb-2">

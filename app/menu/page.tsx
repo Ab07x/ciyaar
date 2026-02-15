@@ -16,12 +16,15 @@ import {
     Bell,
     Shield,
     Activity,
+    Clock3,
     Info,
     CheckCircle2,
     Zap,
     Ticket,
+    BookmarkCheck,
     Copy,
     Check,
+    CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
@@ -58,7 +61,11 @@ export default function MenuPage() {
         { label: "Ciyaaraha Live", icon: Trophy, href: "/ciyaar", color: "text-accent-green" },
         { label: "Filimaan", icon: Film, href: "/movies", color: "text-red-400" },
         { label: "Musalsal", icon: Tv, href: "/series", color: "text-purple-400" },
-        { label: "Liiskaaga (My List)", icon: Heart, href: "/mylist", color: "text-pink-400" },
+        { label: "Liiskaaga (My List)", icon: Heart, href: "/mylist?tab=mylist", color: "text-pink-400" },
+        { label: "Favourites", icon: Heart, href: "/mylist?tab=favourites", color: "text-pink-300" },
+        { label: "Watch Later", icon: BookmarkCheck, href: "/mylist?tab=watch_later", color: "text-yellow-300" },
+        { label: "Watch History", icon: Clock3, href: "/history", color: "text-cyan-300" },
+        { label: "Payments History", icon: CreditCard, href: "/payments", color: "text-emerald-300" },
     ];
 
     const supportNav = [
@@ -115,6 +122,9 @@ export default function MenuPage() {
 
     const avatarLetter = (username?.[0] || "U").toUpperCase();
     const accessCode = String(subscriptionData?.code?.code || fallbackCode || "").trim();
+    const subscriptionExpiresAt = Number(
+        (subscription as { expiresAt?: number } | null)?.expiresAt || 0
+    );
 
     const handleCopyAccessCode = async () => {
         if (!accessCode) return;
@@ -136,8 +146,8 @@ export default function MenuPage() {
         if (isPremium) {
             statusConfig = {
                 label: "Premium User",
-                sub: subscription?.expiresAt
-                    ? `Wuxuu dhacayaa: ${format(subscription.expiresAt, 'MMM dd, yyyy')}`
+                sub: subscriptionExpiresAt > 0
+                    ? `Wuxuu dhacayaa: ${format(subscriptionExpiresAt, "MMM dd, yyyy")}`
                     : "Access aan xad lahayn",
                 theme: "premium",
                 icon: Trophy,
