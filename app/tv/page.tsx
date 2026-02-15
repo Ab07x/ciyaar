@@ -1,23 +1,180 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
-import { TVMovieCard } from "@/components/tv/TVMovieCard";
-import { Tv, Search, User, LogOut, Home, PlayCircle, Play } from "lucide-react";
+import { TVMovie, TVMovieCard } from "@/components/tv/TVMovieCard";
+import { Play } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
+type MovieListResponse = TVMovie[] | { movies?: TVMovie[] };
+type PairSessionStatus = "pending" | "paired" | "expired" | "cancelled";
+type PairSessionState = {
+    code: string;
+    pairUrl: string;
+    expiresAt: number;
+    pollIntervalMs: number;
+};
+
+function formatCountdown(totalSeconds: number): string {
+    const safe = Math.max(0, totalSeconds);
+    const minutes = Math.floor(safe / 60);
+    const seconds = safe % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+}
+
 function TVPageContent() {
     const searchParams = useSearchParams();
     const isGuest = searchParams.get("guest") === "true";
-    const { userId, isPremium } = useUser();
-    const fetcher = (url: string) => fetch(url).then((r) => r.json());
-    const { data: movies } = useSWR("/api/movies?isPublished=true&limit=50", fetcher);
-    const [activeCategory, setActiveCategory] = useState("all");
+    const { deviceId, isPremium, isLoading } = useUser();
 
-    if (!movies) {
+    const [pairSession, setPairSession] = useState<PairSessionState | null>(null);
+    const [pairError, setPairError] = useState<string | null>(null);
+    const [isPairLoading, setIsPairLoading] = useState(false);
+    const [clockNow, setClockNow] = useState(() => Date.now());
+
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: moviesResponse } = useSWR<MovieListResponse>("/api/movies?isPublished=true&limit=50", fetcher);
+
+    const movies = Array.isArray(moviesResponse) ? moviesResponse : (moviesResponse?.movies || []);
+    const featuredMovie = movies[0];
+    const shouldShowPairOverlay = !isGuest && !isPremium && !isLoading;
+
+    const createPairSession = useCallback(async () => {
+        if (!deviceId) return;
+
+        setIsPairLoading(true);
+        setPairError(null);
+
+        try {
+            const res = await fetch("/api/tv/pair", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tvDeviceId: deviceId }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data?.error || "Pairing code lama helin.");
+            }
+
+            if (!data?.code || !data?.pairUrl || !data?.expiresAt) {
+                throw new Error("Pairing response is incomplete");
+            }
+
+            setPairSession({
+                code: data.code,
+                pairUrl: data.pairUrl,
+                expiresAt: Number(data.expiresAt),
+                pollIntervalMs: Number(data.pollIntervalMs || 3000),
+            });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Pairing code lama helin.";
+            setPairError(message);
+            setPairSession(null);
+        } finally {
+            setIsPairLoading(false);
+        }
+    }, [deviceId]);
+
+    useEffect(() => {
+        if (!shouldShowPairOverlay || !deviceId) {
+            setPairSession(null);
+            setPairError(null);
+            return;
+        }
+
+        if (pairSession) return;
+
+        void createPairSession();
+    }, [shouldShowPairOverlay, deviceId, pairSession, createPairSession]);
+
+    useEffect(() => {
+        if (!shouldShowPairOverlay || !pairSession?.code) return;
+
+        let active = true;
+        let polling = false;
+
+        const pollPairingStatus = async () => {
+            if (!active || polling) return;
+            polling = true;
+
+            try {
+                const res = await fetch(`/api/tv/pair?code=${encodeURIComponent(pairSession.code)}`, {
+                    cache: "no-store",
+                });
+                const data = await res.json();
+
+                if (!active) return;
+
+                if (!res.ok) {
+                    if (res.status === 404 || res.status === 410) {
+                        await createPairSession();
+                        return;
+                    }
+                    setPairError(data?.error || "Pairing check failed.");
+                    return;
+                }
+
+                const status = data?.status as PairSessionStatus;
+
+                if (status === "paired") {
+                    window.location.reload();
+                    return;
+                }
+
+                if (status === "expired" || status === "cancelled") {
+                    await createPairSession();
+                    return;
+                }
+
+                setPairSession((prev) => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        expiresAt: Number(data?.expiresAt || prev.expiresAt),
+                    };
+                });
+            } catch {
+                if (active) {
+                    setPairError("Network error while waiting for pairing.");
+                }
+            } finally {
+                polling = false;
+            }
+        };
+
+        const interval = window.setInterval(pollPairingStatus, pairSession.pollIntervalMs);
+        void pollPairingStatus();
+
+        return () => {
+            active = false;
+            window.clearInterval(interval);
+        };
+    }, [shouldShowPairOverlay, pairSession?.code, pairSession?.pollIntervalMs, createPairSession]);
+
+    useEffect(() => {
+        if (!shouldShowPairOverlay || !pairSession?.code) return;
+
+        const interval = window.setInterval(() => {
+            setClockNow(Date.now());
+        }, 1000);
+
+        return () => window.clearInterval(interval);
+    }, [shouldShowPairOverlay, pairSession?.code]);
+
+    const qrImageUrl = useMemo(() => {
+        if (!pairSession?.pairUrl) return "";
+        return `https://api.qrserver.com/v1/create-qr-code/?size=340x340&margin=2&data=${encodeURIComponent(pairSession.pairUrl)}`;
+    }, [pairSession?.pairUrl]);
+
+    const secondsRemaining = pairSession
+        ? Math.max(0, Math.ceil((pairSession.expiresAt - clockNow) / 1000))
+        : 0;
+
+    if (!moviesResponse) {
         return (
             <div className="flex items-center justify-center h-screen bg-black">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
@@ -25,10 +182,8 @@ function TVPageContent() {
         );
     }
 
-    const featuredMovie = movies[0];
-
     return (
-        <div className="relative flex h-screen overflow-hidden bg-black text-white">
+        <div className="relative h-screen overflow-hidden bg-black text-white">
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
                 <Image
@@ -41,36 +196,14 @@ function TVPageContent() {
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
             </div>
 
-            {/* Sidebar Navigation */}
-            <nav className="relative w-24 flex-shrink-0 bg-zinc-900/50 backdrop-blur-xl border-r border-white/10 flex flex-col items-center py-8 z-50">
-                <div className="mb-10">
-                    <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                        <Tv size={24} className="text-white" />
-                    </div>
-                </div>
-
-                <div className="flex-1 space-y-8 w-full flex flex-col items-center">
-                    <NavLink href="/tv" icon={<Home size={28} />} label="Home" active />
-                    <NavLink href="/tv/search" icon={<Search size={28} />} label="Search" />
-                    <NavLink href="/tv/live" icon={<PlayCircle size={28} />} label="Live" />
-                    <NavLink href="/tv/profile" icon={<User size={28} />} label="Profile" />
-                </div>
-
-                <div className="mt-auto">
-                    <button className="p-4 rounded-xl hover:bg-white/10 focus:bg-white/20 focus:outline-none transition-colors text-white/50 hover:text-white">
-                        <LogOut size={24} />
-                    </button>
-                </div>
-            </nav>
-
             {/* Main Content Area */}
-            <main className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden p-8 scroll-smooth">
+            <main className="relative z-10 h-full overflow-y-auto overflow-x-hidden p-8 scroll-smooth">
 
                 {/* Hero Section */}
                 {featuredMovie && (
                     <div className="relative w-full h-[60vh] rounded-3xl overflow-hidden mb-12 group focus-within:ring-4 focus-within:ring-white transition-all">
                         <Image
-                            src={featuredMovie.backdropUrl || featuredMovie.posterUrl}
+                            src={featuredMovie.backdropUrl || featuredMovie.posterUrl || "/bgcdn.webp"}
                             alt={featuredMovie.title}
                             fill
                             className="object-cover"
@@ -113,6 +246,11 @@ function TVPageContent() {
 
                 {/* Categories / Rows */}
                 <section className="space-y-10 pb-20">
+                    {movies.length === 0 && (
+                        <div className="rounded-2xl border border-white/10 bg-black/30 p-8 text-center text-white/70">
+                            Weli filim lama gelin TV section-ka.
+                        </div>
+                    )}
                     <div>
                         <h2 className="text-2xl font-bold mb-6 text-white/90">Latest Movies</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -134,33 +272,75 @@ function TVPageContent() {
 
             </main>
 
-            {/* Login Overlay if needed */}
-            {!userId && !isGuest && (
-                <div className="absolute inset-0 bg-black/95 z-[100] flex items-center justify-center p-20">
-                    <div className="flex gap-20 items-center max-w-5xl w-full">
-                        <div className="flex-1 space-y-6">
-                            <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
-                                Fanbroj TV
-                            </h1>
-                            <p className="text-3xl text-gray-400">
-                                Scan to login with your phone
-                            </p>
-                            <div className="text-lg text-gray-500">
-                                1. Open Camera on your phone<br />
-                                2. Scan the QR code<br />
-                                3. Start watching instantly
+            {/* TV Pairing Overlay */}
+            {shouldShowPairOverlay && (
+                <div className="absolute inset-0 bg-black/95 z-[100] flex items-center justify-center p-6 md:p-12">
+                    <div className="w-full max-w-6xl rounded-3xl border border-white/10 bg-black/80 backdrop-blur-xl p-6 md:p-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                            <div className="space-y-5">
+                                <p className="inline-flex items-center rounded-full border border-yellow-400/30 bg-yellow-400/10 px-4 py-1 text-sm font-semibold text-yellow-300">
+                                    Premium TV Login
+                                </p>
+                                <h1 className="text-4xl md:text-5xl font-black text-white">Fanbroj TV</h1>
+                                <p className="text-xl text-white/80">
+                                    Scan QR-kan si TV-ga ugu xirmo account-kaaga isla markiiba.
+                                </p>
+                                <ol className="space-y-2 text-white/70 text-base md:text-lg list-decimal list-inside">
+                                    <li>Fur camera-ga telefoonkaaga.</li>
+                                    <li>Scan QR code-ka ama geli code-ka hoose.</li>
+                                    <li>Riix <span className="font-semibold text-white">Link this TV</span> oo daawasho bilaaw.</li>
+                                </ol>
+                                {pairSession?.code && (
+                                    <div className="rounded-2xl border border-white/15 bg-white/5 p-4">
+                                        <p className="text-sm text-white/60 mb-1">Pairing Code</p>
+                                        <p className="text-3xl md:text-4xl font-black tracking-[0.18em] text-green-300">{pairSession.code}</p>
+                                        <p className="mt-2 text-sm text-white/70">
+                                            Code expires in <span className="font-bold text-yellow-300">{formatCountdown(secondsRemaining)}</span>
+                                        </p>
+                                    </div>
+                                )}
+
+                                {pairError && (
+                                    <p className="text-red-300 text-sm md:text-base">{pairError}</p>
+                                )}
+
+                                <div className="flex flex-wrap items-center gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => void createPairSession()}
+                                        className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors font-semibold"
+                                    >
+                                        Refresh Code
+                                    </button>
+                                    <Link
+                                        href="/tv?guest=true"
+                                        className="px-5 py-2.5 rounded-xl bg-white text-black font-semibold hover:bg-gray-200 transition-colors"
+                                    >
+                                        Continue as Guest
+                                    </Link>
+                                </div>
                             </div>
-                            <Link
-                                href="/tv?guest=true"
-                                className="inline-block mt-4 px-8 py-3 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 focus:bg-white/20 focus:ring-2 focus:ring-white transition-colors"
-                            >
-                                Browse as Guest
-                            </Link>
-                        </div>
-                        <div className="bg-white p-4 rounded-3xl">
-                            {/* Placeholder QR Code */}
-                            <div className="w-80 h-80 bg-gray-900 rounded-xl flex items-center justify-center">
-                                <span className="text-gray-500">QR CODE</span>
+
+                            <div className="justify-self-center">
+                                <div className="rounded-3xl bg-white p-4 shadow-2xl">
+                                    {pairSession?.pairUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img
+                                            src={qrImageUrl}
+                                            alt="TV pairing QR"
+                                            className="h-72 w-72 md:h-80 md:w-80 rounded-2xl"
+                                        />
+                                    ) : (
+                                        <div className="h-72 w-72 md:h-80 md:w-80 rounded-2xl bg-gray-900 flex items-center justify-center text-gray-500 text-sm text-center px-4">
+                                            {isPairLoading ? "Generating QR..." : "QR code not available"}
+                                        </div>
+                                    )}
+                                </div>
+                                {pairSession?.pairUrl && (
+                                    <p className="mt-3 text-center text-xs md:text-sm text-white/60 break-all">
+                                        {pairSession.pairUrl}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -179,17 +359,5 @@ export default function TVPage() {
         }>
             <TVPageContent />
         </Suspense>
-    );
-}
-
-function NavLink({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active?: boolean }) {
-    return (
-        <Link
-            href={href}
-            className={`w-16 h-16 flex flex-col items-center justify-center rounded-2xl transition-all focus:outline-none focus:ring-4 focus:ring-red-600 focus:bg-zinc-800 focus:scale-110 ${active ? 'bg-red-600/20 text-red-500' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-        >
-            {icon}
-            <span className="text-[10px] mt-1 font-medium">{label}</span>
-        </Link>
     );
 }

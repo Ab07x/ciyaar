@@ -22,6 +22,7 @@ export {
     Message,
     PageView,
     ConversionEvent,
+    TVPairSession,
     SearchAnalytics,
     ContentRequest,
     Prediction,

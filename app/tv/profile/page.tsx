@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useUser } from "@/providers/UserProvider";
-import { Tv, Search, User, LogOut, Home, PlayCircle, Crown, Calendar, Clock } from "lucide-react";
+import { User, Crown, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -45,7 +45,7 @@ export default function TVProfilePage() {
     };
 
     return (
-        <div className="relative flex h-screen overflow-hidden bg-black text-white">
+        <div className="relative h-screen overflow-hidden bg-black text-white">
             {/* Background */}
             <div className="absolute inset-0 z-0">
                 <Image
@@ -58,33 +58,8 @@ export default function TVProfilePage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-transparent" />
             </div>
 
-            {/* Sidebar Navigation */}
-            <nav className="relative w-24 flex-shrink-0 bg-zinc-900/50 backdrop-blur-xl border-r border-white/10 flex flex-col items-center py-8 z-50">
-                <div className="mb-10">
-                    <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                        <Tv size={24} className="text-white" />
-                    </div>
-                </div>
-
-                <div className="flex-1 space-y-8 w-full flex flex-col items-center">
-                    <NavLink href="/tv" icon={<Home size={28} />} label="Home" />
-                    <NavLink href="/tv/search" icon={<Search size={28} />} label="Search" />
-                    <NavLink href="/tv/live" icon={<PlayCircle size={28} />} label="Live" />
-                    <NavLink href="/tv/profile" icon={<User size={28} />} label="Profile" active />
-                </div>
-
-                <div className="mt-auto">
-                    <button
-                        onClick={handleLogout}
-                        className="p-4 rounded-xl hover:bg-white/10 focus:bg-white/20 focus:outline-none transition-colors text-white/50 hover:text-white"
-                    >
-                        <LogOut size={24} />
-                    </button>
-                </div>
-            </nav>
-
             {/* Main Content */}
-            <main className="relative z-10 flex-1 overflow-y-auto p-8">
+            <main className="relative z-10 h-full overflow-y-auto p-8">
                 <div className="max-w-4xl mx-auto">
                     {/* Profile Header */}
                     <div className="mb-8">
@@ -221,18 +196,6 @@ export default function TVProfilePage() {
                 </div>
             </main>
         </div>
-    );
-}
-
-function NavLink({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active?: boolean }) {
-    return (
-        <Link
-            href={href}
-            className={`w-16 h-16 flex flex-col items-center justify-center rounded-2xl transition-all focus:outline-none focus:ring-4 focus:ring-red-600 focus:bg-zinc-800 focus:scale-110 ${active ? 'bg-red-600/20 text-red-500' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-        >
-            {icon}
-            <span className="text-[10px] mt-1 font-medium">{label}</span>
-        </Link>
     );
 }
 

@@ -230,6 +230,36 @@ ConversionEventSchema.index({ deviceId: 1, createdAt: -1 });
 
 export const ConversionEvent = mongoose.models.ConversionEvent || mongoose.model<IConversionEvent>("ConversionEvent", ConversionEventSchema, "conversion_events");
 
+// TV PAIR SESSIONS
+export interface ITVPairSession extends Document {
+    code: string;
+    tvDeviceId: string;
+    status: "pending" | "paired" | "expired" | "cancelled";
+    userId?: string;
+    pairedByDeviceId?: string;
+    createdAt: number;
+    expiresAt: number;
+    pairedAt?: number;
+}
+
+const TVPairSessionSchema = new Schema<ITVPairSession>(
+    {
+        code: { type: String, required: true, unique: true, index: true },
+        tvDeviceId: { type: String, required: true, index: true },
+        status: { type: String, required: true, index: true, default: "pending" },
+        userId: { type: String, index: true },
+        pairedByDeviceId: String,
+        createdAt: { type: Number, required: true, index: true },
+        expiresAt: { type: Number, required: true, index: true },
+        pairedAt: Number,
+    },
+    { timestamps: false }
+);
+
+TVPairSessionSchema.index({ tvDeviceId: 1, status: 1, expiresAt: -1 });
+
+export const TVPairSession = mongoose.models.TVPairSession || mongoose.model<ITVPairSession>("TVPairSession", TVPairSessionSchema, "tv_pair_sessions");
+
 // SEARCH ANALYTICS
 export interface ISearchAnalytics extends Document {
     query: string;

@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Redemption } from "@/lib/models";
-
-function generateCode() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    return code;
-}
+import { generateUniqueRedemptionCode } from "@/lib/auto-redemption";
 
 // GET /api/redemptions — list codes or stats (admin)
 export async function GET(req: NextRequest) {
@@ -54,15 +48,21 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const count = body.count || 1;
         const now = Date.now();
+        const source = String(body.source || "manual");
+        const paymentOrderId = body.paymentOrderId ? String(body.paymentOrderId) : undefined;
+        const note = body.note ? String(body.note) : undefined;
 
         const codes: string[] = [];
         for (let i = 0; i < count; i++) {
-            const code = generateCode();
+            const code = await generateUniqueRedemptionCode();
             await Redemption.create({
                 code,
                 plan: body.plan || "monthly",
                 durationDays: body.durationDays || 30,
                 maxDevices: body.maxDevices || 3,
+                source,
+                paymentOrderId,
+                note,
                 createdAt: now,
             });
             codes.push(code);

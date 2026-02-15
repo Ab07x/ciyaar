@@ -326,6 +326,15 @@ export interface IPayment extends Document {
     paymentType?: string;
     bonusDays?: number;
     offerCode?: string;
+    accessCode?: string;
+    accessCodeId?: string;
+    verifyAttempts?: number;
+    lastCheckedAt?: number;
+    lastGatewayStatus?: string;
+    lastGatewayCode?: string;
+    lastGatewayMessage?: string;
+    failureReason?: string;
+    lastGatewayPayload?: Record<string, unknown>;
     subscriptionId?: string;
     createdAt: number;
     verifiedAt?: number;
@@ -349,6 +358,15 @@ const PaymentSchema = new Schema<IPayment>(
         paymentType: String,
         bonusDays: Number,
         offerCode: String,
+        accessCode: String,
+        accessCodeId: String,
+        verifyAttempts: Number,
+        lastCheckedAt: Number,
+        lastGatewayStatus: String,
+        lastGatewayCode: String,
+        lastGatewayMessage: String,
+        failureReason: String,
+        lastGatewayPayload: Schema.Types.Mixed,
         subscriptionId: String,
         createdAt: { type: Number, required: true },
         verifiedAt: Number,

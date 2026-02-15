@@ -1,31 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { StreamPlayer } from "@/components/StreamPlayer";
 import { Tv, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
+import Image from "next/image";
+
+type TVChannelEmbed = {
+    label?: string;
+    url: string;
+    type?: string;
+    isProtected?: boolean;
+};
+
+type TVChannel = {
+    _id: string;
+    name: string;
+    category?: string;
+    thumbnailUrl?: string;
+    embeds: TVChannelEmbed[];
+};
 
 export default function LiveTVPage() {
     // Fetch channels from database
     const fetcher = (url: string) => fetch(url).then((r) => r.json());
-    const { data: channels } = useSWR("/api/channels?isLive=true", fetcher);
+    const { data: channels } = useSWR<TVChannel[]>("/api/channels?isLive=true", fetcher);
 
     // State
-    const [selectedChannel, setSelectedChannel] = useState<any>(null);
+    const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
+    const selectedChannel = channels?.find((channel) => channel._id === selectedChannelId) || channels?.[0] || null;
 
-    // Auto-select first channel when loaded
-    useEffect(() => {
-        if (channels && channels.length > 0 && !selectedChannel) {
-            setSelectedChannel(channels[0]);
-        }
-    }, [channels, selectedChannel]);
-
-    const handleChannelChange = (channel: any) => {
+    const handleChannelChange = (channelId: string) => {
         setIsLoading(true);
-        setSelectedChannel(channel);
+        setSelectedChannelId(channelId);
         setTimeout(() => setIsLoading(false), 500);
     };
 
@@ -100,9 +110,11 @@ export default function LiveTVPage() {
                         <div className="mt-4 flex items-center gap-4">
                             <div className="w-16 h-16 bg-zinc-800 rounded-xl flex items-center justify-center overflow-hidden">
                                 {selectedChannel.thumbnailUrl ? (
-                                    <img
+                                    <Image
                                         src={selectedChannel.thumbnailUrl}
                                         alt={selectedChannel.name}
+                                        width={40}
+                                        height={40}
                                         className="w-10 h-10 object-contain"
                                     />
                                 ) : (
@@ -125,10 +137,10 @@ export default function LiveTVPage() {
                     <h3 className="text-lg font-bold mb-4 text-white/80">Channels</h3>
 
                     <div className="space-y-2">
-                        {channels.map((channel: any) => (
+                        {channels.map((channel) => (
                             <button
                                 key={channel._id}
-                                onClick={() => handleChannelChange(channel)}
+                                onClick={() => handleChannelChange(channel._id)}
                                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-red-500 ${selectedChannel?._id === channel._id
                                     ? "bg-red-600 text-white"
                                     : "bg-zinc-800/50 hover:bg-zinc-800 text-white/80 hover:text-white"
@@ -136,9 +148,11 @@ export default function LiveTVPage() {
                             >
                                 <div className="w-10 h-10 bg-black/30 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                                     {channel.thumbnailUrl ? (
-                                        <img
+                                        <Image
                                             src={channel.thumbnailUrl}
                                             alt={channel.name}
+                                            width={24}
+                                            height={24}
                                             className="w-6 h-6 object-contain"
                                         />
                                     ) : (

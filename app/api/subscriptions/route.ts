@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Subscription, Device } from "@/lib/models";
+import { Subscription, Device, Redemption, Payment } from "@/lib/models";
 
 const SUBSCRIPTION_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
 type LeanSubscription = {
+    _id: string;
+    userId: string;
+    plan: "match" | "weekly" | "monthly" | "yearly";
     expiresAt: number;
     maxDevices: number;
+    codeId?: string;
+    createdAt?: number;
 };
 
 // GET /api/subscriptions?userId=xxx — check active subscription
@@ -28,7 +33,7 @@ export async function GET(req: NextRequest) {
             if (device) {
                 targetUserId = device.userId;
             } else {
-                return NextResponse.json({ active: false, subscription: null, devices: [] });
+                return NextResponse.json({ active: false, subscription: null, devices: [], now: Date.now() });
             }
         }
 
@@ -46,16 +51,61 @@ export async function GET(req: NextRequest) {
             const graceEndsAt = subscription.expiresAt + SUBSCRIPTION_GRACE_PERIOD_MS;
             // Get all devices for this user
             const devices = await Device.find({ userId: targetUserId }).lean();
-            return NextResponse.json({
-                active: true,
-                subscription,
-                isGracePeriod,
-                graceEndsAt,
-                devices,
-                deviceCount: devices.length,
-                maxDevices: subscription.maxDevices,
-            });
-        }
+
+            let code: {
+                code: string;
+                source?: string;
+                paymentOrderId?: string;
+                usedAt?: number;
+            } | null = null;
+
+            if (subscription.codeId) {
+                const redemption = await Redemption.findById(subscription.codeId)
+                    .select("code source paymentOrderId usedAt")
+                    .lean<{ code?: string; source?: string; paymentOrderId?: string; usedAt?: number } | null>();
+
+                if (redemption?.code) {
+                    code = {
+                        code: redemption.code,
+                        source: redemption.source,
+                        paymentOrderId: redemption.paymentOrderId,
+                        usedAt: redemption.usedAt,
+                    };
+                }
+            }
+
+            if (!code) {
+                const lastPayment = await Payment.findOne({
+                    userId: targetUserId,
+                    status: "success",
+                    accessCode: { $ne: null },
+                })
+                    .sort({ completedAt: -1, createdAt: -1 })
+                    .select("accessCode orderId completedAt")
+                    .lean<{ accessCode?: string; orderId?: string; completedAt?: number } | null>();
+
+                if (lastPayment?.accessCode) {
+                    code = {
+                        code: lastPayment.accessCode,
+                        source: "auto_payment",
+                        paymentOrderId: lastPayment.orderId,
+                        usedAt: lastPayment.completedAt,
+                    };
+                }
+            }
+
+                return NextResponse.json({
+                    active: true,
+                    subscription,
+                    isGracePeriod,
+                    graceEndsAt,
+                    devices,
+                    code,
+                    now,
+                    deviceCount: devices.length,
+                    maxDevices: subscription.maxDevices,
+                });
+            }
 
         // Check for expired subscriptions and mark them
         await Subscription.updateMany(
@@ -63,7 +113,7 @@ export async function GET(req: NextRequest) {
             { status: "expired" }
         );
 
-        return NextResponse.json({ active: false, subscription: null, devices: [] });
+        return NextResponse.json({ active: false, subscription: null, devices: [], now });
     } catch (error) {
         console.error("GET /api/subscriptions error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

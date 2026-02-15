@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Get price from settings
-        const settings = await Settings.findOne().lean() as any;
+        const settings = await Settings.findOne().lean<Record<string, unknown> | null>();
         const priceKey = `price${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
-        const baseAmount = settings?.[priceKey] || 0;
+        const baseAmount = Number(settings?.[priceKey] || 0);
         const bonusDays = plan === "monthly" ? Math.min(7, Math.max(0, Number(offerBonusDays) || 0)) : 0;
         const normalizedOfferCode = bonusDays > 0 ? String(offerCode || "MONTHLY_EXIT_7D") : "";
 
@@ -65,9 +65,10 @@ export async function POST(request: NextRequest) {
         const authToken = Buffer.from(`${username}:${password}`).toString("base64");
 
         // Webhook URL for Sifalo Pay to notify us when payment is completed
-        const webhookUrl = process.env.NODE_ENV === "development"
+        const baseWebhookUrl = process.env.NODE_ENV === "development"
             ? "http://localhost:3000/api/pay/webhook"
             : "https://fanbroj.net/api/pay/webhook";
+        const webhookUrl = `${baseWebhookUrl}?order_id=${encodeURIComponent(orderId)}&device_id=${encodeURIComponent(deviceId)}`;
 
         const sifaloRes = await fetch("https://api.sifalopay.com/gateway/", {
             method: "POST",
@@ -118,6 +119,8 @@ export async function POST(request: NextRequest) {
             status: "pending",
             bonusDays,
             offerCode: normalizedOfferCode || undefined,
+            verifyAttempts: 0,
+            lastCheckedAt: 0,
             createdAt: Date.now(),
         });
 
@@ -149,10 +152,11 @@ export async function POST(request: NextRequest) {
             checkoutUrl,
             orderId,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to initiate checkout";
         console.error("Checkout error:", error);
         return NextResponse.json(
-            { error: error.message || "Failed to initiate checkout" },
+            { error: message },
             { status: 500 }
         );
     }

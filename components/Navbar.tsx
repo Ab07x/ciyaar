@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Newspaper, Crown, CreditCard, List, Zap, MessageSquare } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Radio, Film, Tv, Crown, CreditCard, List, Zap, MessageSquare } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
@@ -31,16 +31,11 @@ export function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Close mobile menu on route change
-    useEffect(() => {
-        setMobileMenuOpen(false);
-        setMobileSearchOpen(false);
-    }, [pathname]);
-
     const navItems = [
         { href: "/ciyaar", label: t("nav.matches"), icon: Trophy, color: "text-[#9AE600]" },
         { href: "/movies", label: t("nav.movies"), icon: Film, color: "text-[#E50914]" },
         { href: "/series", label: t("nav.series"), icon: Tv, color: "text-[#DC2626]" },
+        { href: "/tv", label: "TV", icon: Radio, color: "text-[#3B82F6]" },
         { href: "/requests", label: "Codso", icon: MessageSquare, color: "text-[#3B82F6]" },
         { href: "/mylist", label: t("nav.profile"), icon: List, color: "text-[#E50914]" },
     ];

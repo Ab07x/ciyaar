@@ -1,23 +1,19 @@
 "use client";
 
 import useSWR from "swr";
-import { useEffect, useState } from "react";
-import { Loader2, Crown, Calendar, Smartphone, Ticket, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Crown, Calendar, Smartphone, Ticket, CheckCircle2, Clock } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { useUser } from "@/providers/UserProvider";
 import { LogOut } from "lucide-react";
 
 export default function SubscriptionPage() {
-    const [deviceId, setDeviceId] = useState<string>("");
+    const [deviceId] = useState<string>(() => {
+        if (typeof window === "undefined") return "";
+        return localStorage.getItem("fanbroj_device_id") || "";
+    });
     const { logout } = useUser();
-
-    useEffect(() => {
-        const storedDeviceId = localStorage.getItem("fanbroj_device_id");
-        if (storedDeviceId) {
-            setDeviceId(storedDeviceId);
-        }
-    }, []);
 
     const fetcher = (url: string) => fetch(url).then((r) => r.json());
     const { data: subscriptionData } = useSWR(
@@ -77,8 +73,9 @@ export default function SubscriptionPage() {
 
     // Use subscription expiresAt
     const expiresAt = subscription?.expiresAt || 0;
-    const isExpired = Date.now() > expiresAt;
-    const expiresInDays = Math.ceil((expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+    const nowMs = Number(subscriptionData?.now || 0);
+    const isExpired = nowMs > expiresAt;
+    const expiresInDays = Math.ceil((expiresAt - nowMs) / (1000 * 60 * 60 * 24));
 
     if (!subscription) {
         return (
@@ -187,6 +184,12 @@ export default function SubscriptionPage() {
                         <div>
                             <p className="text-text-secondary text-xs font-bold uppercase mb-1">Redemption Code</p>
                             <p className="text-xl font-mono text-white tracking-widest">{code.code}</p>
+                            {code.source && (
+                                <p className="text-xs text-text-muted mt-1">Source: {code.source}</p>
+                            )}
+                            {code.paymentOrderId && (
+                                <p className="text-xs text-text-muted">Order: {code.paymentOrderId}</p>
+                            )}
                         </div>
                         <CheckCircle2 className="text-accent-green" size={24} />
                     </div>

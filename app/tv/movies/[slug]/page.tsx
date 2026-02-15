@@ -4,16 +4,29 @@
 import useSWR from "swr";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Play, Star, Clock, Calendar, ArrowLeft } from "lucide-react";
+import { Play, Star, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
+
+type TVMovieDetail = {
+    slug: string;
+    title: string;
+    titleSomali?: string;
+    posterUrl?: string;
+    backdropUrl?: string;
+    isPremium?: boolean;
+    rating?: number;
+    releaseDate?: string | number;
+    genres?: string[];
+    overview?: string;
+};
 
 export default function TVMovieDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const slug = params.slug as string;
+    const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
     const fetcher = (url: string) => fetch(url).then((r) => r.json());
-    const { data: movie } = useSWR(`/api/movies/${slug}`, fetcher);
+    const { data: movie } = useSWR<TVMovieDetail>(slug ? `/api/movies/${slug}` : null, fetcher);
     const { isPremium } = useUser();
 
     if (!movie) {
@@ -29,7 +42,7 @@ export default function TVMovieDetailPage() {
             {/* Backdrop */}
             <div className="absolute inset-0">
                 <Image
-                    src={movie.backdropUrl || movie.posterUrl}
+                    src={movie.backdropUrl || movie.posterUrl || "/bgcdn.webp"}
                     alt={movie.title}
                     fill
                     className="object-cover opacity-40"
@@ -62,7 +75,7 @@ export default function TVMovieDetailPage() {
                     )}
                     <div className="flex items-center gap-2 text-white/60 font-bold text-xl">
                         <Calendar size={20} />
-                        {new Date(movie.releaseDate).getFullYear()}
+                        {movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : "N/A"}
                     </div>
                 </div>
 
@@ -84,7 +97,7 @@ export default function TVMovieDetailPage() {
 
                 <div className="flex gap-6">
                     <Link
-                        href={`/movies/${movie.slug}`} // Assuming we rely on the main player for now, or we build a specific /tv/player/[slug]
+                        href={`/movies/${movie.slug}/play`}
                         className="flex items-center gap-3 px-10 py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold text-2xl transition-all hover:scale-105 focus:bg-white focus:text-black focus:ring-4 focus:ring-red-600 focus:outline-none"
                     >
                         <Play fill="currentColor" size={32} />
@@ -108,7 +121,7 @@ export default function TVMovieDetailPage() {
             {/* Poster Preview on the right (optional, for visual balance) */}
             <div className="absolute right-24 top-1/2 -translate-y-1/2 w-[400px] aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-white/10 hidden xl:block">
                 <Image
-                    src={movie.posterUrl}
+                    src={movie.posterUrl || movie.backdropUrl || "/bgcdn.webp"}
                     alt={movie.title}
                     fill
                     className="object-cover"
@@ -118,7 +131,7 @@ export default function TVMovieDetailPage() {
     );
 }
 
-function Crown(props: any) {
+function Crown(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg
             {...props}

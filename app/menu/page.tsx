@@ -18,24 +18,39 @@ import {
     Activity,
     Info,
     CheckCircle2,
-    Zap
+    Zap,
+    Ticket,
+    Copy,
+    Check,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
 import { format } from "date-fns";
 import { ReferralCard } from "@/components/ReferralCard";
+import useSWR from "swr";
 
 /**
  * MenuPage - A premium, sports-themed navigation and settings hub.
  * Design Ethos: "Stadium Noir" - Dark gradients, glassmorphism, and bold accents.
  */
 export default function MenuPage() {
-    const { userId, isPremium, subscription, isLoading, logout, username, updateUsername } = useUser();
+    const { userId, deviceId, isPremium, subscription, isLoading, logout, username, updateUsername } = useUser();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [usernameInput, setUsernameInput] = useState("");
     const [hasEditedUsername, setHasEditedUsername] = useState(false);
     const [isSavingUsername, setIsSavingUsername] = useState(false);
     const [usernameFeedback, setUsernameFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [fallbackCode] = useState<string>(() => {
+        if (typeof window === "undefined") return "";
+        return localStorage.getItem("fanbroj_last_payment_code") || "";
+    });
+    const [copiedCode, setCopiedCode] = useState(false);
+
+    const fetcher = (url: string) => fetch(url).then((r) => r.json());
+    const { data: subscriptionData } = useSWR(
+        deviceId ? `/api/subscriptions?deviceId=${encodeURIComponent(deviceId)}` : null,
+        fetcher
+    );
 
     // Navigation sections
     const mainNav = [
@@ -99,6 +114,14 @@ export default function MenuPage() {
     };
 
     const avatarLetter = (username?.[0] || "U").toUpperCase();
+    const accessCode = String(subscriptionData?.code?.code || fallbackCode || "").trim();
+
+    const handleCopyAccessCode = async () => {
+        if (!accessCode) return;
+        await navigator.clipboard.writeText(accessCode);
+        setCopiedCode(true);
+        window.setTimeout(() => setCopiedCode(false), 1800);
+    };
 
     // Determine user status UI
     let statusConfig = {
@@ -228,6 +251,29 @@ export default function MenuPage() {
                                 {usernameFeedback.text}
                             </p>
                         )}
+                    </div>
+                )}
+
+                {userId && accessCode && (
+                    <div className="bg-stadium-elevated/70 border border-white/10 rounded-3xl p-5 md:p-6">
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-text-secondary flex items-center gap-2">
+                                <Ticket size={14} className="text-accent-blue" />
+                                Premium Access Code
+                            </h3>
+                            <span className="text-[11px] text-text-muted">Auto Payment Code</span>
+                        </div>
+                        <div className="bg-stadium-dark border border-border-subtle rounded-xl px-3 py-3 flex items-center justify-between gap-3">
+                            <span className="font-mono text-lg tracking-wider text-white">{accessCode}</span>
+                            <button
+                                onClick={handleCopyAccessCode}
+                                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold flex items-center gap-1"
+                            >
+                                {copiedCode ? <Check size={14} className="text-accent-green" /> : <Copy size={14} />}
+                                {copiedCode ? "Copied" : "Copy"}
+                            </button>
+                        </div>
+                        <p className="mt-2 text-xs text-text-muted">Keydi code-kan si aad mar kasta u haysato record-ka payment-kaaga.</p>
                     </div>
                 )}
 

@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Device, Subscription, User } from "@/lib/models";
+import { Device, Subscription } from "@/lib/models";
+
+function isAdminAuthenticated(req: NextRequest): boolean {
+    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
+}
 
 // GET /api/admin/devices — list devices for a user or subscription
 export async function GET(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get("userId");
@@ -16,7 +24,7 @@ export async function GET(req: NextRequest) {
 
         let targetUserId = userId;
         if (subscriptionId && !userId) {
-            const sub = await Subscription.findById(subscriptionId).lean() as any;
+            const sub = await Subscription.findById(subscriptionId).select("userId").lean<{ userId?: string } | null>();
             if (sub) targetUserId = sub.userId;
         }
 
@@ -35,10 +43,24 @@ export async function GET(req: NextRequest) {
 // DELETE /api/admin/devices — clear device IDs for a user
 export async function DELETE(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get("userId");
         const deviceId = searchParams.get("deviceId");
+        const clearAll = searchParams.get("all");
+
+        if (clearAll === "1") {
+            const result = await Device.deleteMany({});
+            return NextResponse.json({
+                success: true,
+                message: `Cleared ${result.deletedCount} device login(s)`,
+                deletedCount: result.deletedCount,
+            });
+        }
 
         if (deviceId) {
             // Delete a specific device

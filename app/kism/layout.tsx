@@ -25,6 +25,7 @@ import {
     Bell,
     Lock,
     BarChart3,
+    Bug,
 } from "lucide-react";
 
 const navItems = [
@@ -42,6 +43,7 @@ const navItems = [
     { href: "/kism/categories", label: "Categories", icon: Palette },
     { href: "/kism/codes", label: "Codes", icon: Ticket },
     { href: "/kism/subscribers", label: "Subscribers", icon: Smartphone },
+    { href: "/kism/payments", label: "Payments Debug", icon: Bug },
     { href: "/kism/ppv", label: "PPV", icon: CreditCard },
     { href: "/kism/notifications", label: "Notifications", icon: Bell },
     { href: "/kism/pricing", label: "Pricing", icon: DollarSign },
@@ -64,7 +66,6 @@ export default function AdminLayout({
     useEffect(() => {
         // Skip auth check for login page
         if (pathname === "/kism/login") {
-            setIsAuthenticated(true);
             return;
         }
 

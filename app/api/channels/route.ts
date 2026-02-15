@@ -8,15 +8,18 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const slug = searchParams.get("slug");
         const category = searchParams.get("category");
+        const isLive = searchParams.get("isLive");
+        const isPremium = searchParams.get("isPremium");
 
         if (slug) {
             const channel = await Channel.findOne({ slug }).lean();
             return NextResponse.json(channel || null);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const filter: any = {};
+        const filter: Record<string, unknown> = {};
         if (category) filter.category = category;
+        if (isLive !== null) filter.isLive = isLive === "true";
+        if (isPremium !== null) filter.isPremium = isPremium === "true";
 
         const channels = await Channel.find(filter).sort({ priority: -1 }).lean();
         return NextResponse.json(channels);

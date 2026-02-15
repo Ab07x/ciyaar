@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Payment, Device, Subscription, ConversionEvent } from "@/lib/models";
+import { Payment, Device, Subscription, ConversionEvent, Redemption } from "@/lib/models";
+import { getOrCreateAutoPaymentRedemption } from "@/lib/auto-redemption";
 
 // Plan duration mapping (days)
 const PLAN_DURATIONS: Record<string, number> = {
@@ -16,6 +17,76 @@ const PLAN_DEVICES: Record<string, number> = {
     monthly: 3,
     yearly: 5,
 };
+
+const SUCCESS_STATUSES = new Set(["success", "successful", "completed", "complete", "paid", "approved"]);
+const PENDING_STATUSES = new Set(["pending", "processing", "in_progress", "awaiting", "waiting"]);
+
+type PaymentRecord = {
+    orderId: string;
+    status: string;
+    plan: "match" | "weekly" | "monthly" | "yearly";
+    bonusDays?: number;
+    sifaloSid?: string;
+    accessCode?: string;
+    accessCodeId?: string;
+    subscriptionId?: string;
+    verifyAttempts?: number;
+};
+
+type DeviceRecord = {
+    _id?: string;
+    userId?: string;
+};
+
+function normalizeText(input: unknown): string {
+    return String(input || "").trim().toLowerCase();
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+    if (typeof value === "object" && value !== null) {
+        return value as Record<string, unknown>;
+    }
+    return {};
+}
+
+function readString(value: unknown): string | undefined {
+    const str = String(value || "").trim();
+    return str || undefined;
+}
+
+function extractStatusCandidates(payload: Record<string, unknown>): string[] {
+    const data = asRecord(payload.data);
+    const result = asRecord(payload.result);
+
+    return [
+        payload.status,
+        payload.payment_status,
+        payload.paymentStatus,
+        payload.state,
+        data.status,
+        data.payment_status,
+        result.status,
+    ]
+        .map(normalizeText)
+        .filter(Boolean);
+}
+
+function isSuccessfulVerification(payload: Record<string, unknown>): boolean {
+    const statuses = extractStatusCandidates(payload);
+    if (statuses.some((s) => SUCCESS_STATUSES.has(s))) {
+        return true;
+    }
+
+    const data = asRecord(payload.data);
+    const codeRaw = payload.code ?? data.code ?? payload.resultCode;
+    const codeNum = Number(codeRaw);
+    return Number.isFinite(codeNum) && codeNum === 601;
+}
+
+function isPendingVerification(payload: Record<string, unknown>): boolean {
+    const statuses = extractStatusCandidates(payload);
+    return statuses.some((s) => PENDING_STATUSES.has(s));
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -38,13 +109,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Look up payment record
-        let payment: any = null;
+        let payment: PaymentRecord | null = null;
         if (orderId) {
-            payment = await Payment.findOne({ orderId }).lean();
+            payment = await Payment.findOne({ orderId }).lean<PaymentRecord | null>();
         }
 
         if (!payment && sid) {
-            payment = await Payment.findOne({ sifaloSid: sid }).lean();
+            payment = await Payment.findOne({ sifaloSid: sid }).lean<PaymentRecord | null>();
         }
 
         if (!payment) {
@@ -56,10 +127,45 @@ export async function POST(request: NextRequest) {
 
         // Already verified
         if (payment.status === "success") {
+            let resolvedCode = payment.accessCode || null;
+            if (!resolvedCode) {
+                const linkedCode = await Redemption.findOne({ paymentOrderId: payment.orderId })
+                    .select("code")
+                    .lean<{ code?: string } | null>();
+                resolvedCode = linkedCode?.code || null;
+            }
+
+            if (!resolvedCode) {
+                const existingDevice = await Device.findOne({ deviceId }).lean<DeviceRecord | null>();
+                if (existingDevice?.userId) {
+                    const plan = payment.plan as "match" | "weekly" | "monthly" | "yearly";
+                    const baseDurationDays = PLAN_DURATIONS[plan] || 30;
+                    const bonusDays = Math.max(0, Number(payment.bonusDays) || 0);
+                    const durationDays = baseDurationDays + bonusDays;
+                    const maxDevices = PLAN_DEVICES[plan] || 1;
+                    const access = await getOrCreateAutoPaymentRedemption({
+                        paymentOrderId: payment.orderId,
+                        userId: String(existingDevice.userId),
+                        plan,
+                        durationDays,
+                        maxDevices,
+                    });
+                    resolvedCode = access.code;
+                    await Payment.findOneAndUpdate(
+                        { orderId: payment.orderId },
+                        {
+                            accessCode: access.code,
+                            accessCodeId: access.redemptionId,
+                        }
+                    );
+                }
+            }
+
             return NextResponse.json({
                 success: true,
                 message: "Payment already verified",
                 plan: payment.plan,
+                code: resolvedCode,
             });
         }
 
@@ -104,15 +210,28 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const verifyData = await verifyRes.json();
+        const verifyData = (await verifyRes.json()) as Record<string, unknown>;
         console.log("Sifalo verify response:", verifyData);
 
+        const statusCandidates = extractStatusCandidates(verifyData);
+        await Payment.findOneAndUpdate(
+            { orderId: payment.orderId },
+            {
+                lastCheckedAt: Date.now(),
+                verifyAttempts: Number(payment.verifyAttempts || 0) + 1,
+                lastGatewayStatus: statusCandidates[0] || "",
+                lastGatewayCode: String(verifyData.code ?? asRecord(verifyData.data).code ?? ""),
+                lastGatewayMessage: readString(verifyData.message) || readString(asRecord(verifyData.data).message) || "",
+                lastGatewayPayload: verifyData,
+            }
+        );
+
         // Check payment status
-        if (verifyData.status === "success" && verifyData.code === 601) {
+        if (isSuccessfulVerification(verifyData)) {
             // Payment successful! Activate subscription.
 
             // 1. Resolve user from deviceId
-            const device = await Device.findOne({ deviceId }).lean() as any;
+            const device = await Device.findOne({ deviceId }).lean<DeviceRecord | null>();
 
             if (!device) {
                 return NextResponse.json(
@@ -127,6 +246,13 @@ export async function POST(request: NextRequest) {
             const bonusDays = Math.max(0, Number(payment.bonusDays) || 0);
             const durationDays = baseDurationDays + bonusDays;
             const maxDevices = PLAN_DEVICES[plan] || 1;
+            const access = await getOrCreateAutoPaymentRedemption({
+                paymentOrderId: payment.orderId,
+                userId: String(userId),
+                plan,
+                durationDays,
+                maxDevices,
+            });
 
             // 2. Create subscription
             const subscription = await Subscription.create({
@@ -137,6 +263,7 @@ export async function POST(request: NextRequest) {
                 status: "active",
                 activatedAt: Date.now(),
                 expiresAt: Date.now() + durationDays * 24 * 60 * 60 * 1000,
+                codeId: access.redemptionId,
                 createdAt: Date.now(),
             });
 
@@ -146,10 +273,13 @@ export async function POST(request: NextRequest) {
                 {
                     status: "success",
                     sifaloSid: verifySid,
-                    paymentType: verifyData.payment_type || "unknown",
+                    paymentType: readString(verifyData.payment_type) || readString(asRecord(verifyData.data).payment_type) || "unknown",
                     userId,
                     subscriptionId: subscription._id,
+                    accessCode: access.code,
+                    accessCodeId: access.redemptionId,
                     completedAt: Date.now(),
+                    failureReason: "",
                 }
             );
 
@@ -179,8 +309,9 @@ export async function POST(request: NextRequest) {
                 message: "Payment verified and subscription activated!",
                 plan,
                 expiresIn: `${durationDays} days`,
+                code: access.code,
             });
-        } else if (verifyData.status === "pending") {
+        } else if (isPendingVerification(verifyData)) {
             return NextResponse.json({
                 success: false,
                 message: "Payment is still pending",
@@ -194,8 +325,29 @@ export async function POST(request: NextRequest) {
                     status: "failed",
                     sifaloSid: verifySid,
                     failedAt: Date.now(),
+                    failureReason: readString(verifyData.message) || readString(asRecord(verifyData.data).message) || "Payment declined",
                 }
             );
+
+            try {
+                await ConversionEvent.create({
+                    eventName: "purchase_failed",
+                    deviceId,
+                    pageType: "payment",
+                    plan: payment.plan,
+                    source: "verify_api",
+                    metadata: {
+                        orderId: payment.orderId,
+                        sid: verifySid,
+                        verifyStatus: verifyData.status,
+                        verifyCode: verifyData.code,
+                    },
+                    date: new Date().toISOString().slice(0, 10),
+                    createdAt: Date.now(),
+                });
+            } catch (eventError) {
+                console.error("Verify failure conversion event write failed:", eventError);
+            }
 
             return NextResponse.json({
                 success: false,
@@ -203,10 +355,11 @@ export async function POST(request: NextRequest) {
                 status: "failed",
             });
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Verification failed";
         console.error("Verify error:", error);
         return NextResponse.json(
-            { error: error.message || "Verification failed" },
+            { error: message },
             { status: 500 }
         );
     }

@@ -96,6 +96,9 @@ export interface IRedemption extends Document {
     plan: "match" | "weekly" | "monthly" | "yearly";
     durationDays: number;
     maxDevices: number;
+    source?: "manual" | "auto_payment" | "whatsapp";
+    paymentOrderId?: string;
+    note?: string;
     expiresAt?: number;
     usedByUserId?: string;
     usedAt?: number;
@@ -109,6 +112,9 @@ const RedemptionSchema = new Schema<IRedemption>(
         plan: { type: String, enum: ["match", "weekly", "monthly", "yearly"], required: true },
         durationDays: { type: Number, required: true },
         maxDevices: { type: Number, required: true },
+        source: { type: String, index: true },
+        paymentOrderId: { type: String, index: true },
+        note: String,
         expiresAt: Number,
         usedByUserId: String,
         usedAt: Number,

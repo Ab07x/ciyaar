@@ -7,6 +7,20 @@ import { getDeviceId, getUserAgent } from "@/lib/device";
 type GenericResponse = { success?: boolean; error?: string; [key: string]: unknown };
 type UserProfile = { username?: string; displayName?: string; [key: string]: unknown };
 type UserSubscription = Record<string, unknown>;
+type LocalStoredSubscription = { plan?: string; expiresAt?: number; activatedAt?: number };
+
+const LOCAL_SUBSCRIPTION_KEY = "fanbroj_subscription";
+
+function readLocalSubscription(): LocalStoredSubscription | null {
+    if (typeof window === "undefined") return null;
+    const raw = window.localStorage.getItem(LOCAL_SUBSCRIPTION_KEY);
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw) as LocalStoredSubscription;
+    } catch {
+        return null;
+    }
+}
 
 interface UserContextType {
     deviceId: string;
@@ -57,9 +71,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
         initUser();
     }, []);
 
-    // Fetch subscription status (only when userId is set)
+    // Clean up stale local premium cache on first load.
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const localSub = readLocalSubscription();
+        const localExpiresAt = Number(localSub?.expiresAt || 0);
+        if (localExpiresAt > 0 && localExpiresAt <= Date.now()) {
+            window.localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
+        }
+    }, []);
+
+    // Fetch subscription status bound to the current device.
     const { data: subData } = useSWR(
-        userId ? `/api/subscriptions?userId=${userId}` : null,
+        deviceId ? `/api/subscriptions?deviceId=${encodeURIComponent(deviceId)}` : null,
         (url: string) => fetch(url).then((r) => r.json()),
         { refreshInterval: 30000 } // Check every 30s
     );
@@ -74,6 +98,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const subscription = (subData?.subscription || null) as UserSubscription | null;
     const isPremium = subData?.active ?? false;
     const username = (profileData?.username || profileData?.displayName || null) as string | null;
+
+    // Persist premium login/session state until expiry, and drop to login when session is no longer valid.
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        if (subData === undefined) return;
+
+        const sub = subData?.subscription as { plan?: string; expiresAt?: number; createdAt?: number } | null;
+        const expiresAt = Number(sub?.expiresAt || 0);
+        const activeNow = Boolean(subData?.active) && expiresAt > Date.now();
+
+        if (activeNow && sub) {
+            window.localStorage.setItem(
+                LOCAL_SUBSCRIPTION_KEY,
+                JSON.stringify({
+                    plan: sub.plan || "premium",
+                    expiresAt,
+                    activatedAt: Number(sub.createdAt || Date.now()),
+                })
+            );
+            return;
+        }
+
+        const hadStoredSub = Boolean(window.localStorage.getItem(LOCAL_SUBSCRIPTION_KEY));
+        if (hadStoredSub) {
+            window.localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
+            if (window.location.pathname !== "/login") {
+                window.location.href = "/login";
+            }
+        }
+    }, [subData]);
 
     const checkMatchAccess = (_matchId: string) => {
         void _matchId;
@@ -143,7 +197,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const logout = () => {
         if (typeof window !== "undefined") {
             // Keep device id so user can always recover/login on this same device.
-            localStorage.removeItem("fanbroj_subscription");
+            localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
             setUserId(null);
             window.location.href = "/login";
         }
@@ -156,7 +210,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 userId,
                 username,
                 profile: profileData || null,
-                isLoading: !isInitialized || (userId !== null && subData === undefined),
+                isLoading: !isInitialized || (deviceId !== "" && subData === undefined),
                 isPremium,
                 subscription,
                 checkMatchAccess,

@@ -2,9 +2,36 @@
 
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { Save, Settings, MessageSquare, Search, Globe } from "lucide-react";
+import { Save, Settings, MessageSquare, Search, ShieldAlert } from "lucide-react";
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+type SettingsResponse = {
+    siteName?: string;
+    whatsappNumber?: string;
+    priceMatch?: number;
+    priceWeekly?: number;
+    priceMonthly?: number;
+    priceYearly?: number;
+    priceStarter?: number;
+    pricePlus?: number;
+    pricePro?: number;
+    priceElite?: number;
+    maxDevicesMatch?: number;
+    maxDevicesWeekly?: number;
+    maxDevicesMonthly?: number;
+    maxDevicesYearly?: number;
+    freeMoviesPerDay?: number;
+    freeMoviePreviewMinutes?: number;
+    freeMovieTimerSpeedMultiplier?: number;
+    seoTagline?: string;
+    seoDescription?: string;
+    seoKeywords?: string;
+    ogImage?: string;
+    twitterHandle?: string;
+    googleAnalyticsId?: string;
+    googleVerification?: string;
+};
+
+const fetcher = (url: string): Promise<SettingsResponse> => fetch(url).then(r => r.json());
 
 export default function AdminSettingsPage() {
     const { data: settings, mutate } = useSWR("/api/settings", fetcher);
@@ -39,36 +66,38 @@ export default function AdminSettingsPage() {
         googleVerification: "",
     });
     const [saved, setSaved] = useState(false);
+    const [clearingLogins, setClearingLogins] = useState(false);
+    const [clearLoginsResult, setClearLoginsResult] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     useEffect(() => {
         if (settings) setFormData({
-            siteName: settings.siteName,
-            whatsappNumber: settings.whatsappNumber,
-            priceMatch: settings.priceMatch,
-            priceWeekly: settings.priceWeekly,
-            priceMonthly: settings.priceMonthly,
-            priceYearly: settings.priceYearly,
+            siteName: settings.siteName || "Fanbroj",
+            whatsappNumber: settings.whatsappNumber || "+252",
+            priceMatch: settings.priceMatch ?? 0.2,
+            priceWeekly: settings.priceWeekly ?? 1,
+            priceMonthly: settings.priceMonthly ?? 3.5,
+            priceYearly: settings.priceYearly ?? 11,
             // New Plan Pricing
-            priceStarter: (settings as any).priceStarter || 24.99,
-            pricePlus: (settings as any).pricePlus || 34.00,
-            pricePro: (settings as any).pricePro || 38.00,
-            priceElite: (settings as any).priceElite || 47.00,
-            maxDevicesMatch: settings.maxDevicesMatch,
-            maxDevicesWeekly: settings.maxDevicesWeekly,
-            maxDevicesMonthly: settings.maxDevicesMonthly,
-            maxDevicesYearly: settings.maxDevicesYearly,
+            priceStarter: settings.priceStarter ?? 24.99,
+            pricePlus: settings.pricePlus ?? 34.00,
+            pricePro: settings.pricePro ?? 38.00,
+            priceElite: settings.priceElite ?? 47.00,
+            maxDevicesMatch: settings.maxDevicesMatch ?? 1,
+            maxDevicesWeekly: settings.maxDevicesWeekly ?? 2,
+            maxDevicesMonthly: settings.maxDevicesMonthly ?? 3,
+            maxDevicesYearly: settings.maxDevicesYearly ?? 5,
             freeMoviesPerDay: Math.max(3, settings.freeMoviesPerDay ?? 3),
             freeMoviePreviewMinutes: settings.freeMoviePreviewMinutes ?? 26,
             moviePreviewLockEnabled: true,
             freeMovieTimerSpeedMultiplier: settings.freeMovieTimerSpeedMultiplier ?? 12,
             // SEO Settings
-            seoTagline: (settings as any).seoTagline || "",
-            seoDescription: (settings as any).seoDescription || "",
-            seoKeywords: (settings as any).seoKeywords || "",
-            ogImage: (settings as any).ogImage || "",
-            twitterHandle: (settings as any).twitterHandle || "",
-            googleAnalyticsId: (settings as any).googleAnalyticsId || "",
-            googleVerification: (settings as any).googleVerification || "",
+            seoTagline: settings.seoTagline || "",
+            seoDescription: settings.seoDescription || "",
+            seoKeywords: settings.seoKeywords || "",
+            ogImage: settings.ogImage || "",
+            twitterHandle: settings.twitterHandle || "",
+            googleAnalyticsId: settings.googleAnalyticsId || "",
+            googleVerification: settings.googleVerification || "",
         });
     }, [settings]);
 
@@ -95,6 +124,33 @@ export default function AdminSettingsPage() {
         } catch (err) {
             console.error(err);
             alert("Seed failed");
+        }
+    };
+
+    const clearAllUserLogins = async () => {
+        const confirmed = window.confirm("Tani waxay ka saari doontaa login-ka dhammaan users-ka. Ma hubtaa?");
+        if (!confirmed) return;
+
+        setClearingLogins(true);
+        setClearLoginsResult(null);
+        try {
+            const res = await fetch("/api/admin/devices?all=1", { method: "DELETE" });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.error || "Failed to clear user logins");
+            }
+            setClearLoginsResult({
+                type: "success",
+                text: `Waxaa la nadiifiyay ${data?.deletedCount ?? 0} login(s). Users-ku waxay dib u galayaan code markay soo noqdaan.`,
+            });
+        } catch (err) {
+            console.error(err);
+            setClearLoginsResult({
+                type: "error",
+                text: "Nadiifinta login-ka way fashilantay. Isku day mar kale.",
+            });
+        } finally {
+            setClearingLogins(false);
         }
     };
 
@@ -215,6 +271,31 @@ export default function AdminSettingsPage() {
                     <h3 className="font-bold mb-4">Seed Default Data</h3>
                     <p className="text-text-muted text-sm mb-4">Ku dar data-ga hore (leagues, ads, settings)</p>
                     <button onClick={seedAll} className="px-6 py-3 bg-blue-500 text-white font-bold rounded-xl w-full">Seed All Defaults</button>
+                </div>
+
+                <div className="bg-stadium-elevated border border-accent-red/30 rounded-xl p-6 md:col-span-2">
+                    <div className="flex items-center gap-3 pb-4 border-b border-border-subtle">
+                        <ShieldAlert size={22} className="text-accent-red" />
+                        <div>
+                            <h3 className="font-bold text-accent-red">Admin Logout Control</h3>
+                            <p className="text-xs text-text-muted">Force logout all user logins from the entire site</p>
+                        </div>
+                    </div>
+                    <p className="text-sm text-text-secondary mt-4 mb-4">
+                        Haddii aad tan riixdo, users-ka waxay ka bixi doonaan premium session-kooda ilaa ay mar kale login sameeyaan.
+                    </p>
+                    <button
+                        onClick={clearAllUserLogins}
+                        disabled={clearingLogins}
+                        className="px-6 py-3 bg-accent-red text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {clearingLogins ? "Clearing logins..." : "Clear All User Logins"}
+                    </button>
+                    {clearLoginsResult && (
+                        <p className={`mt-3 text-sm font-semibold ${clearLoginsResult.type === "success" ? "text-accent-green" : "text-accent-red"}`}>
+                            {clearLoginsResult.text}
+                        </p>
+                    )}
                 </div>
             </div>
 

@@ -1,16 +1,29 @@
-
 import React from "react";
 import Image from "next/image";
 import { Star, Crown, Play } from "lucide-react";
 import Link from "next/link";
 
+export interface TVMovie {
+    _id: string;
+    slug: string;
+    title: string;
+    titleSomali?: string;
+    posterUrl?: string;
+    releaseDate?: string | number;
+    genres?: string[];
+    rating?: number;
+    isPremium?: boolean;
+}
+
 interface TVMovieCardProps {
-    movie: any;
+    movie: TVMovie;
     isPremium: boolean;
     priority?: boolean;
 }
 
 export function TVMovieCard({ movie, isPremium, priority = false }: TVMovieCardProps) {
+    const releaseYear = movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : null;
+
     return (
         <Link
             href={`/tv/movies/${movie.slug}`}
@@ -18,7 +31,7 @@ export function TVMovieCard({ movie, isPremium, priority = false }: TVMovieCardP
         >
             <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 shadow-lg">
                 <Image
-                    src={movie.posterUrl || ""}
+                    src={movie.posterUrl || "/bgcdn.webp"}
                     alt={movie.title}
                     fill
                     className="object-cover transition-opacity duration-300 group-focus:opacity-80"
@@ -33,7 +46,7 @@ export function TVMovieCard({ movie, isPremium, priority = false }: TVMovieCardP
                 {movie.isPremium && (
                     <div className="absolute top-2 left-2 flex items-center gap-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold px-2 py-1 rounded shadow-md">
                         <Crown size={12} />
-                        <span>PREMIUM</span>
+                        <span>{isPremium ? "PREMIUM" : "VIP ONLY"}</span>
                     </div>
                 )}
 
@@ -58,7 +71,7 @@ export function TVMovieCard({ movie, isPremium, priority = false }: TVMovieCardP
                     {movie.titleSomali || movie.title}
                 </h3>
                 <p className="text-sm text-gray-400 flex items-center gap-2 mt-1">
-                    <span>{new Date(movie.releaseDate).getFullYear()}</span>
+                    <span>{releaseYear || "N/A"}</span>
                     {movie.genres && movie.genres.length > 0 && (
                         <>
                             <span className="w-1 h-1 bg-gray-500 rounded-full" />
