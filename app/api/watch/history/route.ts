@@ -67,7 +67,10 @@ export async function GET(req: NextRequest) {
             return NextResponse.json([]);
         }
 
-        const rows = await UserWatchProgress.find({ userId })
+        const rows = await UserWatchProgress.find({
+            userId,
+            contentType: { $nin: ["movie_preview_session", "movie_preview"] },
+        })
             .sort({ updatedAt: -1 })
             .limit(limit)
             .lean<WatchRow[]>();

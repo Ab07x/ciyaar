@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Redemption } from "@/lib/models";
 import { generateUniqueRedemptionCode } from "@/lib/auto-redemption";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { resolveTrialMovie } from "@/lib/trial-movie";
 
-function isAdminAuthenticated(req: NextRequest): boolean {
-    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
-}
+
 
 // GET /api/redemptions — list codes or stats (admin)
 export async function GET(req: NextRequest) {
@@ -75,14 +75,22 @@ export async function POST(req: NextRequest) {
         const note = body.note ? String(body.note) : undefined;
         const requestedTrialHours = Number(body.trialHours || 0);
         const trialHours = [1, 2, 4].includes(requestedTrialHours) ? requestedTrialHours : 0;
-        const trialMovieId = String(body.trialMovieId || "").trim();
+        const trialMovieIdRaw = String(body.trialMovieId || "").trim();
         const trialMovieTitle = String(body.trialMovieTitle || "").trim();
 
-        if (trialHours > 0 && !trialMovieId) {
+        if (trialHours > 0 && !trialMovieIdRaw) {
             return NextResponse.json(
                 { error: "trialMovieId is required when trialHours is set." },
                 { status: 400 }
             );
+        }
+
+        let trialMovieId = trialMovieIdRaw;
+        let trialMovieAliases: string[] = [];
+        if (trialHours > 0) {
+            const resolvedTrialMovie = await resolveTrialMovie(trialMovieIdRaw);
+            trialMovieId = resolvedTrialMovie.canonicalMovieId || trialMovieIdRaw;
+            trialMovieAliases = resolvedTrialMovie.aliases || [];
         }
 
         const codes: string[] = [];
@@ -97,6 +105,7 @@ export async function POST(req: NextRequest) {
                 paymentOrderId,
                 trialHours: trialHours > 0 ? trialHours : undefined,
                 trialMovieId: trialHours > 0 ? trialMovieId : undefined,
+                trialMovieAliases: trialHours > 0 ? trialMovieAliases : undefined,
                 trialMovieTitle: trialHours > 0 ? trialMovieTitle || undefined : undefined,
                 note,
                 createdAt: now,

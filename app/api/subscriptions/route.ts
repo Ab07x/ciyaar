@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Subscription, Device, Redemption, Payment } from "@/lib/models";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 const SUBSCRIPTION_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
 
-function isAdminAuthenticated(req: NextRequest): boolean {
-    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
-}
 
 type LeanSubscription = {
     _id: string;

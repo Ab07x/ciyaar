@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
 
         // Create new user
         const now = Date.now();
-        const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const referralCode = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 8);
 
         const user = await User.create({
             createdAt: now,
@@ -132,18 +133,26 @@ export async function POST(req: NextRequest) {
     }
 }
 
-// PUT /api/users — update user
+// PUT /api/users — update user (allowlisted fields only)
 export async function PUT(req: NextRequest) {
     try {
         await connectDB();
         const body = await req.json();
-        const { id, username, ...restUpdates } = body;
+        const { id, username, displayName, avatarUrl } = body;
         if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return NextResponse.json({ error: "Invalid user id" }, { status: 400 });
         }
 
-        const updates: Record<string, unknown> = { ...restUpdates };
+        const updates: Record<string, unknown> = {};
+
+        if (typeof avatarUrl === "string" && avatarUrl.trim()) {
+            updates.avatarUrl = avatarUrl.trim();
+        }
+
+        if (typeof displayName === "string" && displayName.trim()) {
+            updates.displayName = displayName.trim().slice(0, 50);
+        }
 
         if (typeof username === "string") {
             const cleanUsername = username.trim();
@@ -171,6 +180,10 @@ export async function PUT(req: NextRequest) {
             updates.username = cleanUsername;
             updates.usernameLower = usernameLower;
             updates.displayName = cleanUsername;
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
         }
 
         const user = await User.findByIdAndUpdate(id, updates, { new: true }).lean();

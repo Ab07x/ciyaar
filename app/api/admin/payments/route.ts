@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Payment, Redemption } from "@/lib/models";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
-function isAdminAuthenticated(req: NextRequest): boolean {
-    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
-}
+
 
 type LeanPayment = {
     _id: string;

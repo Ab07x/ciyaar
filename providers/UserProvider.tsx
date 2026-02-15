@@ -1,11 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import useSWR from "swr";
 import { getDeviceId, getUserAgent } from "@/lib/device";
 
-type GenericResponse = { success?: boolean; error?: string; [key: string]: unknown };
-type UserProfile = { username?: string; displayName?: string; [key: string]: unknown };
+type GenericResponse = { success?: boolean; error?: string;[key: string]: unknown };
+type UserProfile = { username?: string; displayName?: string;[key: string]: unknown };
 type UserSubscription = Record<string, unknown>;
 type LocalStoredSubscription = { plan?: string; expiresAt?: number; activatedAt?: number };
 
@@ -45,44 +45,45 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const [deviceId, setDeviceId] = useState<string>("");
     const [userId, setUserId] = useState<string | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
+    const didRedirect = useRef(false);
 
     // Initialize user on mount
-    useEffect(() => {
-        const initUser = async () => {
-            const id = getDeviceId();
-            setDeviceId(id);
+    const initUser = useCallback(async () => {
+        const id = getDeviceId();
+        setDeviceId(id);
 
-            try {
-                // 1) Try cookie session first for email-auth users.
-                const sessionRes = await fetch(`/api/auth/session?deviceId=${encodeURIComponent(id)}`, {
-                    cache: "no-store",
+        try {
+            // 1) Try cookie session first for email-auth users.
+            const sessionRes = await fetch(`/api/auth/session?deviceId=${encodeURIComponent(id)}`, {
+                cache: "no-store",
+            });
+            const sessionData = await sessionRes.json();
+            if (sessionData?.authenticated && sessionData?.user?._id) {
+                setUserId(sessionData.user._id);
+            } else {
+                // 2) Fallback to device-based anonymous account.
+                const res = await fetch("/api/users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        deviceId: id,
+                        userAgent: getUserAgent(),
+                    }),
                 });
-                const sessionData = await sessionRes.json();
-                if (sessionData?.authenticated && sessionData?.user?._id) {
-                    setUserId(sessionData.user._id);
-                } else {
-                    // 2) Fallback to device-based anonymous account.
-                    const res = await fetch("/api/users", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            deviceId: id,
-                            userAgent: getUserAgent(),
-                        }),
-                    });
-                    const data = await res.json();
-                    if (data?.user?._id) {
-                        setUserId(data.user._id);
-                    }
+                const data = await res.json();
+                if (data?.user?._id) {
+                    setUserId(data.user._id);
                 }
-            } catch (error) {
-                console.error("Failed to init user:", error);
             }
-            setIsInitialized(true);
-        };
-
-        initUser();
+        } catch (error) {
+            console.error("Failed to init user:", error);
+        }
+        setIsInitialized(true);
     }, []);
+
+    useEffect(() => {
+        initUser();
+    }, [initUser]);
 
     // Clean up stale local premium cache on first load.
     useEffect(() => {
@@ -117,6 +118,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (typeof window === "undefined") return;
         if (subData === undefined) return;
+        if (didRedirect.current) return;
 
         const sub = subData?.subscription as { plan?: string; expiresAt?: number; createdAt?: number } | null;
         const expiresAt = Number(sub?.expiresAt || 0);
@@ -138,6 +140,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (hadStoredSub) {
             window.localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
             if (window.location.pathname !== "/login") {
+                didRedirect.current = true;
                 window.location.href = "/login";
             }
         }
@@ -271,7 +274,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
             localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
             fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
             setUserId(null);
-            window.location.href = "/login";
+            didRedirect.current = true;
+            // Re-establish anonymous user session before redirecting
+            initUser().finally(() => {
+                window.location.href = "/login";
+            });
         }
     };
 

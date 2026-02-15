@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Device, Subscription } from "@/lib/models";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
-function isAdminAuthenticated(req: NextRequest): boolean {
-    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
-}
+
 
 // GET /api/admin/devices — list devices for a user or subscription
 export async function GET(req: NextRequest) {

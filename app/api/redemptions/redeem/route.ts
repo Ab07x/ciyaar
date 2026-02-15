@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import { Redemption, Subscription, User, Device, UserMovieTrial } from "@/lib/models";
+import { buildTrialAliasSet, resolveTrialMovie } from "@/lib/trial-movie";
 
 // POST /api/redemptions/redeem — redeem a code
 export async function POST(req: NextRequest) {
@@ -74,14 +75,21 @@ export async function POST(req: NextRequest) {
         await redemption.save();
 
         const trialHours = Number((redemption as { trialHours?: number }).trialHours || 0);
-        const trialMovieId = String((redemption as { trialMovieId?: string }).trialMovieId || "").trim();
+        const trialMovieIdRaw = String((redemption as { trialMovieId?: string }).trialMovieId || "").trim();
+        const trialMovieTitle = String((redemption as { trialMovieTitle?: string }).trialMovieTitle || "").trim();
 
         // Movie trial codes grant single-movie access for limited hours (no full premium subscription).
-        if (trialHours > 0 && trialMovieId) {
+        if (trialHours > 0 && trialMovieIdRaw) {
+            const resolvedTrialMovie = await resolveTrialMovie(trialMovieIdRaw);
+            const trialMovieId = resolvedTrialMovie.canonicalMovieId || trialMovieIdRaw;
+            const trialMovieAliases = new Set<string>(resolvedTrialMovie.aliases);
+            buildTrialAliasSet(trialMovieTitle).forEach((alias) => trialMovieAliases.add(alias));
+
             const trialExpiresAt = now + trialHours * 60 * 60 * 1000;
             await UserMovieTrial.create({
                 userId: user._id.toString(),
                 movieId: trialMovieId,
+                movieAliases: Array.from(trialMovieAliases),
                 codeId: redemption._id.toString(),
                 code: redemption.code,
                 trialHours,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Settings } from "@/lib/models";
+import { isAdminAuthenticated, setAdminSessionCookie } from "@/lib/admin-auth";
 
 // Admin credentials - set these in environment variables
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
@@ -69,14 +70,8 @@ export async function POST(request: NextRequest) {
         const protocol = request.headers.get("x-forwarded-proto") || "http";
         const isSecure = protocol === "https";
 
-        // Set session cookie
-        response.cookies.set("fanbroj_admin_session", "authenticated", {
-            httpOnly: false,
-            secure: isSecure,
-            sameSite: "lax",
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-            path: "/",
-        });
+        // Set signed admin session cookie
+        setAdminSessionCookie(response, isSecure);
 
         return response;
     } catch (error) {
@@ -89,9 +84,8 @@ export async function POST(request: NextRequest) {
 }
 
 // Check auth status
-export async function GET(request: Request) {
-    const cookieHeader = request.headers.get("cookie") || "";
-    const isAuth = cookieHeader.includes("fanbroj_admin_session=authenticated");
-
-    return NextResponse.json({ authenticated: isAuth });
+export async function GET(request: NextRequest) {
+    const authenticated = isAdminAuthenticated(request);
+    return NextResponse.json({ authenticated });
 }
+

@@ -1,4 +1,4 @@
-import { Payment, Redemption, Subscription, UserMyList, UserWatchProgress } from "@/lib/models";
+import { Payment, Redemption, Subscription, UserMovieTrial, UserMyList, UserWatchProgress } from "@/lib/models";
 
 interface MergeUserIdentityInput {
     fromUserId: string;
@@ -11,6 +11,7 @@ interface MergeUserIdentityResult {
     movedWatchProgress: number;
     movedPayments: number;
     movedRedemptions: number;
+    movedMovieTrials: number;
     movedSubscription: boolean;
 }
 
@@ -52,6 +53,7 @@ export async function mergeUserIdentityData({
             movedWatchProgress: 0,
             movedPayments: 0,
             movedRedemptions: 0,
+            movedMovieTrials: 0,
             movedSubscription: false,
         };
     }
@@ -60,104 +62,120 @@ export async function mergeUserIdentityData({
     let movedWatchProgress = 0;
     let movedSubscription = false;
 
+    let myListMergeComplete = false;
     const sourceMyList = await UserMyList.find({ userId: fromUserId }).lean<Array<Record<string, unknown>>>();
-    for (const row of sourceMyList) {
-        const listType = normalizeMyListType(row.listType);
-        const contentType = String(row.contentType || "");
-        const contentId = String(row.contentId || "");
-        if (!contentType || !contentId) continue;
+    try {
+        for (const row of sourceMyList) {
+            const listType = normalizeMyListType(row.listType);
+            const contentType = String(row.contentType || "");
+            const contentId = String(row.contentId || "");
+            if (!contentType || !contentId) continue;
 
-        const existing = await UserMyList.findOne({
-            userId: toUserId,
-            contentType,
-            contentId,
-            ...myListFilterByType(listType),
-        }).lean<{ _id?: string; addedAt?: number; listType?: string } | null>();
-
-        if (!existing?._id) {
-            await UserMyList.create({
+            const existing = await UserMyList.findOne({
                 userId: toUserId,
-                listType,
                 contentType,
                 contentId,
-                addedAt: Number(row.addedAt || Date.now()),
-            });
-            movedMyList += 1;
-            continue;
-        }
+                ...myListFilterByType(listType),
+            }).lean<{ _id?: string; addedAt?: number; listType?: string } | null>();
 
-        const existingAddedAt = Number(existing.addedAt || 0);
-        const sourceAddedAt = Number(row.addedAt || 0);
-        if (sourceAddedAt > existingAddedAt) {
-            await UserMyList.updateOne(
+            if (!existing?._id) {
+                await UserMyList.create({
+                    userId: toUserId,
+                    listType,
+                    contentType,
+                    contentId,
+                    addedAt: Number(row.addedAt || Date.now()),
+                });
+                movedMyList += 1;
+                continue;
+            }
+
+            const existingAddedAt = Number(existing.addedAt || 0);
+            const sourceAddedAt = Number(row.addedAt || 0);
+            if (sourceAddedAt > existingAddedAt) {
+                await UserMyList.updateOne(
+                    { _id: existing._id },
+                    {
+                        $set: {
+                            addedAt: sourceAddedAt,
+                            listType,
+                        },
+                    }
+                );
+            } else if (!existing.listType) {
+                await UserMyList.updateOne({ _id: existing._id }, { $set: { listType } });
+            }
+        }
+        myListMergeComplete = true;
+    } catch (err) {
+        console.error("mergeUserIdentityData: MyList merge failed mid-loop, skipping delete", err);
+    }
+    if (myListMergeComplete) {
+        await UserMyList.deleteMany({ userId: fromUserId });
+    }
+
+    let watchProgressMergeComplete = false;
+    const sourceProgress = await UserWatchProgress.find({ userId: fromUserId })
+        .lean<Array<Record<string, unknown>>>();
+    try {
+        for (const row of sourceProgress) {
+            const contentType = String(row.contentType || "");
+            const contentId = String(row.contentId || "");
+            if (!contentType || !contentId) continue;
+
+            const sourceProgressSeconds = Number(row.progressSeconds || 0);
+            const sourceDurationSeconds = Number(row.durationSeconds || 0);
+            const sourceUpdatedAt = Number(row.updatedAt || Date.now());
+            const sourceIsFinished = Boolean(row.isFinished);
+            const sourceSeriesId = row.seriesId ? String(row.seriesId) : undefined;
+
+            const existing = await UserWatchProgress.findOne({
+                userId: toUserId,
+                contentType,
+                contentId,
+            }).lean<Record<string, unknown> | null>();
+
+            if (!existing) {
+                await UserWatchProgress.create({
+                    userId: toUserId,
+                    contentType,
+                    contentId,
+                    seriesId: sourceSeriesId,
+                    progressSeconds: sourceProgressSeconds,
+                    durationSeconds: sourceDurationSeconds,
+                    isFinished: sourceIsFinished,
+                    updatedAt: sourceUpdatedAt,
+                });
+                movedWatchProgress += 1;
+                continue;
+            }
+
+            const mergedProgress = Math.max(Number(existing.progressSeconds || 0), sourceProgressSeconds);
+            const mergedDuration = Math.max(Number(existing.durationSeconds || 0), sourceDurationSeconds);
+            const mergedUpdatedAt = Math.max(Number(existing.updatedAt || 0), sourceUpdatedAt);
+            const mergedIsFinished = Boolean(existing.isFinished) || sourceIsFinished;
+            const mergedSeriesId = String(existing.seriesId || sourceSeriesId || "");
+
+            await UserWatchProgress.updateOne(
                 { _id: existing._id },
                 {
                     $set: {
-                        addedAt: sourceAddedAt,
-                        listType,
+                        progressSeconds: mergedProgress,
+                        durationSeconds: mergedDuration,
+                        updatedAt: mergedUpdatedAt,
+                        isFinished: mergedIsFinished,
+                        seriesId: mergedSeriesId || undefined,
                     },
                 }
             );
-        } else if (!existing.listType) {
-            await UserMyList.updateOne({ _id: existing._id }, { $set: { listType } });
         }
+        watchProgressMergeComplete = true;
+    } catch (err) {
+        console.error("mergeUserIdentityData: WatchProgress merge failed mid-loop, skipping delete", err);
     }
-    await UserMyList.deleteMany({ userId: fromUserId });
-
-    const sourceProgress = await UserWatchProgress.find({ userId: fromUserId })
-        .lean<Array<Record<string, unknown>>>();
-    for (const row of sourceProgress) {
-        const contentType = String(row.contentType || "");
-        const contentId = String(row.contentId || "");
-        if (!contentType || !contentId) continue;
-
-        const sourceProgressSeconds = Number(row.progressSeconds || 0);
-        const sourceDurationSeconds = Number(row.durationSeconds || 0);
-        const sourceUpdatedAt = Number(row.updatedAt || Date.now());
-        const sourceIsFinished = Boolean(row.isFinished);
-        const sourceSeriesId = row.seriesId ? String(row.seriesId) : undefined;
-
-        const existing = await UserWatchProgress.findOne({
-            userId: toUserId,
-            contentType,
-            contentId,
-        }).lean<Record<string, unknown> | null>();
-
-        if (!existing) {
-            await UserWatchProgress.create({
-                userId: toUserId,
-                contentType,
-                contentId,
-                seriesId: sourceSeriesId,
-                progressSeconds: sourceProgressSeconds,
-                durationSeconds: sourceDurationSeconds,
-                isFinished: sourceIsFinished,
-                updatedAt: sourceUpdatedAt,
-            });
-            movedWatchProgress += 1;
-            continue;
-        }
-
-        const mergedProgress = Math.max(Number(existing.progressSeconds || 0), sourceProgressSeconds);
-        const mergedDuration = Math.max(Number(existing.durationSeconds || 0), sourceDurationSeconds);
-        const mergedUpdatedAt = Math.max(Number(existing.updatedAt || 0), sourceUpdatedAt);
-        const mergedIsFinished = Boolean(existing.isFinished) || sourceIsFinished;
-        const mergedSeriesId = String(existing.seriesId || sourceSeriesId || "");
-
-        await UserWatchProgress.updateOne(
-            { _id: existing._id },
-            {
-                $set: {
-                    progressSeconds: mergedProgress,
-                    durationSeconds: mergedDuration,
-                    updatedAt: mergedUpdatedAt,
-                    isFinished: mergedIsFinished,
-                    seriesId: mergedSeriesId || undefined,
-                },
-            }
-        );
+    if (watchProgressMergeComplete) {
+        await UserWatchProgress.deleteMany({ userId: fromUserId });
     }
-    await UserWatchProgress.deleteMany({ userId: fromUserId });
 
     const sourceSub = await Subscription.findOne({ userId: fromUserId, status: "active" })
         .sort({ expiresAt: -1 })
@@ -185,6 +203,10 @@ export async function mergeUserIdentityData({
         { userId: fromUserId },
         { $set: { userId: toUserId } }
     );
+    const movieTrialsResult = await UserMovieTrial.updateMany(
+        { userId: fromUserId },
+        { $set: { userId: toUserId } }
+    );
     const redemptionsResult = await Redemption.updateMany(
         { usedByUserId: fromUserId },
         { $set: { usedByUserId: toUserId } }
@@ -196,6 +218,7 @@ export async function mergeUserIdentityData({
         movedWatchProgress,
         movedPayments: Number(paymentsResult.modifiedCount || 0),
         movedRedemptions: Number(redemptionsResult.modifiedCount || 0),
+        movedMovieTrials: Number(movieTrialsResult.modifiedCount || 0),
         movedSubscription,
     };
 }

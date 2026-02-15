@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { UserMovieTrial } from "@/lib/models";
+import { buildTrialAliasSet, resolveTrialMovie } from "@/lib/trial-movie";
 
 // GET /api/movies/trial-access?userId=...&movieId=...
 export async function GET(req: NextRequest) {
@@ -15,13 +16,30 @@ export async function GET(req: NextRequest) {
         }
 
         const now = Date.now();
-        const trial = await UserMovieTrial.findOne({
+        const resolvedMovie = await resolveTrialMovie(movieId);
+        const requestedAliases = new Set<string>(resolvedMovie.aliases);
+
+        const activeTrials = await UserMovieTrial.find({
             userId,
-            movieId,
             expiresAt: { $gt: now },
         })
             .sort({ expiresAt: -1 })
-            .lean<{ expiresAt?: number; trialHours?: number; code?: string } | null>();
+            .limit(50)
+            .lean<Array<{ movieId?: string; movieAliases?: string[]; expiresAt?: number; trialHours?: number; code?: string }>>();
+
+        const trial = activeTrials.find((row) => {
+            const rowAliases = new Set<string>();
+            buildTrialAliasSet(row.movieId || "").forEach((alias) => rowAliases.add(alias));
+            if (Array.isArray(row.movieAliases)) {
+                for (const alias of row.movieAliases) {
+                    buildTrialAliasSet(alias).forEach((nextAlias) => rowAliases.add(nextAlias));
+                }
+            }
+            for (const alias of rowAliases) {
+                if (requestedAliases.has(alias)) return true;
+            }
+            return false;
+        });
 
         const expiresAt = Number(trial?.expiresAt || 0);
         const remainingSeconds = expiresAt > now

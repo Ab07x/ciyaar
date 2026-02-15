@@ -139,6 +139,7 @@ export interface IRedemption extends Document {
     paymentOrderId?: string;
     trialHours?: number;
     trialMovieId?: string;
+    trialMovieAliases?: string[];
     trialMovieTitle?: string;
     note?: string;
     expiresAt?: number;
@@ -158,6 +159,7 @@ const RedemptionSchema = new Schema<IRedemption>(
         paymentOrderId: { type: String, index: true },
         trialHours: Number,
         trialMovieId: String,
+        trialMovieAliases: [String],
         trialMovieTitle: String,
         note: String,
         expiresAt: Number,
