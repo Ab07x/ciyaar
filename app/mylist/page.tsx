@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { type ComponentType, useMemo } from "react";
+import { type ComponentType, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
 import { MovieCard } from "@/components/MovieCard";
@@ -19,29 +19,23 @@ type MyListItem = {
     details?: Record<string, unknown> | null;
 };
 
-const TAB_CONFIG: Array<{
-    id: ListTab;
-    label: string;
-    title: string;
-    empty: string;
-    icon: ComponentType<{ className?: string }>;
-}> = [
+const TAB_CONFIG = [
     {
-        id: "mylist",
+        id: "mylist" as ListTab,
         label: "My List",
         title: "My List",
         empty: "Wali waxba kuma darin My List-kaaga.",
         icon: FolderHeart,
     },
     {
-        id: "favourites",
+        id: "favourites" as ListTab,
         label: "Favourites",
         title: "Favourites",
         empty: "Wali maadan calaamadeyn waxyaabaha aad ugu jeceshahay.",
         icon: Heart,
     },
     {
-        id: "watch_later",
+        id: "watch_later" as ListTab,
         label: "Watch Later",
         title: "Watch Later",
         empty: "Wali maadan kaydsan wax aad hadhow daawato.",
@@ -60,7 +54,7 @@ function normalizeTab(raw: string | null): ListTab {
     return "mylist";
 }
 
-export default function MyListPage() {
+function MyListContent() {
     const { userId } = useUser();
     const searchParams = useSearchParams();
     const currentTab = useMemo(() => normalizeTab(searchParams.get("tab")), [searchParams]);
@@ -152,5 +146,22 @@ export default function MyListPage() {
                 })}
             </div>
         </div>
+    );
+}
+
+export default function MyListPage() {
+    return (
+        <Suspense fallback={
+            <div className="container mx-auto px-4 py-8">
+                <div className="h-8 w-48 bg-white/10 rounded mb-8 animate-pulse" />
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {[...Array(10)].map((_, i) => (
+                        <div key={i} className="aspect-[2/3] bg-white/5 rounded-xl animate-pulse" />
+                    ))}
+                </div>
+            </div>
+        }>
+            <MyListContent />
+        </Suspense>
     );
 }

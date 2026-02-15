@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Settings } from "@/lib/models";
 
+function isAdminAuthenticated(req: NextRequest): boolean {
+    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
+}
+
 const DEFAULTS = {
     whatsappNumber: "+252",
     siteName: "Fanbroj",
@@ -36,6 +40,10 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const body = await req.json();
 

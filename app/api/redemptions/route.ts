@@ -3,9 +3,17 @@ import connectDB from "@/lib/mongodb";
 import { Redemption } from "@/lib/models";
 import { generateUniqueRedemptionCode } from "@/lib/auto-redemption";
 
+function isAdminAuthenticated(req: NextRequest): boolean {
+    return req.cookies.get("fanbroj_admin_session")?.value === "authenticated";
+}
+
 // GET /api/redemptions — list codes or stats (admin)
 export async function GET(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const { searchParams } = new URL(req.url);
         const stats = searchParams.get("stats");
@@ -54,6 +62,10 @@ export async function GET(req: NextRequest) {
 // POST /api/redemptions — create code(s) (admin), supports batch via count
 export async function POST(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const body = await req.json();
         const count = body.count || 1;
@@ -102,6 +114,10 @@ export async function POST(req: NextRequest) {
 // PUT /api/redemptions — revoke code (admin)
 export async function PUT(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const body = await req.json();
         const { id, action } = body;
@@ -121,6 +137,10 @@ export async function PUT(req: NextRequest) {
 // DELETE /api/redemptions?id=xxx — delete code (admin)
 export async function DELETE(req: NextRequest) {
     try {
+        if (!isAdminAuthenticated(req)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         await connectDB();
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");

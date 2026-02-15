@@ -131,7 +131,9 @@ export default function AdminCodesPage() {
         });
         const newCodes = await res.json();
         const code = newCodes[0];
-        const link = `https://fanbroj.net/login`;
+        const link = codeType === "movie_trial"
+            ? "https://fanbroj.net/login"
+            : `https://fanbroj.net/pricing?redeem=${code}`;
         const trialLabelMovie = trialMovieTitle.trim() || trialMovieId.trim();
         const reply = codeType === "movie_trial"
             ? `Mahadsanid! Waa kan TRIAL code-kaaga:
