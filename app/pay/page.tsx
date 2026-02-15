@@ -293,8 +293,10 @@ function CheckoutHub({
     const [paymentMethod, setPaymentMethod] = useState<"sifalo" | "store">("sifalo");
     const [isAuthLoading, setIsAuthLoading] = useState(false);
     const [isPaying, setIsPaying] = useState(false);
+    const [authCompleted, setAuthCompleted] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string>("");
     const [statusError, setStatusError] = useState<string>("");
+    const canProceedToPayment = Boolean(email || authCompleted);
 
     const selectedPlan = useMemo(
         () => PLAN_OPTIONS.find((plan) => plan.id === selectedPlanId) || PLAN_OPTIONS[0],
@@ -345,10 +347,11 @@ function CheckoutHub({
             return;
         }
 
+        setAuthCompleted(true);
         setStatusMessage(
             authMode === "signup"
-                ? "Account waa la sameeyay. Waxaad hadda ku jirtaa freemium mode."
-                : "Login waa sax."
+                ? "Account waa la sameeyay, waana logged-in. Hadda dooro payment method."
+                : "Login waa sax. Hadda dooro payment method."
         );
         setPassword("");
         setConfirmPassword("");
@@ -393,8 +396,8 @@ function CheckoutHub({
     };
 
     const handlePay = async () => {
-        if (!userId) {
-            setStatusError("Marka hore samee account ama login.");
+        if (!canProceedToPayment) {
+            setStatusError("Marka hore samee Sign Up ama Login, kadibna bixi lacagta.");
             return;
         }
 
@@ -451,75 +454,93 @@ function CheckoutHub({
 
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                             <div>
-                                <p className="text-2xl font-black mb-4"><span className="text-red-400">01</span> Create Account</p>
+                                <p className="text-2xl font-black mb-4"><span className="text-red-400">01</span> {canProceedToPayment ? "Login Complete" : "Sign Up / Login"}</p>
 
-                                <div className="inline-flex rounded-lg bg-black/30 p-1 mb-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setAuthMode("signup")}
-                                        className={`px-4 py-2 rounded-md text-sm font-bold ${authMode === "signup" ? "bg-[#1d4ed8] text-white" : "text-gray-300"}`}
-                                    >
-                                        Sign Up
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setAuthMode("login")}
-                                        className={`px-4 py-2 rounded-md text-sm font-bold ${authMode === "login" ? "bg-[#1d4ed8] text-white" : "text-gray-300"}`}
-                                    >
-                                        Login
-                                    </button>
-                                </div>
+                                {canProceedToPayment ? (
+                                    <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-black text-green-300">Account diyaar ah ✅</p>
+                                                <p className="text-xs text-gray-200 mt-1 break-all">{email || formEmail || "Logged in"}</p>
+                                                <p className="text-xs text-gray-400 mt-2">Hadda toos u dooro payment method iyo plan.</p>
+                                            </div>
+                                            {!email && (
+                                                <Loader2 size={16} className="text-green-300 animate-spin flex-shrink-0 mt-0.5" />
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="inline-flex rounded-lg bg-black/30 p-1 mb-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAuthMode("signup")}
+                                                className={`px-4 py-2 rounded-md text-sm font-bold ${authMode === "signup" ? "bg-[#1d4ed8] text-white" : "text-gray-300"}`}
+                                            >
+                                                Sign Up
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setAuthMode("login")}
+                                                className={`px-4 py-2 rounded-md text-sm font-bold ${authMode === "login" ? "bg-[#1d4ed8] text-white" : "text-gray-300"}`}
+                                            >
+                                                Login
+                                            </button>
+                                        </div>
 
-                                <div className="space-y-3">
-                                    <input
-                                        type="email"
-                                        value={formEmail || email || ""}
-                                        onChange={(e) => setFormEmail(e.target.value)}
-                                        placeholder="email@example.com"
-                                        className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
-                                    />
-                                    {authMode === "signup" && (
-                                        <input
-                                            type="text"
-                                            value={displayName}
-                                            onChange={(e) => setDisplayName(e.target.value)}
-                                            placeholder="Magacaaga (optional)"
-                                            className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
-                                        />
-                                    )}
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Password"
-                                        className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
-                                    />
-                                    {authMode === "signup" && (
-                                        <input
-                                            type="password"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Confirm Password"
-                                            className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
-                                        />
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={handleAuth}
-                                        disabled={isAuthLoading}
-                                        className="w-full bg-[#e50914] hover:bg-[#c60912] disabled:opacity-60 rounded-xl py-3 font-black"
-                                    >
-                                        {isAuthLoading ? "Fadlan sug..." : authMode === "signup" ? "Create Account" : "Login"}
-                                    </button>
-                                </div>
+                                        <div className="space-y-3">
+                                            <input
+                                                type="email"
+                                                value={formEmail || email || ""}
+                                                onChange={(e) => setFormEmail(e.target.value)}
+                                                placeholder="email@example.com"
+                                                className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
+                                            />
+                                            {authMode === "signup" && (
+                                                <input
+                                                    type="text"
+                                                    value={displayName}
+                                                    onChange={(e) => setDisplayName(e.target.value)}
+                                                    placeholder="Magacaaga (optional)"
+                                                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
+                                                />
+                                            )}
+                                            <input
+                                                type="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder="Password"
+                                                className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
+                                            />
+                                            {authMode === "signup" && (
+                                                <input
+                                                    type="password"
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    placeholder="Confirm Password"
+                                                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
+                                                />
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={handleAuth}
+                                                disabled={isAuthLoading}
+                                                className="w-full bg-[#e50914] hover:bg-[#c60912] disabled:opacity-60 rounded-xl py-3 font-black"
+                                            >
+                                                {isAuthLoading ? "Fadlan sug..." : authMode === "signup" ? "Create Account" : "Login"}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <div>
                                 <p className="text-2xl font-black mb-4"><span className="text-red-400">02</span> Payment Method</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+                                <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 mb-5 ${canProceedToPayment ? "" : "opacity-60 pointer-events-none"}`}>
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod("sifalo")}
+                                        disabled={!canProceedToPayment}
                                         className={`rounded-xl border p-4 text-left ${paymentMethod === "sifalo" ? "border-green-400 bg-green-500/10" : "border-white/20 bg-white/5"}`}
                                     >
                                         <p className="font-black text-lg">Sifalo Checkout</p>
@@ -528,6 +549,7 @@ function CheckoutHub({
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod("store")}
+                                        disabled={!canProceedToPayment}
                                         className={`rounded-xl border p-4 text-left ${paymentMethod === "store" ? "border-blue-400 bg-blue-500/10" : "border-white/20 bg-white/5"}`}
                                     >
                                         <p className="font-black text-lg">Stripe/PayPal Store</p>
@@ -542,7 +564,7 @@ function CheckoutHub({
                                     <p className="text-xs text-gray-300 mt-1">Offer-kan waa laga soo wareejiyay pricing page.</p>
                                 </div>
                             )}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${canProceedToPayment ? "" : "opacity-60 pointer-events-none"}`}>
                                 {PLAN_OPTIONS.map((plan) => {
                                         const price = getPlanPrice(settings, plan);
                                         const active = plan.id === selectedPlanId;
@@ -551,6 +573,7 @@ function CheckoutHub({
                                                 key={plan.id}
                                                 type="button"
                                                 onClick={() => setSelectedPlanId(plan.id)}
+                                                disabled={!canProceedToPayment}
                                                 className={`rounded-xl border p-4 text-left transition-colors ${active ? "border-[#3B82F6] bg-[#1d4ed8]/15" : "border-white/20 bg-white/5 hover:bg-white/10"}`}
                                             >
                                                 <p className="font-black text-lg">{plan.label}</p>
@@ -570,12 +593,18 @@ function CheckoutHub({
                                     <button
                                         type="button"
                                         onClick={handlePay}
-                                        disabled={isPaying}
+                                        disabled={isPaying || !canProceedToPayment}
                                         className="px-8 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-60 font-black"
                                     >
-                                        {isPaying ? "Processing..." : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                        {!canProceedToPayment ? "Sign Up / Login First" : isPaying ? "Processing..." : `PAY $${selectedPlanPrice.toFixed(2)}`}
                                     </button>
                                 </div>
+
+                                {!canProceedToPayment && (
+                                    <p className="mt-3 text-xs text-yellow-300">
+                                        Marka hore samee Sign Up ama Login si payment method-ku u furmo.
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -591,7 +620,7 @@ function CheckoutHub({
                             <button
                                 type="button"
                                 onClick={() => void startSifaloCheckout(selectedPlan.id)}
-                                disabled={isPaying}
+                                disabled={isPaying || !canProceedToPayment}
                                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-yellow-400 text-black font-black hover:brightness-110 disabled:opacity-60"
                             >
                                 <ShieldCheck size={16} />
