@@ -25,6 +25,8 @@ import {
     Copy,
     Check,
     CreditCard,
+    UserPlus,
+    LogIn,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
@@ -37,7 +39,7 @@ import useSWR from "swr";
  * Design Ethos: "Stadium Noir" - Dark gradients, glassmorphism, and bold accents.
  */
 export default function MenuPage() {
-    const { userId, deviceId, isPremium, subscription, isLoading, logout, username, updateUsername } = useUser();
+    const { userId, deviceId, isPremium, subscription, isLoading, logout, username, updateUsername, email } = useUser();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [usernameInput, setUsernameInput] = useState("");
     const [hasEditedUsername, setHasEditedUsername] = useState(false);
@@ -72,6 +74,12 @@ export default function MenuPage() {
         { label: "Soo Degso Apps", icon: Download, href: "/apps", color: "text-yellow-400" },
         { label: "Wararka & News", icon: Activity, href: "/blog", color: "text-orange-400" },
         { label: "Ku Saabsan", icon: Info, href: "/about", color: "text-blue-400" },
+    ];
+
+    const authNav = [
+        { label: "Sign Up (Email)", icon: UserPlus, href: "/pay?auth=signup", color: "text-blue-300", subLabel: "Samee account cusub oo degdeg ah" },
+        { label: "Login (Email)", icon: LogIn, href: "/pay?auth=login", color: "text-emerald-300", subLabel: "Gal account-kaaga email/password" },
+        { label: "Have Premium Code?", icon: Ticket, href: "/login", color: "text-yellow-300", subLabel: "Geli code haddii aad hore u iibsatay" },
     ];
 
     const settingsNav = [
@@ -289,6 +297,16 @@ export default function MenuPage() {
 
                 {/* Navigation Blocks */}
                 <div className="grid gap-8">
+                    {!email && (
+                        <MenuSection title="Login & Sign Up">
+                            <div className="grid grid-cols-1 gap-2">
+                                {authNav.map((item) => (
+                                    <MenuLink key={item.label} {...item} />
+                                ))}
+                            </div>
+                        </MenuSection>
+                    )}
+
                     {/* Main Nav Section */}
                     <MenuSection title="Daawo & Baro">
                         <div className="grid grid-cols-1 gap-2">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { User } from "@/lib/models";
+import { generateUniqueReferralCode } from "@/lib/referral-code";
 
 // POST /api/referrals/create — Generate a referral code for a user
 export async function POST(req: NextRequest) {
@@ -22,8 +23,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ code: user.referralCode });
         }
 
-        // Generate unique 6-char code
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        // Generate unique referral code
+        const code = await generateUniqueReferralCode();
         user.referralCode = code;
         user.referralCount = user.referralCount || 0;
         user.referralEarnings = user.referralEarnings || 0;

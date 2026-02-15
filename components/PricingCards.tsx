@@ -175,7 +175,7 @@ interface PricingCardsProps {
 
 export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsProps) {
   const { data: settings } = useSWR("/api/settings", fetcher);
-  const { deviceId, userId } = useUser();
+  const { deviceId, userId, email } = useUser();
   const { data: subDetails } = useSWR(
     deviceId ? `/api/subscriptions?deviceId=${deviceId}` : null,
     fetcher
@@ -283,30 +283,22 @@ export function PricingCards({ className, monthlyBonusDays = 0 }: PricingCardsPr
       exitOfferApplied: appliedBonusDays > 0,
     });
 
-    try {
-      const res = await fetch("/api/pay/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan: plan.id,
-          deviceId: deviceId || "unknown",
-          offerBonusDays: appliedBonusDays,
-          offerCode: appliedBonusDays > 0 ? "EXIT_INTENT_MONTHLY_7D" : undefined,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        alert(data.error || "Khalad ayaa dhacay. Fadlan isku day mar kale.");
+    if (typeof window !== "undefined") {
+      const payUrl = new URL("/pay", window.location.origin);
+      payUrl.searchParams.set("plan", plan.id);
+      payUrl.searchParams.set("src", "pricing");
+      if (!email) {
+        payUrl.searchParams.set("auth", "signup");
       }
-    } catch {
-      alert("Khalad ayaa dhacay. Fadlan hubso internetkaaga.");
-    } finally {
-      setLoadingPlan(null);
+      if (appliedBonusDays > 0) {
+        payUrl.searchParams.set("bonusDays", String(appliedBonusDays));
+        payUrl.searchParams.set("offerCode", "EXIT_INTENT_MONTHLY_7D");
+      }
+      window.location.assign(payUrl.toString());
+      return;
     }
+
+    setLoadingPlan(null);
   };
 
   return (

@@ -10,6 +10,7 @@ interface IPreviewUsageRow {
     contentId?: string;
     sessionId?: string;
     updatedAt?: number;
+    dateKey?: string;
 }
 
 function getUtcDayBounds(nowMs: number) {
@@ -41,7 +42,7 @@ async function getTodayPreviewRows(userId: string, start: number, end: number) {
         contentType: { $in: [SESSION_CONTENT_TYPE, LEGACY_CONTENT_TYPE] },
         updatedAt: { $gte: start, $lt: end },
     })
-        .select("contentId sessionId updatedAt")
+        .select("contentId sessionId updatedAt dateKey")
         .lean() as IPreviewUsageRow[];
     return rows;
 }
@@ -145,27 +146,58 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        await UserWatchProgress.create({
+        const sessionRowFilter = {
             userId,
             contentType: SESSION_CONTENT_TYPE,
-            contentId: movieId,
             sessionId: normalizedSessionId,
-            progressSeconds: 0,
-            durationSeconds: 0,
-            isFinished: false,
-            updatedAt: now,
-            dateKey,
-        });
+            $or: [
+                { dateKey },
+                { updatedAt: { $gte: start, $lt: end } },
+            ],
+        };
 
-        const nextUsed = used + 1;
+        const upsertResult = await UserWatchProgress.updateOne(
+            sessionRowFilter,
+            {
+                $setOnInsert: {
+                    userId,
+                    contentType: SESSION_CONTENT_TYPE,
+                    contentId: movieId,
+                    sessionId: normalizedSessionId,
+                    progressSeconds: 0,
+                    durationSeconds: 0,
+                    isFinished: false,
+                    updatedAt: now,
+                    dateKey,
+                },
+            },
+            { upsert: true }
+        );
+
+        const insertedNewSession = Number((upsertResult as { upsertedCount?: number }).upsertedCount || 0) > 0;
+        const rowsAfter = await getTodayPreviewRows(userId, start, end);
+        const usedAfter = getUsedCount(rowsAfter);
+
+        if (!insertedNewSession) {
+            return NextResponse.json({
+                allowed: true,
+                alreadyWatched: true,
+                used: usedAfter,
+                remaining: Math.max(0, dailyLimit - usedAfter),
+                dailyLimit,
+                dateKey,
+                locked: usedAfter >= dailyLimit,
+            });
+        }
+
         return NextResponse.json({
             allowed: true,
             alreadyWatched: false,
-            used: nextUsed,
-            remaining: Math.max(0, dailyLimit - nextUsed),
+            used: usedAfter,
+            remaining: Math.max(0, dailyLimit - usedAfter),
             dailyLimit,
             dateKey,
-            locked: nextUsed >= dailyLimit,
+            locked: usedAfter >= dailyLimit,
         });
     } catch (error) {
         console.error("POST /api/movies/free-limit error:", error);

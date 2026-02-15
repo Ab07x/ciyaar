@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, User, Trophy, Film, Tv, Crown, CreditCard, List, Zap, MessageSquare } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Film, Tv, Crown, CreditCard, List, Zap, MessageSquare, UserPlus, LogIn, Ticket } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
@@ -41,8 +41,9 @@ export function Navbar() {
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const pathname = usePathname();
-    const { isPremium, isLoading } = useUser();
+    const { isPremium, isLoading, email } = useUser();
     const { t } = useLanguage();
+    const isRegisteredUser = Boolean(email);
 
     // Handle scroll for glassmorphism effect
     useEffect(() => {
@@ -181,6 +182,25 @@ export function Navbar() {
                         <NotificationBell />
                     </div>
 
+                    {!isLoading && !isRegisteredUser && (
+                        <div className="hidden md:flex items-center gap-2">
+                            <Link
+                                href="/pay?auth=signup"
+                                className="px-3 py-2 rounded-lg bg-[#1d4ed8] text-white text-xs font-black uppercase tracking-wide hover:bg-[#1e40af] transition-colors flex items-center gap-1.5"
+                            >
+                                <UserPlus size={14} />
+                                Sign Up
+                            </Link>
+                            <Link
+                                href="/pay?auth=login"
+                                className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-black uppercase tracking-wide hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+                            >
+                                <LogIn size={14} />
+                                Login
+                            </Link>
+                        </div>
+                    )}
+
                     {/* Account Icon */}
                     {isLoading ? (
                         <div className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hidden md:flex">
@@ -200,14 +220,24 @@ export function Navbar() {
                                 <Crown size={22} />
                             </Link>
                         </motion.div>
+                    ) : isRegisteredUser ? (
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Link
+                                href="/menu"
+                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg transition-colors hidden md:flex"
+                                aria-label="My Account"
+                            >
+                                <User size={22} />
+                            </Link>
+                        </motion.div>
                     ) : (
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Link
                                 href="/login"
                                 className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg transition-colors hidden md:flex"
-                                aria-label="Account"
+                                aria-label="Redeem Code"
                             >
-                                <User size={22} />
+                                <Ticket size={22} />
                             </Link>
                         </motion.div>
                     )}
@@ -308,6 +338,7 @@ export function Navbar() {
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     transition={{ delay: 0.4 }}
+                                    className="space-y-2"
                                 >
                                     {isPremium ? (
                                         <Link
@@ -318,15 +349,42 @@ export function Navbar() {
                                             <CreditCard size={22} />
                                             My Plan
                                         </Link>
-                                    ) : (
+                                    ) : isRegisteredUser ? (
                                         <Link
-                                            href="/login"
-                                            className="p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 text-gray-600 hover:bg-gray-50 transition-colors"
+                                            href="/menu"
+                                            className="p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 text-gray-700 hover:bg-gray-50 transition-colors"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
                                             <User size={22} />
-                                            Akoon
+                                            My Account
                                         </Link>
+                                    ) : (
+                                        <>
+                                            <Link
+                                                href="/pay?auth=signup"
+                                                className="p-4 min-h-[48px] rounded-xl text-base font-black flex items-center gap-4 text-white bg-[#1d4ed8] hover:bg-[#1e40af] transition-colors"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                <UserPlus size={22} />
+                                                Sign Up
+                                            </Link>
+                                            <Link
+                                                href="/pay?auth=login"
+                                                className="p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                <LogIn size={22} />
+                                                Login
+                                            </Link>
+                                            <Link
+                                                href="/login"
+                                                className="p-4 min-h-[48px] rounded-xl text-sm font-semibold flex items-center gap-4 text-gray-600 hover:bg-gray-50 transition-colors"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                <Ticket size={20} />
+                                                Have Premium Code?
+                                            </Link>
+                                        </>
                                     )}
                                 </motion.div>
                             </nav>

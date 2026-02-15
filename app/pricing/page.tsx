@@ -290,6 +290,29 @@ export default function PricingPage() {
                         Qoyskaaga u fur content-ka aad rabtaan adigoon buffering iyo ads ku daalin.
                     </p>
 
+                    <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                        <Link
+                            href="/pay?auth=signup&src=pricing-hero"
+                            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:brightness-110 text-white font-black px-6 py-3 rounded-xl transition-all"
+                        >
+                            <Shield size={18} />
+                            Create Account & Pay
+                        </Link>
+                        <Link
+                            href="/pay?auth=login&src=pricing-hero"
+                            className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-6 py-3 rounded-xl transition-all"
+                        >
+                            <Crown size={18} />
+                            Login & Continue
+                        </Link>
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white underline underline-offset-4"
+                        >
+                            Have a premium code?
+                        </Link>
+                    </div>
+
                     {/* Stats Row */}
                     <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 mt-8">
                         <div className="flex items-center gap-2 text-center">

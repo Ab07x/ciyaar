@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import { Redemption, Subscription, User, Device, UserMovieTrial } from "@/lib/models";
+import { generateUniqueReferralCode } from "@/lib/referral-code";
 import { buildTrialAliasSet, resolveTrialMovie } from "@/lib/trial-movie";
 
 // POST /api/redemptions/redeem — redeem a code
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
             // Create new user
             user = await User.create({
                 createdAt: now,
-                referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                referralCode: await generateUniqueReferralCode(),
                 referralCount: 0,
             });
 

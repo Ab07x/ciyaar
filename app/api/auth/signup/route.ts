@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import { Device, Subscription, User, UserSession } from "@/lib/models";
+import { generateUniqueReferralCode } from "@/lib/referral-code";
 import { mergeUserIdentityData } from "@/lib/user-merge";
 import {
     USER_SESSION_TTL_MS,
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
                 avatarUrl: `/img/icons/background.png`,
             });
         } else {
-            const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const referralCode = await generateUniqueReferralCode();
             const created = await User.create({
                 email: emailLower,
                 emailLower,

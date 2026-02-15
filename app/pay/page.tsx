@@ -270,16 +270,26 @@ function PaymentVerifier({ sid, orderId }: { sid: string | null; orderId: string
     );
 }
 
-function CheckoutHub() {
+function CheckoutHub({
+    initialPlanId = "monthly",
+    initialAuthMode = "signup",
+    initialBonusDays = 0,
+    initialOfferCode = "",
+}: {
+    initialPlanId?: PlanId;
+    initialAuthMode?: "signup" | "login";
+    initialBonusDays?: number;
+    initialOfferCode?: string;
+}) {
     const { data: settings } = useSWR("/api/settings", fetcher);
     const { deviceId, userId, email, signupWithEmail, loginWithEmail } = useUser();
 
-    const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
+    const [authMode, setAuthMode] = useState<"signup" | "login">(initialAuthMode);
     const [formEmail, setFormEmail] = useState(email || "");
     const [displayName, setDisplayName] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [selectedPlanId, setSelectedPlanId] = useState<PlanId>("monthly");
+    const [selectedPlanId, setSelectedPlanId] = useState<PlanId>(initialPlanId);
     const [paymentMethod, setPaymentMethod] = useState<"sifalo" | "store">("sifalo");
     const [isAuthLoading, setIsAuthLoading] = useState(false);
     const [isPaying, setIsPaying] = useState(false);
@@ -302,7 +312,9 @@ function CheckoutHub() {
         setStatusError("");
         setStatusMessage("");
 
-        if (!formEmail.trim()) {
+        const emailInput = (formEmail || email || "").trim();
+
+        if (!emailInput) {
             setStatusError("Email geli.");
             return;
         }
@@ -324,8 +336,8 @@ function CheckoutHub() {
 
         setIsAuthLoading(true);
         const result = authMode === "signup"
-            ? await signupWithEmail(formEmail.trim(), password, displayName.trim())
-            : await loginWithEmail(formEmail.trim(), password);
+            ? await signupWithEmail(emailInput, password, displayName.trim())
+            : await loginWithEmail(emailInput, password);
         setIsAuthLoading(false);
 
         if (!result.success) {
@@ -347,6 +359,12 @@ function CheckoutHub() {
         setStatusError("");
         setStatusMessage("");
         setIsPaying(true);
+        const bonusDays = planToPay === "monthly"
+            ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0))
+            : 0;
+        const offerCode = bonusDays > 0
+            ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS")
+            : undefined;
 
         try {
             const res = await fetch("/api/pay/checkout", {
@@ -355,6 +373,8 @@ function CheckoutHub() {
                 body: JSON.stringify({
                     plan: planToPay,
                     deviceId: deviceId || "unknown",
+                    offerBonusDays: bonusDays,
+                    offerCode,
                 }),
             });
 
@@ -379,7 +399,13 @@ function CheckoutHub() {
         }
 
         if (paymentMethod === "store") {
-            window.open(storeUrl, "_blank", "noopener,noreferrer");
+            const params = new URLSearchParams();
+            params.set("plan", selectedPlan.id);
+            params.set("amount", selectedPlanPrice.toFixed(2));
+            params.set("src", "fanbroj_pay");
+            if (email) params.set("email", email);
+            const storeTarget = `${storeUrl}${storeUrl.includes("?") ? "&" : "?"}${params.toString()}`;
+            window.open(storeTarget, "_blank", "noopener,noreferrer");
             setStatusMessage("Waxaan kuu furnay SomaliWebsite store si aad Stripe/PayPal uga bixiso.");
             return;
         }
@@ -447,7 +473,7 @@ function CheckoutHub() {
                                 <div className="space-y-3">
                                     <input
                                         type="email"
-                                        value={formEmail}
+                                        value={formEmail || email || ""}
                                         onChange={(e) => setFormEmail(e.target.value)}
                                         placeholder="email@example.com"
                                         className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6]"
@@ -509,9 +535,15 @@ function CheckoutHub() {
                                     </button>
                                 </div>
 
-                                <p className="text-2xl font-black mb-4"><span className="text-red-400">03</span> Choose Plan</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {PLAN_OPTIONS.map((plan) => {
+                            <p className="text-2xl font-black mb-4"><span className="text-red-400">03</span> Choose Plan</p>
+                            {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
+                                <div className="mb-4 rounded-xl border border-green-400/30 bg-green-500/10 p-3">
+                                    <p className="text-sm font-black text-green-300">Monthly Bonus Active: +{initialBonusDays} maalmood</p>
+                                    <p className="text-xs text-gray-300 mt-1">Offer-kan waa laga soo wareejiyay pricing page.</p>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {PLAN_OPTIONS.map((plan) => {
                                         const price = getPlanPrice(settings, plan);
                                         const active = plan.id === selectedPlanId;
                                         return (
@@ -577,12 +609,33 @@ function PayPageContent() {
     const searchParams = useSearchParams();
     const sid = searchParams.get("sid");
     const orderId = searchParams.get("order_id");
+    const planParam = (searchParams.get("plan") || "").trim().toLowerCase();
+    const authParam = (searchParams.get("auth") || "").trim().toLowerCase();
+    const bonusDaysParam = Number(searchParams.get("bonusDays") || "0");
+    const offerCodeParam = String(searchParams.get("offerCode") || "").trim();
+
+    const initialPlanId: PlanId = planParam === "match"
+        || planParam === "weekly"
+        || planParam === "monthly"
+        || planParam === "yearly"
+        ? (planParam as PlanId)
+        : "monthly";
+
+    const initialAuthMode: "signup" | "login" = authParam === "login" ? "login" : "signup";
+    const initialBonusDays = Number.isFinite(bonusDaysParam) ? Math.min(7, Math.max(0, Math.floor(bonusDaysParam))) : 0;
 
     if (sid || orderId) {
         return <PaymentVerifier sid={sid} orderId={orderId} />;
     }
 
-    return <CheckoutHub />;
+    return (
+        <CheckoutHub
+            initialPlanId={initialPlanId}
+            initialAuthMode={initialAuthMode}
+            initialBonusDays={initialBonusDays}
+            initialOfferCode={offerCodeParam}
+        />
+    );
 }
 
 export default function PayPage() {

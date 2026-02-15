@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import connectDB from "@/lib/mongodb";
 import { Settings, Payment, ConversionEvent } from "@/lib/models";
 
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
         const totalAmount = Math.round((baseAmount + fee) * 100) / 100;
 
         // Generate unique order ID
-        const orderId = `FBJ-${plan.toUpperCase()}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const orderNonce = crypto.randomBytes(4).toString("hex").toUpperCase();
+        const orderId = `FBJ-${plan.toUpperCase()}-${Date.now()}-${orderNonce}`;
 
         // Get site URL for return_url (hardcoded to production domain)
         const siteUrl = process.env.NODE_ENV === "development"
