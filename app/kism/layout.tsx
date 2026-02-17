@@ -26,6 +26,7 @@ import {
     Lock,
     BarChart3,
     Bug,
+    Users,
 } from "lucide-react";
 
 const navItems = [
@@ -42,6 +43,7 @@ const navItems = [
     { href: "/kism/hero", label: "Hero Slider", icon: Image },
     { href: "/kism/categories", label: "Categories", icon: Palette },
     { href: "/kism/codes", label: "Codes", icon: Ticket },
+    { href: "/kism/users", label: "Users", icon: Users },
     { href: "/kism/subscribers", label: "Subscribers", icon: Smartphone },
     { href: "/kism/payments", label: "Payments Debug", icon: Bug },
     { href: "/kism/ppv", label: "PPV", icon: CreditCard },
@@ -73,7 +75,7 @@ export default function AdminLayout({
         const checkAuth = () => {
             const cookies = document.cookie;
             console.log("[Auth] Checking cookies:", cookies);
-            if (cookies.includes("fanbroj_admin_session=authenticated")) {
+            if (cookies.includes("fanbroj_admin_session=")) {
                 console.log("[Auth] Authenticated!");
                 setIsAuthenticated(true);
             } else {

@@ -334,7 +334,7 @@ export default function MovieFormPage({ params }: Props) {
                             className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                         />
                         <button
-                            onClick={handleSearch}
+                            onClick={() => handleSearch()}
                             disabled={searching}
                             className="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2"
                         >

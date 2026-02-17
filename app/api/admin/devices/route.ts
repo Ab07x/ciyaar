@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         let targetUserId = userId;
         if (subscriptionId && !userId) {
             const sub = await Subscription.findById(subscriptionId).select("userId").lean<{ userId?: string } | null>();
-            if (sub) targetUserId = sub.userId;
+            if (sub) targetUserId = sub.userId ?? null;
         }
 
         if (!targetUserId) {

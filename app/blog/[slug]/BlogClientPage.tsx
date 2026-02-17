@@ -122,7 +122,7 @@ export default function BlogClientPage({ slug }: BlogClientPageProps) {
 
             {/* Content */}
             <div className="prose prose-invert prose-lg max-w-none">
-                {post.content.split("\n\n").map((paragraph, i) => {
+                {(post.content as string).split("\n\n").map((paragraph: string, i: number) => {
                     if (paragraph.startsWith("## ")) {
                         return (
                             <h2 key={i} className="text-2xl font-bold mt-8 mb-4">

@@ -129,7 +129,7 @@ export function LiveChat({ matchId, className }: LiveChatProps) {
                         <p className="text-sm">Fariin wali lama soo dirin. Noqo qofka ugu horeeya!</p>
                     </div>
                 ) : (
-                    messages.slice().reverse().map((msg) => (
+                    messages.slice().reverse().map((msg: any) => (
                         <div key={msg._id} className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
                                 <span className={cn(

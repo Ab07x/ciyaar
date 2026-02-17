@@ -1,90 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
-import { Check, X, Sparkles, Shield, Zap, Crown, ShieldCheck, Moon, Star, MessageCircle, Gift, Film, Tv, Users, Play, Flame } from "lucide-react";
+import { Shield, Crown, MessageCircle, Gift, Film, Tv, Users, Star, Check, ShieldCheck, Zap, Smartphone, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { PricingCards } from "@/components/PricingCards";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-const freeVsPremium = [
-    { feature: "Xayeysiis", free: "Joojin badan", premium: "Bilaa xayeysiis", premiumGood: true },
-    { feature: "Maktabadda filimada", free: "Kooban", premium: "724+ cinwaan", premiumGood: true },
-    { feature: "Sports Live", free: "Qaar kaliya", premium: "Dhacdooyinka waaweyn oo dhan", premiumGood: true },
-    { feature: "Tayada muuqaalka", free: "480p", premium: "1080p / 4K", premiumGood: true },
-    { feature: "Xawaare daawasho", free: "Buffer badan", premium: "Degdeg oo deggan", premiumGood: true },
-    { feature: "Qalabka la oggol yahay", free: "1 qalab", premium: "Ilaa 5 qalab", premiumGood: true },
-    { feature: "Taageero degdeg ah", free: "Maya", premium: "WhatsApp 24/7", premiumGood: true },
-    { feature: "Filimada cusub", free: "Dib ayaad uga helaysaa", premium: "Marka la soo daayo", premiumGood: true },
+const FAQ_ITEMS = [
+    {
+        q: "Sidee ayaan lacagta u bixiyaa?",
+        a: "Waxaad ku bixi kartaa EVC Plus, eDahab, Zaad, Sahal, Card, ama Apple Pay. Lacag-bixintu waa degdeg oo ammaan ah.",
+    },
+    {
+        q: "Goorma ayuu Premium-ku ii shaqeynayaa?",
+        a: "Isla markiiba marka lacagta la xaqiijiyo. Badanaa waa 1-2 daqiiqo gudahood.",
+    },
+    {
+        q: "Ma isticmaali karaa qalab ka badan mid?",
+        a: "Haa! Monthly waxaad ku isticmaali kartaa 3 qalab, Yearly-na 5 qalab. Weekly 2, Single Match 1.",
+    },
 ];
-
-const RAMADAN_START_ISO = "2026-02-16T00:00:00";
-const RAMADAN_END_ISO = "2026-03-17T23:59:59";
-
-function RamadanCountdown() {
-    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-    const ramadanStart = new Date(RAMADAN_START_ISO).getTime();
-    const ramadanEnd = new Date(RAMADAN_END_ISO).getTime();
-
-    useEffect(() => {
-        const tick = () => {
-            const now = Date.now();
-            const diff = ramadanStart - now;
-            if (diff <= 0) {
-                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-                return;
-            }
-            setTimeLeft({
-                days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-                hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-                minutes: Math.floor((diff / (1000 * 60)) % 60),
-                seconds: Math.floor((diff / 1000) % 60),
-            });
-        };
-        tick();
-        const id = setInterval(tick, 1000);
-        return () => clearInterval(id);
-    }, []);
-
-    const nowTs = Date.now();
-    const isRamadan = nowTs >= ramadanStart && nowTs <= ramadanEnd;
-
-    return (
-        <div className="bg-gradient-to-r from-emerald-900/40 via-green-800/30 to-emerald-900/40 border border-emerald-500/20 rounded-2xl p-6 md:p-8 text-center backdrop-blur-sm mb-8">
-            <div className="text-3xl mb-2">🌙</div>
-            <h3 className="text-xl md:text-2xl font-black text-yellow-400 mb-1">
-                {isRamadan ? "RAMADAN KARIIM 2026" : "Ramadan wuxuu bilaabanayaa 16 Febraayo 2026"}
-            </h3>
-            <p className="text-sm text-emerald-300 mb-4">
-                {isRamadan
-                    ? "Qorshaha Premium hadda fur oo ku daawo filim iyo ciyaar live bilaa xayeysiis."
-                    : "Ha sugin habeenka koowaad. Hadda qaado Premium si aad Ramadan u gasho adigoo diyaar ah."}
-            </p>
-            {!isRamadan && (
-                <div className="flex items-center justify-center gap-3 md:gap-5">
-                    {[
-                        { value: timeLeft.days, label: "Maalmood" },
-                        { value: timeLeft.hours, label: "Saacadood" },
-                        { value: timeLeft.minutes, label: "Daqiiqo" },
-                        { value: timeLeft.seconds, label: "Ilbiriqsi" },
-                    ].map((item) => (
-                        <div key={item.label} className="flex flex-col items-center">
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-black/50 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-                                <span className="text-2xl md:text-3xl font-black text-white tabular-nums">
-                                    {String(item.value).padStart(2, "0")}
-                                </span>
-                            </div>
-                            <span className="text-[10px] md:text-xs text-emerald-400 mt-1 font-bold uppercase">{item.label}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
 
 export default function PricingPage() {
     const { data: settings } = useSWR("/api/settings", fetcher);
@@ -93,31 +32,9 @@ export default function PricingPage() {
     const [redemptionResult, setRedemptionResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const hasTracked = useRef(false);
-    const conversionSessionIdRef = useRef(`pricing:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`);
-    const [showNotification, setShowNotification] = useState(true);
-    const [showExitOffer, setShowExitOffer] = useState(false);
-    const [exitOfferAccepted, setExitOfferAccepted] = useState(false);
-    const [exitOfferSeen, setExitOfferSeen] = useState(false);
+    const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-    const trackConversionEvent = (eventName: string, metadata?: Record<string, unknown>) => {
-        if (typeof window === "undefined") return;
-        const payload = {
-            eventName,
-            userId: userId || undefined,
-            deviceId: deviceId || undefined,
-            sessionId: conversionSessionIdRef.current,
-            pageType: "pricing",
-            metadata,
-            createdAt: Date.now(),
-        };
-        fetch("/api/analytics/conversion", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-            keepalive: true,
-        }).catch(() => { });
-    };
-
+    // Track page view
     useEffect(() => {
         if (!hasTracked.current) {
             hasTracked.current = true;
@@ -125,390 +42,224 @@ export default function PricingPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "pageview", pageType: "pricing", date: new Date().toISOString().split("T")[0] }),
-            }).catch(() => { });
-
-            const dayKey = new Date().toISOString().slice(0, 10);
-            const counterKey = `fanbroj:conversion:pricing_visit:${dayKey}`;
-            try {
-                const current = Number(window.localStorage.getItem(counterKey) || 0);
-                const next = Number.isFinite(current) ? current + 1 : 1;
-                window.localStorage.setItem(counterKey, String(next));
-                trackConversionEvent("pricing_visit", { visitsToday: next });
-            } catch {
-                trackConversionEvent("pricing_visit");
-            }
+            }).catch(() => {});
         }
-    }, [deviceId, userId]);
-
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        const seen = window.sessionStorage.getItem("fanbroj_exit_offer_seen") === "1";
-        const accepted = window.sessionStorage.getItem("fanbroj_exit_offer_accepted") === "1";
-        setExitOfferSeen(seen);
-        setExitOfferAccepted(accepted);
     }, []);
-
-    useEffect(() => {
-        if (isPremium || exitOfferSeen) return;
-
-        const onMouseOut = (event: MouseEvent) => {
-            const leavingFromTop = event.clientY <= 0;
-            if (!leavingFromTop) return;
-            setShowExitOffer(true);
-            setExitOfferSeen(true);
-            if (typeof window !== "undefined") {
-                window.sessionStorage.setItem("fanbroj_exit_offer_seen", "1");
-            }
-        };
-
-        window.addEventListener("mouseout", onMouseOut);
-        return () => window.removeEventListener("mouseout", onMouseOut);
-    }, [isPremium, exitOfferSeen]);
-
-    const activateExitOffer = () => {
-        trackConversionEvent("cta_clicked", {
-            ctaType: "exit_offer_accept",
-            destination: "#plan-card-monthly",
-        });
-        setExitOfferAccepted(true);
-        setShowExitOffer(false);
-        if (typeof window !== "undefined") {
-            window.sessionStorage.setItem("fanbroj_exit_offer_accepted", "1");
-        }
-        const monthlyCard = document.getElementById("plan-card-monthly");
-        monthlyCard?.scrollIntoView({ behavior: "smooth", block: "center" });
-    };
 
     const handleRedeem = async () => {
         if (!code.trim()) return;
         setLoading(true);
         setRedemptionResult(null);
-
         try {
             const result = await redeemCode(code.trim());
             setRedemptionResult(result);
             if (result.success) {
                 setCode("");
-                setTimeout(() => {
-                    window.location.assign("/");
-                }, 800);
+                setTimeout(() => window.location.assign("/"), 800);
             }
-        } catch (error) {
+        } catch {
             setRedemptionResult({ success: false, error: "Wax qalad ah ayaa dhacay" });
         } finally {
             setLoading(false);
         }
     };
 
+    const monthlyPrice = Number(settings?.priceMonthly) || 3.2;
+    const yearlyPrice = Number(settings?.priceYearly) || 11.99;
+    const yearlyPerMonth = (yearlyPrice / 12).toFixed(2);
+    const yearlySaving = (monthlyPrice * 12 - yearlyPrice).toFixed(2);
+
     return (
         <div className="min-h-screen relative">
-            {/* Exit Intent Offer Modal */}
-            {showExitOffer && !isPremium && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-md rounded-2xl border border-yellow-500/40 bg-[#101723] p-6 shadow-2xl">
-                        <p className="text-yellow-400 text-xs font-black uppercase tracking-wider mb-2">Offer-ka Maanta</p>
-                        <h2 className="text-2xl font-black text-white mb-2">Ka hor intaadan bixin...</h2>
-                        <p className="text-gray-300 mb-5">
-                            Qaado <span className="text-green-400 font-black">Monthly +7 maalmood bilaash</span> maanta oo kaliya.
-                        </p>
-                        <div className="space-y-3">
-                            <button
-                                onClick={activateExitOffer}
-                                className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-400 text-black font-black hover:brightness-110 transition-all"
-                            >
-                                Haa, i dhaqaaji offer-ka
-                            </button>
-                            <button
-                                onClick={() => setShowExitOffer(false)}
-                                className="w-full py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all"
-                            >
-                                Maya, waan ka gudbayaa
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Full Page Background */}
-            <div className="fixed inset-0 -z-10">
-                <Image
-                    src="/img/lm-bg.jpg"
-                    alt="Background"
-                    fill
-                    className="object-cover"
-                    priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/90 to-black" />
+            {/* Background */}
+            <div className="fixed inset-0 -z-10 bg-[#0a0e17]">
+                <Image src="/img/icons/background.png" alt="" fill className="object-cover opacity-30" priority />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0a0e17]/50 via-[#0a0e17]/80 to-[#0a0e17]" />
             </div>
 
-            {/* 🔔 STICKY NOTIFICATION BAR - High CTR */}
-            {showNotification && !isPremium && (
-                <div className="sticky top-0 z-50 bg-gradient-to-r from-yellow-600 via-amber-500 to-yellow-600 text-black">
-                    <div className="container mx-auto px-4 py-2.5 flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1 justify-center">
-                            <Moon size={16} className="animate-pulse" />
-                            <p className="text-sm font-bold text-center">
-                                Ramadan 2026 (16 Feb) | Premium hadda qaado: Filim + Sports Live, bilaa xayeysiis, WhatsApp 24/7
-                            </p>
-                            <Flame size={16} className="animate-pulse" />
-                        </div>
-                        <button
-                            onClick={() => setShowNotification(false)}
-                            className="ml-2 p-1 hover:bg-black/10 rounded text-black/60 hover:text-black"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* Hero */}
-            <section className="py-12 md:py-20 text-center relative overflow-hidden">
-                {/* Floating Ramadan elements */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div className="absolute top-10 left-[5%] text-5xl opacity-20 animate-pulse">🌙</div>
-                    <div className="absolute top-20 right-[10%] text-4xl opacity-15 animate-pulse" style={{ animationDelay: "1s" }}>⭐</div>
-                    <div className="absolute bottom-10 left-[20%] text-3xl opacity-10 animate-pulse" style={{ animationDelay: "2s" }}>✨</div>
-                    <div className="absolute top-32 left-[60%] text-2xl opacity-10 animate-pulse" style={{ animationDelay: "0.5s" }}>🕌</div>
-                </div>
-
-                <div className="container mx-auto px-4 relative z-10">
-                    {/* Ramadan Badge */}
-                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/30 to-amber-500/20 text-yellow-400 px-5 py-2 rounded-full text-sm font-black mb-6 border border-yellow-500/20 animate-pulse">
-                        <Moon size={16} />
-                        RAMADAN 2026 SALES CAMPAIGN
-                        <Sparkles size={16} />
-                    </div>
-
+            <section className="py-16 md:py-24 text-center">
+                <div className="container mx-auto px-4">
                     <h1 className="text-4xl md:text-5xl xl:text-6xl font-black mb-4 leading-tight">
-                        <span className="text-yellow-400">Ramadan 2026</span> u gal adigoo Premium ah<br />
-                        <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">Filim + Sports Live, Bilaa Xayeysiis</span>
+                        Daawo Filim & Sports Live<br />
+                        <span className="bg-gradient-to-r from-[#3B82F6] to-[#60A5FA] bg-clip-text text-transparent">Bilaa Xayeysiis</span>
                     </h1>
-
-                    <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
-                        Hal qorshe, hal lacag-bixin, daawasho deggan.
-                        Qoyskaaga u fur content-ka aad rabtaan adigoon buffering iyo ads ku daalin.
+                    <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                        724+ filim AF Somali | Sports Live | HD/4K | Smart TV
                     </p>
 
-                    <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                    <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
                         <Link
-                            href="/pay?auth=signup&src=pricing-hero"
-                            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] hover:brightness-110 text-white font-black px-6 py-3 rounded-xl transition-all"
+                            href="/pay?plan=monthly&auth=signup"
+                            className="inline-flex items-center gap-2 bg-[#3B82F6] hover:bg-[#2563eb] text-white font-black px-8 py-4 rounded-xl transition-all text-lg"
                         >
-                            <Shield size={18} />
-                            Create Account & Pay
+                            <Shield size={20} />
+                            Iibso Monthly
                         </Link>
                         <Link
-                            href="/pay?auth=login&src=pricing-hero"
-                            className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-6 py-3 rounded-xl transition-all"
+                            href="/pay?plan=yearly&auth=signup"
+                            className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold px-8 py-4 rounded-xl transition-all text-lg"
                         >
-                            <Crown size={18} />
-                            Login & Continue
-                        </Link>
-                        <Link
-                            href="/login"
-                            className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white underline underline-offset-4"
-                        >
-                            Have a premium code?
+                            <Crown size={20} className="text-yellow-400" />
+                            Iibso Yearly — Save 69%
                         </Link>
                     </div>
 
-                    {/* Stats Row */}
-                    <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 mt-8">
-                        <div className="flex items-center gap-2 text-center">
-                            <Film size={20} className="text-green-400" />
-                            <div>
-                                <p className="text-2xl font-black text-white">724+</p>
-                                <p className="text-xs text-gray-400">Filim & Musalsal</p>
-                            </div>
+                    {/* Social Proof */}
+                    <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+                        <div className="flex items-center gap-2">
+                            <Users size={18} className="text-[#3B82F6]" />
+                            <span className="text-white font-bold">5,000+</span>
+                            <span className="text-gray-500 text-sm">isticmaale</span>
                         </div>
-                        <div className="flex items-center gap-2 text-center">
-                            <Tv size={20} className="text-blue-400" />
-                            <div>
-                                <p className="text-2xl font-black text-white">100+</p>
-                                <p className="text-xs text-gray-400">Sports Live</p>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <Film size={18} className="text-green-400" />
+                            <span className="text-white font-bold">15+</span>
+                            <span className="text-gray-500 text-sm">dal</span>
                         </div>
-                        <div className="flex items-center gap-2 text-center">
-                            <Users size={20} className="text-yellow-400" />
-                            <div>
-                                <p className="text-2xl font-black text-white">5000+</p>
-                                <p className="text-xs text-gray-400">Macaamiil firfircoon</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-center">
-                            <Star size={20} className="text-yellow-400" fill="currentColor" />
-                            <div>
-                                <p className="text-2xl font-black text-white">4.8</p>
-                                <p className="text-xs text-gray-400">Qiimeyn</p>
-                            </div>
+                        <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={14} className="text-yellow-400" fill="currentColor" />
+                            ))}
+                            <span className="text-white font-bold ml-1">4.8</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Ramadan Countdown */}
-            <section className="container mx-auto px-4">
-                <RamadanCountdown />
-            </section>
+            {/* Plan Cards */}
+            <PricingCards />
 
-            {/* Plans Grid */}
-            <PricingCards monthlyBonusDays={exitOfferAccepted ? 7 : 0} />
-
-            {/* CTA Section */}
-            <section className="py-12 bg-black/60 backdrop-blur-sm border-y border-white/10">
-                <div className="container mx-auto px-4">
-                    <div className="max-w-2xl mx-auto">
-                        {/* Secure Payment Badge */}
-                        <div className="bg-green-600/10 border border-green-600/20 rounded-2xl p-8 text-center mb-8 backdrop-blur-sm">
-                            <ShieldCheck size={48} className="text-green-500 mx-auto mb-4" />
-                            <h3 className="text-2xl font-bold mb-2">Lacag-bixin ammaan ah oo degdeg ah 🔒</h3>
-                            <p className="text-text-secondary mb-4">
-                                Hababka ugu badan ee aad isticmaashaan waa diyaar: EVC Plus, eDahab, Zaad, Sahal, Card, Apple Pay, iyo M-Pesa.
-                            </p>
-                            <div className="flex flex-wrap justify-center gap-2">
-                                {["EVC Plus", "Zaad", "Sahal", "eDahab", "Card", "Apple Pay", "M-Pesa"].map((m) => (
-                                    <span key={m} className="text-xs bg-white/10 text-gray-300 px-3 py-1.5 rounded-full">
-                                        {m}
-                                    </span>
-                                ))}
-                            </div>
-                            {/* M-Pesa Direct Payment */}
-                            <div className="mt-4 p-4 bg-green-600/10 border border-green-600/20 rounded-xl text-center">
-                                <p className="text-sm text-green-400 font-bold mb-1">📱 M-Pesa Direct</p>
-                                <p className="text-lg font-black text-white tracking-wider">0797415296</p>
-                                <p className="text-xs text-gray-400 mt-1">Lacagta u dir lambarkan, kadibna WhatsApp noogu soo dir caddeynta.</p>
-                            </div>
-                        </div>
-
-                        {/* Redeem Code - Hidden for premium users */}
-                        {!isPremium && (
-                            <div className="bg-black/60 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
-                                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                                    <Gift size={20} className="text-yellow-400" />
-                                    Haysataa code hadiyad ah?
-                                </h3>
-                                <p className="text-gray-400 text-sm mb-4">Halkan ku geli code-ka si Premium-ku isla markiiba kuu furmo.</p>
-                                <div className="flex gap-3">
-                                    <input
-                                        type="text"
-                                        value={code}
-                                        onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                        placeholder="ABCD1234"
-                                        className="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white uppercase tracking-wider focus:outline-none focus:border-accent-green"
-                                    />
-                                    <button
-                                        onClick={handleRedeem}
-                                        disabled={loading || !code.trim()}
-                                        className="bg-accent-green text-black px-6 py-3 rounded-xl font-bold hover:bg-accent-green/90 transition-colors disabled:opacity-50"
-                                    >
-                                        {loading ? "..." : "Isticmaal"}
-                                    </button>
-                                </div>
-
-                                {redemptionResult && (
-                                    <div className={`mt-4 p-4 rounded-xl ${redemptionResult.success
-                                        ? "bg-accent-green/20 text-accent-green"
-                                        : "bg-accent-red/20 text-accent-red"
-                                        }`}>
-                                        {redemptionResult.success ? redemptionResult.message : redemptionResult.error}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </section>
-
-            {/* Free vs Premium Comparison */}
+            {/* Yearly Psychology Block */}
             <section className="py-12">
                 <div className="container mx-auto px-4">
-                    <div className="text-center mb-8">
-                        <h2 className="text-3xl font-black mb-2">
-                            Bilaash vs <span className="text-yellow-400">Premium</span>
-                        </h2>
-                        <p className="text-gray-400">Farqiga ugu weyn halkaan ka eeg si aad go'aan degdeg ah u gaarto.</p>
-                    </div>
-
-                    <div className="max-w-3xl mx-auto overflow-hidden rounded-2xl border border-white/10 bg-black/60 backdrop-blur-sm">
-                        <div className="grid grid-cols-3 bg-black/80 border-b border-white/10">
-                            <div className="p-4 font-bold text-gray-400">Feature</div>
-                            <div className="p-4 font-bold text-center border-x border-white/10 text-red-400">
-                                <span className="flex items-center justify-center gap-1">
-                                    <X size={14} /> Bilaash
-                                </span>
+                    <div className="max-w-2xl mx-auto rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-8 text-center">
+                        <Crown size={32} className="text-yellow-400 mx-auto mb-4" />
+                        <h3 className="text-2xl font-black text-white mb-4">Maxaa Yearly u fiican?</h3>
+                        <div className="grid grid-cols-2 gap-6 mb-6">
+                            <div className="text-center">
+                                <p className="text-gray-500 text-sm">Yearly</p>
+                                <p className="text-3xl font-black text-yellow-400">${yearlyPrice}</p>
+                                <p className="text-xs text-gray-400">= ${yearlyPerMonth}/bishii</p>
                             </div>
-                            <div className="p-4 font-bold text-center text-yellow-400">
-                                <span className="flex items-center justify-center gap-1">
-                                    <Crown size={14} /> Premium
-                                </span>
+                            <div className="text-center">
+                                <p className="text-gray-500 text-sm">Monthly x 12</p>
+                                <p className="text-3xl font-black text-gray-500">${(monthlyPrice * 12).toFixed(2)}</p>
+                                <p className="text-xs text-gray-400">= ${monthlyPrice.toFixed(2)}/bishii</p>
                             </div>
                         </div>
+                        <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-6 py-2 rounded-full font-black">
+                            <Check size={16} />
+                            Badbaadin: ${yearlySaving} sanadkii
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-                        {freeVsPremium.map((row, i) => (
-                            <div key={i} className={`grid grid-cols-3 border-b border-white/5 last:border-0 ${i % 2 === 0 ? '' : 'bg-white/[0.02]'}`}>
-                                <div className="p-4 text-gray-300 text-sm font-medium">{row.feature}</div>
-                                <div className="p-4 text-center border-x border-white/5">
-                                    <span className="text-gray-500 text-sm">{row.free}</span>
-                                </div>
-                                <div className="p-4 text-center">
-                                    <span className="text-green-400 font-bold text-sm">{row.premium}</span>
-                                </div>
+            {/* Trust Block */}
+            <section className="py-12">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { icon: ShieldCheck, label: "Lacag-bixin ammaan ah", color: "text-green-400" },
+                            { icon: Zap, label: "Activation degdeg ah", color: "text-yellow-400" },
+                            { icon: MessageCircle, label: "WhatsApp 24/7", color: "text-[#25D366]" },
+                            { icon: Tv, label: "Smart TV + Mobile", color: "text-blue-400" },
+                        ].map((item) => (
+                            <div key={item.label} className="flex flex-col items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center">
+                                <item.icon size={28} className={item.color} />
+                                <p className="text-sm text-gray-300 font-medium">{item.label}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* WhatsApp CTA — Only for non-premium */}
+            {/* How to Buy */}
+            <section className="py-12">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-3xl mx-auto">
+                        <h3 className="text-2xl font-black text-white text-center mb-8">Sida Loo Iibsado</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {[
+                                { step: "1", title: "Samee Account", desc: "Email + password geli, verification ma jiro." },
+                                { step: "2", title: "Dooro Payment", desc: "EVC, eDahab, Zaad, Sahal, Card, Apple Pay." },
+                                { step: "3", title: "Bilow Daawashada", desc: "Premium si toos ah ayuu u shaqeeyaa!" },
+                            ].map((item) => (
+                                <div key={item.step} className="flex flex-col items-center text-center rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+                                    <div className="w-10 h-10 rounded-full bg-[#3B82F6] flex items-center justify-center text-white font-black mb-4">{item.step}</div>
+                                    <h4 className="font-bold text-white mb-2">{item.title}</h4>
+                                    <p className="text-sm text-gray-400">{item.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* FAQ */}
+            <section className="py-12">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-2xl mx-auto">
+                        <h3 className="text-2xl font-black text-white text-center mb-8">Su'aalaha Badanaa La Isweydiiyo</h3>
+                        <div className="space-y-3">
+                            {FAQ_ITEMS.map((item, i) => (
+                                <div key={i} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+                                    <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between px-5 py-4 text-left">
+                                        <span className="font-bold text-white text-sm">{item.q}</span>
+                                        <ChevronDown size={16} className={`text-gray-500 transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
+                                    </button>
+                                    {openFaq === i && (
+                                        <div className="px-5 pb-4">
+                                            <p className="text-sm text-gray-400">{item.a}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Code Redemption */}
             {!isPremium && (
                 <section className="py-12">
                     <div className="container mx-auto px-4">
-                        <div className="max-w-2xl mx-auto bg-gradient-to-r from-[#25D366]/20 to-[#128C7E]/10 border border-[#25D366]/30 rounded-2xl p-8 text-center">
-                            <MessageCircle size={40} className="text-[#25D366] mx-auto mb-4" />
-                            <h3 className="text-2xl font-bold text-white mb-2">
-                                Su&apos;aal ama caawin degdeg ah?
+                        <div className="max-w-xl mx-auto rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+                            <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                <Gift size={20} className="text-yellow-400" />
+                                Haysataa code hadiyad ah?
                             </h3>
-                            <p className="text-gray-300 mb-4">
-                                Kooxda WhatsApp waxay kaa caawinayaan doorashada plan-ka iyo lacag-bixinta.
-                            </p>
-                            <a
-                                href="https://wa.me/252618274188?text=Asc%2C%20waxaan%20rabaa%20macluumaad%20ku%20saabsan%20Premium%20%F0%9F%8C%99"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold px-8 py-3 rounded-full text-lg transition-all transform hover:scale-105"
-                            >
-                                <MessageCircle size={20} fill="white" />
-                                WhatsApp Support
-                            </a>
+                            <p className="text-gray-400 text-sm mb-4">Halkan ku geli code-ka si Premium-ku isla markiiba kuu furmo.</p>
+                            <div className="flex gap-3">
+                                <input
+                                    type="text"
+                                    value={code}
+                                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                                    placeholder="ABCD1234"
+                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white uppercase tracking-wider focus:outline-none focus:border-[#3B82F6]"
+                                />
+                                <button
+                                    onClick={handleRedeem}
+                                    disabled={loading || !code.trim()}
+                                    className="bg-[#3B82F6] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#2563eb] transition-colors disabled:opacity-50"
+                                >
+                                    {loading ? "..." : "Isticmaal"}
+                                </button>
+                            </div>
+                            {redemptionResult && (
+                                <div className={`mt-4 p-4 rounded-xl ${redemptionResult.success ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+                                    {redemptionResult.success ? redemptionResult.message : redemptionResult.error}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </section>
             )}
 
-            {/* Motivational Section */}
-            <section className="py-12 text-center">
-                <div className="container mx-auto px-4 max-w-4xl">
-                    <h2 className="text-2xl md:text-4xl font-bold text-white mb-6">
-                        Ramadan 2026 wuxuu bilaabanayaa 16 Febraayo
-                    </h2>
-                    <p className="text-lg md:text-xl text-gray-300 mb-4">
-                        Hadda qaado Monthly ama Yearly si habeen walba aad u haysato daawasho deggan:
-                        <span className="text-green-400 font-bold italic"> filim, musalsal iyo sports live</span>.
-                    </p>
-                    <p className="text-xl md:text-2xl text-white font-medium mt-8">
-                        Qorshahaaga maanta fur, daawashadaaduna ha noqoto mid aan kala go' lahayn.
-                    </p>
-                </div>
-            </section>
-
             {/* Back to Home */}
             <section className="py-8 text-center">
-                <Link
-                    href="/"
-                    className="text-text-muted hover:text-white transition-colors inline-flex items-center gap-2"
-                >
-                    <Play size={14} className="rotate-180" />
+                <Link href="/" className="text-gray-500 hover:text-white transition-colors text-sm">
                     Ku laabo Bogga Hore
                 </Link>
             </section>

@@ -303,6 +303,7 @@ export interface IContentRequest extends Document {
     posterUrl?: string;
     year?: string;
     votes: number;
+    voters: string[];
     status: string;
     createdAt: number;
 }

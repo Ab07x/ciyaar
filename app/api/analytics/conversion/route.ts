@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
                     purchase_completed: 0,
                 };
             }
-            dailyMap[date][eventName] = Number(row.count || 0);
+            (dailyMap[date] as any)[eventName] = Number(row.count || 0);
         });
 
         const previewStarted = counts.preview_started || 0;

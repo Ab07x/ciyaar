@@ -49,7 +49,7 @@ export function LeaderboardTable({ limit = 10 }: { limit?: number }) {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {leaderboard.map((entry, index) => {
+                            {leaderboard.map((entry: any, index: number) => {
                                 const rank = index + 1;
                                 const isMe = (userId && entry.userId === userId);
 
@@ -116,7 +116,7 @@ export function LeaderboardTable({ limit = 10 }: { limit?: number }) {
                     </div>
                     <div className="text-right">
                         <div className="text-sm text-text-muted">Darajada</div>
-                        <div className="text-xl font-bold text-accent-green">#{leaderboard.findIndex(l => l.userId === myStats.userId) + 1 || "100+"}</div>
+                        <div className="text-xl font-bold text-accent-green">#{leaderboard.findIndex((l: any) => l.userId === myStats.userId) + 1 || "100+"}</div>
                     </div>
                 </div>
             )}

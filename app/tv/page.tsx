@@ -244,7 +244,7 @@ function TVPageContent() {
                 {featuredMovie && (
                     <div className="relative w-full h-[60vh] rounded-3xl overflow-hidden mb-12 group focus-within:ring-4 focus-within:ring-white transition-all">
                         <Image
-                            src={featuredMovie.backdropUrl || featuredMovie.posterUrl || "/bgcdn.webp"}
+                            src={(featuredMovie as any).backdropUrl || featuredMovie.posterUrl || "/bgcdn.webp"}
                             alt={featuredMovie.title}
                             fill
                             className="object-cover"
@@ -268,7 +268,7 @@ function TVPageContent() {
                                 {featuredMovie.titleSomali || featuredMovie.title}
                             </h1>
                             <p className="text-lg text-white/70 line-clamp-2 mb-8">
-                                {featuredMovie.overview}
+                                {(featuredMovie as any).overview}
                             </p>
                             <div className="flex gap-4">
                                 <Link

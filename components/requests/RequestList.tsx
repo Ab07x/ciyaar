@@ -61,7 +61,7 @@ export function RequestList() {
     return (
         <div className="space-y-4">
             <h2 className="text-xl font-bold mb-4">Codsigii Ugu Dambeeyay</h2>
-            {requests.map((req) => {
+            {requests.map((req: any) => {
                 const hasVoted = myVotes?.includes(req._id);
 
                 return (

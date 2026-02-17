@@ -209,7 +209,7 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div className="space-y-3">
-                    {devices.map((device) => (
+                    {devices.map((device: any) => (
                         <div
                             key={device.deviceId}
                             className={`p-4 rounded-xl border flex items-center justify-between ${device.deviceId === deviceId

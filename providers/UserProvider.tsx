@@ -34,6 +34,7 @@ interface UserContextType {
     checkMatchAccess: (matchId: string) => boolean;
     redeemCode: (code: string, matchId?: string) => Promise<GenericResponse>;
     updateUsername: (username: string) => Promise<{ success: boolean; error?: string }>;
+    updateAvatar: (file: File) => Promise<{ success: boolean; avatarUrl?: string; error?: string }>;
     signupWithEmail: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
     loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
@@ -211,6 +212,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const updateAvatar = async (file: File): Promise<{ success: boolean; avatarUrl?: string; error?: string }> => {
+        if (!userId) return { success: false, error: "User not found" };
+        try {
+            const formData = new FormData();
+            formData.append("avatar", file);
+            formData.append("userId", userId);
+            const res = await fetch("/api/users/avatar", { method: "POST", body: formData });
+            const data = await res.json();
+            if (!res.ok) return { success: false, error: data?.error || "Upload failed" };
+            mutateProfile();
+            return { success: true, avatarUrl: data.avatarUrl };
+        } catch {
+            return { success: false, error: "Network error" };
+        }
+    };
+
     const signupWithEmail = async (email: string, password: string, displayName?: string) => {
         if (!deviceId) return { success: false, error: "Device not initialized" };
         try {
@@ -270,15 +287,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const logout = () => {
         if (typeof window !== "undefined") {
-            // Keep device id so user can always recover/login on this same device.
             localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
             fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
             setUserId(null);
             didRedirect.current = true;
-            // Re-establish anonymous user session before redirecting
-            initUser().finally(() => {
-                window.location.href = "/login";
-            });
+            window.location.href = "/login";
         }
     };
 
@@ -296,6 +309,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 checkMatchAccess,
                 redeemCode,
                 updateUsername,
+                updateAvatar,
                 signupWithEmail,
                 loginWithEmail,
                 logout,

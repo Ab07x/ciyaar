@@ -56,7 +56,7 @@ export default function ChannelWatchPage() {
 
     // Related channels (same category, excluding current)
     const relatedChannels = allChannels?.all
-        .filter((c) => c.category === channel.category && c._id !== channel._id)
+        .filter((c: any) => c.category === channel.category && c._id !== channel._id)
         .slice(0, 4) || [];
 
     const handleRedeem = async () => {
@@ -187,7 +187,7 @@ export default function ChannelWatchPage() {
                                 <span className="text-xs text-text-muted uppercase font-bold tracking-wider mr-2">
                                     Haddii uusan shaqaynin → Bedel Link:
                                 </span>
-                                {channel.embeds.map((embed, index) => (
+                                {channel.embeds.map((embed: any, index: number) => (
                                     <button
                                         key={index}
                                         onClick={() => setActiveEmbedIndex(index)}
@@ -232,7 +232,7 @@ export default function ChannelWatchPage() {
                                     </Link>
                                 </div>
                                 <div className="space-y-3">
-                                    {relatedChannels.map((ch) => (
+                                    {relatedChannels.map((ch: any) => (
                                         <Link
                                             key={ch._id}
                                             href={`/live/${ch.slug}`}

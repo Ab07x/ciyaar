@@ -37,15 +37,15 @@ export default function LivePage() {
     // Filter channels by category
     const filteredChannels = activeCategory === "all"
         ? all
-        : all.filter((c) => c.category === activeCategory);
+        : all.filter((c: any) => c.category === activeCategory);
 
     const filteredFree = activeCategory === "all"
         ? free
-        : free.filter((c) => c.category === activeCategory);
+        : free.filter((c: any) => c.category === activeCategory);
 
     const filteredPremium = activeCategory === "all"
         ? premium
-        : premium.filter((c) => c.category === activeCategory);
+        : premium.filter((c: any) => c.category === activeCategory);
 
     // Dynamic BroadcastEvent JSON-LD for live channels
     const broadcastJsonLd = live.length > 0 ? {
@@ -170,7 +170,7 @@ export default function LivePage() {
                                 </span>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {live.map((channel) => (
+                                {live.map((channel: any) => (
                                     <ChannelCard
                                         key={channel._id}
                                         {...channel}
@@ -194,7 +194,7 @@ export default function LivePage() {
                         </div>
                         {filteredFree.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {filteredFree.map((channel) => (
+                                {filteredFree.map((channel: any) => (
                                     <ChannelCard key={channel._id} {...channel} isLocked={false} />
                                 ))}
                             </div>
@@ -224,7 +224,7 @@ export default function LivePage() {
                         </div>
                         {filteredPremium.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {filteredPremium.map((channel) => (
+                                {filteredPremium.map((channel: any) => (
                                     <ChannelCard
                                         key={channel._id}
                                         {...channel}

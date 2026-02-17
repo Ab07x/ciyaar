@@ -13,7 +13,7 @@ export function RelatedNews({ limit = 3 }: { limit?: number }) {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {posts.map((post) => (
+            {posts.map((post: any) => (
                 <Link
                     key={post._id}
                     href={`/blog/${post.slug}`}

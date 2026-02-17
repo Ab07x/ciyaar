@@ -26,17 +26,17 @@ export default function SeriesPage() {
     }
 
     // Get unique genres
-    const allGenres = Array.from(new Set(series.flatMap((s) => s.genres))).slice(0, 10);
+    const allGenres: string[] = Array.from(new Set((series as any[]).flatMap((s: any) => s.genres))).slice(0, 10);
 
     // Filter series
-    let filteredSeries = series;
+    let filteredSeries = series as any[];
     if (filter === "dubbed") {
-        filteredSeries = series.filter((s) => s.isDubbed);
+        filteredSeries = filteredSeries.filter((s: any) => s.isDubbed);
     } else if (filter === "premium") {
-        filteredSeries = series.filter((s) => s.isPremium);
+        filteredSeries = filteredSeries.filter((s: any) => s.isPremium);
     }
     if (genreFilter) {
-        filteredSeries = filteredSeries.filter((s) => s.genres.includes(genreFilter));
+        filteredSeries = filteredSeries.filter((s: any) => s.genres.includes(genreFilter));
     }
 
     return (
@@ -88,7 +88,7 @@ export default function SeriesPage() {
                     {/* Genre filter */}
                     <div className="flex flex-wrap gap-2 items-center">
                         <Filter size={16} className="text-text-muted" />
-                        {allGenres.map((genre) => (
+                        {allGenres.map((genre: string) => (
                             <button
                                 key={genre}
                                 onClick={() => setGenreFilter(genreFilter === genre ? null : genre)}
@@ -107,7 +107,7 @@ export default function SeriesPage() {
 
                 {/* Series Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-                    {filteredSeries.map((s) => {
+                    {filteredSeries.map((s: any) => {
                         const isLocked = s.isPremium && !isPremium;
                         return (
                             <Link
