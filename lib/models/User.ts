@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 // USER
 export interface IUser extends Document {
     phoneOrId?: string;
+    phoneNumber?: string;
     email?: string;
     emailLower?: string;
     passwordHash?: string;
@@ -26,6 +27,7 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>(
     {
         phoneOrId: String,
+        phoneNumber: { type: String, sparse: true, index: true },
         email: { type: String, index: true },
         emailLower: { type: String, unique: true, sparse: true, index: true },
         passwordHash: String,

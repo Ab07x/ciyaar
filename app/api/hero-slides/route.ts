@@ -15,24 +15,44 @@ export async function GET(req: NextRequest) {
             const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD as seed
             const seedNum = today.split("-").join("").slice(-6);
 
-            // Get movies with backdrop images, sorted by a pseudo-random seed
-            const movies = await Movie.find({
+            // First, get manually featured movies (admin-selected)
+            const featuredMovies = await Movie.find({
                 isPublished: true,
+                isFeatured: true,
                 backdropUrl: { $exists: true, $ne: "" },
             })
-                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium")
+                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium featuredOrder")
+                .sort({ featuredOrder: 1 })
                 .lean();
 
-            // Deterministic shuffle based on date
-            const shuffled = movies
-                .map((m: any, i: number) => ({
-                    ...m,
-                    _sortKey: ((i + 1) * parseInt(seedNum)) % (movies.length + 1),
-                }))
-                .sort((a: any, b: any) => a._sortKey - b._sortKey)
-                .slice(0, 8);
+            const MAX_SLIDES = 8;
+            let finalMovies: any[] = [...featuredMovies].slice(0, MAX_SLIDES);
 
-            const autoSlides = shuffled.map((m: any, i: number) => ({
+            // Fill remaining slots with random popular movies if needed
+            if (finalMovies.length < MAX_SLIDES) {
+                const featuredSlugs = new Set(finalMovies.map((m: any) => m.slug));
+                const otherMovies = await Movie.find({
+                    isPublished: true,
+                    isFeatured: { $ne: true },
+                    backdropUrl: { $exists: true, $ne: "" },
+                })
+                    .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium")
+                    .lean();
+
+                // Deterministic shuffle for non-featured
+                const shuffled = otherMovies
+                    .filter((m: any) => !featuredSlugs.has(m.slug))
+                    .map((m: any, i: number) => ({
+                        ...m,
+                        _sortKey: ((i + 1) * parseInt(seedNum)) % (otherMovies.length + 1),
+                    }))
+                    .sort((a: any, b: any) => a._sortKey - b._sortKey)
+                    .slice(0, MAX_SLIDES - finalMovies.length);
+
+                finalMovies = [...finalMovies, ...shuffled];
+            }
+
+            const autoSlides = finalMovies.map((m: any, i: number) => ({
                 _id: `auto-${i}`,
                 contentType: "movie",
                 contentId: m.slug,

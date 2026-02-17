@@ -51,9 +51,9 @@ export function generateMetadata(): Metadata {
       type: "website",
       locale: "so_SO",
       url: "https://fanbroj.net",
-      title: "Fanproj – Hindi Af Somali Cusub | Daawo Filimaan & Ciyaar Live FREE",
-      description: "Daawo filimaha Hindi Af Somali cusub 2026 oo bilaash ah. Fanproj NXT, Astaan Films, Saafi Films, Fanproj Play & ciyaaraha live. Ku daawo HD!",
-      siteName: "Fanproj – Fanbroj.net",
+      title: title,
+      description,
+      siteName: "Fanproj",
       images: [
         {
           url: "/og-preview.png",
@@ -65,17 +65,28 @@ export function generateMetadata(): Metadata {
     },
     twitter: {
       card: "summary_large_image",
-      title: "Fanproj – Hindi Af Somali Cusub 2026 | Fanbroj TV",
-      description: "Daawo filimaha Hindi Af Somali cusub oo bilaash ah HD. Fanproj NXT, Astaan Films, Saafi Films & ciyaaraha live.",
+      title: title,
+      description,
       images: ["/og-preview.png"],
     },
     icons: {
-      icon: [
-        { url: "/favicon.ico", sizes: "any" },
-        { url: "/img/logo/favicon.ico", type: "image/x-icon" },
-      ],
+      icon: "/favicon.ico",
       shortcut: "/favicon.ico",
       apple: "/icon-192.png",
+      other: [
+        {
+          rel: "icon",
+          type: "image/png",
+          sizes: "32x32",
+          url: "/favicon-32x32.png",
+        },
+        {
+          rel: "icon",
+          type: "image/png",
+          sizes: "16x16",
+          url: "/favicon-16x16.png",
+        },
+      ],
     },
     manifest: "/manifest.json",
     alternates: {

@@ -64,30 +64,30 @@ export default function AdminLayout({
     const router = useRouter();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-    // Check auth on mount (client-side)
+    // Check auth on mount via API (cookie is httpOnly, can't read from JS)
     useEffect(() => {
         // Skip auth check for login page
         if (pathname === "/kism/login") {
             return;
         }
 
-        // Check if admin session exists with small delay to ensure cookie is available
-        const checkAuth = () => {
-            const cookies = document.cookie;
-            console.log("[Auth] Checking cookies:", cookies);
-            if (cookies.includes("fanbroj_admin_session=")) {
-                console.log("[Auth] Authenticated!");
-                setIsAuthenticated(true);
-            } else {
-                console.log("[Auth] Not authenticated, redirecting...");
+        const checkAuth = async () => {
+            try {
+                const res = await fetch("/api/kism/login", { method: "GET", credentials: "include" });
+                const data = await res.json();
+                if (data.authenticated) {
+                    setIsAuthenticated(true);
+                } else {
+                    setIsAuthenticated(false);
+                    router.push("/kism/login");
+                }
+            } catch {
                 setIsAuthenticated(false);
                 router.push("/kism/login");
             }
         };
 
-        // Small delay to ensure cookie is processed
-        const timer = setTimeout(checkAuth, 100);
-        return () => clearTimeout(timer);
+        checkAuth();
     }, [pathname, router]);
 
     // Login page - no layout

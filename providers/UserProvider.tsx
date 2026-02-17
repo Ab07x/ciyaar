@@ -35,7 +35,7 @@ interface UserContextType {
     redeemCode: (code: string, matchId?: string) => Promise<GenericResponse>;
     updateUsername: (username: string) => Promise<{ success: boolean; error?: string }>;
     updateAvatar: (file: File) => Promise<{ success: boolean; avatarUrl?: string; error?: string }>;
-    signupWithEmail: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+    signupWithEmail: (email: string, password: string, displayName?: string, phoneNumber?: string) => Promise<{ success: boolean; error?: string }>;
     loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
 }
@@ -228,7 +228,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const signupWithEmail = async (email: string, password: string, displayName?: string) => {
+    const signupWithEmail = async (email: string, password: string, displayName?: string, phoneNumber?: string) => {
         if (!deviceId) return { success: false, error: "Device not initialized" };
         try {
             const res = await fetch("/api/auth/signup", {
@@ -238,6 +238,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     email,
                     password,
                     displayName,
+                    phoneNumber,
                     deviceId,
                     userAgent: getUserAgent(),
                 }),

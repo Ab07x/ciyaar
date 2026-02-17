@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         const emailRaw = String(body?.email || "");
         const password = String(body?.password || "");
         const displayNameRaw = String(body?.displayName || "");
+        const phoneNumber = String(body?.phoneNumber || "").trim();
         const deviceId = String(body?.deviceId || "").trim();
         const userAgent = String(body?.userAgent || request.headers.get("user-agent") || "");
 
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
                 passwordSalt: salt,
                 displayName,
                 avatarUrl: `/img/icons/background.png`,
+                ...(phoneNumber ? { phoneNumber } : {}),
             });
         } else {
             const referralCode = await generateUniqueReferralCode();
@@ -98,6 +100,7 @@ export async function POST(request: NextRequest) {
                 referralCount: 0,
                 referralEarnings: 0,
                 isTrialUsed: false,
+                ...(phoneNumber ? { phoneNumber } : {}),
                 createdAt: now,
             });
             userDoc = { _id: created._id.toString(), emailLower: created.emailLower };

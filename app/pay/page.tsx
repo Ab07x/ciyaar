@@ -170,6 +170,7 @@ function CheckoutHub({
     const [authMode, setAuthMode] = useState<"signup" | "login">(initialAuthMode);
     const [formEmail, setFormEmail] = useState(email || "");
     const [displayName, setDisplayName] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [selectedPlanId, setSelectedPlanId] = useState<PlanId>(initialPlanId);
@@ -203,7 +204,7 @@ function CheckoutHub({
         }
         setIsAuthLoading(true);
         const result = authMode === "signup"
-            ? await signupWithEmail(emailInput, password, displayName.trim())
+            ? await signupWithEmail(emailInput, password, displayName.trim(), phoneNumber.trim())
             : await loginWithEmail(emailInput, password);
         setIsAuthLoading(false);
         if (!result.success) { setStatusError(result.error || "Auth failed"); return; }
@@ -308,6 +309,9 @@ function CheckoutHub({
                                         </div>
                                         {authMode === "signup" && (
                                             <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name (optional)" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors" />
+                                        )}
+                                        {authMode === "signup" && (
+                                            <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone number (e.g. 0612345678)" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors" />
                                         )}
                                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3B82F6] transition-colors" />
                                         {authMode === "signup" && (

@@ -79,13 +79,15 @@ function formatProgress(item: HistoryItem) {
 }
 
 export default function WatchHistoryPage() {
-    const { userId } = useUser();
-    const { data: history } = useSWR<HistoryItem[]>(
+    const { userId, isLoading: isUserLoading } = useUser();
+    const { data: history, isLoading: isHistoryLoading } = useSWR<HistoryItem[]>(
         userId ? `/api/watch/history?userId=${encodeURIComponent(userId)}&limit=80` : null,
         fetcher
     );
 
-    if (history === undefined) {
+    const isLoading = isUserLoading || (userId && isHistoryLoading);
+
+    if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-8">
                 <div className="h-8 w-56 bg-white/10 rounded mb-8 animate-pulse" />
@@ -94,6 +96,27 @@ export default function WatchHistoryPage() {
                         <div key={i} className="h-52 bg-white/5 rounded-xl animate-pulse" />
                     ))}
                 </div>
+            </div>
+        );
+    }
+
+    if (!userId) {
+        return (
+            <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center">
+                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                    <History className="w-12 h-12 text-text-muted" />
+                </div>
+                <h1 className="text-3xl font-bold mb-2">Watch History</h1>
+                <p className="text-text-secondary max-w-md mb-8">
+                    Fadlan soo gal (login) si aad u aragto taariikhda daawashadaada.
+                </p>
+                <Link
+                    href="/pay?auth=login"
+                    className="inline-flex items-center gap-2 rounded-xl bg-accent-green text-black font-bold px-5 py-3 hover:brightness-110 transition-all"
+                >
+                    <PlayCircle size={18} />
+                    Login / Sign Up
+                </Link>
             </div>
         );
     }

@@ -40,21 +40,25 @@ function formatPlan(plan: string) {
 }
 
 export default function PaymentsPage() {
-    const { userId, deviceId } = useUser();
+    const { userId, deviceId, isLoading: isUserLoading } = useUser();
+
+    // Only fetch if we have either userId or deviceId, but prefer userId for full history
+    const shouldFetch = !isUserLoading && (userId || deviceId);
     const query = userId
-        ? `userId=${encodeURIComponent(userId)}&deviceId=${encodeURIComponent(deviceId)}`
+        ? `userId=${encodeURIComponent(userId)}`
         : deviceId
             ? `deviceId=${encodeURIComponent(deviceId)}`
             : "";
 
-    const { data } = useSWR<{ payments: PaymentRow[] }>(
-        query ? `/api/pay/history?${query}` : null,
+    const { data, isLoading: isDataLoading } = useSWR<{ payments: PaymentRow[] }>(
+        shouldFetch ? `/api/pay/history?${query}` : null,
         fetcher
     );
 
     const payments = data?.payments || [];
+    const isLoading = isUserLoading || (shouldFetch && isDataLoading);
 
-    if (data === undefined) {
+    if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-8">
                 <div className="h-8 w-64 bg-white/10 rounded mb-8 animate-pulse" />
@@ -63,6 +67,27 @@ export default function PaymentsPage() {
                         <div key={i} className="h-24 rounded-xl bg-white/5 animate-pulse" />
                     ))}
                 </div>
+            </div>
+        );
+    }
+
+    if (!userId && !deviceId) {
+        return (
+            <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center">
+                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                    <CreditCard className="w-12 h-12 text-text-muted" />
+                </div>
+                <h1 className="text-3xl font-bold mb-2">Payments History</h1>
+                <p className="text-text-secondary max-w-md mb-8">
+                    Fadlan soo gal (login) si aad u aragto taariikhda.
+                </p>
+                <Link
+                    href="/pay?auth=login"
+                    className="inline-flex items-center gap-2 rounded-xl bg-accent-green text-black font-bold px-5 py-3 hover:brightness-110 transition-all"
+                >
+                    <History size={18} />
+                    Login / Sign Up
+                </Link>
             </div>
         );
     }

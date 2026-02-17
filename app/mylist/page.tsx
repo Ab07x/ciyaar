@@ -61,18 +61,21 @@ function normalizeTab(raw: string | null): ListTab {
 }
 
 function MyListContent() {
-    const { userId } = useUser();
+    const { userId, isLoading: isUserLoading } = useUser();
     const searchParams = useSearchParams();
     const currentTab = useMemo(() => normalizeTab(searchParams.get("tab")), [searchParams]);
     const currentConfig = TAB_CONFIG.find((tab) => tab.id === currentTab) || TAB_CONFIG[0];
     const HeaderIcon = currentConfig.icon;
     const fetcher = (url: string) => fetch(url).then((r) => r.json());
-    const { data: myList } = useSWR<MyListItem[]>(
+
+    const { data: myList = [], isLoading: isListLoading } = useSWR<MyListItem[]>(
         userId ? `/api/mylist?userId=${userId}&listType=${currentTab}` : null,
         fetcher
     );
 
-    if (myList === undefined) {
+    const isLoading = isUserLoading || (userId && isListLoading);
+
+    if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-8">
                 <div className="h-8 w-48 bg-white/10 rounded mb-8 animate-pulse" />
@@ -81,6 +84,25 @@ function MyListContent() {
                         <div key={i} className="aspect-[2/3] bg-white/5 rounded-xl animate-pulse" />
                     ))}
                 </div>
+            </div>
+        );
+    }
+
+    if (!userId) {
+        return (
+            <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center">
+                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                    <HeaderIcon className="w-12 h-12 text-text-muted" />
+                </div>
+                <h1 className="text-3xl font-bold mb-2">{currentConfig.title}</h1>
+                <p className="text-text-secondary max-w-md mb-8">
+                    Fadlan soo gal (login) si aad u isticmaasho {currentConfig.label}.
+                </p>
+                <Link href="/pay?auth=login">
+                    <Button variant="primary" leftIcon={<Plus size={18} />}>
+                        Login / Sign Up
+                    </Button>
+                </Link>
             </div>
         );
     }

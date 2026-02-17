@@ -6,6 +6,8 @@ import { Users, Search, ChevronLeft, ChevronRight, Crown, Clock, User as UserIco
 interface UserRow {
     _id: string;
     email: string | null;
+    phoneNumber: string | null;
+    phoneOrId: string | null;
     username: string | null;
     displayName: string | null;
     avatarUrl: string | null;
@@ -124,6 +126,7 @@ export default function AdminUsersPage() {
                             <tr className="border-b border-border-strong text-gray-400 text-left">
                                 <th className="px-4 py-3 font-medium">User</th>
                                 <th className="px-4 py-3 font-medium">Email</th>
+                                <th className="px-4 py-3 font-medium">Phone</th>
                                 <th className="px-4 py-3 font-medium">Status</th>
                                 <th className="px-4 py-3 font-medium">Plan</th>
                                 <th className="px-4 py-3 font-medium">Signed Up</th>
@@ -131,9 +134,9 @@ export default function AdminUsersPage() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-500">Loading...</td></tr>
+                                <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-500">Loading...</td></tr>
                             ) : users.length === 0 ? (
-                                <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-500">No users found</td></tr>
+                                <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-500">No users found</td></tr>
                             ) : users.map((user) => (
                                 <tr key={user._id} className="border-b border-border-strong/50 hover:bg-white/[0.02]">
                                     <td className="px-4 py-3">
@@ -152,6 +155,7 @@ export default function AdminUsersPage() {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-gray-300">{user.email || <span className="text-gray-600">—</span>}</td>
+                                    <td className="px-4 py-3 text-gray-300">{user.phoneNumber || user.phoneOrId || <span className="text-gray-600">—</span>}</td>
                                     <td className="px-4 py-3">
                                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold uppercase ${STATUS_COLORS[user.status]}`}>
                                             {user.status === "paid" && <Shield size={10} />}

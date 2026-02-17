@@ -119,20 +119,35 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Title and slug are required" }, { status: 400 });
         }
 
-        // Check for existing movie by tmdbId or slug
-        const existing = await Movie.findOne({
-            $or: [
-                ...(body.tmdbId ? [{ tmdbId: body.tmdbId }] : []),
-                { slug: body.slug },
-            ],
-        });
-
-        if (existing) {
-            return NextResponse.json(
-                { error: `Filimkaan horey ayuu u jiray: "${existing.title}". Badal slug-ga ama edit-garee.` },
-                { status: 409 }
-            );
+        // Check for existing movie by tmdbId only (allow same-name movies with different dates)
+        if (body.tmdbId) {
+            const existingByTmdb = await Movie.findOne({ tmdbId: body.tmdbId });
+            if (existingByTmdb) {
+                return NextResponse.json(
+                    { error: `Filimkaan horey ayuu u jiray (tmdbId: ${body.tmdbId}): "${existingByTmdb.title}". Edit-garee haddii aad rabto.` },
+                    { status: 409 }
+                );
+            }
         }
+
+        // Ensure unique slug — append year or index if needed
+        let slug = body.slug;
+        const existingBySlug = await Movie.findOne({ slug });
+        if (existingBySlug) {
+            const year = body.releaseDate ? body.releaseDate.split("-")[0] : "";
+            if (year) {
+                slug = `${body.slug}-${year}`;
+            }
+            // If slug with year also exists, append an incrementing number
+            let counter = 1;
+            let candidateSlug = slug;
+            while (await Movie.findOne({ slug: candidateSlug })) {
+                counter++;
+                candidateSlug = `${slug}-${counter}`;
+            }
+            slug = candidateSlug;
+        }
+        body.slug = slug;
 
         const now = Date.now();
         const seoTitle = `Daawo ${body.title} ${body.isDubbed ? "Af-Somali" : ""} Online | Fanbroj`;
