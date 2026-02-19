@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
             }));
 
             return NextResponse.json(autoSlides, {
-                headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+                headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
             });
         }
 

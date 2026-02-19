@@ -7,7 +7,7 @@ import { LiveBadge } from "@/components/ui/LiveBadge";
 import Link from "next/link";
 
 import { MoviePosterImage, optimizeImageUrl } from "@/components/MoviePosterImage";
-import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp } from "lucide-react";
+import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp, Youtube } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
@@ -157,6 +157,26 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
             Open TV
           </span>
         </Link>
+      </section>
+
+      {/* Video Tutorial - How to Buy & Watch VIP */}
+      <section className="max-w-7xl mx-auto px-4 pt-4">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-[#0a1a2b] to-[#0f1e30] p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Youtube size={20} className="text-red-500" />
+            <h3 className="text-sm md:text-base font-bold text-white uppercase">Sida Loo Iibsado & Daawado VIP</h3>
+          </div>
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+            <iframe
+              src="https://www.youtube.com/embed/5h1a8fQJ0JA"
+              title="Sida loo iibsado Premium - Fanbroj Tutorial"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+        </div>
       </section>
 
       {/* HERO SLIDER - Lookmovie Style */}

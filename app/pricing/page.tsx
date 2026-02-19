@@ -197,6 +197,25 @@ export default function PricingPage() {
                 </div>
             </section>
 
+            {/* Video Tutorial */}
+            <section className="py-12">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-3xl mx-auto">
+                        <h3 className="text-2xl font-black text-white text-center mb-2">Daawo Video Tutorial-ka</h3>
+                        <p className="text-gray-400 text-sm text-center mb-6">Sida loo iibsado iyo sida loo daawado VIP content</p>
+                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10">
+                            <iframe
+                                src="https://www.youtube.com/embed/5h1a8fQJ0JA"
+                                title="Sida loo iibsado Premium - Fanbroj Tutorial"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="absolute inset-0 w-full h-full"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* FAQ */}
             <section className="py-12">
                 <div className="container mx-auto px-4">

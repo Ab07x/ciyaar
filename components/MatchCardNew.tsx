@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Play, Lock, Bell, Eye, Trophy, Clock, Users } from "lucide-react";
 import { motion } from "framer-motion";
@@ -64,11 +63,12 @@ export function MatchCardNew({
   const TeamLogo = ({ name, logo, className: logoClassName }: { name: string; logo?: string | null; className?: string }) => (
     <div className={cn("relative flex items-center justify-center", logoClassName)}>
       {logo ? (
-        <Image
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
           src={logo}
           alt={name}
-          fill
-          className="object-contain"
+          className="absolute inset-0 w-full h-full object-contain"
+          loading="lazy"
         />
       ) : (
         <div className="w-full h-full rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center border border-white/10">
@@ -104,7 +104,8 @@ export function MatchCardNew({
           {/* Thumbnail Background */}
           {thumbnailUrl && (
             <div className="absolute inset-0 opacity-20">
-              <Image src={thumbnailUrl} alt="" fill className="object-cover" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={thumbnailUrl} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent" />
             </div>
           )}
@@ -115,7 +116,8 @@ export function MatchCardNew({
               <div className="flex items-center gap-2">
                 {leagueLogo && (
                   <div className="w-6 h-6 relative">
-                    <Image src={leagueLogo} alt={displayLeague || ""} fill className="object-contain" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={leagueLogo} alt={displayLeague || ""} className="absolute inset-0 w-full h-full object-contain" loading="lazy" />
                   </div>
                 )}
                 <span className="text-white/60 text-sm font-medium uppercase tracking-wider">

@@ -2,8 +2,8 @@ import HomeClient from "./HomeClient";
 import connectDB from "@/lib/mongodb";
 import { Movie, Match } from "@/lib/models";
 
-// Revalidate every 5 minutes for fresh content
-export const revalidate = 300;
+// Revalidate every 2 minutes for fresh hero slides & content
+export const revalidate = 120;
 
 export default async function HomePage() {
     let initialMovies: any = { movies: [], total: 0 };

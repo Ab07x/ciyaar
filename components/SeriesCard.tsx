@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Play, Lock, Layers, Tv } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { optimizeImageUrl } from "@/components/MoviePosterImage";
+import { MoviePosterImage } from "@/components/MoviePosterImage";
 
 interface SeriesCardProps {
     id: string;
@@ -42,20 +41,11 @@ export function SeriesCard({
         >
             {/* Poster Container */}
             <div className="aspect-[2/3] relative overflow-hidden bg-white/5">
-                {posterUrl ? (
-                    <Image
-                        src={optimizeImageUrl(posterUrl, "poster") || posterUrl}
-                        alt={title}
-                        fill
-                        sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12vw"
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-white/20 gap-2">
-                        <Tv size={24} className="opacity-50" />
-                        <span className="text-[10px] uppercase font-bold text-center px-2">{title}</span>
-                    </div>
-                )}
+                <MoviePosterImage
+                    src={posterUrl}
+                    alt={title}
+                    className="transition-transform duration-300 group-hover:scale-105"
+                />
 
                 {/* Premium Badge */}
                 {isPremium && (

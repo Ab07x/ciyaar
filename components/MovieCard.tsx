@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Play, Star, Lock, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { optimizeImageUrl } from "@/components/MoviePosterImage";
+import { MoviePosterImage } from "@/components/MoviePosterImage";
 
 interface MovieCardProps {
     id: string;
@@ -16,11 +14,10 @@ interface MovieCardProps {
     rating?: number;
     isPremium?: boolean;
     className?: string;
-    isLocked?: boolean; // New prop
+    isLocked?: boolean;
 }
 
 export function MovieCard({
-    id,
     slug,
     title,
     posterUrl,
@@ -30,8 +27,6 @@ export function MovieCard({
     className,
     isLocked = false,
 }: MovieCardProps) {
-    const [imgError, setImgError] = useState(false); // Added state for image error
-
     return (
         <Link
             href={`/movies/${slug}`}
@@ -44,21 +39,11 @@ export function MovieCard({
             {/* Poster Container */}
             <div className="aspect-[2/3] relative overflow-hidden bg-white/5">
                 <div className="relative w-full h-full">
-                    {posterUrl && !imgError ? (
-                        <Image
-                            src={optimizeImageUrl(posterUrl, "poster") || posterUrl}
-                            alt={title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12vw"
-                            onError={() => setImgError(true)}
-                        />
-                    ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/5 flex flex-col items-center justify-center text-white/30 gap-2">
-                            <Play size={32} className="opacity-50" />
-                            <span className="text-xs font-bold text-center px-2 line-clamp-2">{title}</span>
-                        </div>
-                    )}
+                    <MoviePosterImage
+                        src={posterUrl}
+                        alt={title}
+                        className="transition-transform duration-500 group-hover:scale-110"
+                    />
                 </div>
 
                 {/* Top Badges */}
