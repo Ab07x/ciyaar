@@ -10,10 +10,12 @@ export async function GET(req: NextRequest) {
         const auto = searchParams.get("auto");
 
         // Auto-rotate mode: return 8 random published movies with backdrops
-        // Rotates every 24 hours using date as seed
+        // Rotates every 6 hours for fresh engagement (4 rotations per day)
         if (auto === "true") {
-            const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD as seed
-            const seedNum = today.split("-").join("").slice(-6);
+            const now = new Date();
+            const block = Math.floor(now.getHours() / 6); // 0-3 (every 6hrs)
+            const today = now.toISOString().split("T")[0]; // YYYY-MM-DD
+            const seedNum = today.split("-").join("").slice(-6) + String(block);
 
             // First, get manually featured movies (admin-selected)
             const featuredMovies = await Movie.find({
