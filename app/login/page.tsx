@@ -2,179 +2,143 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Ticket, Loader2, CheckCircle2, XCircle, Lock } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
-
-// Generate a simple device ID
-function getDeviceId(): string {
-    if (typeof window === "undefined") return "";
-
-    let deviceId = localStorage.getItem("fanbroj_device_id");
-    if (!deviceId) {
-        deviceId = `device_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
-        localStorage.setItem("fanbroj_device_id", deviceId);
-    }
-    return deviceId;
-}
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { loginWithEmail, email: userEmail, isLoading: userLoading } = useUser();
 
-    const [code, setCode] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<{ success: boolean; message?: string; error?: string; plan?: string; expiresAt?: string } | null>(null);
-    const [deviceId] = useState<string>(() => getDeviceId());
-    const { isPremium, isLoading: userLoading } = useUser();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
+    // If already logged in, redirect to home
     useEffect(() => {
-        // Device-based auth: if this device already has active premium, don't keep user on login page.
-        if (!userLoading && isPremium) {
+        if (!userLoading && userEmail) {
             router.replace("/");
         }
-    }, [isPremium, userLoading, router]);
+    }, [userEmail, userLoading, router]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!code.trim() || loading) return;
+        setError("");
 
-        setLoading(true);
-        setResult(null);
-
-        try {
-            const res = await fetch("/api/redemptions/redeem", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    code: code.trim().toUpperCase(),
-                    deviceId,
-                    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-                }),
-            });
-            const response = await res.json();
-
-            setResult(response);
-
-            if (response.success) {
-                const isTrialCode = Boolean(response.trial);
-
-                if (isTrialCode) {
-                    localStorage.removeItem("fanbroj_subscription");
-                } else {
-                    // Store subscription info in localStorage
-                    localStorage.setItem("fanbroj_subscription", JSON.stringify({
-                        plan: response.plan,
-                        expiresAt: response.expiresAt,
-                        activatedAt: Date.now(),
-                    }));
-                }
-
-                const nextHref = isTrialCode && response.trialMovieId
-                    ? `/movies/${response.trialMovieId}/play`
-                    : "/";
-
-                // Redirect after success message
-                setTimeout(() => {
-                    router.push(nextHref);
-                }, 1500);
-            }
-        } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Khalad dhacay";
-            setResult({ success: false, error: message });
+        if (!email.trim() || !password.trim()) {
+            setError("Fadlan geli email iyo password.");
+            return;
         }
 
-        setLoading(false);
+        setIsLoading(true);
+        const result = await loginWithEmail(email.trim(), password);
+        setIsLoading(false);
+
+        if (!result.success) {
+            setError(result.error || "Email ama Password waa khalad.");
+            return;
+        }
+
+        // On success, redirect to home
+        router.push("/");
     };
 
     return (
-        <div className="min-h-screen bg-stadium-dark flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <Link href="/" className="inline-block text-3xl font-black tracking-tighter text-white mb-2">
-                        FAN<span className="text-accent-green">BROJ</span>
-                    </Link>
-                    <p className="text-text-secondary">Geli code-kaaga Premium</p>
-                </div>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b13] text-white font-sans selection:bg-[#ff1a4e] selection:text-white relative">
 
-                {/* Login Card */}
-                <div className="bg-stadium-elevated border border-border-subtle rounded-2xl p-6 shadow-elevated">
-                    <div className="flex items-center justify-center mb-6">
-                        <div className="bg-accent-gold/20 p-4 rounded-full">
-                            <Lock className="text-accent-gold" size={32} />
-                        </div>
+            {/* Logo Header (Optional, but LookMovie has it top-left absolute on actual site. Here we center or add above) */}
+            <div className="mb-10 text-center">
+                <Link href="/" className="text-4xl font-black tracking-tighter shadow-sm">
+                    FAN<span className="text-[#ff1a4e] drop-shadow-[0_0_15px_rgba(255,26,78,0.5)]">BROJ</span>
+                </Link>
+            </div>
+
+            {/* Login Box */}
+            <div className="w-full max-w-[420px] bg-[#0e1628] rounded-xl border border-[#1e293b] p-8 shadow-2xl relative z-10">
+                <form onSubmit={handleLogin} className="flex flex-col">
+
+                    {/* Email Input */}
+                    <div className="flex flex-col mb-5">
+                        <label className="text-[13px] font-bold text-gray-300 mb-2">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="bg-[#131b2f] border border-transparent focus:border-[#ff1a4e] rounded-md px-4 py-3.5 text-white outline-none transition-colors text-sm"
+                            disabled={isLoading}
+                        />
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-2">
-                                Premium Code
-                            </label>
-                            <div className="relative">
-                                <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={20} />
+                    {/* Password Input */}
+                    <div className="flex flex-col mb-4">
+                        <label className="text-[13px] font-bold text-gray-300 mb-2">Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="bg-[#131b2f] border border-transparent focus:border-[#ff1a4e] rounded-md px-4 py-3.5 text-white outline-none transition-colors text-sm font-sans tracking-widest"
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    {/* Options Row */}
+                    <div className="flex items-center justify-between mb-8 mt-2">
+                        <label className="flex items-center cursor-pointer group">
+                            <div className="relative flex items-center justify-center w-[18px] h-[18px] mr-2">
                                 <input
-                                    type="text"
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                    placeholder="XXXXXXXX"
-                                    maxLength={12}
-                                    className="w-full bg-stadium-dark border border-border-subtle rounded-xl pl-10 pr-4 py-4 text-lg font-mono tracking-wider text-center uppercase focus:outline-none focus:ring-2 focus:ring-accent-gold/50 focus:border-accent-gold transition-all"
-                                    disabled={loading}
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="appearance-none w-full h-full border border-gray-600 rounded-[4px] bg-[#131b2f] checked:bg-[#007bff] checked:border-transparent transition-all cursor-pointer"
                                 />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading || code.length < 6}
-                            className="w-full bg-accent-gold text-black font-bold py-4 rounded-xl hover:bg-accent-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader2 className="animate-spin" size={20} />
-                                    Checking...
-                                </>
-                            ) : (
-                                "Activate Premium"
-                            )}
-                        </button>
-                    </form>
-
-                    {/* Result Message */}
-                    {result && (
-                        <div className={`mt-6 p-4 rounded-xl flex items-start gap-3 ${result.success
-                            ? "bg-accent-green/10 border border-accent-green/30"
-                            : "bg-accent-red/10 border border-accent-red/30"
-                            }`}>
-                            {result.success ? (
-                                <CheckCircle2 className="text-accent-green flex-shrink-0 mt-0.5" size={20} />
-                            ) : (
-                                <XCircle className="text-accent-red flex-shrink-0 mt-0.5" size={20} />
-                            )}
-                            <div>
-                                <p className={result.success ? "text-accent-green" : "text-accent-red"}>
-                                    {result.message || result.error}
-                                </p>
-                                {result.success && result.plan && (
-                                    <p className="text-text-secondary text-sm mt-1">
-                                        Plan: {result.plan.charAt(0).toUpperCase() + result.plan.slice(1)}
-                                    </p>
+                                {rememberMe && (
+                                    <svg className="w-[10px] h-[10px] text-white absolute pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
                                 )}
                             </div>
+                            <span className="text-[13px] text-gray-200 font-bold tracking-wide group-hover:text-white transition-colors">Remember Me</span>
+                        </label>
+                        <Link href="/login" className="text-[13px] text-[#007bff] hover:text-[#3395ff] transition-colors font-medium">
+                            Forgot your password?
+                        </Link>
+                    </div>
+
+                    {error && (
+                        <div className="mb-6 bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded text-center font-bold">
+                            {error}
                         </div>
                     )}
-                </div>
 
-                {/* Footer Links */}
-                <div className="mt-6 text-center space-y-3">
-                    <p className="text-text-muted text-sm">
-                        Ma lihid code? <Link href="/pricing" className="text-accent-gold hover:underline">Iibin Premium</Link>
-                    </p>
-                    <Link href="/" className="text-text-secondary text-sm hover:text-white transition-colors block">
-                        ← Ku noqo Homepage
-                    </Link>
-                </div>
+                    {/* Login Button */}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full bg-[#ff1a4e] hover:bg-[#ff0038] disabled:opacity-50 disabled:hover:bg-[#ff1a4e] py-3.5 rounded-sm font-black text-[15px] tracking-wide text-white uppercase transition-all shadow-[0_0_15px_rgba(255,26,78,0.4)] hover:shadow-[0_0_25px_rgba(255,26,78,0.6)] flex items-center justify-center gap-2"
+                    >
+                        {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
+                        {isLoading ? "LOADING..." : "LOGIN"}
+                    </button>
+
+                </form>
             </div>
+
+            {/* Support Link */}
+            <div className="mt-8 relative z-10">
+                <a href="mailto:support@fanbroj.net" className="text-gray-400 hover:text-white text-sm transition-colors">
+                    support@fanbroj.net
+                </a>
+            </div>
+
+            {/* Additional "Sign Up via Plans" Link (Since users arriving here without account need guidance) */}
+            <div className="mt-4 relative z-10">
+                <p className="text-gray-500 text-sm">
+                    Kuma haysatid account? <Link href="/pricing" className="text-[#007bff] hover:underline font-bold">Sign Up (Dooro Plan)</Link>
+                </p>
+            </div>
+
         </div>
     );
 }
