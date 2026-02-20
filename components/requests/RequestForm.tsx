@@ -33,7 +33,7 @@ export function RequestForm({ onRequestSubmitted }: { onRequestSubmitted: () => 
                 try {
                     const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(query)}&type=${type}`);
                     const data = await res.json();
-                    setResults(data);
+                    setResults(data.results || []);
                 } catch (error) {
                     console.error("Search failed", error);
                 } finally {
