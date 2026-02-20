@@ -22,8 +22,12 @@ import {
     RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { StatsCard } from "@/components/admin/StatsCard";
-import { ViewsChart, TopContentChart, SubscriptionChart } from "@/components/admin/ViewsChart";
+
+const ViewsChart = dynamic(() => import("@/components/admin/ViewsChart").then(mod => mod.ViewsChart), { ssr: false });
+const TopContentChart = dynamic(() => import("@/components/admin/ViewsChart").then(mod => mod.TopContentChart), { ssr: false });
+const SubscriptionChart = dynamic(() => import("@/components/admin/ViewsChart").then(mod => mod.SubscriptionChart), { ssr: false });
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
