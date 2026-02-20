@@ -23,6 +23,7 @@ import { PLAN_OPTIONS, PlanId, getPlanPrice } from "@/lib/plans";
 
 type SettingsResponse = Record<string, unknown>;
 const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<SettingsResponse>);
+const fetcherGeneric = (url: string) => fetch(url).then((r) => r.json());
 
 /* ────────────────────────────────────────────── */
 /*  PaymentVerifier                               */
@@ -140,11 +141,14 @@ function CheckoutHub({
     initialOfferCode?: string;
 }) {
     const { data: settings } = useSWR("/api/settings", fetcher);
+    const { data: geo } = useSWR<{ country: string | null; multiplier: number }>("/api/geo", fetcherGeneric);
+    const geoMultiplier = geo?.multiplier ?? 1;
     const { deviceId, email, profile, signupWithEmail, loginWithEmail, updateAvatar } = useUser();
 
     // Determine the actual Plan option safely.
     const selectedPlan = useMemo(() => PLAN_OPTIONS.find((p) => p.id === initialPlanId) || PLAN_OPTIONS[0], [initialPlanId]);
-    const selectedPlanPrice = useMemo(() => getPlanPrice(settings, selectedPlan), [settings, selectedPlan]);
+    const basePlanPrice = useMemo(() => getPlanPrice(settings, selectedPlan), [settings, selectedPlan]);
+    const selectedPlanPrice = useMemo(() => Math.round(basePlanPrice * geoMultiplier * 100) / 100, [basePlanPrice, geoMultiplier]);
 
     const [authMode, setAuthMode] = useState<"signup" | "login">(initialAuthMode);
     const [formEmail, setFormEmail] = useState(email || "");

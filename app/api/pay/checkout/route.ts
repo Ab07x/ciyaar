@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import connectDB from "@/lib/mongodb";
 import { Settings, Payment, ConversionEvent } from "@/lib/models";
+import { getRequestGeo } from "@/lib/geo-lookup";
 
 export async function POST(request: NextRequest) {
     try {
@@ -37,10 +38,14 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Apply geo-based pricing multiplier
+        const { country, multiplier } = await getRequestGeo(request);
+        const geoAdjustedAmount = Math.round(baseAmount * multiplier * 100) / 100;
+
         // Add Sifalo Pay processing fee (1% for mobile money) so merchant gets full price
         const FEE_PERCENT = 0.01; // 1%
-        const fee = Math.ceil(baseAmount * FEE_PERCENT * 100) / 100; // round up to nearest cent
-        const totalAmount = Math.round((baseAmount + fee) * 100) / 100;
+        const fee = Math.ceil(geoAdjustedAmount * FEE_PERCENT * 100) / 100; // round up to nearest cent
+        const totalAmount = Math.round((geoAdjustedAmount + fee) * 100) / 100;
 
         // Generate unique order ID
         const orderNonce = crypto.randomBytes(4).toString("hex").toUpperCase();
@@ -112,7 +117,7 @@ export async function POST(request: NextRequest) {
         await Payment.create({
             deviceId,
             plan,
-            amount: baseAmount,
+            amount: geoAdjustedAmount,
             currency: "USD",
             orderId,
             gateway: "checkout",
@@ -123,6 +128,9 @@ export async function POST(request: NextRequest) {
             offerCode: normalizedOfferCode || undefined,
             verifyAttempts: 0,
             lastCheckedAt: 0,
+            geoCountry: country || undefined,
+            geoMultiplier: multiplier,
+            baseAmount,
             createdAt: Date.now(),
         });
 
@@ -135,7 +143,10 @@ export async function POST(request: NextRequest) {
                 source: "checkout_api",
                 metadata: {
                     baseAmount,
+                    geoAdjustedAmount,
                     totalAmount,
+                    geoCountry: country || undefined,
+                    geoMultiplier: multiplier,
                     bonusDays,
                     offerCode: normalizedOfferCode || undefined,
                     orderId,

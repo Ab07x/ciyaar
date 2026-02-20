@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import crypto from "crypto";
 import connectDB from "@/lib/mongodb";
 import { Settings, Payment, ConversionEvent } from "@/lib/models";
+import { getRequestGeo } from "@/lib/geo-lookup";
 
 export async function POST(request: NextRequest) {
     try {
@@ -47,6 +48,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Apply geo-based pricing multiplier
+        const { country, multiplier } = await getRequestGeo(request);
+        const finalAmount = Math.round(baseAmount * multiplier * 100) / 100;
+
         // Generate unique order ID
         const orderNonce = crypto.randomBytes(4).toString("hex").toUpperCase();
         const orderId = `FBJ-STRIPE-${plan.toUpperCase()}-${Date.now()}-${orderNonce}`;
@@ -77,7 +82,7 @@ export async function POST(request: NextRequest) {
                                 ? `${planLabels[plan]} + ${bonusDays} bonus days`
                                 : planLabels[plan] || plan,
                         },
-                        unit_amount: Math.round(baseAmount * 100), // Stripe uses cents
+                        unit_amount: Math.round(finalAmount * 100), // Stripe uses cents
                     },
                     quantity: 1,
                 },
@@ -104,7 +109,7 @@ export async function POST(request: NextRequest) {
         await Payment.create({
             deviceId,
             plan,
-            amount: baseAmount,
+            amount: finalAmount,
             currency: "USD",
             orderId,
             gateway: "stripe",
@@ -114,6 +119,9 @@ export async function POST(request: NextRequest) {
             offerCode: normalizedOfferCode || undefined,
             verifyAttempts: 0,
             lastCheckedAt: 0,
+            geoCountry: country || undefined,
+            geoMultiplier: multiplier,
+            baseAmount,
             createdAt: Date.now(),
         });
 
@@ -126,6 +134,9 @@ export async function POST(request: NextRequest) {
                 source: "stripe_checkout",
                 metadata: {
                     baseAmount,
+                    finalAmount,
+                    geoCountry: country || undefined,
+                    geoMultiplier: multiplier,
                     bonusDays,
                     offerCode: normalizedOfferCode || undefined,
                     orderId,
