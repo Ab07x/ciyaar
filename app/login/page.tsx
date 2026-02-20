@@ -4,17 +4,23 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
-import { Loader2 } from "lucide-react";
+import { Loader2, Ticket, CheckCircle2 } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { loginWithEmail, email: userEmail, isLoading: userLoading } = useUser();
+    const { loginWithEmail, email: userEmail, isLoading: userLoading, deviceId } = useUser();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+
+    // Code redemption state
+    const [redeemCode, setRedeemCode] = useState("");
+    const [isRedeeming, setIsRedeeming] = useState(false);
+    const [redeemError, setRedeemError] = useState("");
+    const [redeemSuccess, setRedeemSuccess] = useState("");
 
     // If already logged in, redirect to home
     useEffect(() => {
@@ -43,6 +49,58 @@ export default function LoginPage() {
 
         // On success, redirect to home
         router.push("/");
+    };
+
+    const handleRedeemCode = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setRedeemError("");
+        setRedeemSuccess("");
+
+        if (!redeemCode.trim()) {
+            setRedeemError("Fadlan geli code-ka.");
+            return;
+        }
+
+        if (!deviceId) {
+            setRedeemError("Device ID lama helin. Fadlan refresh samee.");
+            return;
+        }
+
+        setIsRedeeming(true);
+        try {
+            const res = await fetch("/api/redemptions/redeem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    code: redeemCode.trim().toUpperCase(),
+                    deviceId,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                setRedeemError(data.error || "Code-ku waa khalad.");
+                setIsRedeeming(false);
+                return;
+            }
+
+            setRedeemSuccess(
+                data.trial
+                    ? `Trial waa la furay! ${data.trialHours} saac.`
+                    : `Premium waa la furay! ${data.durationDays} maalmood.`
+            );
+            setRedeemCode("");
+            setIsRedeeming(false);
+
+            // Redirect to home after 2 seconds
+            setTimeout(() => {
+                router.push("/");
+            }, 2000);
+        } catch {
+            setRedeemError("Khalad ayaa dhacay. Fadlan isku day mar kale.");
+            setIsRedeeming(false);
+        }
     };
 
     return (
@@ -135,8 +193,60 @@ export default function LoginPage() {
                 </Link>
             </div>
 
+            {/* Divider */}
+            <div className="mt-8 mb-6 flex items-center gap-3 w-full max-w-[420px] relative z-10">
+                <div className="flex-1 h-px bg-white/10"></div>
+                <span className="text-gray-500 text-xs font-bold uppercase tracking-wide">Ama</span>
+                <div className="flex-1 h-px bg-white/10"></div>
+            </div>
+
+            {/* Code Redemption Box */}
+            <div className="w-full max-w-[420px] bg-[#0e1628] rounded-xl border border-[#1e293b] p-8 shadow-2xl relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                    <Ticket size={20} className="text-[#007bff]" />
+                    <h2 className="text-[15px] font-black text-white uppercase tracking-wide">Redeem Code</h2>
+                </div>
+                <p className="text-xs text-gray-400 mb-5">Haddii aad leedahay premium code, halkan ku geli.</p>
+
+                <form onSubmit={handleRedeemCode} className="flex flex-col">
+                    <div className="flex flex-col mb-4">
+                        <label className="text-[13px] font-bold text-gray-300 mb-2">Premium Code</label>
+                        <input
+                            type="text"
+                            value={redeemCode}
+                            onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                            placeholder="XXXX-XXXX-XXXX"
+                            className="bg-[#131b2f] border border-transparent focus:border-[#007bff] rounded-md px-4 py-3.5 text-white outline-none transition-colors text-sm font-mono tracking-wider uppercase"
+                            disabled={isRedeeming}
+                        />
+                    </div>
+
+                    {redeemError && (
+                        <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded text-center font-bold">
+                            {redeemError}
+                        </div>
+                    )}
+
+                    {redeemSuccess && (
+                        <div className="mb-4 bg-green-500/10 border border-green-500/20 text-green-500 text-sm p-3 rounded flex items-center gap-2 font-bold">
+                            <CheckCircle2 size={16} />
+                            {redeemSuccess}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={isRedeeming}
+                        className="w-full bg-[#007bff] hover:bg-[#0056b3] disabled:opacity-50 disabled:hover:bg-[#007bff] py-3.5 rounded-sm font-black text-[15px] tracking-wide text-white uppercase transition-all shadow-[0_0_15px_rgba(0,123,255,0.3)] hover:shadow-[0_0_25px_rgba(0,123,255,0.5)] flex items-center justify-center gap-2"
+                    >
+                        {isRedeeming ? <Loader2 size={18} className="animate-spin" /> : <Ticket size={18} />}
+                        {isRedeeming ? "ACTIVATING..." : "ACTIVATE CODE"}
+                    </button>
+                </form>
+            </div>
+
             {/* Support */}
-            <div className="mt-5 relative z-10">
+            <div className="mt-8 relative z-10">
                 <a href="mailto:support@fanbroj.net" className="text-gray-500 hover:text-white text-xs transition-colors">
                     support@fanbroj.net
                 </a>
