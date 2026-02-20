@@ -335,6 +335,8 @@ export interface IPayment extends Document {
     lastGatewayMessage?: string;
     failureReason?: string;
     lastGatewayPayload?: Record<string, unknown>;
+    stripeSessionId?: string;
+    stripePaymentIntentId?: string;
     subscriptionId?: string;
     createdAt: number;
     verifiedAt?: number;
@@ -367,6 +369,8 @@ const PaymentSchema = new Schema<IPayment>(
         lastGatewayMessage: String,
         failureReason: String,
         lastGatewayPayload: Schema.Types.Mixed,
+        stripeSessionId: { type: String, index: true },
+        stripePaymentIntentId: String,
         subscriptionId: String,
         createdAt: { type: Number, required: true },
         verifiedAt: Number,

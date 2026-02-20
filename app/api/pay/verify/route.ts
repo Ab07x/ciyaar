@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
 import connectDB from "@/lib/mongodb";
 import { Payment, Device, Subscription, ConversionEvent, Redemption } from "@/lib/models";
 import { getOrCreateAutoPaymentRedemption } from "@/lib/auto-redemption";
@@ -27,6 +28,8 @@ type PaymentRecord = {
     plan: "match" | "weekly" | "monthly" | "yearly";
     bonusDays?: number;
     sifaloSid?: string;
+    gateway?: string;
+    stripeSessionId?: string;
     accessCode?: string;
     accessCodeId?: string;
     subscriptionId?: string;
@@ -169,7 +172,127 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // If we don't have a sid, we can't verify yet
+        // Stripe payment verification
+        if (payment.gateway === "stripe" && payment.stripeSessionId) {
+            if (!process.env.STRIPE_SECRET_KEY) {
+                return NextResponse.json(
+                    { error: "Stripe not configured" },
+                    { status: 500 }
+                );
+            }
+
+            const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+            const session = await stripeClient.checkout.sessions.retrieve(payment.stripeSessionId);
+
+            await Payment.findOneAndUpdate(
+                { orderId: payment.orderId },
+                {
+                    lastCheckedAt: Date.now(),
+                    verifyAttempts: Number(payment.verifyAttempts || 0) + 1,
+                    lastGatewayStatus: session.payment_status || "",
+                }
+            );
+
+            if (session.payment_status === "paid") {
+                // Payment successful — activate subscription
+                const device = await Device.findOne({ deviceId }).lean<DeviceRecord | null>();
+
+                if (!device) {
+                    return NextResponse.json(
+                        { error: "Device not found, please contact support" },
+                        { status: 404 }
+                    );
+                }
+
+                const userId = device.userId || device._id;
+                const plan = payment.plan as "match" | "weekly" | "monthly" | "yearly";
+                const baseDurationDays = PLAN_DURATIONS[plan] || 30;
+                const bonusDays = Math.max(0, Number(payment.bonusDays) || 0);
+                const durationDays = baseDurationDays + bonusDays;
+                const maxDevices = PLAN_DEVICES[plan] || 1;
+
+                const access = await getOrCreateAutoPaymentRedemption({
+                    paymentOrderId: payment.orderId,
+                    userId: String(userId),
+                    plan,
+                    durationDays,
+                    maxDevices,
+                });
+
+                const subscription = await Subscription.create({
+                    userId,
+                    plan,
+                    durationDays,
+                    maxDevices,
+                    status: "active",
+                    activatedAt: Date.now(),
+                    expiresAt: Date.now() + durationDays * 24 * 60 * 60 * 1000,
+                    codeId: access.redemptionId,
+                    createdAt: Date.now(),
+                });
+
+                await Payment.findOneAndUpdate(
+                    { orderId: payment.orderId },
+                    {
+                        status: "success",
+                        stripePaymentIntentId: typeof session.payment_intent === "string"
+                            ? session.payment_intent
+                            : "",
+                        paymentType: "stripe_card",
+                        userId,
+                        subscriptionId: subscription._id,
+                        accessCode: access.code,
+                        accessCodeId: access.redemptionId,
+                        completedAt: Date.now(),
+                        failureReason: "",
+                    }
+                );
+
+                try {
+                    await ConversionEvent.create({
+                        eventName: "purchase_completed",
+                        userId: String(userId),
+                        deviceId,
+                        pageType: "payment",
+                        plan,
+                        source: "stripe_verify_api",
+                        metadata: {
+                            orderId: payment.orderId,
+                            stripeSessionId: payment.stripeSessionId,
+                            bonusDays,
+                            durationDays,
+                        },
+                        date: new Date().toISOString().slice(0, 10),
+                        createdAt: Date.now(),
+                    });
+                } catch (eventError) {
+                    console.error("Stripe verify conversion event write failed:", eventError);
+                }
+
+                return NextResponse.json({
+                    success: true,
+                    message: "Payment verified and subscription activated!",
+                    plan,
+                    expiresIn: `${durationDays} days`,
+                    code: access.code,
+                });
+            } else if (session.payment_status === "unpaid") {
+                return NextResponse.json({
+                    success: false,
+                    message: "Payment is still pending",
+                    status: "pending",
+                });
+            } else {
+                return NextResponse.json({
+                    success: false,
+                    message: "Payment session expired or failed",
+                    status: "failed",
+                });
+            }
+        }
+
+        // If we don't have a sid, we can't verify yet (Sifalo payments)
         const verifySid = sid || payment.sifaloSid;
         if (!verifySid) {
             return NextResponse.json({
