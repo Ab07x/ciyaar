@@ -26,7 +26,7 @@ export interface HomePageProps {
 export default function HomeClient({ initialMovies, initialMatches, initialTrending, initialHeroSlides }: HomePageProps) {
   const { data: matchData } = useSWR("/api/matches", fetcher, { fallbackData: initialMatches });
   const { data: moviesData } = useSWR("/api/movies?isPublished=true&pageSize=1000", fetcher, { fallbackData: initialMovies });
-  const { data: heroSlidesData } = useSWR("/api/hero-slides?auto=true", fetcher, { fallbackData: initialHeroSlides });
+  const { data: heroSlidesData } = useSWR("/api/hero-slides?auto=true", fetcher, { fallbackData: initialHeroSlides, refreshInterval: 4 * 60 * 60 * 1000 });
   const { data: trendingMovies } = useSWR("/api/movies?sort=views&limit=10&isPublished=true", fetcher, { fallbackData: initialTrending });
   const { data: seriesData } = useSWR("/api/series?isPublished=true", fetcher);
 
@@ -55,11 +55,11 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
   // Extract movies array from paginated response
   const movies = moviesData?.movies || moviesData || [];
 
-  // Hero movies: auto-rotated slides (changes every 24hrs), fallback to latest movies
+  // Hero movies: auto-rotated slides (changes every 4hrs), fallback to trending 50+ views
   const heroMovies = (heroSlidesData && heroSlidesData.length > 0)
     ? heroSlidesData.map((s: any) => s.content || { title: s.title, backdropUrl: s.imageUrl, slug: s.contentId, posterUrl: s.imageUrl })
     : (movies || [])
-      .filter((m: any) => m.posterUrl)
+      .filter((m: any) => m.backdropUrl && (m.views || 0) >= 50)
       .sort((a: any, b: any) => (b.views || 0) - (a.views || 0))
       .slice(0, 8);
 

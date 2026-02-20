@@ -125,18 +125,21 @@ export default function LoginPage() {
                 </form>
             </div>
 
-            {/* Support Link */}
-            <div className="mt-8 relative z-10">
-                <a href="mailto:support@fanbroj.net" className="text-gray-400 hover:text-white text-sm transition-colors">
-                    support@fanbroj.net
-                </a>
+            {/* Sign Up CTA — clear and prominent for mobile */}
+            <div className="mt-6 relative z-10 text-center">
+                <p className="text-gray-400 text-sm mb-2">
+                    Account ma haysatid?
+                </p>
+                <Link href="/pricing" className="inline-block px-6 py-2.5 bg-white/10 border border-white/10 text-white font-bold text-sm rounded-lg hover:bg-white/15 transition-all">
+                    Samee Account — Dooro Plan
+                </Link>
             </div>
 
-            {/* Additional "Sign Up via Plans" Link (Since users arriving here without account need guidance) */}
-            <div className="mt-4 relative z-10">
-                <p className="text-gray-500 text-sm">
-                    Kuma haysatid account? <Link href="/pricing" className="text-[#007bff] hover:underline font-bold">Sign Up (Dooro Plan)</Link>
-                </p>
+            {/* Support */}
+            <div className="mt-5 relative z-10">
+                <a href="mailto:support@fanbroj.net" className="text-gray-500 hover:text-white text-xs transition-colors">
+                    support@fanbroj.net
+                </a>
             </div>
 
         </div>

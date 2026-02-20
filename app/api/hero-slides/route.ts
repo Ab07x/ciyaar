@@ -9,52 +9,114 @@ export async function GET(req: NextRequest) {
         const activeOnly = searchParams.get("activeOnly");
         const auto = searchParams.get("auto");
 
-        // Auto-rotate mode: return 8 random published movies with backdrops
-        // Rotates every 6 hours for fresh engagement (4 rotations per day)
+        // Auto-rotate mode: return 8 mixed hero slides
+        // Rotates every 4 hours (6 rotations per day)
+        // Mix: admin-featured (max 3) + new movies (last 14d) + trending (50+ views) — randomised
         if (auto === "true") {
             const now = new Date();
-            const block = Math.floor(now.getHours() / 6); // 0-3 (every 6hrs)
-            const today = now.toISOString().split("T")[0]; // YYYY-MM-DD
-            const seedNum = today.split("-").join("").slice(-6) + String(block);
+            const block = Math.floor(now.getHours() / 4); // 0-5 (every 4hrs)
+            const daysSinceEpoch = Math.floor(now.getTime() / 86400000);
+            const seed = daysSinceEpoch * 6 + block; // unique per 4-hour window
 
-            // First, get manually featured movies (admin-selected)
+            // Seeded pseudo-random (mulberry32) for deterministic shuffle per block
+            function seededRandom(s: number) {
+                return function () {
+                    s |= 0; s = s + 0x6D2B79F5 | 0;
+                    let t = Math.imul(s ^ s >>> 15, 1 | s);
+                    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                };
+            }
+            const rand = seededRandom(seed);
+
+            function shuffle<T>(arr: T[]): T[] {
+                const a = [...arr];
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(rand() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            }
+
+            const MAX_SLIDES = 8;
+            const MAX_FEATURED = 3; // cap admin-featured so rotation stays fresh
+            const MIN_VIEWS_TRENDING = 50;
+            const NEW_MOVIE_DAYS = 14;
+
+            const usedSlugs = new Set<string>();
+            const finalMovies: any[] = [];
+
+            // 1) Admin-featured (max 3, shuffled so they rotate position)
             const featuredMovies = await Movie.find({
                 isPublished: true,
                 isFeatured: true,
                 backdropUrl: { $exists: true, $ne: "" },
             })
-                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium featuredOrder")
-                .sort({ featuredOrder: 1 })
+                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium views overview overviewSomali createdAt featuredOrder")
                 .lean();
 
-            const MAX_SLIDES = 8;
-            let finalMovies: any[] = [...featuredMovies].slice(0, MAX_SLIDES);
-
-            // Fill remaining slots with random popular movies if needed
-            if (finalMovies.length < MAX_SLIDES) {
-                const featuredSlugs = new Set(finalMovies.map((m: any) => m.slug));
-                const otherMovies = await Movie.find({
-                    isPublished: true,
-                    isFeatured: { $ne: true },
-                    backdropUrl: { $exists: true, $ne: "" },
-                })
-                    .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium")
-                    .lean();
-
-                // Deterministic shuffle for non-featured
-                const shuffled = otherMovies
-                    .filter((m: any) => !featuredSlugs.has(m.slug))
-                    .map((m: any, i: number) => ({
-                        ...m,
-                        _sortKey: ((i + 1) * parseInt(seedNum)) % (otherMovies.length + 1),
-                    }))
-                    .sort((a: any, b: any) => a._sortKey - b._sortKey)
-                    .slice(0, MAX_SLIDES - finalMovies.length);
-
-                finalMovies = [...finalMovies, ...shuffled];
+            const shuffledFeatured = shuffle(featuredMovies).slice(0, MAX_FEATURED);
+            for (const m of shuffledFeatured) {
+                finalMovies.push(m);
+                usedSlugs.add(m.slug);
             }
 
-            const autoSlides = finalMovies.map((m: any, i: number) => ({
+            // 2) New movies (uploaded in last 14 days with a backdrop)
+            const cutoffMs = now.getTime() - NEW_MOVIE_DAYS * 86400000;
+            const newMovies = await Movie.find({
+                isPublished: true,
+                backdropUrl: { $exists: true, $ne: "" },
+                createdAt: { $gte: cutoffMs },
+            })
+                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium views overview overviewSomali createdAt")
+                .sort({ createdAt: -1 })
+                .limit(20)
+                .lean();
+
+            const newFiltered = shuffle(newMovies.filter((m: any) => !usedSlugs.has(m.slug)));
+            const newSlots = Math.min(2, MAX_SLIDES - finalMovies.length, newFiltered.length);
+            for (let i = 0; i < newSlots; i++) {
+                finalMovies.push(newFiltered[i]);
+                usedSlugs.add(newFiltered[i].slug);
+            }
+
+            // 3) Trending movies (50+ views, randomly picked)
+            const trendingMovies = await Movie.find({
+                isPublished: true,
+                backdropUrl: { $exists: true, $ne: "" },
+                views: { $gte: MIN_VIEWS_TRENDING },
+            })
+                .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium views overview overviewSomali createdAt")
+                .lean();
+
+            const trendingFiltered = shuffle(trendingMovies.filter((m: any) => !usedSlugs.has(m.slug)));
+            const trendingSlots = Math.min(MAX_SLIDES - finalMovies.length, trendingFiltered.length);
+            for (let i = 0; i < trendingSlots; i++) {
+                finalMovies.push(trendingFiltered[i]);
+                usedSlugs.add(trendingFiltered[i].slug);
+            }
+
+            // 4) Fill any remaining with random published movies
+            if (finalMovies.length < MAX_SLIDES) {
+                const filler = await Movie.find({
+                    isPublished: true,
+                    backdropUrl: { $exists: true, $ne: "" },
+                    slug: { $nin: [...usedSlugs] },
+                })
+                    .select("title titleSomali slug posterUrl backdropUrl genres rating releaseDate isDubbed isPremium views overview overviewSomali createdAt")
+                    .lean();
+
+                const shuffledFiller = shuffle(filler);
+                const fillerSlots = Math.min(MAX_SLIDES - finalMovies.length, shuffledFiller.length);
+                for (let i = 0; i < fillerSlots; i++) {
+                    finalMovies.push(shuffledFiller[i]);
+                }
+            }
+
+            // Final shuffle so featured/new/trending aren't always in the same position
+            const result = shuffle(finalMovies);
+
+            const autoSlides = result.map((m: any, i: number) => ({
                 _id: `auto-${i}`,
                 contentType: "movie",
                 contentId: m.slug,
@@ -68,7 +130,7 @@ export async function GET(req: NextRequest) {
             }));
 
             return NextResponse.json(autoSlides, {
-                headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
+                headers: { "Cache-Control": "no-store" },
             });
         }
 

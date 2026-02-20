@@ -27,6 +27,7 @@ import {
     BarChart3,
     Bug,
     Users,
+    UserPlus,
 } from "lucide-react";
 
 const navItems = [
@@ -43,6 +44,7 @@ const navItems = [
     { href: "/kism/hero", label: "Hero Slider", icon: Image },
     { href: "/kism/categories", label: "Categories", icon: Palette },
     { href: "/kism/codes", label: "Codes", icon: Ticket },
+    { href: "/kism/add-user", label: "Add User", icon: UserPlus },
     { href: "/kism/users", label: "Users", icon: Users },
     { href: "/kism/subscribers", label: "Subscribers", icon: Smartphone },
     { href: "/kism/payments", label: "Payments Debug", icon: Bug },

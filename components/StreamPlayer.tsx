@@ -1262,14 +1262,14 @@ export function StreamPlayer({
     const isDailyCapPaywall = conversionGateEnabled && !!conversionGate?.reachedDailyLimit;
     const isMoviePreviewPaywall = conversionGateEnabled && !isDailyCapPaywall;
     const basePaywallTitle = conversionGate?.paywallTitle || (isDailyCapPaywall
-        ? "Xadka FREE-ga maanta waa dhammaaday 🚫"
+        ? "Ramadan dhan daawo bilaa xayeysiis"
         : isMoviePreviewPaywall
-            ? "Preview-ga bilaashka ah waa dhammaaday"
+            ? "Si aad u sii wadato, qaado Premium Ramadan"
             : "Free Preview Ended");
     const basePaywallMessage = conversionGate?.paywallMessage || (isDailyCapPaywall
-        ? `Waxaad isticmaashay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 3} free views maanta. VIP hadda fur si aad u daawato si aan xad lahayn.`
+        ? `Waxaad isticmaashay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 3} free maanta. Fur VIP hadda — bilaa xayeysiis, HD, Sports Live.`
         : isMoviePreviewPaywall
-            ? `Si aad u sii wadato daawashada "${conversionGate?.contentLabel || "filimkan"}": Upgrade to VIP 💎`
+            ? `Si aad u sii wadato "${conversionGate?.contentLabel || "filimkan"}" — bilaa xayeysiis, HD quality. Iibso VIP hadda.`
             : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`);
     const highIntentNudge = highIntentReason === "watch_streak"
         ? "Waxaad daawatay 2+ content 24 saac gudahood. VIP ayaa kuu fiican si daawashadu u socoto."
@@ -1278,14 +1278,14 @@ export function StreamPlayer({
             : highIntentReason === "lock_repeat"
                 ? "Waxaad gaartay lock dhowr jeer maanta. Fur VIP si aan laguu joojin mar kale."
                 : "";
-    const paywallTitle = highIntentReason ? "Waxaad tahay user firfircoon 👀" : basePaywallTitle;
+    const paywallTitle = highIntentReason ? "Ramadan offer — Fur VIP hadda" : basePaywallTitle;
     const paywallMessage = highIntentNudge
         ? `${basePaywallMessage} ${highIntentNudge}`
         : basePaywallMessage;
     const primaryPaywallCta = conversionGate?.primaryCtaLabel
         || (highIntentReason
-            ? "FUR VIP HADDA"
-            : (isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO VIP HADDA" : "Unlock for $0.25");
+            ? "FUR VIP — RAMADAN SPECIAL"
+            : (isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO HADDA — UNLOCK" : "Unlock for $0.25");
     const previewQualityLabel = conversionGate?.qualityCap ? `${conversionGate.qualityCap}p` : "Free";
     const previewCountdownSeconds = Math.max(0, previewRemainingSeconds ?? Math.ceil(moviePreviewLimit));
     const whatsappSupportNumber = String((settings as any)?.whatsappNumber || "+252618274188").replace(/\D/g, "");
@@ -1377,6 +1377,7 @@ export function StreamPlayer({
                                         WhatsApp Support
                                     </a>
                                 </div>
+                                <p className="text-[10px] text-gray-500 mt-2">Secure Payment &bull; Instant Unlock &bull; 24/7 Support</p>
                             </div>
                         </div>
                     </div>
@@ -1598,6 +1599,7 @@ export function StreamPlayer({
                                     WhatsApp Support
                                 </a>
                             </div>
+                            <p className="text-[10px] text-gray-500 mt-2">Secure Payment &bull; Instant Unlock &bull; 24/7 Support</p>
                         </div>
                     </div>
                 </div>

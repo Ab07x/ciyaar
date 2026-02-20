@@ -322,11 +322,13 @@ function CheckoutHub({
 
                                 {/* Order Summary Right Side */}
                                 <div className="flex-1 w-full flex flex-col justify-center">
-                                    <p className="text-sm font-medium text-gray-400 mb-4 whitespace-nowrap">
-                                        You'll be redirected to pay at our<br />
-                                        <span className="text-white">Secure Processing Partner:</span><br />
-                                        <span className="font-bold text-gray-500 uppercase mt-1 block">{paymentMethod === "stripe" ? "Stripe" : "Sifalo"}</span>
-                                    </p>
+                                    {/* Trust badges */}
+                                    <div className="grid grid-cols-2 gap-2 mb-5">
+                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Lock size={12} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
+                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Shield size={12} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : "Sifalo"} Secure</div>
+                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><CreditCard size={12} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
+                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Crown size={12} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={handlePay}
@@ -336,6 +338,7 @@ function CheckoutHub({
                                         {isPaying ? <Loader2 size={24} className="animate-spin" /> : null}
                                         {isPaying ? "PROCESSING" : `PAY $${selectedPlanPrice.toFixed(2)}`}
                                     </button>
+                                    <p className="text-[11px] text-gray-500 text-center mt-3">Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna.</p>
                                 </div>
                             </div>
                         </section>

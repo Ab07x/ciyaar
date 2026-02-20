@@ -168,8 +168,8 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
             {isPreviewMode && (
                 <div className="bg-[#061a2d]/95 border border-[#1b4d86] rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                     <div className="flex-1 min-w-0">
-                        <p className="text-white font-black text-sm sm:text-base">Ciyaarta sii wad?</p>
-                        <p className="text-gray-300 text-xs sm:text-sm">Iibso Match Pass ama nala hadal WhatsApp si isla markiiba laguu furo.</p>
+                        <p className="text-white font-black text-sm sm:text-base">Ramadan — Ciyaarta sii wad</p>
+                        <p className="text-gray-300 text-xs sm:text-sm">Iibso Match Pass hadda — isla markiiba furmaa. WhatsApp 24/7.</p>
                     </div>
                     <div className="flex gap-2 sm:gap-3">
                         <Link
