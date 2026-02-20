@@ -40,6 +40,9 @@ const nextConfig = {
   // Static generation configuration
   staticPageGenerationTimeout: 120, // 2 minutes timeout for static pages
 
+  // Fix module resolution for recharts with Turbopack in Next.js 16
+  transpilePackages: ['recharts'],
+
   // Fix workspace root warning
   outputFileTracingRoot: process.cwd(),
 
