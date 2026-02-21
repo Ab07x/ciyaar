@@ -338,6 +338,7 @@ export interface IPayment extends Document {
     stripeSessionId?: string;
     stripePaymentIntentId?: string;
     paypalTxId?: string;
+    mpesaTxId?: string;
     subscriptionId?: string;
     createdAt: number;
     verifiedAt?: number;
@@ -373,6 +374,7 @@ const PaymentSchema = new Schema<IPayment>(
         stripeSessionId: { type: String, index: true },
         stripePaymentIntentId: String,
         paypalTxId: { type: String, index: true },
+        mpesaTxId: { type: String, index: true },
         subscriptionId: String,
         createdAt: { type: Number, required: true },
         verifiedAt: Number,

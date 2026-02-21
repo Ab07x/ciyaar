@@ -18,6 +18,7 @@ type LeanPayment = {
     gateway?: string;
     sifaloSid?: string;
     paypalTxId?: string;
+    mpesaTxId?: string;
     bonusDays?: number;
     offerCode?: string;
     accessCode?: string;

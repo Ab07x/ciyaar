@@ -158,8 +158,9 @@ function CheckoutHub({
     const [confirmPassword, setConfirmPassword] = useState("");
 
     // Payment + loading state
-    const [paymentMethod, setPaymentMethod] = useState<"sifalo" | "stripe" | "paypal">("stripe");
+    const [paymentMethod, setPaymentMethod] = useState<"sifalo" | "stripe" | "paypal" | "mpesa">("stripe");
     const [paypalTxId, setPaypalTxId] = useState("");
+    const [mpesaTxId, setMpesaTxId] = useState("");
     const [isAuthLoading, setIsAuthLoading] = useState(false);
     const [isPaying, setIsPaying] = useState(false);
     const [authCompleted, setAuthCompleted] = useState(false);
@@ -214,6 +215,20 @@ function CheckoutHub({
         } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
     };
 
+    const startMpesaCheckout = async () => {
+        setStatusError(""); setStatusMessage(""); setIsPaying(true);
+        const txId = mpesaTxId.trim().toUpperCase();
+        if (!txId) { setStatusError("Please enter your M-Pesa Transaction Code."); setIsPaying(false); return; }
+        const bonusDays = selectedPlan.id === "monthly" ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0)) : 0;
+        const offerCode = bonusDays > 0 ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS") : undefined;
+        try {
+            const res = await fetch("/api/pay/mpesa/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", mpesaTxId: txId, offerBonusDays: bonusDays, offerCode }) });
+            const data = await res.json();
+            if (!res.ok || !data?.orderId) { setStatusError(data?.error || "M-Pesa submission failed. Please try again."); setIsPaying(false); return; }
+            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}`;
+        } catch { setStatusError("Submission error. Please try again."); setIsPaying(false); }
+    };
+
     const startPaypalCheckout = async () => {
         setStatusError(""); setStatusMessage(""); setIsPaying(true);
         const txId = paypalTxId.trim();
@@ -234,6 +249,8 @@ function CheckoutHub({
             await startStripeCheckout();
         } else if (paymentMethod === "paypal") {
             await startPaypalCheckout();
+        } else if (paymentMethod === "mpesa") {
+            await startMpesaCheckout();
         } else {
             await startSifaloCheckout();
         }
@@ -352,10 +369,46 @@ function CheckoutHub({
                                 {/* Trust badges */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2 text-sm text-gray-300"><Lock size={14} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Shield size={14} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : "Sifalo"} Secure</div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Shield size={14} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : paymentMethod === "mpesa" ? "M-Pesa" : "Sifalo"} Secure</div>
                                     <div className="flex items-center gap-2 text-sm text-gray-300"><CreditCard size={14} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
                                     <div className="flex items-center gap-2 text-sm text-gray-300"><Crown size={14} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
                                 </div>
+
+                                {/* M-Pesa step-by-step guide */}
+                                {paymentMethod === "mpesa" && (
+                                    <div className="rounded-xl border border-[#4CAF50]/30 bg-[#4CAF50]/5 p-5 space-y-4">
+                                        <p className="text-white font-bold text-base">How to pay with M-Pesa:</p>
+                                        <div className="space-y-3">
+                                            <div className="flex items-start gap-3">
+                                                <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
+                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                    Open M-Pesa and send{" "}
+                                                    <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
+                                                    to:<br />
+                                                    <span className="text-[#4CAF50] font-black text-base">0797415296</span>
+                                                    <span className="text-gray-400 text-sm"> — Abdullahi Ahmed</span>
+                                                </p>
+                                            </div>
+                                            <div className="flex items-start gap-3">
+                                                <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
+                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                    After sending, check your M-Pesa SMS for the <span className="text-white font-bold">Transaction Code</span> (looks like: QJK2ABCDE5)
+                                                </p>
+                                            </div>
+                                            <div className="flex items-start gap-3">
+                                                <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
+                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste the code below and click Submit</p>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={mpesaTxId}
+                                            onChange={e => setMpesaTxId(e.target.value.toUpperCase())}
+                                            placeholder="Paste M-Pesa code e.g. QJK2ABCDE5"
+                                            className="w-full bg-[#060b13] border-2 border-[#4CAF50]/40 focus:border-[#4CAF50] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono uppercase"
+                                        />
+                                    </div>
+                                )}
 
                                 {/* PayPal step-by-step guide */}
                                 {paymentMethod === "paypal" && (
@@ -400,11 +453,13 @@ function CheckoutHub({
                                     className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-black text-xl py-5 rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_24px_rgba(13,110,253,0.35)] hover:shadow-[0_0_36px_rgba(13,110,253,0.55)]"
                                 >
                                     {(isPaying || !geoReady) ? <Loader2 size={24} className="animate-spin" /> : null}
-                                    {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                    {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : paymentMethod === "mpesa" ? "SUBMIT M-PESA PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
                                 </button>
                                 <p className="text-sm text-gray-500 text-center">
                                     {paymentMethod === "paypal"
                                         ? "We will verify your payment within 30–40 minutes and activate your Premium."
+                                        : paymentMethod === "mpesa"
+                                        ? "We will verify your M-Pesa payment within 30–40 minutes and activate your Premium."
                                         : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
                                 </p>
                             </div>
@@ -423,7 +478,7 @@ function CheckoutHub({
                             <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
                                 <span className="text-4xl text-[#ff003e] font-light leading-none">02</span> Payment Method
                             </h2>
-                            <div className="grid grid-cols-1 xs:grid-cols-3 sm:grid-cols-3 gap-4 relative">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 relative">
 
                                 {/* Stripe Panel */}
                                 <div
@@ -494,6 +549,30 @@ function CheckoutHub({
                                             Manual Verification
                                             <br />
                                             <span className="opacity-70 text-[10px]">Send & submit TX ID</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* M-Pesa Panel */}
+                                <div
+                                    onClick={() => setPaymentMethod('mpesa')}
+                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'mpesa' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
+                                        }`}
+                                >
+                                    {paymentMethod === 'mpesa' && (
+                                        <div className="absolute top-0 right-0 left-0 h-1 bg-[#4CAF50]" />
+                                    )}
+                                    {paymentMethod === 'mpesa' && (
+                                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center ring-4 ring-[#060b13]">
+                                            <Check size={14} className="text-[#060b13] ml-2 mt-2" strokeWidth={4} />
+                                        </div>
+                                    )}
+                                    <div className="text-center z-10">
+                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">M-PESA</h3>
+                                        <p className="text-xs text-gray-400 italic font-medium">
+                                            Kenya Mobile Money
+                                            <br />
+                                            <span className="opacity-70 text-[10px]">Send & submit code</span>
                                         </p>
                                     </div>
                                 </div>

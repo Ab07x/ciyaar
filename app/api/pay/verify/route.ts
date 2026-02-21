@@ -181,6 +181,15 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        // M-Pesa manual payment — just report pending until admin approves
+        if (payment.gateway === "mpesa") {
+            return NextResponse.json({
+                success: false,
+                message: "M-Pesa payment received. We will verify within 30–40 minutes and activate your Premium.",
+                status: "pending",
+            });
+        }
+
         // Stripe payment verification
         if (payment.gateway === "stripe" && payment.stripeSessionId) {
             if (!process.env.STRIPE_SECRET_KEY) {
