@@ -123,36 +123,97 @@ export default async function MovieViewPage({ params }: PageProps) {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://fanbroj.net'}/api/movies/${dbSlug}`, { cache: 'no-store' });
     const movie = res.ok ? await res.json() : null;
 
-    // Movie JSON-LD structured data for Google rich results
+    // JSON-LD: @graph with Movie + VideoObject + BreadcrumbList
+    // VideoObject enables Google's video rich results (increases CTR significantly)
+    // BreadcrumbList enables breadcrumb display in SERPs
+    const movieName = movie ? (movie.titleSomali || movie.title) : "";
+    const year = movie?.releaseDate?.split("-")[0] || "";
+    const posterUrl = movie?.posterUrl?.startsWith("/")
+        ? `https://fanbroj.net${movie.posterUrl}`
+        : movie?.posterUrl || "";
+    const canonicalUrl = `https://fanbroj.net/movies/${dbSlug}-af-somali`;
+
     const jsonLd = movie ? {
         "@context": "https://schema.org",
-        "@type": "Movie",
-        name: movie.titleSomali || movie.title,
-        alternateName: movie.titleSomali ? movie.title : undefined,
-        description: movie.overviewSomali || movie.overview || "",
-        image: movie.posterUrl,
-        datePublished: movie.releaseDate,
-        genre: movie.genres || [],
-        inLanguage: movie.isDubbed ? "so" : "en",
-        url: `https://fanbroj.net/movies/${dbSlug}-af-somali`,
-        ...(movie.rating && movie.rating > 0 ? {
-            aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: movie.rating,
-                bestRating: 10,
-                ratingCount: movie.views || 1,
+        "@graph": [
+            // 1. Movie entity
+            {
+                "@type": "Movie",
+                "@id": `${canonicalUrl}#movie`,
+                name: movieName,
+                alternateName: movie.titleSomali ? movie.title : undefined,
+                description: movie.overviewSomali || movie.overview || "",
+                image: posterUrl || undefined,
+                datePublished: movie.releaseDate,
+                genre: movie.genres || [],
+                inLanguage: movie.isDubbed ? "so" : "en",
+                url: canonicalUrl,
+                ...(movie.rating && movie.rating > 0 ? {
+                    aggregateRating: {
+                        "@type": "AggregateRating",
+                        ratingValue: movie.rating,
+                        bestRating: 10,
+                        ratingCount: Math.max(movie.views || 1, 1),
+                    },
+                } : {}),
+                ...(movie.duration ? { duration: `PT${movie.duration}M` } : {}),
+                potentialAction: {
+                    "@type": "WatchAction",
+                    target: canonicalUrl,
+                },
+                provider: {
+                    "@type": "Organization",
+                    name: "Fanproj",
+                    url: "https://fanbroj.net",
+                },
             },
-        } : {}),
-        ...(movie.duration ? { duration: `PT${movie.duration}M` } : {}),
-        potentialAction: {
-            "@type": "WatchAction",
-            target: `https://fanbroj.net/movies/${dbSlug}-af-somali`,
-        },
-        provider: {
-            "@type": "Organization",
-            name: "Fanproj",
-            url: "https://fanbroj.net",
-        },
+            // 2. VideoObject — enables Google video rich results
+            {
+                "@type": "VideoObject",
+                "@id": `${canonicalUrl}#video`,
+                name: movie.isDubbed
+                    ? `${movieName} (${movie.title}) – Hindi Af Somali ${year}`
+                    : `${movieName} – Af Somali ${year}`,
+                description: movie.overviewSomali || movie.overview || `Daawo ${movieName} Af Somali bilaash HD – Fanproj.`,
+                thumbnailUrl: posterUrl || "https://fanbroj.net/og-preview.png",
+                uploadDate: movie.createdAt || movie.releaseDate || new Date().toISOString(),
+                ...(movie.duration ? { duration: `PT${movie.duration}M` } : {}),
+                embedUrl: canonicalUrl,
+                contentUrl: canonicalUrl,
+                inLanguage: "so",
+                publisher: {
+                    "@type": "Organization",
+                    name: "Fanproj",
+                    url: "https://fanbroj.net",
+                    logo: {
+                        "@type": "ImageObject",
+                        url: "https://fanbroj.net/icon-192.png",
+                    },
+                },
+                potentialAction: {
+                    "@type": "WatchAction",
+                    target: canonicalUrl,
+                },
+                ...(movie.rating && movie.rating > 0 ? {
+                    aggregateRating: {
+                        "@type": "AggregateRating",
+                        ratingValue: movie.rating,
+                        bestRating: 10,
+                        ratingCount: Math.max(movie.views || 1, 1),
+                    },
+                } : {}),
+            },
+            // 3. BreadcrumbList — shows "Fanproj > Movies > [Title]" in SERP
+            {
+                "@type": "BreadcrumbList",
+                "@id": `${canonicalUrl}#breadcrumb`,
+                itemListElement: [
+                    { "@type": "ListItem", position: 1, name: "Fanproj", item: "https://fanbroj.net" },
+                    { "@type": "ListItem", position: 2, name: "Hindi Af Somali", item: "https://fanbroj.net/hindi-af-somali" },
+                    { "@type": "ListItem", position: 3, name: movieName, item: canonicalUrl },
+                ],
+            },
+        ],
     } : null;
 
     return (

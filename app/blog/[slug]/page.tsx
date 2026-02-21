@@ -19,6 +19,11 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     return {
         title: `${title} – Wararka Kubadda Cagta | Fanbroj`,
         description,
+        keywords: [
+            ...(post.tags || []),
+            "wararka kubadda cagta", "fanbroj wararka", "ciyaar wararka",
+            "football somali news", "fanproj wararka",
+        ].filter(Boolean),
         alternates: {
             canonical: `https://fanbroj.net/blog/${slug}`,
         },

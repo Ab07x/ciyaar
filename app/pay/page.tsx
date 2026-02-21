@@ -29,7 +29,7 @@ const fetcherGeneric = (url: string) => fetch(url).then((r) => r.json());
 /* ────────────────────────────────────────────── */
 /*  PaymentVerifier                               */
 /* ────────────────────────────────────────────── */
-function PaymentVerifier({ sid, orderId, stripeSession }: { sid: string | null; orderId: string | null; stripeSession: string | null }) {
+function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: string | null; orderId: string | null; stripeSession: string | null; paymentType: string | null }) {
     const [status, setStatus] = useState<"verifying" | "success" | "failed" | "pending" | "error">("verifying");
     const [message, setMessage] = useState("");
     const [plan, setPlan] = useState("");
@@ -37,7 +37,11 @@ function PaymentVerifier({ sid, orderId, stripeSession }: { sid: string | null; 
     const [isCodeCopied, setIsCodeCopied] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
     const [autoPollCount, setAutoPollCount] = useState(0);
-    const [isManualPayment, setIsManualPayment] = useState(false);
+    // Initialise from URL param — eliminates the async race where auto-poll could start
+    // before the verify response sets isManualPayment. M-Pesa and PayPal are always manual.
+    const [isManualPayment, setIsManualPayment] = useState(
+        paymentType === "mpesa" || paymentType === "paypal"
+    );
     const MAX_AUTO_POLLS = 10;
     const hasQueryToken = Boolean(sid || orderId || stripeSession);
 
@@ -252,7 +256,8 @@ function CheckoutHub({
             const res = await fetch("/api/pay/mpesa/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", mpesaTxId: txId, offerBonusDays: bonusDays, offerCode }) });
             const data = await res.json();
             if (!res.ok || !data?.orderId) { setStatusError(data?.error || "M-Pesa submission failed. Please try again."); setIsPaying(false); return; }
-            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}`;
+            // type=mpesa tells PaymentVerifier this is a manual payment immediately (no async race)
+            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}&type=mpesa`;
         } catch { setStatusError("Submission error. Please try again."); setIsPaying(false); }
     };
 
@@ -266,7 +271,8 @@ function CheckoutHub({
             const res = await fetch("/api/pay/paypal/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", paypalTxId: txId, offerBonusDays: bonusDays, offerCode }) });
             const data = await res.json();
             if (!res.ok || !data?.orderId) { setStatusError(data?.error || "PayPal submission failed. Please try again."); setIsPaying(false); return; }
-            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}`;
+            // type=paypal tells PaymentVerifier this is a manual payment immediately (no async race)
+            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}&type=paypal`;
         } catch { setStatusError("Submission error. Please try again."); setIsPaying(false); }
     };
 
@@ -683,6 +689,7 @@ function PayPageContent() {
     const sid = searchParams.get("sid");
     const orderId = searchParams.get("order_id");
     const stripeSession = searchParams.get("stripe_session");
+    const paymentType = searchParams.get("type"); // "mpesa" | "paypal" | null
     const planParam = (searchParams.get("plan") || "").trim().toLowerCase();
     const authParam = (searchParams.get("auth") || "").trim().toLowerCase();
     const bonusDaysParam = Number(searchParams.get("bonusDays") || "0");
@@ -691,7 +698,7 @@ function PayPageContent() {
     const initialAuthMode: "signup" | "login" = authParam === "login" ? "login" : "signup";
     const initialBonusDays = Number.isFinite(bonusDaysParam) ? Math.min(7, Math.max(0, Math.floor(bonusDaysParam))) : 0;
 
-    if (sid || orderId || stripeSession) return <PaymentVerifier sid={sid} orderId={orderId} stripeSession={stripeSession} />;
+    if (sid || orderId || stripeSession) return <PaymentVerifier sid={sid} orderId={orderId} stripeSession={stripeSession} paymentType={paymentType} />;
     return <CheckoutHub initialPlanId={initialPlanId} initialAuthMode={initialAuthMode} initialBonusDays={initialBonusDays} initialOfferCode={offerCodeParam} />;
 }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Crown, Lock, Unlock, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import QuickCheckout from "@/components/QuickCheckout";
 
 interface PremiumLockCardProps {
     matchId: string;
@@ -25,6 +26,7 @@ export function PremiumLockCard({
 }: PremiumLockCardProps) {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [showCheckout, setShowCheckout] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,14 +87,20 @@ export function PremiumLockCard({
                 <Link href="/pricing" className="cta-gold flex-1 text-sm">
                     Iibso
                 </Link>
-                <Link
-                    href="/pricing"
+                <button
+                    onClick={() => setShowCheckout(true)}
                     className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] bg-accent-green text-black font-bold rounded-xl hover:brightness-110 transition-colors text-sm"
                 >
                     <Wallet size={16} />
                     Bixi Hadda
-                </Link>
+                </button>
             </div>
+
+            <QuickCheckout
+                isOpen={showCheckout}
+                onClose={() => setShowCheckout(false)}
+                defaultPlan="monthly"
+            />
         </div>
     );
 }

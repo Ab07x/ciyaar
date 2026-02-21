@@ -18,6 +18,17 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
     return {
         title: `${title} – Daawo Ciyaar Live | Fanbroj`,
         description,
+        keywords: [
+            `${match.teamA} vs ${match.teamB}`,
+            `${match.teamA} vs ${match.teamB} live`,
+            `${match.teamA} vs ${match.teamB} af somali`,
+            match.leagueName,
+            "ciyaar live", "daawo ciyaar live", "football live fanbroj",
+            "fanbroj live", "fanproj ciyaar", "live streaming af somali",
+        ].filter(Boolean),
+        alternates: {
+            canonical: `https://fanbroj.net/match/${slug}`,
+        },
         openGraph: {
             title: `${title} – Daawo Ciyaar Live | Fanbroj`,
             description,

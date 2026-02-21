@@ -14,10 +14,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 1. Static Routes - high-value pages first
     const staticRoutes: MetadataRoute.Sitemap = [
         { url: BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
+        // Content hub pages targeting high-impression keyword clusters (GSC data)
+        { url: `${BASE_URL}/hindi-af-somali`, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
+        { url: `${BASE_URL}/hindi-af-somali/2025`, lastModified: new Date(), changeFrequency: "daily", priority: 0.95 },
         { url: `${BASE_URL}/movies`, lastModified: new Date(), changeFrequency: "daily", priority: 0.95 },
         { url: `${BASE_URL}/series`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
         { url: `${BASE_URL}/ciyaar`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
         { url: `${BASE_URL}/live`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.85 },
+        { url: `${BASE_URL}/tags`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
         { url: `${BASE_URL}/search`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
         { url: `${BASE_URL}/pricing`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
         { url: `${BASE_URL}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 },
@@ -25,7 +29,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${BASE_URL}/apps`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
         { url: `${BASE_URL}/apps/android`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
         { url: `${BASE_URL}/apps/ios`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
-        { url: `${BASE_URL}/tags`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
         { url: `${BASE_URL}/requests`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.4 },
     ];
 

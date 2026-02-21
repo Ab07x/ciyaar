@@ -22,8 +22,10 @@ import { SitewideOfferBar } from "@/components/SitewideOfferBar";
 // SEO-optimized metadata targeting top search keywords
 export function generateMetadata(): Metadata {
   const siteName = "Fanproj";
-  const title = "Fanproj – Daawo Hindi Af Somali Cusub 2026 | Filimaan & Ciyaar Live | Fanbroj TV";
-  const description = "Fanproj (Fanbroj) waa goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub, Astaan Films, Saafi Films iyo ciyaaraha live tooska ah. Daawo filim Hindi af Somali oo bilaash ah HD – Fanproj NXT, Fanproj Play, Fanproj TV.";
+  // Title includes "FanprojNXT" explicitly to capture "fanprojnxt" (13K impressions, 12% CTR → target 40%+)
+  // Also targets "fanproj nxt" (41K impressions, 20% CTR → target 50%+)
+  const title = "Fanproj NXT – Daawo Hindi Af Somali Cusub 2026 | FanprojNXT | Filimaan & Ciyaar Live";
+  const description = "FanprojNXT (fanbroj.net) – Goobta rasmiga ah ee Fanproj. Daawo filimaha Hindi Af Somali cusub 2025 & 2026, Astaan Films, Saafi Films iyo ciyaaraha live HD bilaash. Fanproj NXT · Fanproj Play · Fanproj TV.";
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net"),
@@ -131,7 +133,14 @@ export default function RootLayout({
                   "@type": "Organization",
                   "@id": "https://fanbroj.net/#organization",
                   name: "Fanproj",
-                  alternateName: ["Fanbroj", "Fanproj NXT", "Fanproj TV", "Fanproj Play", "Fanbaroj"],
+                  // All brand variants people search — helps Google match all misspellings to this entity
+                  alternateName: [
+                    "Fanbroj", "Fanproj NXT", "FanprojNXT", "Fanprojnxt",
+                    "Fanproj TV", "Fanproj Play", "Fanproj Net", "Fanprojnet",
+                    "Fanbaroj", "Fanparoj", "Faanproj", "Fanbroj TV",
+                    "Fanproj Af Somali", "Fanbroj Af Somali",
+                    "Stream NXT", "StreamNXT",
+                  ],
                   url: "https://fanbroj.net",
                   logo: "https://fanbroj.net/icon-512.png",
                   description: "Fanproj - Goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub, Astaan Films, Saafi Films iyo ciyaaraha live.",

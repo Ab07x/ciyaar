@@ -9,9 +9,10 @@ import {
     ChevronUp, PictureInPicture2, X, Lock, Zap, Clock3, MessageCircle,
     Check, Shield, ChevronRight
 } from "lucide-react";
-import { PLAN_OPTIONS, getPlanPrice } from "@/lib/plans";
+import { PLAN_OPTIONS, getPlanPrice, type PlanId } from "@/lib/plans";
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
+import QuickCheckout from "@/components/QuickCheckout";
 import { BufferIndicator } from "./player/BufferIndicator";
 import { MobileGestures } from "./player/MobileGestures";
 
@@ -252,6 +253,8 @@ export function StreamPlayer({
 
     const [showPaywall, setShowPaywall] = useState(false);
     const [showPlanPicker, setShowPlanPicker] = useState(false);
+    const [showQuickCheckout, setShowQuickCheckout] = useState(false);
+    const [quickCheckoutPlan, setQuickCheckoutPlan] = useState<PlanId>("monthly");
     const [isGateHardLocked, setIsGateHardLocked] = useState(false);
     const hasTriggeredPreviewStartRef = useRef(false);
     const hasNotifiedGateLockRef = useRef(false);
@@ -1401,10 +1404,9 @@ export function StreamPlayer({
                                         <p className="text-xs text-gray-400 uppercase tracking-widest font-bold text-center mb-4">Dooro Qorshahaaga</p>
 
                                         {/* Monthly plan */}
-                                        <a
-                                            href="/pay?plan=monthly&auth=signup"
-                                            onClick={() => trackConversionEvent("plan_selected", { plan: "monthly", source: "paywall_picker" })}
-                                            className="flex items-center justify-between p-3 rounded-xl border-2 border-green-400 bg-green-500/10 hover:bg-green-500/20 transition-all mb-3 text-left"
+                                        <button
+                                            onClick={() => { trackConversionEvent("plan_selected", { plan: "monthly", source: "paywall_picker" }); setQuickCheckoutPlan("monthly"); setShowQuickCheckout(true); }}
+                                            className="flex items-center justify-between p-3 rounded-xl border-2 border-green-400 bg-green-500/10 hover:bg-green-500/20 transition-all mb-3 text-left w-full"
                                         >
                                             <div>
                                                 <div className="flex items-center gap-2">
@@ -1417,13 +1419,12 @@ export function StreamPlayer({
                                                 <p className="text-xl font-black text-white">${monthlyPrice.toFixed(2)}</p>
                                                 <ChevronRight size={16} className="text-green-400" />
                                             </div>
-                                        </a>
+                                        </button>
 
                                         {/* Yearly plan */}
-                                        <a
-                                            href="/pay?plan=yearly&auth=signup"
-                                            onClick={() => trackConversionEvent("plan_selected", { plan: "yearly", source: "paywall_picker" })}
-                                            className="flex items-center justify-between p-3 rounded-xl border-2 border-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all mb-4 text-left"
+                                        <button
+                                            onClick={() => { trackConversionEvent("plan_selected", { plan: "yearly", source: "paywall_picker" }); setQuickCheckoutPlan("yearly"); setShowQuickCheckout(true); }}
+                                            className="flex items-center justify-between p-3 rounded-xl border-2 border-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all mb-4 text-left w-full"
                                         >
                                             <div>
                                                 <div className="flex items-center gap-2">
@@ -1436,7 +1437,7 @@ export function StreamPlayer({
                                                 <p className="text-xl font-black text-white">${yearlyPrice.toFixed(2)}</p>
                                                 <ChevronRight size={16} className="text-yellow-400" />
                                             </div>
-                                        </a>
+                                        </button>
 
                                         {/* Trust line */}
                                         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-3 text-[10px] text-gray-500">
@@ -1684,10 +1685,9 @@ export function StreamPlayer({
                                 <>
                                     <p className="text-xs text-gray-400 uppercase tracking-widest font-bold text-center mb-4">Dooro Qorshahaaga</p>
 
-                                    <a
-                                        href="/pay?plan=monthly&auth=signup"
-                                        onClick={() => trackConversionEvent("plan_selected", { plan: "monthly", source: "paywall_picker" })}
-                                        className="flex items-center justify-between p-3 rounded-xl border-2 border-green-400 bg-green-500/10 hover:bg-green-500/20 transition-all mb-3 text-left"
+                                    <button
+                                        onClick={() => { trackConversionEvent("plan_selected", { plan: "monthly", source: "paywall_picker" }); setQuickCheckoutPlan("monthly"); setShowQuickCheckout(true); }}
+                                        className="flex items-center justify-between p-3 rounded-xl border-2 border-green-400 bg-green-500/10 hover:bg-green-500/20 transition-all mb-3 text-left w-full"
                                     >
                                         <div>
                                             <div className="flex items-center gap-2">
@@ -1700,12 +1700,11 @@ export function StreamPlayer({
                                             <p className="text-xl font-black text-white">${monthlyPrice.toFixed(2)}</p>
                                             <ChevronRight size={16} className="text-green-400" />
                                         </div>
-                                    </a>
+                                    </button>
 
-                                    <a
-                                        href="/pay?plan=yearly&auth=signup"
-                                        onClick={() => trackConversionEvent("plan_selected", { plan: "yearly", source: "paywall_picker" })}
-                                        className="flex items-center justify-between p-3 rounded-xl border-2 border-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all mb-4 text-left"
+                                    <button
+                                        onClick={() => { trackConversionEvent("plan_selected", { plan: "yearly", source: "paywall_picker" }); setQuickCheckoutPlan("yearly"); setShowQuickCheckout(true); }}
+                                        className="flex items-center justify-between p-3 rounded-xl border-2 border-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all mb-4 text-left w-full"
                                     >
                                         <div>
                                             <div className="flex items-center gap-2">
@@ -1718,7 +1717,7 @@ export function StreamPlayer({
                                             <p className="text-xl font-black text-white">${yearlyPrice.toFixed(2)}</p>
                                             <ChevronRight size={16} className="text-yellow-400" />
                                         </div>
-                                    </a>
+                                    </button>
 
                                     <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-3 text-[10px] text-gray-500">
                                         <span className="flex items-center gap-1"><Shield size={10} /> SSL Ammaan</span>
@@ -2055,6 +2054,17 @@ export function StreamPlayer({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <QuickCheckout
+                isOpen={showQuickCheckout}
+                onClose={() => setShowQuickCheckout(false)}
+                defaultPlan={quickCheckoutPlan}
+                onSuccess={() => {
+                    setShowQuickCheckout(false);
+                    setShowPaywall(false);
+                    setShowPlanPicker(false);
+                }}
+            />
         </div>
     );
 }
