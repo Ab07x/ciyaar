@@ -141,7 +141,9 @@ function CheckoutHub({
     initialOfferCode?: string;
 }) {
     const { data: settings } = useSWR("/api/settings", fetcher);
-    const { data: geo } = useSWR<{ country: string | null; multiplier: number }>("/api/geo", fetcherGeneric);
+    const { data: geo, isLoading: geoLoading } = useSWR<{ country: string | null; multiplier: number }>("/api/geo", fetcherGeneric);
+    // Don't fall back to 1 — wait until geo is confirmed to avoid price mismatch
+    const geoReady = !geoLoading && geo !== undefined;
     const geoMultiplier = geo?.multiplier ?? 1;
     const { deviceId, email, profile, signupWithEmail, loginWithEmail, updateAvatar } = useUser();
 
@@ -326,7 +328,10 @@ function CheckoutHub({
                                 <div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-gray-400 text-base font-medium">{selectedPlan.label}</span>
-                                        <span className="text-2xl font-bold text-white">${selectedPlanPrice.toFixed(2)}</span>
+                                        {geoReady
+                                            ? <span className="text-2xl font-bold text-white">${selectedPlanPrice.toFixed(2)}</span>
+                                            : <span className="w-20 h-7 rounded bg-white/10 animate-pulse inline-block" />
+                                        }
                                     </div>
                                     {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
                                         <div className="flex items-center justify-between mt-2">
@@ -337,7 +342,10 @@ function CheckoutHub({
                                     <div className="h-px bg-[#2a303c] my-4" />
                                     <div className="flex items-center justify-between">
                                         <span className="text-white font-bold text-lg">Total</span>
-                                        <span className="text-3xl font-black text-white">${selectedPlanPrice.toFixed(2)}</span>
+                                        {geoReady
+                                            ? <span className="text-3xl font-black text-white">${selectedPlanPrice.toFixed(2)}</span>
+                                            : <span className="w-24 h-9 rounded bg-white/10 animate-pulse inline-block" />
+                                        }
                                     </div>
                                 </div>
 
@@ -388,11 +396,11 @@ function CheckoutHub({
                                 <button
                                     type="button"
                                     onClick={handlePay}
-                                    disabled={isPaying || !canProceedToPayment}
+                                    disabled={isPaying || !canProceedToPayment || !geoReady}
                                     className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-black text-xl py-5 rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_24px_rgba(13,110,253,0.35)] hover:shadow-[0_0_36px_rgba(13,110,253,0.55)]"
                                 >
-                                    {isPaying ? <Loader2 size={24} className="animate-spin" /> : null}
-                                    {isPaying ? "PROCESSING..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                    {(isPaying || !geoReady) ? <Loader2 size={24} className="animate-spin" /> : null}
+                                    {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
                                 </button>
                                 <p className="text-sm text-gray-500 text-center">
                                     {paymentMethod === "paypal"

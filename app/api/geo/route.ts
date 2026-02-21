@@ -8,7 +8,8 @@ export async function GET(req: NextRequest) {
         { country, multiplier },
         {
             headers: {
-                "Cache-Control": "private, max-age=3600",
+                // Never cache — geo must be fresh per request so price is accurate
+                "Cache-Control": "no-store",
             },
         }
     );

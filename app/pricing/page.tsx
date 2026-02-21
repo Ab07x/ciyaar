@@ -46,7 +46,8 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
    ════════════════════════════════════════════ */
 export default function PricingPage() {
     const { data: settings } = useSWR("/api/settings", fetcher);
-    const { data: geo } = useSWR<{ country: string | null; multiplier: number }>("/api/geo", fetcher);
+    const { data: geo, isLoading: geoLoading } = useSWR<{ country: string | null; multiplier: number }>("/api/geo", fetcher);
+    const geoReady = !geoLoading && geo !== undefined;
     const geoMultiplier = geo?.multiplier ?? 1;
     const { isPremium } = useUser();
     const router = useRouter();
@@ -116,7 +117,7 @@ export default function PricingPage() {
                             onClick={() => handleSelectPlan("monthly")}
                             className="w-full sm:w-auto px-8 py-4 bg-white/10 text-white font-bold rounded-xl text-base hover:bg-white/15 transition-all border border-white/10"
                         >
-                            Iibso Monthly — ${monthlyPrice.toFixed(2)}
+                            {geoReady ? `Iibso Monthly — $${monthlyPrice.toFixed(2)}` : "Iibso Monthly..."}
                         </button>
                     </div>
 
@@ -152,15 +153,24 @@ export default function PricingPage() {
                                     {/* Price */}
                                     <div className="mb-1">
                                         <div className="flex items-baseline gap-1.5">
-                                            <span className="text-white/50 text-base font-bold">$$</span>
-                                            <span className="text-5xl font-black text-white">{yearlyPrice.toFixed(2)}</span>
+                                            <span className="text-white/50 text-base font-bold">$</span>
+                                            {geoReady
+                                                ? <span className="text-5xl font-black text-white">{yearlyPrice.toFixed(2)}</span>
+                                                : <span className="w-28 h-12 rounded bg-white/10 animate-pulse inline-block" />
+                                            }
                                         </div>
-                                        <p className="text-yellow-400/80 text-sm font-bold mt-1">= ${yearlyPerMonth.toFixed(2)} bishii</p>
+                                        {geoReady && <p className="text-yellow-400/80 text-sm font-bold mt-1">= ${yearlyPerMonth.toFixed(2)} bishii</p>}
                                     </div>
                                     {/* Savings comparison */}
                                     <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 mb-4">
-                                        <p className="text-xs text-gray-400">Monthly × 12 = <span className="line-through text-gray-500">${monthlyAnnualCost.toFixed(2)}</span></p>
-                                        <p className="text-sm font-black text-green-400">Waxaad badbaadisaa ${savingsAmount.toFixed(2)}</p>
+                                        {geoReady ? (
+                                            <>
+                                                <p className="text-xs text-gray-400">Monthly × 12 = <span className="line-through text-gray-500">${monthlyAnnualCost.toFixed(2)}</span></p>
+                                                <p className="text-sm font-black text-green-400">Waxaad badbaadisaa ${savingsAmount.toFixed(2)}</p>
+                                            </>
+                                        ) : (
+                                            <div className="h-8 rounded bg-white/10 animate-pulse" />
+                                        )}
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handleSelectPlan("yearly"); }}
@@ -198,8 +208,11 @@ export default function PricingPage() {
                                 <div>
                                     <div className="mb-4">
                                         <div className="flex items-baseline gap-1.5">
-                                            <span className="text-white/50 text-base font-bold">$$</span>
-                                            <span className="text-5xl font-black text-white">{monthlyPrice.toFixed(2)}</span>
+                                            <span className="text-white/50 text-base font-bold">$</span>
+                                            {geoReady
+                                                ? <span className="text-5xl font-black text-white">{monthlyPrice.toFixed(2)}</span>
+                                                : <span className="w-24 h-12 rounded bg-white/10 animate-pulse inline-block" />
+                                            }
                                         </div>
                                     </div>
                                     <button
