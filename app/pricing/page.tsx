@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
+import ExitIntentOffer from "@/components/ExitIntentOffer";
 import { useRouter } from "next/navigation";
 import { Check, Shield, Zap, ChevronDown, PlayCircle, MessageCircle, Monitor, Crown, Smartphone, Lock } from "lucide-react";
 import Image from "next/image";
@@ -81,6 +82,7 @@ export default function PricingPage() {
     const savingsPercent = Math.round((1 - yearlyPrice / monthlyAnnualCost) * 100);
 
     return (
+        <ExitIntentOffer />
         <div className="min-h-screen relative overflow-hidden text-white font-sans selection:bg-yellow-400 selection:text-black pb-24">
             {/* Background */}
             <div className="fixed inset-0 -z-10 bg-[#0a0a12]">

@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Play, Pause, Maximize, Minimize, Volume2, VolumeX, Volume1,
     Settings, RefreshCw, AlertCircle, Loader2, SkipForward, SkipBack,
-    ChevronUp, PictureInPicture2, X, Lock, Zap, Clock3, MessageCircle
+    ChevronUp, PictureInPicture2, X, Lock, Zap, Clock3, MessageCircle,
+    Check, Shield, ChevronRight
 } from "lucide-react";
+import { PLAN_OPTIONS, getPlanPrice } from "@/lib/plans";
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { BufferIndicator } from "./player/BufferIndicator";
@@ -245,8 +247,11 @@ export function StreamPlayer({
         (url: string) => fetch(url).then(r => r.json()).then(d => d.position || 0)
     );
     const { data: settings } = useSWR("/api/settings", (url: string) => fetch(url).then(r => r.json()));
+    const { data: geo } = useSWR("/api/geo", (url: string) => fetch(url).then(r => r.json()));
+    const geoMultiplier: number = (geo as any)?.multiplier ?? 1;
 
     const [showPaywall, setShowPaywall] = useState(false);
+    const [showPlanPicker, setShowPlanPicker] = useState(false);
     const [isGateHardLocked, setIsGateHardLocked] = useState(false);
     const hasTriggeredPreviewStartRef = useRef(false);
     const hasNotifiedGateLockRef = useRef(false);
@@ -1302,14 +1307,21 @@ export function StreamPlayer({
     const paywallButtonsClass = "flex flex-col gap-2.5 sm:gap-3";
     const paywallPrimaryButtonClass = "w-full py-2.5 sm:py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
     const paywallWhatsappButtonClass = "w-full py-2.5 sm:py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#1fb855] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
+    const monthlyOption = PLAN_OPTIONS.find(p => p.id === "monthly")!;
+    const yearlyOption  = PLAN_OPTIONS.find(p => p.id === "yearly")!;
+    const monthlyPrice  = Math.round(getPlanPrice(settings, monthlyOption) * geoMultiplier * 100) / 100;
+    const yearlyPrice   = Math.round(getPlanPrice(settings, yearlyOption)  * geoMultiplier * 100) / 100;
+    const yearlySavePct = Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100);
+
     const handlePrimaryPaywallClick = useCallback(() => {
         trackConversionEvent("cta_clicked", {
             ctaType: "primary_upgrade",
-            destination: paywallHref,
+            destination: "inline_plan_picker",
             lockType: isDailyCapPaywall ? "daily_limit" : "preview_time",
             intent: highIntentReason || "normal",
         });
-    }, [highIntentReason, isDailyCapPaywall, paywallHref, trackConversionEvent]);
+        setShowPlanPicker(true);
+    }, [highIntentReason, isDailyCapPaywall, trackConversionEvent]);
     const handleWhatsappPaywallClick = useCallback(() => {
         trackConversionEvent("cta_clicked", {
             ctaType: "whatsapp_support",
@@ -1349,35 +1361,98 @@ export function StreamPlayer({
                     <div className={paywallOverlayClass}>
                         <div className={paywallCardWrapClass}>
                             <div className={paywallCardClass}>
-                                <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
-                                <h3 className={paywallTitleClass}>{paywallTitle}</h3>
-                                <p className={paywallMessageClass}>{paywallMessage}</p>
-                                {highIntentReason && (
-                                    <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
-                                        Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
-                                    </p>
+                                {!showPlanPicker ? (
+                                    <>
+                                        <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
+                                        <h3 className={paywallTitleClass}>{paywallTitle}</h3>
+                                        <p className={paywallMessageClass}>{paywallMessage}</p>
+                                        {highIntentReason && (
+                                            <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
+                                                Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
+                                            </p>
+                                        )}
+                                        <div className={paywallButtonsClass}>
+                                            <button
+                                                onClick={handlePrimaryPaywallClick}
+                                                className={paywallPrimaryButtonClass}
+                                            >
+                                                <Zap size={20} />
+                                                {primaryPaywallCta}
+                                            </button>
+                                            <a
+                                                href={whatsappSupportHref}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={handleWhatsappPaywallClick}
+                                                className={paywallWhatsappButtonClass}
+                                            >
+                                                <MessageCircle size={20} />
+                                                WhatsApp Support
+                                            </a>
+                                        </div>
+                                        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-3 text-[10px] text-gray-500">
+                                            <span className="flex items-center gap-1"><Shield size={10} /> SSL Ammaan</span>
+                                            <span className="flex items-center gap-1"><Zap size={10} /> Isla markiiba</span>
+                                            <span className="flex items-center gap-1">👥 39,246 users this month</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-xs text-gray-400 uppercase tracking-widest font-bold text-center mb-4">Dooro Qorshahaaga</p>
+
+                                        {/* Monthly plan */}
+                                        <a
+                                            href="/pay?plan=monthly&auth=signup"
+                                            onClick={() => trackConversionEvent("plan_selected", { plan: "monthly", source: "paywall_picker" })}
+                                            className="flex items-center justify-between p-3 rounded-xl border-2 border-green-400 bg-green-500/10 hover:bg-green-500/20 transition-all mb-3 text-left"
+                                        >
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-black text-white text-sm">Monthly</p>
+                                                    <span className="text-[10px] bg-green-500 text-black font-black px-1.5 py-0.5 rounded-full">POPULAR</span>
+                                                </div>
+                                                <p className="text-xs text-gray-400 mt-0.5">30 maalmood • 3 devices</p>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <p className="text-xl font-black text-white">${monthlyPrice.toFixed(2)}</p>
+                                                <ChevronRight size={16} className="text-green-400" />
+                                            </div>
+                                        </a>
+
+                                        {/* Yearly plan */}
+                                        <a
+                                            href="/pay?plan=yearly&auth=signup"
+                                            onClick={() => trackConversionEvent("plan_selected", { plan: "yearly", source: "paywall_picker" })}
+                                            className="flex items-center justify-between p-3 rounded-xl border-2 border-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all mb-4 text-left"
+                                        >
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-black text-white text-sm">Yearly</p>
+                                                    <span className="text-[10px] bg-yellow-400 text-black font-black px-1.5 py-0.5 rounded-full">SAVE {yearlySavePct}%</span>
+                                                </div>
+                                                <p className="text-xs text-gray-400 mt-0.5">365 + 60 maalmood • 5 devices</p>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <p className="text-xl font-black text-white">${yearlyPrice.toFixed(2)}</p>
+                                                <ChevronRight size={16} className="text-yellow-400" />
+                                            </div>
+                                        </a>
+
+                                        {/* Trust line */}
+                                        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-3 text-[10px] text-gray-500">
+                                            <span className="flex items-center gap-1"><Shield size={10} /> SSL Ammaan</span>
+                                            <span className="flex items-center gap-1"><Zap size={10} /> Isla markiiba furmaa</span>
+                                            <span className="flex items-center gap-1"><Check size={10} className="text-green-400" /> Bilaa Xayeysiis</span>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setShowPlanPicker(false)}
+                                            className="text-xs text-gray-600 hover:text-gray-400 transition-colors w-full text-center"
+                                        >
+                                            ← Dib u noqo
+                                        </button>
+                                    </>
                                 )}
-                                <div className={paywallButtonsClass}>
-                                    <a
-                                        href={paywallHref}
-                                        onClick={handlePrimaryPaywallClick}
-                                        className={paywallPrimaryButtonClass}
-                                    >
-                                        <Zap size={20} />
-                                        {primaryPaywallCta}
-                                    </a>
-                                    <a
-                                        href={whatsappSupportHref}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={handleWhatsappPaywallClick}
-                                        className={paywallWhatsappButtonClass}
-                                    >
-                                        <MessageCircle size={20} />
-                                        WhatsApp Support
-                                    </a>
-                                </div>
-                                <p className="text-[10px] text-gray-500 mt-2">Secure Payment &bull; Instant Unlock &bull; 24/7 Support</p>
                             </div>
                         </div>
                     </div>
@@ -1570,36 +1645,95 @@ export function StreamPlayer({
                 <div className={paywallOverlayClass}>
                     <div className={paywallCardWrapClass}>
                         <div className={paywallCardClass}>
-                            <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
-                            <h3 className={paywallTitleClass}>{paywallTitle}</h3>
-                            <p className={paywallMessageClass}>{paywallMessage}</p>
-                            {highIntentReason && (
-                                <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
-                                    Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
-                                </p>
-                            )}
+                            {!showPlanPicker ? (
+                                <>
+                                    <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
+                                    <h3 className={paywallTitleClass}>{paywallTitle}</h3>
+                                    <p className={paywallMessageClass}>{paywallMessage}</p>
+                                    {highIntentReason && (
+                                        <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
+                                            Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
+                                        </p>
+                                    )}
+                                    <div className={paywallButtonsClass}>
+                                        <button
+                                            onClick={handlePrimaryPaywallClick}
+                                            className={paywallPrimaryButtonClass}
+                                        >
+                                            <Zap size={20} />
+                                            {primaryPaywallCta}
+                                        </button>
+                                        <a
+                                            href={whatsappSupportHref}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={handleWhatsappPaywallClick}
+                                            className={paywallWhatsappButtonClass}
+                                        >
+                                            <MessageCircle size={20} />
+                                            WhatsApp Support
+                                        </a>
+                                    </div>
+                                    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-3 text-[10px] text-gray-500">
+                                        <span className="flex items-center gap-1"><Shield size={10} /> SSL Ammaan</span>
+                                        <span className="flex items-center gap-1"><Zap size={10} /> Isla markiiba</span>
+                                        <span className="flex items-center gap-1">👥 39,246 users this month</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-xs text-gray-400 uppercase tracking-widest font-bold text-center mb-4">Dooro Qorshahaaga</p>
 
-                            <div className={paywallButtonsClass}>
-                                <a
-                                    href={paywallHref}
-                                    onClick={handlePrimaryPaywallClick}
-                                    className={paywallPrimaryButtonClass}
-                                >
-                                    <Zap size={20} />
-                                    {primaryPaywallCta}
-                                </a>
-                                <a
-                                    href={whatsappSupportHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={handleWhatsappPaywallClick}
-                                    className={paywallWhatsappButtonClass}
-                                >
-                                    <MessageCircle size={20} />
-                                    WhatsApp Support
-                                </a>
-                            </div>
-                            <p className="text-[10px] text-gray-500 mt-2">Secure Payment &bull; Instant Unlock &bull; 24/7 Support</p>
+                                    <a
+                                        href="/pay?plan=monthly&auth=signup"
+                                        onClick={() => trackConversionEvent("plan_selected", { plan: "monthly", source: "paywall_picker" })}
+                                        className="flex items-center justify-between p-3 rounded-xl border-2 border-green-400 bg-green-500/10 hover:bg-green-500/20 transition-all mb-3 text-left"
+                                    >
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-black text-white text-sm">Monthly</p>
+                                                <span className="text-[10px] bg-green-500 text-black font-black px-1.5 py-0.5 rounded-full">POPULAR</span>
+                                            </div>
+                                            <p className="text-xs text-gray-400 mt-0.5">30 maalmood • 3 devices</p>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <p className="text-xl font-black text-white">${monthlyPrice.toFixed(2)}</p>
+                                            <ChevronRight size={16} className="text-green-400" />
+                                        </div>
+                                    </a>
+
+                                    <a
+                                        href="/pay?plan=yearly&auth=signup"
+                                        onClick={() => trackConversionEvent("plan_selected", { plan: "yearly", source: "paywall_picker" })}
+                                        className="flex items-center justify-between p-3 rounded-xl border-2 border-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all mb-4 text-left"
+                                    >
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-black text-white text-sm">Yearly</p>
+                                                <span className="text-[10px] bg-yellow-400 text-black font-black px-1.5 py-0.5 rounded-full">SAVE {yearlySavePct}%</span>
+                                            </div>
+                                            <p className="text-xs text-gray-400 mt-0.5">365 + 60 maalmood • 5 devices</p>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <p className="text-xl font-black text-white">${yearlyPrice.toFixed(2)}</p>
+                                            <ChevronRight size={16} className="text-yellow-400" />
+                                        </div>
+                                    </a>
+
+                                    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-3 text-[10px] text-gray-500">
+                                        <span className="flex items-center gap-1"><Shield size={10} /> SSL Ammaan</span>
+                                        <span className="flex items-center gap-1"><Zap size={10} /> Isla markiiba furmaa</span>
+                                        <span className="flex items-center gap-1"><Check size={10} className="text-green-400" /> Bilaa Xayeysiis</span>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setShowPlanPicker(false)}
+                                        className="text-xs text-gray-600 hover:text-gray-400 transition-colors w-full text-center"
+                                    >
+                                        ← Dib u noqo
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
 import { PLAN_OPTIONS, PlanId, getPlanPrice } from "@/lib/plans";
+import ExitIntentOffer from "@/components/ExitIntentOffer";
 
 type SettingsResponse = Record<string, unknown>;
 const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<SettingsResponse>);
@@ -284,6 +285,8 @@ function CheckoutHub({
     const isEditingAuth = !canProceedToPayment;
 
     return (
+        <>
+        <ExitIntentOffer plan={initialPlanId === "yearly" ? "yearly" : "monthly"} />
         <div className="min-h-screen bg-[#060b13] text-[#e1e2e6] selection:bg-[#FF1A4E] selection:text-white font-sans relative overflow-hidden pb-32">
             {/* Background Lines */}
             <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
@@ -599,6 +602,7 @@ function CheckoutHub({
                 </div>
             </div>
         </div>
+        </>
     );
 }
 
