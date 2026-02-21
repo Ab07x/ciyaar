@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         if (payment.gateway === "paypal") {
             return NextResponse.json({
                 success: false,
-                message: "PayPal lacag-bixintaada waa la helay. Aqoonsi gudaha 24 saacadood, Premium kuu furmaa.",
+                message: "PayPal lacag-bixintaada waa la helay. Aqoonsi gudaha 30–40 daqiiqo, Premium kuu furmaa.",
                 status: "pending",
             });
         }

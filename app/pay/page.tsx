@@ -396,7 +396,7 @@ function CheckoutHub({
                                 </button>
                                 <p className="text-sm text-gray-500 text-center">
                                     {paymentMethod === "paypal"
-                                        ? "We will verify your payment within 24 hours and activate your Premium."
+                                        ? "We will verify your payment within 30–40 minutes and activate your Premium."
                                         : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
                                 </p>
                             </div>
