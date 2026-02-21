@@ -247,7 +247,7 @@ function CheckoutHub({
                 <div className="absolute w-[200%] h-[200%] -top-[50%] -left-[50%] bg-[linear-gradient(45deg,rgba(59,130,246,0.1)0%,transparent_40%,transparent_60%,rgba(255,26,78,0.1)100%)]" />
             </div>
 
-            <div className="max-w-[1240px] mx-auto px-6 py-10 relative z-10">
+            <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-10 relative z-10">
                 {/* Header Navbar-like element */}
                 <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-12">
                     <Link href="/" className="text-2xl font-black tracking-tighter">FAN<span className="text-[#ff003e]">BROJ</span></Link>
@@ -256,7 +256,7 @@ function CheckoutHub({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-10">
 
                     {/* LEFT COLUMN: 01 Create Account + 03 Pay */}
                     <div className="space-y-12 xl:pr-8">
@@ -317,75 +317,88 @@ function CheckoutHub({
 
                         {/* 03 Pay */}
                         <section className={`transition-opacity duration-300 ${isEditingAuth ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                            <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
+                            <h2 className="text-3xl font-black mb-6 flex items-end gap-3 tracking-wide">
                                 <span className="text-4xl text-[#ff003e] font-light leading-none">03</span> Pay
                             </h2>
-                            <div className="border border-[#2a303c] rounded-xl p-8 bg-[#0b101a]/50 backdrop-blur-md relative overflow-hidden flex flex-col lg:flex-row items-center gap-8">
+                            <div className="border border-[#2a303c] rounded-xl p-6 sm:p-8 bg-[#0b101a]/50 backdrop-blur-md space-y-6">
 
-                                {/* Order Summary Left Side */}
-                                <div className="flex-1 w-full lg:pr-6 lg:border-r border-[#2a303c]">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="text-gray-400 font-medium">{selectedPlan.label}</span>
-                                        <span className="text-xl font-bold text-white"><span className="text-[12px] text-gray-500 align-top mr-1">$</span>{selectedPlanPrice.toFixed(2)}</span>
+                                {/* Order Summary */}
+                                <div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-400 text-base font-medium">{selectedPlan.label}</span>
+                                        <span className="text-2xl font-bold text-white">${selectedPlanPrice.toFixed(2)}</span>
                                     </div>
                                     {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
-                                        <div className="flex items-center justify-between mt-2 mb-4">
-                                            <span className="text-green-500 text-sm font-bold">+{initialBonusDays} Days FREE Bonus</span>
-                                            <span className="text-green-500 text-sm font-bold">$0.00</span>
+                                        <div className="flex items-center justify-between mt-2">
+                                            <span className="text-green-400 text-sm font-bold">+{initialBonusDays} Days FREE Bonus</span>
+                                            <span className="text-green-400 text-sm font-bold">$0.00</span>
                                         </div>
                                     )}
                                     <div className="h-px bg-[#2a303c] my-4" />
                                     <div className="flex items-center justify-between">
-                                        <span className="text-gray-300 font-bold">Total</span>
-                                        <span className="text-2xl font-black text-white"><span className="text-[12px] text-gray-500 align-top mr-1">$</span>{selectedPlanPrice.toFixed(2)}</span>
+                                        <span className="text-white font-bold text-lg">Total</span>
+                                        <span className="text-3xl font-black text-white">${selectedPlanPrice.toFixed(2)}</span>
                                     </div>
                                 </div>
 
-                                {/* Order Summary Right Side */}
-                                <div className="flex-1 w-full flex flex-col justify-center">
-                                    {/* Trust badges */}
-                                    <div className="grid grid-cols-2 gap-2 mb-5">
-                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Lock size={12} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
-                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Shield size={12} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : "Sifalo"} Secure</div>
-                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><CreditCard size={12} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
-                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Crown size={12} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
-                                    </div>
+                                {/* Trust badges */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Lock size={14} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Shield size={14} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : "Sifalo"} Secure</div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-300"><CreditCard size={14} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Crown size={14} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
+                                </div>
 
-                                    {/* PayPal TX ID input */}
-                                    {paymentMethod === "paypal" && (
-                                        <div className="mb-4 space-y-2">
-                                            <p className="text-xs text-gray-400">
-                                                Send <span className="text-white font-bold">${selectedPlanPrice.toFixed(2)}</span> to{" "}
-                                                <span className="text-[#009cde] font-bold">code.abdala@gmail.com</span> via PayPal,
-                                                then paste your Transaction ID below.
-                                            </p>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={paypalTxId}
-                                                    onChange={e => setPaypalTxId(e.target.value)}
-                                                    placeholder="PayPal Transaction ID e.g. 5TY05013RG002845M"
-                                                    className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-3 text-sm focus:outline-none focus:border-[#009cde] transition-colors font-mono"
-                                                />
+                                {/* PayPal step-by-step guide */}
+                                {paymentMethod === "paypal" && (
+                                    <div className="rounded-xl border border-[#009cde]/30 bg-[#009cde]/5 p-5 space-y-4">
+                                        <p className="text-white font-bold text-base">How to pay with PayPal:</p>
+                                        <div className="space-y-3">
+                                            <div className="flex items-start gap-3">
+                                                <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
+                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                    Open PayPal and send{" "}
+                                                    <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
+                                                    to:<br />
+                                                    <span className="text-[#009cde] font-black text-base break-all">code.abdala@gmail.com</span>
+                                                </p>
+                                            </div>
+                                            <div className="flex items-start gap-3">
+                                                <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
+                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                    After paying, open your PayPal receipt and copy the <span className="text-white font-bold">Transaction ID</span> (looks like: 5TY05013RG002845M)
+                                                </p>
+                                            </div>
+                                            <div className="flex items-start gap-3">
+                                                <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
+                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste it below and click Submit</p>
                                             </div>
                                         </div>
-                                    )}
+                                        <input
+                                            type="text"
+                                            value={paypalTxId}
+                                            onChange={e => setPaypalTxId(e.target.value)}
+                                            placeholder="Paste Transaction ID here..."
+                                            className="w-full bg-[#060b13] border-2 border-[#009cde]/40 focus:border-[#009cde] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono"
+                                        />
+                                    </div>
+                                )}
 
-                                    <button
-                                        type="button"
-                                        onClick={handlePay}
-                                        disabled={isPaying || !canProceedToPayment}
-                                        className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-bold text-xl py-4 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(13,110,253,0.3)] hover:shadow-[0_0_30px_rgba(13,110,253,0.5)]"
-                                    >
-                                        {isPaying ? <Loader2 size={24} className="animate-spin" /> : null}
-                                        {isPaying ? "PROCESSING" : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
-                                    </button>
-                                    <p className="text-[11px] text-gray-500 text-center mt-3">
-                                        {paymentMethod === "paypal"
-                                            ? "PayPal payments are reviewed manually within 24 hours."
-                                            : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
-                                    </p>
-                                </div>
+                                {/* Pay Button */}
+                                <button
+                                    type="button"
+                                    onClick={handlePay}
+                                    disabled={isPaying || !canProceedToPayment}
+                                    className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-black text-xl py-5 rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_24px_rgba(13,110,253,0.35)] hover:shadow-[0_0_36px_rgba(13,110,253,0.55)]"
+                                >
+                                    {isPaying ? <Loader2 size={24} className="animate-spin" /> : null}
+                                    {isPaying ? "PROCESSING..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                </button>
+                                <p className="text-sm text-gray-500 text-center">
+                                    {paymentMethod === "paypal"
+                                        ? "We will verify your payment within 24 hours and activate your Premium."
+                                        : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
+                                </p>
                             </div>
                         </section>
 
@@ -402,12 +415,12 @@ function CheckoutHub({
                             <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
                                 <span className="text-4xl text-[#ff003e] font-light leading-none">02</span> Payment Method
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 relative">
+                            <div className="grid grid-cols-1 xs:grid-cols-3 sm:grid-cols-3 gap-4 relative">
 
                                 {/* Stripe Panel */}
                                 <div
                                     onClick={() => setPaymentMethod('stripe')}
-                                    className={`relative rounded-xl border-2 p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center h-[160px] ${paymentMethod === 'stripe' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
+                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'stripe' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
                                         }`}
                                 >
                                     {paymentMethod === 'stripe' && (
@@ -431,7 +444,7 @@ function CheckoutHub({
                                 {/* Sifalo Panel */}
                                 <div
                                     onClick={() => setPaymentMethod('sifalo')}
-                                    className={`relative rounded-xl border-2 p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center h-[160px] ${paymentMethod === 'sifalo' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-[#323946] hover:border-[#4b5563] hover:bg-[#3d4554]'
+                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'sifalo' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-[#323946] hover:border-[#4b5563] hover:bg-[#3d4554]'
                                         }`}
                                 >
                                     {paymentMethod === 'sifalo' && (
@@ -443,9 +456,9 @@ function CheckoutHub({
                                         </div>
                                     )}
                                     <div className="text-center z-10">
-                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">LACAG GURI</h3>
-                                        <p className="text-xs text-brand-whiteish italic font-medium text-gray-300">
-                                            Mobile Money Somali
+                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">MOBILE MONEY</h3>
+                                        <p className="text-xs text-gray-300 italic font-medium">
+                                            Lacagta Somali
                                             <br />
                                             <span className="opacity-70 text-[10px]">EVC / eDahab / Sahal / Zaad</span>
                                         </p>
@@ -456,7 +469,7 @@ function CheckoutHub({
                                 {/* PayPal Panel */}
                                 <div
                                     onClick={() => setPaymentMethod('paypal')}
-                                    className={`relative rounded-xl border-2 p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center h-[160px] ${paymentMethod === 'paypal' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
+                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'paypal' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
                                         }`}
                                 >
                                     {paymentMethod === 'paypal' && (
