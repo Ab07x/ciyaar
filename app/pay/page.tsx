@@ -156,7 +156,8 @@ function CheckoutHub({
     const [confirmPassword, setConfirmPassword] = useState("");
 
     // Payment + loading state
-    const [paymentMethod, setPaymentMethod] = useState<"sifalo" | "stripe">("stripe");
+    const [paymentMethod, setPaymentMethod] = useState<"sifalo" | "stripe" | "paypal">("stripe");
+    const [paypalTxId, setPaypalTxId] = useState("");
     const [isAuthLoading, setIsAuthLoading] = useState(false);
     const [isPaying, setIsPaying] = useState(false);
     const [authCompleted, setAuthCompleted] = useState(false);
@@ -211,10 +212,26 @@ function CheckoutHub({
         } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
     };
 
+    const startPaypalCheckout = async () => {
+        setStatusError(""); setStatusMessage(""); setIsPaying(true);
+        const txId = paypalTxId.trim();
+        if (!txId) { setStatusError("Fadlan geli PayPal Transaction ID-gaaga."); setIsPaying(false); return; }
+        const bonusDays = selectedPlan.id === "monthly" ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0)) : 0;
+        const offerCode = bonusDays > 0 ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS") : undefined;
+        try {
+            const res = await fetch("/api/pay/paypal/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", paypalTxId: txId, offerBonusDays: bonusDays, offerCode }) });
+            const data = await res.json();
+            if (!res.ok || !data?.orderId) { setStatusError(data?.error || "PayPal submission failed. Please try again."); setIsPaying(false); return; }
+            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}`;
+        } catch { setStatusError("Submission error. Please try again."); setIsPaying(false); }
+    };
+
     const handlePay = async () => {
         if (!canProceedToPayment) { setStatusError("Fadlan isdiiwaangeli ama gal accountka."); return; }
         if (paymentMethod === "stripe") {
             await startStripeCheckout();
+        } else if (paymentMethod === "paypal") {
+            await startPaypalCheckout();
         } else {
             await startSifaloCheckout();
         }
@@ -329,10 +346,31 @@ function CheckoutHub({
                                     {/* Trust badges */}
                                     <div className="grid grid-cols-2 gap-2 mb-5">
                                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Lock size={12} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
-                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Shield size={12} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : "Sifalo"} Secure</div>
+                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Shield size={12} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : "Sifalo"} Secure</div>
                                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><CreditCard size={12} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
                                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><Crown size={12} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
                                     </div>
+
+                                    {/* PayPal TX ID input */}
+                                    {paymentMethod === "paypal" && (
+                                        <div className="mb-4 space-y-2">
+                                            <p className="text-xs text-gray-400">
+                                                Send <span className="text-white font-bold">${selectedPlanPrice.toFixed(2)}</span> to{" "}
+                                                <span className="text-[#009cde] font-bold">code.abdala@gmail.com</span> via PayPal,
+                                                then paste your Transaction ID below.
+                                            </p>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={paypalTxId}
+                                                    onChange={e => setPaypalTxId(e.target.value)}
+                                                    placeholder="PayPal Transaction ID e.g. 5TY05013RG002845M"
+                                                    className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-3 text-sm focus:outline-none focus:border-[#009cde] transition-colors font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <button
                                         type="button"
                                         onClick={handlePay}
@@ -340,9 +378,13 @@ function CheckoutHub({
                                         className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-bold text-xl py-4 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(13,110,253,0.3)] hover:shadow-[0_0_30px_rgba(13,110,253,0.5)]"
                                     >
                                         {isPaying ? <Loader2 size={24} className="animate-spin" /> : null}
-                                        {isPaying ? "PROCESSING" : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                        {isPaying ? "PROCESSING" : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
                                     </button>
-                                    <p className="text-[11px] text-gray-500 text-center mt-3">Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna.</p>
+                                    <p className="text-[11px] text-gray-500 text-center mt-3">
+                                        {paymentMethod === "paypal"
+                                            ? "PayPal payments are reviewed manually within 24 hours."
+                                            : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
+                                    </p>
                                 </div>
                             </div>
                         </section>
@@ -360,7 +402,7 @@ function CheckoutHub({
                             <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
                                 <span className="text-4xl text-[#ff003e] font-light leading-none">02</span> Payment Method
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 relative">
 
                                 {/* Stripe Panel */}
                                 <div
@@ -378,7 +420,11 @@ function CheckoutHub({
                                     )}
                                     <div className="text-center z-10">
                                         <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">CREDIT CARD</h3>
-                                        <p className="text-xs text-gray-400 italic font-medium">Mastercard, Visa and more.</p>
+                                        <p className="text-xs text-gray-400 italic font-medium">
+                                            International Cards
+                                            <br />
+                                            <span className="opacity-70 text-[10px]">Visa / Mastercard / Amex</span>
+                                        </p>
                                     </div>
                                 </div>
 
@@ -397,14 +443,38 @@ function CheckoutHub({
                                         </div>
                                     )}
                                     <div className="text-center z-10">
-                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">CARDS & WALLETS</h3>
+                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">LACAG GURI</h3>
                                         <p className="text-xs text-brand-whiteish italic font-medium text-gray-300">
-                                            Cards / Local / Mobile Money
+                                            Mobile Money Somali
                                             <br />
                                             <span className="opacity-70 text-[10px]">EVC / eDahab / Sahal / Zaad</span>
                                         </p>
                                     </div>
                                     <div className="absolute w-[150%] h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-30deg] -translate-x-full transition-transform duration-700 group-hover:block" />
+                                </div>
+
+                                {/* PayPal Panel */}
+                                <div
+                                    onClick={() => setPaymentMethod('paypal')}
+                                    className={`relative rounded-xl border-2 p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center h-[160px] ${paymentMethod === 'paypal' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
+                                        }`}
+                                >
+                                    {paymentMethod === 'paypal' && (
+                                        <div className="absolute top-0 right-0 left-0 h-1 bg-green-500" />
+                                    )}
+                                    {paymentMethod === 'paypal' && (
+                                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center ring-4 ring-[#060b13]">
+                                            <Check size={14} className="text-[#060b13] ml-2 mt-2" strokeWidth={4} />
+                                        </div>
+                                    )}
+                                    <div className="text-center z-10">
+                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">PAYPAL</h3>
+                                        <p className="text-xs text-gray-400 italic font-medium">
+                                            Manual Verification
+                                            <br />
+                                            <span className="opacity-70 text-[10px]">Send & submit TX ID</span>
+                                        </p>
+                                    </div>
                                 </div>
 
                             </div>

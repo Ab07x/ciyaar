@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { AlertTriangle, CheckCircle2, Clock3, Copy, CreditCard, RefreshCw, Search, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock3, Copy, CreditCard, RefreshCw, Search, XCircle, ThumbsUp } from "lucide-react";
 
 type PaymentRow = {
     _id: string;
@@ -14,7 +14,9 @@ type PaymentRow = {
     paymentType?: string;
     deviceId?: string;
     userId?: string;
+    gateway?: string;
     sifaloSid?: string;
+    paypalTxId?: string;
     accessCode?: string;
     codeSource?: string;
     verifyAttempts?: number;
@@ -62,6 +64,25 @@ export default function AdminPaymentsPage() {
     const [status, setStatus] = useState("all");
     const [search, setSearch] = useState("");
     const [copiedValue, setCopiedValue] = useState("");
+    const [approvingOrderId, setApprovingOrderId] = useState("");
+    const [approveError, setApproveError] = useState("");
+
+    const approvePaypal = async (orderId: string) => {
+        setApprovingOrderId(orderId);
+        setApproveError("");
+        try {
+            const res = await fetch("/api/pay/paypal/approve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ orderId }),
+            });
+            const data = await res.json();
+            if (!res.ok) { setApproveError(data.error || "Approval failed"); }
+            else { void mutate(); }
+        } catch { setApproveError("Network error"); }
+        setApprovingOrderId("");
+    };
 
     const query = useMemo(() => {
         const params = new URLSearchParams();
@@ -124,6 +145,12 @@ export default function AdminPaymentsPage() {
                     <p className="text-2xl font-black text-orange-300">{data?.stats?.stalePending || 0}</p>
                 </div>
             </div>
+
+            {approveError && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium">
+                    {approveError}
+                </div>
+            )}
 
             <div className="bg-stadium-elevated border border-border-strong rounded-xl p-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
                 <div className="flex items-center gap-2 w-full md:max-w-md">
@@ -214,9 +241,24 @@ export default function AdminPaymentsPage() {
                                         )}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="text-xs text-white flex items-center gap-1"><CreditCard size={12} /> {payment.paymentType || "-"}</div>
-                                        <div className="text-text-muted text-[11px] mt-1 break-all">SID: {payment.sifaloSid || "-"}</div>
+                                        <div className="text-xs text-white flex items-center gap-1"><CreditCard size={12} /> {payment.paymentType || payment.gateway || "-"}</div>
+                                        {payment.gateway === "paypal" && payment.paypalTxId && (
+                                            <div className="text-[#009cde] text-[11px] mt-1 break-all font-mono">TX: {payment.paypalTxId}</div>
+                                        )}
+                                        {payment.sifaloSid && (
+                                            <div className="text-text-muted text-[11px] mt-1 break-all">SID: {payment.sifaloSid}</div>
+                                        )}
                                         <div className="text-text-muted text-[11px] break-all">Status: {payment.lastGatewayStatus || "-"} {payment.lastGatewayCode ? `(${payment.lastGatewayCode})` : ""}</div>
+                                        {payment.gateway === "paypal" && payment.status !== "success" && (
+                                            <button
+                                                onClick={() => void approvePaypal(payment.orderId)}
+                                                disabled={approvingOrderId === payment.orderId}
+                                                className="mt-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-green-500/20 hover:bg-green-500/40 text-green-300 text-xs font-bold disabled:opacity-50"
+                                            >
+                                                <ThumbsUp size={11} />
+                                                {approvingOrderId === payment.orderId ? "..." : "Approve"}
+                                            </button>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         {payment.debugReason ? (

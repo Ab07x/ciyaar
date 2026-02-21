@@ -337,6 +337,7 @@ export interface IPayment extends Document {
     lastGatewayPayload?: Record<string, unknown>;
     stripeSessionId?: string;
     stripePaymentIntentId?: string;
+    paypalTxId?: string;
     subscriptionId?: string;
     createdAt: number;
     verifiedAt?: number;
@@ -371,6 +372,7 @@ const PaymentSchema = new Schema<IPayment>(
         lastGatewayPayload: Schema.Types.Mixed,
         stripeSessionId: { type: String, index: true },
         stripePaymentIntentId: String,
+        paypalTxId: { type: String, index: true },
         subscriptionId: String,
         createdAt: { type: Number, required: true },
         verifiedAt: Number,

@@ -172,6 +172,15 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        // PayPal manual payment — just report pending until admin approves
+        if (payment.gateway === "paypal") {
+            return NextResponse.json({
+                success: false,
+                message: "PayPal lacag-bixintaada waa la helay. Aqoonsi gudaha 24 saacadood, Premium kuu furmaa.",
+                status: "pending",
+            });
+        }
+
         // Stripe payment verification
         if (payment.gateway === "stripe" && payment.stripeSessionId) {
             if (!process.env.STRIPE_SECRET_KEY) {
