@@ -172,8 +172,10 @@ function CheckoutHub({
     const geoMultiplier = geo?.multiplier ?? 1;
     const { deviceId, email, profile, signupWithEmail, loginWithEmail, updateAvatar } = useUser();
 
+    const [currentPlanId, setCurrentPlanId] = useState<PlanId>(initialPlanId);
+
     // Determine the actual Plan option safely.
-    const selectedPlan = useMemo(() => PLAN_OPTIONS.find((p) => p.id === initialPlanId) || PLAN_OPTIONS[0], [initialPlanId]);
+    const selectedPlan = useMemo(() => PLAN_OPTIONS.find((p) => p.id === currentPlanId) || PLAN_OPTIONS[0], [currentPlanId]);
     const basePlanPrice = useMemo(() => getPlanPrice(settings, selectedPlan), [settings, selectedPlan]);
     const selectedPlanPrice = useMemo(() => Math.round(basePlanPrice * geoMultiplier * 100) / 100, [basePlanPrice, geoMultiplier]);
 
@@ -293,6 +295,13 @@ function CheckoutHub({
                 <div className="absolute w-[200%] h-[200%] -top-[50%] -left-[50%] bg-[linear-gradient(45deg,rgba(59,130,246,0.1)0%,transparent_40%,transparent_60%,rgba(255,26,78,0.1)100%)]" />
             </div>
 
+            {/* Urgency + guarantee strip */}
+            <div className="relative z-10 bg-gradient-to-r from-yellow-500/10 via-orange-400/10 to-yellow-500/10 border-b border-yellow-400/10 px-4 py-2.5 text-center">
+                <p className="text-yellow-300 text-xs sm:text-sm font-semibold">
+                    ⏰ 7-maalmood money-back guarantee &nbsp;·&nbsp; Premium isla markiiba furmaa &nbsp;·&nbsp; <span className="text-white font-black">39,246</span> users this month
+                </p>
+            </div>
+
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-10 relative z-10">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-12">
@@ -309,9 +318,21 @@ function CheckoutHub({
 
                     {/* ── 01 Create Account ── col1 row1 on desktop */}
                     <section className="lg:col-start-1 lg:row-start-1 lg:pr-8">
-                        <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
-                            <span className="text-4xl text-[#ff003e] font-light leading-none">01</span> Create Account
+                        <h2 className="text-3xl font-black mb-1 flex items-end gap-3 tracking-wide">
+                            <span className="text-4xl text-[#ff003e] font-light leading-none">01</span> Xifaaladaada Kaydi
                         </h2>
+                        <p className="text-sm text-gray-500 mb-4">Email + password — 30 second oo kaliya</p>
+
+                        {/* Social proof avatars */}
+                        <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-6">
+                            <div className="flex -space-x-1.5">
+                                {["A","H","F","M","Z"].map((l,i) => (
+                                    <div key={i} className={`w-5 h-5 rounded-full border border-[#060b13] flex items-center justify-center text-[8px] text-white font-bold ${["bg-blue-500","bg-purple-500","bg-green-500","bg-orange-500","bg-pink-500"][i]}`}>{l}</div>
+                                ))}
+                            </div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                            <span>39,246 Premium users maanta</span>
+                        </div>
 
                         {isEditingAuth ? (
                             <div className="space-y-5">
@@ -468,6 +489,37 @@ function CheckoutHub({
                         </h2>
                         <div className="border border-[#2a303c] rounded-xl p-6 sm:p-8 bg-[#0b101a]/50 backdrop-blur-md space-y-6">
 
+                            {/* Plan Switcher */}
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3">Dooro Qorshaha</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {([
+                                        { id: "weekly" as PlanId, label: "Weekly", sub: "7 maalmood" },
+                                        { id: "monthly" as PlanId, label: "Monthly", sub: "30 maalmood", badge: "POPULAR" },
+                                        { id: "yearly" as PlanId, label: "Yearly", sub: "365+60 maalmood" },
+                                    ]).map((opt) => {
+                                        const planOption = PLAN_OPTIONS.find(p => p.id === opt.id)!;
+                                        const price = Math.round(getPlanPrice(settings, planOption) * geoMultiplier * 100) / 100;
+                                        const isActive = currentPlanId === opt.id;
+                                        return (
+                                            <button
+                                                key={opt.id}
+                                                onClick={() => setCurrentPlanId(opt.id)}
+                                                className={`relative rounded-lg border p-2.5 text-center transition-all cursor-pointer ${isActive ? 'border-[#ff003e] bg-[#ff003e]/10 shadow-[0_0_12px_rgba(255,0,62,0.15)]' : 'border-[#2a303c] hover:border-[#4b5563] bg-transparent'}`}
+                                            >
+                                                {opt.badge && <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded-full whitespace-nowrap">{opt.badge}</div>}
+                                                <p className="font-bold text-white text-xs mb-0.5">{opt.label}</p>
+                                                {geoReady
+                                                    ? <p className={`font-black text-sm ${isActive ? 'text-[#ff003e]' : 'text-gray-300'}`}>${price.toFixed(2)}</p>
+                                                    : <div className="w-10 h-4 rounded bg-white/10 animate-pulse mx-auto" />
+                                                }
+                                                <p className="text-[9px] text-gray-500 leading-tight mt-0.5">{opt.sub}</p>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
                             {/* Order Summary */}
                             <div>
                                 <div className="flex items-center justify-between">
@@ -490,6 +542,13 @@ function CheckoutHub({
                                         ? <span className="text-3xl font-black text-white">${selectedPlanPrice.toFixed(2)}</span>
                                         : <span className="w-24 h-9 rounded bg-white/10 animate-pulse inline-block" />
                                     }
+                                </div>
+                                {/* Value pills */}
+                                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                                    <span className="text-[11px] text-gray-500">✓ {selectedPlan.duration}</span>
+                                    <span className="text-[11px] text-gray-500">✓ 12,000+ filim</span>
+                                    <span className="text-[11px] text-gray-500">✓ Bilaa xayeysiis</span>
+                                    {selectedPlan.id === "yearly" && <span className="text-[11px] text-green-400 font-bold">✓ +60 maalmood BILAASH</span>}
                                 </div>
                             </div>
 
@@ -572,6 +631,12 @@ function CheckoutHub({
                                 </div>
                             )}
 
+                            {/* Live activity badge */}
+                            <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-white/[0.03] border border-white/5">
+                                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+                                <span className="text-[11px] text-gray-400">🔥 <strong className="text-white">128</strong> ruux ayaa Premium siday saacaddan</span>
+                            </div>
+
                             {/* Pay Button */}
                             <button
                                 type="button"
@@ -582,7 +647,14 @@ function CheckoutHub({
                                 {(isPaying || !geoReady) ? <Loader2 size={24} className="animate-spin" /> : null}
                                 {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : paymentMethod === "mpesa" ? "SUBMIT M-PESA PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
                             </button>
-                            <p className="text-sm text-gray-500 text-center">
+
+                            {/* Money-back guarantee */}
+                            <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
+                                <Shield size={12} className="text-green-400 flex-shrink-0" />
+                                <span>7-maalmood money-back guarantee — Su&apos;aal la&apos;aantii lacagta ku celinaa</span>
+                            </div>
+
+                            <p className="text-xs text-gray-600 text-center">
                                 {paymentMethod === "paypal"
                                     ? "We will verify your payment within 30–40 minutes and activate your Premium."
                                     : paymentMethod === "mpesa"
