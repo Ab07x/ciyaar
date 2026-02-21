@@ -176,8 +176,9 @@ export async function POST(request: NextRequest) {
         if (payment.gateway === "paypal") {
             return NextResponse.json({
                 success: false,
-                message: "PayPal lacag-bixintaada waa la helay. Aqoonsi gudaha 30–40 daqiiqo, Premium kuu furmaa.",
+                message: "PayPal lacag-bixintaada waa la helay! Kooxdeenu waxay xaqiijin doontaa 30–40 daqiiqo gudahood — kadibna Premium si toos ah ayuu kuu furmaa.",
                 status: "pending",
+                manual: true,
             });
         }
 
@@ -185,8 +186,9 @@ export async function POST(request: NextRequest) {
         if (payment.gateway === "mpesa") {
             return NextResponse.json({
                 success: false,
-                message: "M-Pesa payment received. We will verify within 30–40 minutes and activate your Premium.",
+                message: "M-Pesa lacag-bixintaada waa la helay! Kooxdeenu waxay xaqiijin doontaa 30–40 daqiiqo gudahood — kadibna Premium si toos ah ayuu kuu furmaa.",
                 status: "pending",
+                manual: true,
             });
         }
 

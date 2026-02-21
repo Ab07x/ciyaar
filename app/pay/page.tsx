@@ -36,6 +36,7 @@ function PaymentVerifier({ sid, orderId, stripeSession }: { sid: string | null; 
     const [isCodeCopied, setIsCodeCopied] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
     const [autoPollCount, setAutoPollCount] = useState(0);
+    const [isManualPayment, setIsManualPayment] = useState(false);
     const MAX_AUTO_POLLS = 10;
     const hasQueryToken = Boolean(sid || orderId || stripeSession);
 
@@ -47,13 +48,14 @@ function PaymentVerifier({ sid, orderId, stripeSession }: { sid: string | null; 
             const res = await fetch("/api/pay/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sid, orderId, stripeSession, deviceId }) });
             const data = await res.json();
             if (data.success) { setStatus("success"); setMessage(data.message || "Premium wuu kuu shaqeynayaa!"); setPlan(data.plan || ""); if (data.code) { setAccessCode(String(data.code)); localStorage.setItem("fanbroj_last_payment_code", String(data.code)); } }
-            else if (data.status === "pending") { setStatus("pending"); setMessage("Lacagta wali way socotaa..."); }
+            else if (data.status === "pending") { setStatus("pending"); setMessage(data.message || "Lacagta wali way socotaa..."); if (data.manual) setIsManualPayment(true); }
             else { setStatus("failed"); setMessage(data.message || data.error || "Xaqiijinta lacagtu way fashilmatay."); }
         } catch { setStatus("error"); setMessage("Khalad ayaa dhacay. Fadlan isku day mar kale."); }
     }, [sid, orderId, stripeSession]);
 
     useEffect(() => { if (!hasQueryToken) return; const t = window.setTimeout(() => { void verifyPayment(); }, 0); return () => window.clearTimeout(t); }, [hasQueryToken, retryCount, verifyPayment]);
-    useEffect(() => { if (status !== "pending" || autoPollCount >= MAX_AUTO_POLLS) return; const t = window.setTimeout(() => { setAutoPollCount(c => c + 1); setRetryCount(c => c + 1); }, 4000); return () => window.clearTimeout(t); }, [status, autoPollCount]);
+    // Only auto-poll for non-manual payments (Sifalo/Stripe auto-resolve; PayPal/M-Pesa need admin)
+    useEffect(() => { if (status !== "pending" || isManualPayment || autoPollCount >= MAX_AUTO_POLLS) return; const t = window.setTimeout(() => { setAutoPollCount(c => c + 1); setRetryCount(c => c + 1); }, 4000); return () => window.clearTimeout(t); }, [status, autoPollCount, isManualPayment]);
     const handleRetry = () => { setAutoPollCount(0); setRetryCount(c => c + 1); };
     const handleCopyCode = async () => { if (!accessCode) return; try { await navigator.clipboard.writeText(accessCode); setIsCodeCopied(true); window.setTimeout(() => setIsCodeCopied(false), 1800); } catch { setIsCodeCopied(false); } };
     const displayStatus = hasQueryToken ? status : "error";
@@ -94,12 +96,34 @@ function PaymentVerifier({ sid, orderId, stripeSession }: { sid: string | null; 
                 )}
                 {displayStatus === "pending" && (
                     <div className="text-center">
-                        <div className="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><Loader2 className="text-yellow-400 animate-spin" size={48} /></div>
-                        <h1 className="text-2xl font-black text-white mb-2">Lacagta wali ma dhammaanin</h1>
-                        <p className="text-gray-400 mb-6">{displayMessage}</p>
-                        <p className="text-sm text-gray-500 mb-6">Haddii aad lacagta bixisay, fadlan sug daqiiqado yar oo ku dhufo "Isku day mar kale"</p>
-                        <p className="text-xs text-gray-500 mb-6">Auto-check: {Math.min(autoPollCount, MAX_AUTO_POLLS)} / {MAX_AUTO_POLLS}</p>
-                        <button onClick={handleRetry} className="flex items-center justify-center gap-2 w-full bg-yellow-500 text-black font-bold py-3 rounded-xl hover:brightness-110 transition-all"><RefreshCw size={18} />Isku day mar kale</button>
+                        {isManualPayment ? (
+                            /* Manual payment (M-Pesa / PayPal) — waiting for admin approval */
+                            <>
+                                <div className="w-24 h-24 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
+                                    <CheckCircle2 className="text-green-400" size={48} />
+                                </div>
+                                <h1 className="text-2xl font-black text-white mb-3">Lacagta La Helay!</h1>
+                                <p className="text-gray-300 mb-6 leading-relaxed max-w-sm mx-auto">{displayMessage}</p>
+                                <div className="rounded-xl border border-yellow-400/20 bg-yellow-400/5 p-4 mb-6 text-left space-y-2">
+                                    <p className="text-yellow-400 font-bold text-sm">Maxaa xiga?</p>
+                                    <p className="text-gray-400 text-sm">✔ Kooxdeenu waxay heli doontaa lacag-bixintaada</p>
+                                    <p className="text-gray-400 text-sm">✔ 30–40 daqiiqo gudahood Premium wuu kuu furmaa</p>
+                                    <p className="text-gray-400 text-sm">✔ Haddii aad su&apos;aal qabtid, nala soo xiriir WhatsApp</p>
+                                </div>
+                                <p className="text-xs text-gray-600 mb-4">Xog: Boggan xidh — Premium markuu furmaa waxaad moodada gali kartaa</p>
+                                <Link href="/" className="flex items-center justify-center gap-2 w-full bg-white/10 text-white font-bold py-3 rounded-xl hover:bg-white/20 transition-all">Ku laabo Bogga Hore</Link>
+                            </>
+                        ) : (
+                            /* Auto payment (Sifalo / Stripe) — polling */
+                            <>
+                                <div className="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><Loader2 className="text-yellow-400 animate-spin" size={48} /></div>
+                                <h1 className="text-2xl font-black text-white mb-2">Lacagta la xaqiijinayaa...</h1>
+                                <p className="text-gray-400 mb-6">{displayMessage}</p>
+                                <p className="text-sm text-gray-500 mb-6">Haddii aad lacagta bixisay, fadlan sug daqiiqado yar oo ku dhufo &quot;Isku day mar kale&quot;</p>
+                                <p className="text-xs text-gray-500 mb-6">Auto-check: {Math.min(autoPollCount, MAX_AUTO_POLLS)} / {MAX_AUTO_POLLS}</p>
+                                <button onClick={handleRetry} className="flex items-center justify-center gap-2 w-full bg-yellow-500 text-black font-bold py-3 rounded-xl hover:brightness-110 transition-all"><RefreshCw size={18} />Isku day mar kale</button>
+                            </>
+                        )}
                     </div>
                 )}
                 {displayStatus === "failed" && (
