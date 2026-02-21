@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Short, HeroSlide, PromoBanner, PageView, SearchAnalytics, Message } from "@/lib/models/Misc";
 import { Category, League, Fixture } from "@/lib/models/Settings";
+import { Match, Movie } from "@/lib/models";
 
 // ============ CATEGORIES ============
 export async function GET(req: NextRequest) {
@@ -75,6 +76,16 @@ export async function POST(req: NextRequest) {
         const { type, ...data } = body;
 
         switch (type) {
+            case "increment": {
+                const { id, collection } = data;
+                if (!id || !collection) return NextResponse.json({ error: "id and collection required" }, { status: 400 });
+                if (collection === "matches") {
+                    await Match.findByIdAndUpdate(id, { $inc: { views: 1 } });
+                } else if (collection === "movies" || collection === "posts") {
+                    await Movie.findByIdAndUpdate(id, { $inc: { views: 1 } });
+                }
+                return NextResponse.json({ success: true });
+            }
             case "message": {
                 const msg = await Message.create({ ...data, createdAt: Date.now() });
                 return NextResponse.json(msg, { status: 201 });
