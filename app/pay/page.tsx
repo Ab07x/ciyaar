@@ -410,7 +410,7 @@ function CheckoutHub({
                             <p className="text-[11px] text-gray-500 uppercase tracking-widest font-bold mb-4">Waxaad Helaysaa</p>
                             <div className="space-y-3">
                                 {[
-                                    { icon: "🎬", label: "724+ Filim Af Somali" },
+                                    { icon: "🎬", label: "12,000+ Aflaan Af Somali" },
                                     { icon: "⚽", label: "Ciyaaro Live — HD & 4K" },
                                     { icon: "📺", label: "Smart TV + Mobile + PC" },
                                     { icon: "🚫", label: "Bilaa Xayeysiis (No Ads)" },
