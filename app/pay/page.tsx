@@ -267,319 +267,310 @@ function CheckoutHub({
             </div>
 
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-10 relative z-10">
-                {/* Header Navbar-like element */}
+                {/* Header */}
                 <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-12">
                     <Link href="/" className="text-2xl font-black tracking-tighter">FAN<span className="text-[#ff003e]">BROJ</span></Link>
-                    <div className="flex items-center gap-4">
-                        <Link href="/pricing" className="text-sm font-medium hover:text-white">CHANGE PLAN</Link>
-                    </div>
+                    <Link href="/pricing" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">CHANGE PLAN</Link>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-10">
+                {/*
+                  Mobile order: 01 Create Account → 02 Payment Method → 03 Pay
+                  Desktop: 2-col grid — left col has 01+03, right col has 02 (spans both rows)
+                  Achieved by: flex-col on mobile (DOM order), CSS grid on lg with explicit placement
+                */}
+                <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-12 gap-y-10">
 
-                    {/* LEFT COLUMN: 01 Create Account + 03 Pay */}
-                    <div className="space-y-12 xl:pr-8">
+                    {/* ── 01 Create Account ── col1 row1 on desktop */}
+                    <section className="lg:col-start-1 lg:row-start-1 lg:pr-8">
+                        <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
+                            <span className="text-4xl text-[#ff003e] font-light leading-none">01</span> Create Account
+                        </h2>
 
-                        {/* 01 Create Account */}
-                        <section>
-                            <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
-                                <span className="text-4xl text-[#ff003e] font-light leading-none">01</span> Create Account
-                            </h2>
-
-                            {isEditingAuth ? (
-                                <div className="space-y-5">
-                                    <div className="flex items-center gap-6 mb-4">
-                                        <label className={`cursor-pointer font-bold border-b-2 pb-1 ${authMode === 'signup' ? 'text-white border-[#ff003e]' : 'text-gray-500 border-transparent hover:text-gray-300'}`} onClick={() => setAuthMode('signup')}>New Account</label>
-                                        <label className={`cursor-pointer font-bold border-b-2 pb-1 ${authMode === 'login' ? 'text-white border-[#ff003e]' : 'text-gray-500 border-transparent hover:text-gray-300'}`} onClick={() => setAuthMode('login')}>I Have An Account</label>
+                        {isEditingAuth ? (
+                            <div className="space-y-5">
+                                <div className="flex items-center gap-6 mb-4">
+                                    <label className={`cursor-pointer font-bold border-b-2 pb-1 ${authMode === 'signup' ? 'text-white border-[#ff003e]' : 'text-gray-500 border-transparent hover:text-gray-300'}`} onClick={() => setAuthMode('signup')}>New Account</label>
+                                    <label className={`cursor-pointer font-bold border-b-2 pb-1 ${authMode === 'login' ? 'text-white border-[#ff003e]' : 'text-gray-500 border-transparent hover:text-gray-300'}`} onClick={() => setAuthMode('login')}>I Have An Account</label>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="sm:col-span-2 relative">
+                                        <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Email</label>
+                                        <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="example@email.com" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                        <div className="sm:col-span-2 relative">
-                                            <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Email</label>
-                                            <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="example@email.com" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
-                                        </div>
+                                    <div className="relative">
+                                        <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Password</label>
+                                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="**********" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
+                                    </div>
+                                    {authMode === "signup" && (
                                         <div className="relative">
-                                            <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Password</label>
-                                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="**********" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
-                                        </div>
-                                        {authMode === "signup" && (
-                                            <div className="relative">
-                                                <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Confirm Password</label>
-                                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="**********" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
-                                            </div>
-                                        )}
-                                        {/* We don't have a giant save button in lookmovie, just continue/auth logic via PAY button or dedicated button? 
-                                            Lookmovie handles auth on next step. We will add a small inline button here. */}
-                                        <div className="sm:col-span-2 pt-2">
-                                            <button type="button" onClick={handleAuth} disabled={isAuthLoading} className="w-full sm:w-auto px-8 bg-[#2a303c] hover:bg-[#323947] disabled:opacity-50 py-3 rounded-md font-bold text-white transition-colors">
-                                                {isAuthLoading ? "Sending..." : "Continue"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="border border-[#2a303c] rounded-lg p-6 flex flex-col sm:flex-row items-center gap-5 relative bg-[#0b101a] backdrop-blur-sm">
-                                    <div className="absolute top-4 right-4 text-green-500 flex items-center gap-1.5 text-xs font-bold bg-green-500/10 px-2.5 py-1 rounded-full"><CheckCircle2 size={12} /> Ready</div>
-                                    <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                                        <div className="w-16 h-16 rounded-full border border-[#2a303c] bg-[#1a202c] overflow-hidden flex items-center justify-center">
-                                            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="font-bold text-2xl text-gray-500 uppercase">{(email || "U")[0]}</span>}
-                                        </div>
-                                        <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Camera size={16} /></div>
-                                        <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={async (e) => { if (e.target.files?.[0]) updateAvatar(e.target.files[0]) }} />
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-bold text-lg">{email || formEmail}</p>
-                                        <p className="text-gray-400 text-sm mt-0.5">Account verified and ready for checkout</p>
-                                    </div>
-                                </div>
-                            )}
-                        </section>
-
-                        {/* 03 Pay */}
-                        <section className={`transition-opacity duration-300 ${isEditingAuth ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                            <h2 className="text-3xl font-black mb-6 flex items-end gap-3 tracking-wide">
-                                <span className="text-4xl text-[#ff003e] font-light leading-none">03</span> Pay
-                            </h2>
-                            <div className="border border-[#2a303c] rounded-xl p-6 sm:p-8 bg-[#0b101a]/50 backdrop-blur-md space-y-6">
-
-                                {/* Order Summary */}
-                                <div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-gray-400 text-base font-medium">{selectedPlan.label}</span>
-                                        {geoReady
-                                            ? <span className="text-2xl font-bold text-white">${selectedPlanPrice.toFixed(2)}</span>
-                                            : <span className="w-20 h-7 rounded bg-white/10 animate-pulse inline-block" />
-                                        }
-                                    </div>
-                                    {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
-                                        <div className="flex items-center justify-between mt-2">
-                                            <span className="text-green-400 text-sm font-bold">+{initialBonusDays} Days FREE Bonus</span>
-                                            <span className="text-green-400 text-sm font-bold">$0.00</span>
+                                            <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Confirm Password</label>
+                                            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="**********" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
                                         </div>
                                     )}
-                                    <div className="h-px bg-[#2a303c] my-4" />
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-white font-bold text-lg">Total</span>
-                                        {geoReady
-                                            ? <span className="text-3xl font-black text-white">${selectedPlanPrice.toFixed(2)}</span>
-                                            : <span className="w-24 h-9 rounded bg-white/10 animate-pulse inline-block" />
-                                        }
+                                    <div className="sm:col-span-2 pt-2">
+                                        <button type="button" onClick={handleAuth} disabled={isAuthLoading} className="w-full sm:w-auto px-8 bg-[#2a303c] hover:bg-[#323947] disabled:opacity-50 py-3 rounded-md font-bold text-white transition-colors">
+                                            {isAuthLoading ? "Sending..." : "Continue"}
+                                        </button>
                                     </div>
                                 </div>
-
-                                {/* Trust badges */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Lock size={14} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Shield size={14} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : paymentMethod === "mpesa" ? "M-Pesa" : "Sifalo"} Secure</div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-300"><CreditCard size={14} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-300"><Crown size={14} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
-                                </div>
-
-                                {/* M-Pesa step-by-step guide */}
-                                {paymentMethod === "mpesa" && (
-                                    <div className="rounded-xl border border-[#4CAF50]/30 bg-[#4CAF50]/5 p-5 space-y-4">
-                                        <p className="text-white font-bold text-base">How to pay with M-Pesa:</p>
-                                        <div className="space-y-3">
-                                            <div className="flex items-start gap-3">
-                                                <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
-                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                    Open M-Pesa and send{" "}
-                                                    <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
-                                                    to:<br />
-                                                    <span className="text-[#4CAF50] font-black text-base">0797415296</span>
-                                                    <span className="text-gray-400 text-sm"> — Abdullahi Ahmed</span>
-                                                </p>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
-                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                    After sending, check your M-Pesa SMS for the <span className="text-white font-bold">Transaction Code</span> (looks like: QJK2ABCDE5)
-                                                </p>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
-                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste the code below and click Submit</p>
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={mpesaTxId}
-                                            onChange={e => setMpesaTxId(e.target.value.toUpperCase())}
-                                            placeholder="Paste M-Pesa code e.g. QJK2ABCDE5"
-                                            className="w-full bg-[#060b13] border-2 border-[#4CAF50]/40 focus:border-[#4CAF50] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono uppercase"
-                                        />
-                                    </div>
-                                )}
-
-                                {/* PayPal step-by-step guide */}
-                                {paymentMethod === "paypal" && (
-                                    <div className="rounded-xl border border-[#009cde]/30 bg-[#009cde]/5 p-5 space-y-4">
-                                        <p className="text-white font-bold text-base">How to pay with PayPal:</p>
-                                        <div className="space-y-3">
-                                            <div className="flex items-start gap-3">
-                                                <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
-                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                    Open PayPal and send{" "}
-                                                    <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
-                                                    to:<br />
-                                                    <span className="text-[#009cde] font-black text-base break-all">code.abdala@gmail.com</span>
-                                                </p>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
-                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                    After paying, open your PayPal receipt and copy the <span className="text-white font-bold">Transaction ID</span> (looks like: 5TY05013RG002845M)
-                                                </p>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
-                                                <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste it below and click Submit</p>
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={paypalTxId}
-                                            onChange={e => setPaypalTxId(e.target.value)}
-                                            placeholder="Paste Transaction ID here..."
-                                            className="w-full bg-[#060b13] border-2 border-[#009cde]/40 focus:border-[#009cde] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono"
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Pay Button */}
-                                <button
-                                    type="button"
-                                    onClick={handlePay}
-                                    disabled={isPaying || !canProceedToPayment || !geoReady}
-                                    className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-black text-xl py-5 rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_24px_rgba(13,110,253,0.35)] hover:shadow-[0_0_36px_rgba(13,110,253,0.55)]"
-                                >
-                                    {(isPaying || !geoReady) ? <Loader2 size={24} className="animate-spin" /> : null}
-                                    {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : paymentMethod === "mpesa" ? "SUBMIT M-PESA PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
-                                </button>
-                                <p className="text-sm text-gray-500 text-center">
-                                    {paymentMethod === "paypal"
-                                        ? "We will verify your payment within 30–40 minutes and activate your Premium."
-                                        : paymentMethod === "mpesa"
-                                        ? "We will verify your M-Pesa payment within 30–40 minutes and activate your Premium."
-                                        : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
-                                </p>
                             </div>
-                        </section>
-
-                        {(statusError || statusMessage) && (
-                            <div className={`p-4 rounded-lg text-sm border font-medium ${statusError ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-green-500/30 bg-green-500/10 text-green-400'}`}>
-                                {statusError || statusMessage}
+                        ) : (
+                            <div className="border border-[#2a303c] rounded-lg p-6 flex flex-col sm:flex-row items-center gap-5 relative bg-[#0b101a] backdrop-blur-sm">
+                                <div className="absolute top-4 right-4 text-green-500 flex items-center gap-1.5 text-xs font-bold bg-green-500/10 px-2.5 py-1 rounded-full"><CheckCircle2 size={12} /> Ready</div>
+                                <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                                    <div className="w-16 h-16 rounded-full border border-[#2a303c] bg-[#1a202c] overflow-hidden flex items-center justify-center">
+                                        {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="font-bold text-2xl text-gray-500 uppercase">{(email || "U")[0]}</span>}
+                                    </div>
+                                    <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Camera size={16} /></div>
+                                    <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={async (e) => { if (e.target.files?.[0]) updateAvatar(e.target.files[0]) }} />
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold text-lg">{email || formEmail}</p>
+                                    <p className="text-gray-400 text-sm mt-0.5">Account verified and ready for checkout</p>
+                                </div>
                             </div>
                         )}
-                    </div>
+                    </section>
 
-                    {/* RIGHT COLUMN: 02 Payment Method */}
-                    <div className="space-y-12">
-                        <section className={`transition-opacity duration-300 ${isEditingAuth ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                            <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
-                                <span className="text-4xl text-[#ff003e] font-light leading-none">02</span> Payment Method
-                            </h2>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 relative">
+                    {/* ── 02 Payment Method ── col2 rows 1-2 on desktop; position 2 on mobile */}
+                    <section className={`lg:col-start-2 lg:row-start-1 lg:row-span-2 transition-opacity duration-300 ${isEditingAuth ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                        <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
+                            <span className="text-4xl text-[#ff003e] font-light leading-none">02</span> Payment Method
+                        </h2>
+                        <div className="grid grid-cols-2 gap-3">
 
-                                {/* Stripe Panel */}
-                                <div
-                                    onClick={() => setPaymentMethod('stripe')}
-                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'stripe' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
-                                        }`}
-                                >
-                                    {paymentMethod === 'stripe' && (
-                                        <div className="absolute top-0 right-0 left-0 h-1 bg-green-500" />
-                                    )}
-                                    {paymentMethod === 'stripe' && (
-                                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center ring-4 ring-[#060b13]">
-                                            <Check size={14} className="text-[#060b13] ml-2 mt-2" strokeWidth={4} />
-                                        </div>
-                                    )}
-                                    <div className="text-center z-10">
-                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">CREDIT CARD</h3>
-                                        <p className="text-xs text-gray-400 italic font-medium">
-                                            International Cards
-                                            <br />
-                                            <span className="opacity-70 text-[10px]">Visa / Mastercard / Amex</span>
-                                        </p>
+                            {/* Credit Card / Stripe */}
+                            <div
+                                onClick={() => setPaymentMethod('stripe')}
+                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'stripe' ? 'border-blue-500 bg-blue-500/5 shadow-[0_0_18px_rgba(59,130,246,0.15)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-white/[0.02]'}`}
+                            >
+                                {paymentMethod === 'stripe' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-xl" />}
+                                {paymentMethod === 'stripe' && (
+                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                                        <Check size={11} className="text-white" strokeWidth={3} />
                                     </div>
-                                </div>
-
-                                {/* Sifalo Panel */}
-                                <div
-                                    onClick={() => setPaymentMethod('sifalo')}
-                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'sifalo' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-[#323946] hover:border-[#4b5563] hover:bg-[#3d4554]'
-                                        }`}
-                                >
-                                    {paymentMethod === 'sifalo' && (
-                                        <div className="absolute top-0 right-0 left-0 h-1 bg-green-500" />
-                                    )}
-                                    {paymentMethod === 'sifalo' && (
-                                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center ring-4 ring-[#060b13]">
-                                            <Check size={14} className="text-[#060b13] ml-2 mt-2" strokeWidth={4} />
-                                        </div>
-                                    )}
-                                    <div className="text-center z-10">
-                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">MOBILE MONEY</h3>
-                                        <p className="text-xs text-gray-300 italic font-medium">
-                                            Lacagta Somali
-                                            <br />
-                                            <span className="opacity-70 text-[10px]">EVC / eDahab / Sahal / Zaad</span>
-                                        </p>
-                                    </div>
-                                    <div className="absolute w-[150%] h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-30deg] -translate-x-full transition-transform duration-700 group-hover:block" />
-                                </div>
-
-                                {/* PayPal Panel */}
-                                <div
-                                    onClick={() => setPaymentMethod('paypal')}
-                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'paypal' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
-                                        }`}
-                                >
-                                    {paymentMethod === 'paypal' && (
-                                        <div className="absolute top-0 right-0 left-0 h-1 bg-green-500" />
-                                    )}
-                                    {paymentMethod === 'paypal' && (
-                                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center ring-4 ring-[#060b13]">
-                                            <Check size={14} className="text-[#060b13] ml-2 mt-2" strokeWidth={4} />
-                                        </div>
-                                    )}
-                                    <div className="text-center z-10">
-                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">PAYPAL</h3>
-                                        <p className="text-xs text-gray-400 italic font-medium">
-                                            Manual Verification
-                                            <br />
-                                            <span className="opacity-70 text-[10px]">Send & submit TX ID</span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* M-Pesa Panel */}
-                                <div
-                                    onClick={() => setPaymentMethod('mpesa')}
-                                    className={`relative rounded-xl border-2 p-4 sm:p-6 cursor-pointer overflow-hidden transition-all duration-200 group flex flex-col justify-center min-h-[120px] sm:min-h-[160px] ${paymentMethod === 'mpesa' ? 'border-green-500 bg-[#2a303c]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-[#1a202c]/50'
-                                        }`}
-                                >
-                                    {paymentMethod === 'mpesa' && (
-                                        <div className="absolute top-0 right-0 left-0 h-1 bg-[#4CAF50]" />
-                                    )}
-                                    {paymentMethod === 'mpesa' && (
-                                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center ring-4 ring-[#060b13]">
-                                            <Check size={14} className="text-[#060b13] ml-2 mt-2" strokeWidth={4} />
-                                        </div>
-                                    )}
-                                    <div className="text-center z-10">
-                                        <h3 className="font-extrabold text-xl text-white tracking-wide uppercase mb-2">M-PESA</h3>
-                                        <p className="text-xs text-gray-400 italic font-medium">
-                                            Kenya Mobile Money
-                                            <br />
-                                            <span className="opacity-70 text-[10px]">Send & submit code</span>
-                                        </p>
-                                    </div>
-                                </div>
-
+                                )}
+                                <div className="text-2xl mb-2">💳</div>
+                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">Credit Card</h3>
+                                <p className="text-[10px] text-gray-500 text-center">Visa / MC / Amex</p>
                             </div>
-                        </section>
-                    </div>
+
+                            {/* Mobile Money / Sifalo */}
+                            <div
+                                onClick={() => setPaymentMethod('sifalo')}
+                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'sifalo' ? 'border-orange-400 bg-orange-400/5 shadow-[0_0_18px_rgba(251,146,60,0.15)]' : 'border-[#2a303c] bg-[#0f1520] hover:border-[#4b5563]'}`}
+                            >
+                                {paymentMethod === 'sifalo' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-orange-400 rounded-t-xl" />}
+                                {paymentMethod === 'sifalo' && (
+                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center">
+                                        <Check size={11} className="text-white" strokeWidth={3} />
+                                    </div>
+                                )}
+                                <div className="text-2xl mb-2">📱</div>
+                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">Mobile Money</h3>
+                                <p className="text-[10px] text-gray-500 text-center">EVC · Zaad · Sahal</p>
+                            </div>
+
+                            {/* PayPal */}
+                            <div
+                                onClick={() => setPaymentMethod('paypal')}
+                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'paypal' ? 'border-[#009cde] bg-[#009cde]/5 shadow-[0_0_18px_rgba(0,156,222,0.15)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-white/[0.02]'}`}
+                            >
+                                {paymentMethod === 'paypal' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#009cde] rounded-t-xl" />}
+                                {paymentMethod === 'paypal' && (
+                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#009cde] flex items-center justify-center">
+                                        <Check size={11} className="text-white" strokeWidth={3} />
+                                    </div>
+                                )}
+                                <div className="text-2xl mb-2">🅿️</div>
+                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">PayPal</h3>
+                                <p className="text-[10px] text-gray-500 text-center">Send & submit TX</p>
+                            </div>
+
+                            {/* M-Pesa */}
+                            <div
+                                onClick={() => setPaymentMethod('mpesa')}
+                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'mpesa' ? 'border-[#4CAF50] bg-[#4CAF50]/5 shadow-[0_0_18px_rgba(76,175,80,0.15)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-white/[0.02]'}`}
+                            >
+                                {paymentMethod === 'mpesa' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#4CAF50] rounded-t-xl" />}
+                                {paymentMethod === 'mpesa' && (
+                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#4CAF50] flex items-center justify-center">
+                                        <Check size={11} className="text-white" strokeWidth={3} />
+                                    </div>
+                                )}
+                                <div className="text-2xl mb-2">🌿</div>
+                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">M-Pesa</h3>
+                                <p className="text-[10px] text-gray-500 text-center">Kenya Mobile Money</p>
+                            </div>
+
+                        </div>
+
+                        {/* What's included — fills empty space below payment cards */}
+                        <div className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-5">
+                            <p className="text-[11px] text-gray-500 uppercase tracking-widest font-bold mb-4">Waxaad Helaysaa</p>
+                            <div className="space-y-3">
+                                {[
+                                    { icon: "🎬", label: "724+ Filim Af Somali" },
+                                    { icon: "⚽", label: "Ciyaaro Live — HD & 4K" },
+                                    { icon: "📺", label: "Smart TV + Mobile + PC" },
+                                    { icon: "🚫", label: "Bilaa Xayeysiis (No Ads)" },
+                                    { icon: "⚡", label: "Premium isla markiiba furmaa" },
+                                    { icon: "💬", label: "WhatsApp Support 24/7" },
+                                ].map((feat) => (
+                                    <div key={feat.label} className="flex items-center gap-3">
+                                        <span className="text-base w-6 flex-shrink-0">{feat.icon}</span>
+                                        <span className="text-sm text-gray-300">{feat.label}</span>
+                                        <Check size={13} className="text-green-400 ml-auto flex-shrink-0" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Security strip */}
+                        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-gray-600">
+                            <span className="flex items-center gap-1"><Lock size={11} /> SSL Encrypted</span>
+                            <span className="flex items-center gap-1"><Shield size={11} /> Secure Checkout</span>
+                            <span className="flex items-center gap-1">🔒 Data Protected</span>
+                        </div>
+                    </section>
+
+                    {/* ── 03 Pay ── col1 row2 on desktop; position 3 on mobile */}
+                    <section className={`lg:col-start-1 lg:row-start-2 lg:pr-8 transition-opacity duration-300 ${isEditingAuth ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                        <h2 className="text-3xl font-black mb-6 flex items-end gap-3 tracking-wide">
+                            <span className="text-4xl text-[#ff003e] font-light leading-none">03</span> Pay
+                        </h2>
+                        <div className="border border-[#2a303c] rounded-xl p-6 sm:p-8 bg-[#0b101a]/50 backdrop-blur-md space-y-6">
+
+                            {/* Order Summary */}
+                            <div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-400 text-base font-medium">{selectedPlan.label}</span>
+                                    {geoReady
+                                        ? <span className="text-2xl font-bold text-white">${selectedPlanPrice.toFixed(2)}</span>
+                                        : <span className="w-20 h-7 rounded bg-white/10 animate-pulse inline-block" />
+                                    }
+                                </div>
+                                {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
+                                    <div className="flex items-center justify-between mt-2">
+                                        <span className="text-green-400 text-sm font-bold">+{initialBonusDays} Days FREE Bonus</span>
+                                        <span className="text-green-400 text-sm font-bold">$0.00</span>
+                                    </div>
+                                )}
+                                <div className="h-px bg-[#2a303c] my-4" />
+                                <div className="flex items-center justify-between">
+                                    <span className="text-white font-bold text-lg">Total</span>
+                                    {geoReady
+                                        ? <span className="text-3xl font-black text-white">${selectedPlanPrice.toFixed(2)}</span>
+                                        : <span className="w-24 h-9 rounded bg-white/10 animate-pulse inline-block" />
+                                    }
+                                </div>
+                            </div>
+
+                            {/* Trust badges */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center gap-2 text-sm text-gray-300"><Lock size={14} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
+                                <div className="flex items-center gap-2 text-sm text-gray-300"><Shield size={14} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : paymentMethod === "mpesa" ? "M-Pesa" : "Sifalo"} Secure</div>
+                                <div className="flex items-center gap-2 text-sm text-gray-300"><CreditCard size={14} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
+                                <div className="flex items-center gap-2 text-sm text-gray-300"><Crown size={14} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
+                            </div>
+
+                            {/* M-Pesa step-by-step guide */}
+                            {paymentMethod === "mpesa" && (
+                                <div className="rounded-xl border border-[#4CAF50]/30 bg-[#4CAF50]/5 p-5 space-y-4">
+                                    <p className="text-white font-bold text-base">How to pay with M-Pesa:</p>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
+                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                Open M-Pesa and send{" "}
+                                                <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
+                                                to:<br />
+                                                <span className="text-[#4CAF50] font-black text-base">0797415296</span>
+                                                <span className="text-gray-400 text-sm"> — Abdullahi Ahmed</span>
+                                            </p>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
+                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                After sending, check your M-Pesa SMS for the <span className="text-white font-bold">Transaction Code</span> (looks like: QJK2ABCDE5)
+                                            </p>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
+                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste the code below and click Submit</p>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={mpesaTxId}
+                                        onChange={e => setMpesaTxId(e.target.value.toUpperCase())}
+                                        placeholder="Paste M-Pesa code e.g. QJK2ABCDE5"
+                                        className="w-full bg-[#060b13] border-2 border-[#4CAF50]/40 focus:border-[#4CAF50] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono uppercase"
+                                    />
+                                </div>
+                            )}
+
+                            {/* PayPal step-by-step guide */}
+                            {paymentMethod === "paypal" && (
+                                <div className="rounded-xl border border-[#009cde]/30 bg-[#009cde]/5 p-5 space-y-4">
+                                    <p className="text-white font-bold text-base">How to pay with PayPal:</p>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
+                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                Open PayPal and send{" "}
+                                                <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
+                                                to:<br />
+                                                <span className="text-[#009cde] font-black text-base break-all">code.abdala@gmail.com</span>
+                                            </p>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
+                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
+                                                After paying, open your PayPal receipt and copy the <span className="text-white font-bold">Transaction ID</span> (looks like: 5TY05013RG002845M)
+                                            </p>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
+                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste it below and click Submit</p>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={paypalTxId}
+                                        onChange={e => setPaypalTxId(e.target.value)}
+                                        placeholder="Paste Transaction ID here..."
+                                        className="w-full bg-[#060b13] border-2 border-[#009cde]/40 focus:border-[#009cde] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Pay Button */}
+                            <button
+                                type="button"
+                                onClick={handlePay}
+                                disabled={isPaying || !canProceedToPayment || !geoReady}
+                                className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-black text-xl py-5 rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_24px_rgba(13,110,253,0.35)] hover:shadow-[0_0_36px_rgba(13,110,253,0.55)]"
+                            >
+                                {(isPaying || !geoReady) ? <Loader2 size={24} className="animate-spin" /> : null}
+                                {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : paymentMethod === "mpesa" ? "SUBMIT M-PESA PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                            </button>
+                            <p className="text-sm text-gray-500 text-center">
+                                {paymentMethod === "paypal"
+                                    ? "We will verify your payment within 30–40 minutes and activate your Premium."
+                                    : paymentMethod === "mpesa"
+                                    ? "We will verify your M-Pesa payment within 30–40 minutes and activate your Premium."
+                                    : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* Status messages */}
+                    {(statusError || statusMessage) && (
+                        <div className={`lg:col-start-1 p-4 rounded-lg text-sm border font-medium ${statusError ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-green-500/30 bg-green-500/10 text-green-400'}`}>
+                            {statusError || statusMessage}
+                        </div>
+                    )}
 
                 </div>
             </div>

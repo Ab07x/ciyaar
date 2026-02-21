@@ -111,7 +111,7 @@ export default function PricingPage() {
                             onClick={() => handleSelectPlan("yearly")}
                             className="w-full sm:w-auto px-8 py-4 bg-yellow-400 text-black font-black rounded-xl text-base uppercase tracking-wide hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/20"
                         >
-                            Save {savingsPercent}% — Iibso Yearly
+                            {geoReady ? `Save ${savingsPercent}% — Iibso Yearly` : "Iibso Yearly..."}
                         </button>
                         <button
                             onClick={() => handleSelectPlan("monthly")}
@@ -348,7 +348,7 @@ export default function PricingPage() {
                         <h2 className="text-xl sm:text-2xl font-black text-white mb-2">Caawimaad u baahan tahay?</h2>
                         <p className="text-gray-400 mb-5 text-sm">Nala soo xiriir WhatsApp — waan kaa caawin doonaa.</p>
                         <a
-                            href={`https://wa.me/${String(settings?.whatsappNumber || "+252618274188").replace(/\D/g, "")}?text=${encodeURIComponent("Salaan, waxaan rabaa inaan wax ka ogaado Fanproj Premium.")}`}
+                            href={`https://wa.me/${String(settings?.whatsappNumber || "+252618274188").replace(/\D/g, "")}?text=${encodeURIComponent("Salaan, waxaan rabaa inaan wax ka ogaado Fanbroj Premium.")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2.5 px-7 py-3 bg-[#25D366] text-white font-black rounded-xl hover:bg-[#1fb855] transition-colors text-sm uppercase tracking-wide"
