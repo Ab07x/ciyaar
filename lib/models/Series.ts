@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface ISeries extends Document {
     slug: string;
-    tmdbId: number;
+    tmdbId?: number;
     imdbId?: string;
     title: string;
     titleSomali?: string;
@@ -36,7 +36,7 @@ export interface ISeries extends Document {
 const SeriesSchema = new Schema<ISeries>(
     {
         slug: { type: String, required: true, index: true },
-        tmdbId: { type: Number, required: true, index: true },
+        tmdbId: { type: Number, index: true, sparse: true },
         imdbId: String,
         title: { type: String, required: true },
         titleSomali: String,

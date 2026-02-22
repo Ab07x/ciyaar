@@ -15,7 +15,9 @@ import {
     Calendar,
     Download,
     Edit,
-    Play
+    Play,
+    Upload,
+    PenLine,
 } from "lucide-react";
 import Link from "next/link";
 import EpisodeEditor from "@/components/admin/EpisodeEditor";
@@ -58,6 +60,10 @@ export default function SeriesFormPage({ params }: Props) {
     }
 
     const [activeTab, setActiveTab] = useState<"details" | "episodes">("details");
+    const [sourceMode, setSourceMode] = useState<"tmdb" | "manual">("tmdb");
+    const [uploadingPoster, setUploadingPoster] = useState(false);
+    const [uploadingBackdrop, setUploadingBackdrop] = useState(false);
+
     const [tmdbInput, setTmdbInput] = useState("");
     const [searching, setSearching] = useState(false);
     const [fetching, setFetching] = useState(false);
@@ -116,6 +122,40 @@ export default function SeriesFormPage({ params }: Props) {
         }
     }, [existingSeries]);
 
+    const generateSlug = (title: string) => {
+        return title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "")
+            + "-af-somali";
+    };
+
+    const handleImageUpload = async (file: File, type: "poster" | "backdrop") => {
+        if (type === "poster") setUploadingPoster(true);
+        else setUploadingBackdrop(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            const data = await res.json();
+            if (data.url) {
+                setFormData((prev) => ({
+                    ...prev,
+                    [type === "poster" ? "posterUrl" : "backdropUrl"]: data.url,
+                }));
+            } else {
+                alert("Upload failed");
+            }
+        } catch {
+            alert("Upload failed");
+        } finally {
+            if (type === "poster") setUploadingPoster(false);
+            else setUploadingBackdrop(false);
+        }
+    };
+
     const handleSearch = async () => {
         if (!tmdbInput.trim()) return;
         setSearching(true);
@@ -163,9 +203,12 @@ export default function SeriesFormPage({ params }: Props) {
     };
 
     const handleSubmit = async () => {
-        if (!formData.tmdbId || !formData.title) {
-            alert("First fetch series data from TMDB");
+        if (!formData.title) {
+            alert("Title is required");
             return;
+        }
+        if (!formData.slug && formData.title) {
+            formData.slug = generateSlug(formData.title);
         }
 
         try {
@@ -190,6 +233,7 @@ export default function SeriesFormPage({ params }: Props) {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         ...formData,
+                        tmdbId: formData.tmdbId || undefined,
                         backdropUrl: formData.backdropUrl || undefined,
                         lastAirDate: formData.lastAirDate || undefined,
                         rating: formData.rating || undefined,
@@ -302,65 +346,279 @@ export default function SeriesFormPage({ params }: Props) {
             {/* TAB: DETAILS */}
             {activeTab === "details" && (
                 <>
-                    {/* TMDB Search */}
+                    {/* Source Mode Toggle + Search/Manual */}
                     {!id && (
-                        <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-6">
-                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <Tv className="text-purple-400" />
-                                Step 1: Search TMDB
-                            </h3>
-                            <div className="flex gap-3">
-                                <input
-                                    type="text"
-                                    value={tmdbInput}
-                                    onChange={(e) => setTmdbInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                                    placeholder="Search series name..."
-                                    className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                                />
+                        <>
+                            <div className="flex bg-stadium-elevated rounded-xl p-1 border border-border-strong w-fit">
                                 <button
-                                    onClick={handleSearch}
-                                    disabled={searching}
-                                    className="px-6 py-3 bg-purple-500 text-white rounded-lg font-bold flex items-center gap-2"
+                                    onClick={() => setSourceMode("tmdb")}
+                                    className={`px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all ${sourceMode === "tmdb" ? "bg-purple-500 text-white" : "text-text-secondary hover:text-white"}`}
                                 >
-                                    {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-                                    Search
+                                    <Search size={16} /> Search TMDB
+                                </button>
+                                <button
+                                    onClick={() => setSourceMode("manual")}
+                                    className={`px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all ${sourceMode === "manual" ? "bg-orange-500 text-white" : "text-text-secondary hover:text-white"}`}
+                                >
+                                    <PenLine size={16} /> Add Manually
                                 </button>
                             </div>
 
-                            {showSearch && searchResults.length > 0 && (
-                                <div className="mt-4 grid grid-cols-5 gap-3">
-                                    {searchResults.map((r) => (
+                            {/* TMDB Search */}
+                            {sourceMode === "tmdb" && (
+                                <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-6">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <Tv className="text-purple-400" />
+                                        Step 1: Search TMDB
+                                    </h3>
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            value={tmdbInput}
+                                            onChange={(e) => setTmdbInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                                            placeholder="Search series name..."
+                                            className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                        />
                                         <button
-                                            key={r.id}
-                                            onClick={() => handleFetchTMDB(r.id)}
-                                            className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-purple-500"
+                                            onClick={handleSearch}
+                                            disabled={searching}
+                                            className="px-6 py-3 bg-purple-500 text-white rounded-lg font-bold flex items-center gap-2"
                                         >
-                                            {r.posterUrl ? (
-                                                <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover" />
-                                            ) : (
-                                                <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
-                                                    <Tv size={24} className="text-text-muted" />
-                                                </div>
-                                            )}
-                                            <div className="p-2">
-                                                <p className="text-xs font-bold truncate">{r.title}</p>
-                                                <p className="text-xs text-text-muted">{r.year}</p>
-                                            </div>
+                                            {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                                            Search
                                         </button>
-                                    ))}
+                                    </div>
+
+                                    {showSearch && searchResults.length > 0 && (
+                                        <div className="mt-4 grid grid-cols-5 gap-3">
+                                            {searchResults.map((r) => (
+                                                <button
+                                                    key={r.id}
+                                                    onClick={() => handleFetchTMDB(r.id)}
+                                                    className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-purple-500"
+                                                >
+                                                    {r.posterUrl ? (
+                                                        <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover" />
+                                                    ) : (
+                                                        <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
+                                                            <Tv size={24} className="text-text-muted" />
+                                                        </div>
+                                                    )}
+                                                    <div className="p-2">
+                                                        <p className="text-xs font-bold truncate">{r.title}</p>
+                                                        <p className="text-xs text-text-muted">{r.year}</p>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
+
+                            {/* Manual Entry Form */}
+                            {sourceMode === "manual" && !formData.title && (
+                                <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6 space-y-6">
+                                    <h3 className="text-lg font-bold flex items-center gap-2">
+                                        <PenLine className="text-orange-400" />
+                                        Add Series Manually
+                                    </h3>
+                                    <p className="text-sm text-text-muted">Fill in the series details below. Upload a poster and backdrop image.</p>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Title *</label>
+                                            <input
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value, slug: generateSlug(e.target.value) })}
+                                                placeholder="Series title..."
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-text-secondary uppercase font-bold block mb-2">First Air Date</label>
+                                            <input
+                                                type="date"
+                                                value={formData.firstAirDate}
+                                                onChange={(e) => setFormData({ ...formData, firstAirDate: e.target.value })}
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Overview</label>
+                                        <textarea
+                                            value={formData.overview}
+                                            onChange={(e) => setFormData({ ...formData, overview: e.target.value })}
+                                            placeholder="Series description..."
+                                            rows={4}
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        <div>
+                                            <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Seasons</label>
+                                            <input
+                                                type="number"
+                                                value={formData.numberOfSeasons || ""}
+                                                onChange={(e) => setFormData({ ...formData, numberOfSeasons: parseInt(e.target.value) || 0 })}
+                                                placeholder="1"
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Episodes</label>
+                                            <input
+                                                type="number"
+                                                value={formData.numberOfEpisodes || ""}
+                                                onChange={(e) => setFormData({ ...formData, numberOfEpisodes: parseInt(e.target.value) || 0 })}
+                                                placeholder="12"
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Status</label>
+                                            <select
+                                                value={formData.status}
+                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            >
+                                                <option value="">Select...</option>
+                                                <option value="Returning Series">Returning Series</option>
+                                                <option value="Ended">Ended</option>
+                                                <option value="Canceled">Canceled</option>
+                                                <option value="In Production">In Production</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Genres */}
+                                    <div>
+                                        <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Genres (comma separated)</label>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {formData.genres.map((g, i) => (
+                                                <span key={i} className="flex items-center gap-1 px-2 py-1 bg-purple-500/20 rounded text-purple-400 text-xs font-bold">
+                                                    {g}
+                                                    <button type="button" onClick={() => setFormData({ ...formData, genres: formData.genres.filter((_, idx) => idx !== i) })} className="hover:text-white">
+                                                        <X size={12} />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder="Drama, Action, Comedy"
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    const input = e.target as HTMLInputElement;
+                                                    const val = input.value.trim();
+                                                    if (val) {
+                                                        const newGenres = val.split(",").map(g => g.trim()).filter(g => g && !formData.genres.includes(g));
+                                                        if (newGenres.length > 0) setFormData({ ...formData, genres: [...formData.genres, ...newGenres] });
+                                                        input.value = "";
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Image Uploads */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Poster Image</label>
+                                            <div className="bg-stadium-dark border border-border-subtle rounded-xl p-4">
+                                                {formData.posterUrl ? (
+                                                    <div className="relative">
+                                                        <img src={formData.posterUrl} alt="Poster" className="w-full max-w-[200px] rounded-lg mx-auto" />
+                                                        <button type="button" onClick={() => setFormData({ ...formData, posterUrl: "" })} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white">
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <label className="flex flex-col items-center justify-center py-8 cursor-pointer hover:bg-stadium-hover rounded-lg transition-colors">
+                                                        {uploadingPoster ? <Loader2 size={32} className="animate-spin text-orange-400 mb-2" /> : <Upload size={32} className="text-text-muted mb-2" />}
+                                                        <span className="text-sm text-text-muted">{uploadingPoster ? "Uploading..." : "Click to upload poster"}</span>
+                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "poster"); }} />
+                                                    </label>
+                                                )}
+                                                <input
+                                                    value={formData.posterUrl}
+                                                    onChange={(e) => setFormData({ ...formData, posterUrl: e.target.value })}
+                                                    placeholder="Or paste image URL..."
+                                                    className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm mt-3"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Backdrop Image</label>
+                                            <div className="bg-stadium-dark border border-border-subtle rounded-xl p-4">
+                                                {formData.backdropUrl ? (
+                                                    <div className="relative">
+                                                        <img src={formData.backdropUrl} alt="Backdrop" className="w-full rounded-lg" />
+                                                        <button type="button" onClick={() => setFormData({ ...formData, backdropUrl: "" })} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white">
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <label className="flex flex-col items-center justify-center py-8 cursor-pointer hover:bg-stadium-hover rounded-lg transition-colors">
+                                                        {uploadingBackdrop ? <Loader2 size={32} className="animate-spin text-orange-400 mb-2" /> : <Upload size={32} className="text-text-muted mb-2" />}
+                                                        <span className="text-sm text-text-muted">{uploadingBackdrop ? "Uploading..." : "Click to upload backdrop"}</span>
+                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "backdrop"); }} />
+                                                    </label>
+                                                )}
+                                                <input
+                                                    value={formData.backdropUrl}
+                                                    onChange={(e) => setFormData({ ...formData, backdropUrl: e.target.value })}
+                                                    placeholder="Or paste image URL..."
+                                                    className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm mt-3"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!formData.title) { alert("Title is required"); return; }
+                                            if (!formData.slug) setFormData({ ...formData, slug: generateSlug(formData.title) });
+                                        }}
+                                        disabled={!formData.title}
+                                        className="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        <Plus size={18} /> Continue to Settings
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
 
-                    {/* Fetched Data */}
-                    {formData.tmdbId > 0 && (
+                    {/* Data Preview & Edit */}
+                    {(formData.tmdbId > 0 || formData.title) && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div>
-                                {formData.posterUrl && (
+                            <div className="space-y-4">
+                                {formData.posterUrl ? (
                                     <img src={formData.posterUrl} alt={formData.title} className="w-full rounded-2xl shadow-2xl" />
+                                ) : (
+                                    <div className="w-full aspect-[2/3] bg-stadium-elevated rounded-2xl flex items-center justify-center">
+                                        <Tv size={48} className="text-text-muted/30" />
+                                    </div>
                                 )}
+                                <div className="space-y-3">
+                                    <label className="flex items-center gap-2 px-4 py-2.5 bg-stadium-elevated border border-border-subtle rounded-lg cursor-pointer hover:bg-stadium-hover transition-colors text-sm">
+                                        {uploadingPoster ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                        {uploadingPoster ? "Uploading..." : "Upload Poster"}
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "poster"); }} />
+                                    </label>
+                                    <label className="flex items-center gap-2 px-4 py-2.5 bg-stadium-elevated border border-border-subtle rounded-lg cursor-pointer hover:bg-stadium-hover transition-colors text-sm">
+                                        {uploadingBackdrop ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                        {uploadingBackdrop ? "Uploading..." : "Upload Backdrop"}
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "backdrop"); }} />
+                                    </label>
+                                </div>
                             </div>
 
                             <div className="lg:col-span-2 space-y-6">
@@ -471,7 +729,7 @@ export default function SeriesFormPage({ params }: Props) {
                         </div>
                     )}
 
-                    {!id && formData.tmdbId === 0 && (
+                    {!id && !formData.title && sourceMode === "tmdb" && (
                         <div className="text-center py-20">
                             <Tv size={64} className="mx-auto mb-4 text-text-muted/30" />
                             <p className="text-text-muted">Search TMDB above to auto-fill series data</p>

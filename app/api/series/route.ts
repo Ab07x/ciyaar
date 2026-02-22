@@ -44,6 +44,30 @@ export async function POST(req: NextRequest) {
     try {
         await connectDB();
         const body = await req.json();
+
+        if (!body.title || !body.slug) {
+            return NextResponse.json({ error: "Title and slug are required" }, { status: 400 });
+        }
+
+        // Ensure unique slug
+        let slug = body.slug;
+        let counter = 1;
+        while (await Series.findOne({ slug })) {
+            counter++;
+            slug = `${body.slug}-${counter}`;
+        }
+        body.slug = slug;
+
+        // Defaults for manual entries
+        body.overview = body.overview || "No description available.";
+        body.posterUrl = body.posterUrl || "";
+        body.firstAirDate = body.firstAirDate || "2026-01-01";
+        body.status = body.status || "Returning Series";
+        body.numberOfSeasons = body.numberOfSeasons || 1;
+        body.numberOfEpisodes = body.numberOfEpisodes || 0;
+        body.genres = body.genres || [];
+        body.cast = body.cast || [];
+
         const now = Date.now();
         const series = await Series.create({ ...body, createdAt: now, updatedAt: now });
         return NextResponse.json(series, { status: 201 });

@@ -15,6 +15,8 @@ import {
     Clock,
     Calendar,
     Bell,
+    Upload,
+    PenLine,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -30,6 +32,10 @@ export default function MovieFormPage({ params }: Props) {
     const id = idParams?.id;
 
     const { data: existingMovie } = useSWR(id ? `/api/movies?id=${id}&full=true` : null, fetcher);
+
+    const [sourceMode, setSourceMode] = useState<"tmdb" | "manual">("tmdb");
+    const [uploadingPoster, setUploadingPoster] = useState(false);
+    const [uploadingBackdrop, setUploadingBackdrop] = useState(false);
 
     const [tmdbInput, setTmdbInput] = useState("");
     const [searching, setSearching] = useState(false);
@@ -116,6 +122,42 @@ export default function MovieFormPage({ params }: Props) {
         );
     }
 
+    // Generate slug from title
+    const generateSlug = (title: string) => {
+        return title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "")
+            + "-af-somali";
+    };
+
+    // Upload image handler
+    const handleImageUpload = async (file: File, type: "poster" | "backdrop") => {
+        if (type === "poster") setUploadingPoster(true);
+        else setUploadingBackdrop(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            const data = await res.json();
+            if (data.url) {
+                setFormData((prev) => ({
+                    ...prev,
+                    [type === "poster" ? "posterUrl" : "backdropUrl"]: data.url,
+                }));
+            } else {
+                alert("Upload failed");
+            }
+        } catch {
+            alert("Upload failed");
+        } finally {
+            if (type === "poster") setUploadingPoster(false);
+            else setUploadingBackdrop(false);
+        }
+    };
+
     // Search TMDB
     const handleSearch = async (page = 1) => {
         const query = page > 1 ? lastQuery : tmdbInput.trim();
@@ -173,9 +215,13 @@ export default function MovieFormPage({ params }: Props) {
     const handleSubmit = async () => {
         if (saving) return;
 
-        if (!formData.tmdbId || !formData.title) {
-            alert("First fetch movie data from TMDB");
+        if (!formData.title) {
+            alert("Title is required");
             return;
+        }
+        // Auto-generate slug for manual entries
+        if (!formData.slug && formData.title) {
+            formData.slug = generateSlug(formData.title);
         }
         if (!formData.embeds[0]?.url) {
             alert("Add at least one embed link");
@@ -194,7 +240,7 @@ export default function MovieFormPage({ params }: Props) {
             const payload = {
                 ...(id ? { id } : {}),
                 slug: formData.slug,
-                tmdbId: formData.tmdbId,
+                tmdbId: formData.tmdbId || undefined,
                 imdbId: formData.imdbId || undefined,
                 title: formData.title,
                 titleSomali: formData.titleSomali || undefined,
@@ -317,114 +363,374 @@ export default function MovieFormPage({ params }: Props) {
                 </button>
             </div>
 
-            {/* TMDB Search - Only show on new */}
+            {/* Source Mode Toggle - Only show on new */}
             {!id && (
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
-                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                        <Film className="text-blue-400" />
-                        Step 1: Search TMDB
-                    </h3>
-                    <div className="flex gap-3">
-                        <input
-                            type="text"
-                            value={tmdbInput}
-                            onChange={(e) => setTmdbInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                            placeholder="Search movie name or enter TMDB ID..."
-                            className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                        />
+                <>
+                    <div className="flex bg-stadium-elevated rounded-xl p-1 border border-border-strong w-fit">
                         <button
-                            onClick={() => handleSearch()}
-                            disabled={searching}
-                            className="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2"
+                            onClick={() => setSourceMode("tmdb")}
+                            className={`px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all ${sourceMode === "tmdb" ? "bg-blue-500 text-white" : "text-text-secondary hover:text-white"}`}
                         >
-                            {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-                            Search
+                            <Search size={16} /> Search TMDB
                         </button>
                         <button
-                            onClick={() => {
-                                const num = parseInt(tmdbInput);
-                                if (num) handleFetchTMDB(num);
-                            }}
-                            disabled={fetching}
-                            className="px-6 py-3 bg-accent-green text-black rounded-lg font-bold"
+                            onClick={() => setSourceMode("manual")}
+                            className={`px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all ${sourceMode === "manual" ? "bg-orange-500 text-white" : "text-text-secondary hover:text-white"}`}
                         >
-                            {fetching ? <Loader2 size={18} className="animate-spin" /> : "Fetch by ID"}
+                            <PenLine size={16} /> Add Manually
                         </button>
                     </div>
 
-                    {/* Search Results */}
-                    {showSearch && searchResults.length > 0 && (
-                        <div className="mt-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <p className="text-sm text-text-muted">{tmdbTotalResults} results found</p>
-                                {tmdbTotalPages > 1 && (
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => handleSearch(tmdbPage - 1)}
-                                            disabled={tmdbPage <= 1 || searching}
-                                            className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
-                                        >
-                                            Prev
-                                        </button>
-                                        <span className="text-sm text-text-muted">
-                                            {tmdbPage} / {tmdbTotalPages}
-                                        </span>
-                                        <button
-                                            onClick={() => handleSearch(tmdbPage + 1)}
-                                            disabled={tmdbPage >= tmdbTotalPages || searching}
-                                            className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                )}
+                    {/* TMDB Search */}
+                    {sourceMode === "tmdb" && (
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <Film className="text-blue-400" />
+                                Step 1: Search TMDB
+                            </h3>
+                            <div className="flex gap-3">
+                                <input
+                                    type="text"
+                                    value={tmdbInput}
+                                    onChange={(e) => setTmdbInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                                    placeholder="Search movie name or enter TMDB ID..."
+                                    className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                />
+                                <button
+                                    onClick={() => handleSearch()}
+                                    disabled={searching}
+                                    className="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2"
+                                >
+                                    {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                                    Search
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const num = parseInt(tmdbInput);
+                                        if (num) handleFetchTMDB(num);
+                                    }}
+                                    disabled={fetching}
+                                    className="px-6 py-3 bg-accent-green text-black rounded-lg font-bold"
+                                >
+                                    {fetching ? <Loader2 size={18} className="animate-spin" /> : "Fetch by ID"}
+                                </button>
                             </div>
-                            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                                {searchResults.map((r) => (
-                                    <button
-                                        key={r.id}
-                                        onClick={() => handleFetchTMDB(r.id)}
-                                        className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-accent-green transition-all group"
-                                    >
-                                        {r.posterUrl ? (
-                                            <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover group-hover:brightness-110" />
-                                        ) : (
-                                            <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
-                                                <Film size={24} className="text-text-muted" />
+
+                            {/* Search Results */}
+                            {showSearch && searchResults.length > 0 && (
+                                <div className="mt-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <p className="text-sm text-text-muted">{tmdbTotalResults} results found</p>
+                                        {tmdbTotalPages > 1 && (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleSearch(tmdbPage - 1)}
+                                                    disabled={tmdbPage <= 1 || searching}
+                                                    className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
+                                                >
+                                                    Prev
+                                                </button>
+                                                <span className="text-sm text-text-muted">
+                                                    {tmdbPage} / {tmdbTotalPages}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleSearch(tmdbPage + 1)}
+                                                    disabled={tmdbPage >= tmdbTotalPages || searching}
+                                                    className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
+                                                >
+                                                    Next
+                                                </button>
                                             </div>
                                         )}
-                                        <div className="p-2">
-                                            <p className="text-xs font-bold truncate">{r.title}</p>
-                                            <div className="flex items-center justify-between mt-1">
-                                                <span className="text-xs text-text-muted">{r.year}</span>
-                                                {r.rating && (
-                                                    <span className="text-xs text-accent-gold flex items-center gap-0.5">
-                                                        <Star size={10} className="fill-accent-gold" /> {r.rating}
-                                                    </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                                        {searchResults.map((r) => (
+                                            <button
+                                                key={r.id}
+                                                onClick={() => handleFetchTMDB(r.id)}
+                                                className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-accent-green transition-all group"
+                                            >
+                                                {r.posterUrl ? (
+                                                    <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover group-hover:brightness-110" />
+                                                ) : (
+                                                    <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
+                                                        <Film size={24} className="text-text-muted" />
+                                                    </div>
                                                 )}
-                                            </div>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
+                                                <div className="p-2">
+                                                    <p className="text-xs font-bold truncate">{r.title}</p>
+                                                    <div className="flex items-center justify-between mt-1">
+                                                        <span className="text-xs text-text-muted">{r.year}</span>
+                                                        {r.rating && (
+                                                            <span className="text-xs text-accent-gold flex items-center gap-0.5">
+                                                                <Star size={10} className="fill-accent-gold" /> {r.rating}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
-                </div>
+
+                    {/* Manual Entry Form */}
+                    {sourceMode === "manual" && !formData.title && (
+                        <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6 space-y-6">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <PenLine className="text-orange-400" />
+                                Add Movie Manually
+                            </h3>
+                            <p className="text-sm text-text-muted">Fill in the movie details below. Upload a poster and backdrop image.</p>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Title */}
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Title *</label>
+                                    <input
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value, slug: generateSlug(e.target.value) })}
+                                        placeholder="Movie title..."
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    />
+                                </div>
+                                {/* Release Date */}
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Release Date</label>
+                                    <input
+                                        type="date"
+                                        value={formData.releaseDate}
+                                        onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Overview */}
+                            <div>
+                                <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Overview</label>
+                                <textarea
+                                    value={formData.overview}
+                                    onChange={(e) => setFormData({ ...formData, overview: e.target.value })}
+                                    placeholder="Movie description..."
+                                    rows={4}
+                                    className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Runtime */}
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Runtime (min)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.runtime || ""}
+                                        onChange={(e) => setFormData({ ...formData, runtime: parseInt(e.target.value) || 0 })}
+                                        placeholder="120"
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    />
+                                </div>
+                                {/* Rating */}
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Rating (0-10)</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="10"
+                                        value={formData.rating || ""}
+                                        onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) || 0 })}
+                                        placeholder="7.5"
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    />
+                                </div>
+                                {/* Director */}
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Director</label>
+                                    <input
+                                        value={formData.director}
+                                        onChange={(e) => setFormData({ ...formData, director: e.target.value })}
+                                        placeholder="Director name..."
+                                        className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Genres */}
+                            <div>
+                                <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Genres (comma separated)</label>
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                    {formData.genres.map((g, i) => (
+                                        <span key={i} className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 rounded text-blue-400 text-xs font-bold">
+                                            {g}
+                                            <button type="button" onClick={() => setFormData({ ...formData, genres: formData.genres.filter((_, idx) => idx !== i) })} className="hover:text-white">
+                                                <X size={12} />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Action, Drama, Thriller"
+                                    className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            const input = e.target as HTMLInputElement;
+                                            const val = input.value.trim();
+                                            if (val) {
+                                                const newGenres = val.split(",").map(g => g.trim()).filter(g => g && !formData.genres.includes(g));
+                                                if (newGenres.length > 0) setFormData({ ...formData, genres: [...formData.genres, ...newGenres] });
+                                                input.value = "";
+                                            }
+                                        }
+                                    }}
+                                />
+                            </div>
+
+                            {/* Image Uploads */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Poster Upload */}
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Poster Image</label>
+                                    <div className="bg-stadium-dark border border-border-subtle rounded-xl p-4">
+                                        {formData.posterUrl ? (
+                                            <div className="relative">
+                                                <img src={formData.posterUrl} alt="Poster" className="w-full max-w-[200px] rounded-lg mx-auto" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, posterUrl: "" })}
+                                                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <label className="flex flex-col items-center justify-center py-8 cursor-pointer hover:bg-stadium-hover rounded-lg transition-colors">
+                                                {uploadingPoster ? (
+                                                    <Loader2 size={32} className="animate-spin text-orange-400 mb-2" />
+                                                ) : (
+                                                    <Upload size={32} className="text-text-muted mb-2" />
+                                                )}
+                                                <span className="text-sm text-text-muted">{uploadingPoster ? "Uploading..." : "Click to upload poster"}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) handleImageUpload(file, "poster");
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+                                        {/* Or paste URL */}
+                                        <input
+                                            value={formData.posterUrl}
+                                            onChange={(e) => setFormData({ ...formData, posterUrl: e.target.value })}
+                                            placeholder="Or paste image URL..."
+                                            className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm mt-3"
+                                        />
+                                    </div>
+                                </div>
+                                {/* Backdrop Upload */}
+                                <div>
+                                    <label className="text-xs text-text-secondary uppercase font-bold block mb-2">Backdrop Image</label>
+                                    <div className="bg-stadium-dark border border-border-subtle rounded-xl p-4">
+                                        {formData.backdropUrl ? (
+                                            <div className="relative">
+                                                <img src={formData.backdropUrl} alt="Backdrop" className="w-full rounded-lg" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, backdropUrl: "" })}
+                                                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <label className="flex flex-col items-center justify-center py-8 cursor-pointer hover:bg-stadium-hover rounded-lg transition-colors">
+                                                {uploadingBackdrop ? (
+                                                    <Loader2 size={32} className="animate-spin text-orange-400 mb-2" />
+                                                ) : (
+                                                    <Upload size={32} className="text-text-muted mb-2" />
+                                                )}
+                                                <span className="text-sm text-text-muted">{uploadingBackdrop ? "Uploading..." : "Click to upload backdrop"}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) handleImageUpload(file, "backdrop");
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+                                        <input
+                                            value={formData.backdropUrl}
+                                            onChange={(e) => setFormData({ ...formData, backdropUrl: e.target.value })}
+                                            placeholder="Or paste image URL..."
+                                            className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm mt-3"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Confirm button to proceed to metadata/embeds */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!formData.title) {
+                                        alert("Title is required");
+                                        return;
+                                    }
+                                    if (!formData.slug) {
+                                        setFormData({ ...formData, slug: generateSlug(formData.title) });
+                                    }
+                                }}
+                                disabled={!formData.title}
+                                className="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <Plus size={18} /> Continue to Settings & Embeds
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
 
-            {/* Fetched Data Preview */}
-            {formData.tmdbId > 0 && (
+            {/* Data Preview & Edit */}
+            {(formData.tmdbId > 0 || formData.title) && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left: Poster */}
-                    <div>
-                        {formData.posterUrl && (
+                    <div className="space-y-4">
+                        {formData.posterUrl ? (
                             <img
                                 src={formData.posterUrl}
                                 alt={formData.title}
                                 className="w-full rounded-2xl shadow-2xl"
                             />
+                        ) : (
+                            <div className="w-full aspect-[2/3] bg-stadium-elevated rounded-2xl flex items-center justify-center">
+                                <Film size={48} className="text-text-muted/30" />
+                            </div>
                         )}
+                        {/* Poster/Backdrop upload for all modes */}
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 px-4 py-2.5 bg-stadium-elevated border border-border-subtle rounded-lg cursor-pointer hover:bg-stadium-hover transition-colors text-sm">
+                                {uploadingPoster ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                {uploadingPoster ? "Uploading..." : "Upload Poster"}
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "poster"); }} />
+                            </label>
+                            <label className="flex items-center gap-2 px-4 py-2.5 bg-stadium-elevated border border-border-subtle rounded-lg cursor-pointer hover:bg-stadium-hover transition-colors text-sm">
+                                {uploadingBackdrop ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                {uploadingBackdrop ? "Uploading..." : "Upload Backdrop"}
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "backdrop"); }} />
+                            </label>
+                        </div>
                     </div>
 
                     {/* Right: Details */}
@@ -753,7 +1059,7 @@ export default function MovieFormPage({ params }: Props) {
             )}
 
             {/* Empty State */}
-            {!id && formData.tmdbId === 0 && (
+            {!id && !formData.title && sourceMode === "tmdb" && (
                 <div className="text-center py-20">
                     <Film size={64} className="mx-auto mb-4 text-text-muted/30" />
                     <p className="text-text-muted">Search TMDB above to auto-fill movie data</p>
