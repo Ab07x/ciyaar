@@ -129,8 +129,7 @@ export default function MovieFormPage({ params }: Props) {
             .replace(/[^a-z0-9\s-]/g, "")
             .replace(/\s+/g, "-")
             .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "")
-            + "-af-somali";
+            .replace(/^-|-$/g, "");
     };
 
     // Upload image handler
