@@ -18,6 +18,7 @@ import {
     Play,
     Upload,
     PenLine,
+    Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import EpisodeEditor from "@/components/admin/EpisodeEditor";
@@ -753,24 +754,49 @@ export default function SeriesFormPage({ params }: Props) {
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handleSyncSeason(seasonNum);
+                                            onClick={() => {
+                                                const nextEpNum = (episodes.length > 0
+                                                    ? Math.max(...episodes.map((e: any) => e.episodeNumber || 0)) + 1
+                                                    : 1);
+                                                setEditingEpisode({
+                                                    _id: null,
+                                                    seriesId: id,
+                                                    seasonNumber: seasonNum,
+                                                    episodeNumber: nextEpNum,
+                                                    title: "",
+                                                    overview: "",
+                                                    embeds: [],
+                                                    isPublished: true,
+                                                });
                                             }}
-                                            disabled={isSyncing}
-                                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                                            className="px-3 py-1.5 bg-accent-green hover:bg-accent-green/80 text-black rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
                                         >
-                                            {isSyncing ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
-                                            Sync from TMDB
+                                            <Plus size={12} /> Add Episode
                                         </button>
+                                        {existingSeries?.tmdbId && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleSyncSeason(seasonNum);
+                                                }}
+                                                disabled={isSyncing}
+                                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                                            >
+                                                {isSyncing ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                                                Sync from TMDB
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div className="p-4">
                                     {episodes.length === 0 ? (
                                         <div className="text-center py-8 text-text-muted">
-                                            No episodes loaded. Click sync to fetch from TMDB.
+                                            {existingSeries?.tmdbId
+                                                ? "No episodes loaded. Click sync to fetch from TMDB or add manually."
+                                                : "No episodes yet. Click \"Add Episode\" to create one."}
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
@@ -804,6 +830,16 @@ export default function SeriesFormPage({ params }: Props) {
                                                         className="p-2 hover:bg-white/10 rounded-lg text-text-secondary hover:text-white"
                                                     >
                                                         <Edit size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!confirm(`Delete S${ep.seasonNumber}E${ep.episodeNumber} - ${ep.title}?`)) return;
+                                                            await fetch(`/api/episodes?id=${ep._id}`, { method: "DELETE" });
+                                                            mutateEpisodes();
+                                                        }}
+                                                        className="p-2 hover:bg-accent-red/20 rounded-lg text-text-secondary hover:text-accent-red"
+                                                    >
+                                                        <Trash2 size={16} />
                                                     </button>
                                                 </div>
                                             ))}

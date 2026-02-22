@@ -10,34 +10,46 @@ interface Props {
 }
 
 export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
-
+    const isNew = !episode._id;
 
     const [formData, setFormData] = useState({
-        title: episode.title,
+        title: episode.title || "",
         titleSomali: episode.titleSomali || "",
         overview: episode.overview || "",
         overviewSomali: episode.overviewSomali || "",
         runtime: episode.runtime || 0,
         airDate: episode.airDate || "",
         embeds: episode.embeds || [],
-        isPublished: episode.isPublished,
+        isPublished: episode.isPublished ?? true,
+        episodeNumber: episode.episodeNumber || 1,
     });
 
     const [saving, setSaving] = useState(false);
 
     const handleSave = async () => {
+        if (!formData.title.trim()) {
+            alert("Episode title is required");
+            return;
+        }
         setSaving(true);
         try {
-            await fetch("/api/episodes", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+            const method = isNew ? "POST" : "PUT";
+            const payload = isNew
+                ? {
+                    seriesId: episode.seriesId,
+                    seasonNumber: episode.seasonNumber,
+                    ...formData,
+                }
+                : {
                     id: episode._id,
                     seriesId: episode.seriesId,
                     seasonNumber: episode.seasonNumber,
-                    episodeNumber: episode.episodeNumber,
-                    ...formData
-                }),
+                    ...formData,
+                };
+            await fetch("/api/episodes", {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
             });
             onSave();
             onClose();
@@ -56,7 +68,7 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border-strong bg-stadium-elevated sticky top-0 z-10">
                     <h2 className="text-xl font-bold">
-                        S{episode.seasonNumber} E{episode.episodeNumber} - {formData.title}
+                        {isNew ? "New Episode" : `S${episode.seasonNumber} E${episode.episodeNumber}`} {formData.title ? `- ${formData.title}` : ""}
                     </h2>
                     <button onClick={onClose} className="p-2 hover:bg-stadium-hover rounded-full">
                         <X size={24} />
@@ -65,15 +77,28 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
 
                 <div className="p-6 space-y-6">
                     {/* Basic Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-text-secondary uppercase">Title</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-xs font-bold text-text-secondary uppercase">Title *</label>
                             <input
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                placeholder="Episode title..."
                                 className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2"
                             />
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-text-secondary uppercase">Episode #</label>
+                            <input
+                                type="number"
+                                min={1}
+                                value={formData.episodeNumber}
+                                onChange={(e) => setFormData({ ...formData, episodeNumber: parseInt(e.target.value) || 1 })}
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2"
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-text-secondary uppercase">Air Date</label>
                             <input
@@ -83,6 +108,27 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
                                 className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2"
                             />
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-text-secondary uppercase">Runtime (min)</label>
+                            <input
+                                type="number"
+                                min={0}
+                                value={formData.runtime || ""}
+                                onChange={(e) => setFormData({ ...formData, runtime: parseInt(e.target.value) || 0 })}
+                                placeholder="45"
+                                className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2"
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-text-secondary uppercase">Overview</label>
+                        <textarea
+                            value={formData.overview}
+                            onChange={(e) => setFormData({ ...formData, overview: e.target.value })}
+                            placeholder="Episode description..."
+                            rows={3}
+                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-3 py-2"
+                        />
                     </div>
 
                     {/* Translations */}
@@ -194,7 +240,7 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
                         className="px-6 py-2 bg-accent-green text-black rounded-lg font-bold flex items-center gap-2"
                     >
                         <Save size={18} />
-                        {saving ? "Saving..." : "Save Changes"}
+                        {saving ? "Saving..." : isNew ? "Create Episode" : "Save Changes"}
                     </button>
                 </div>
             </div>
