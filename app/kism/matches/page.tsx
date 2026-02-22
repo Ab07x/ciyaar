@@ -2,7 +2,7 @@
 
 import useSWR, { mutate } from "swr";
 import Link from "next/link";
-import { Plus, Edit, Trash2, PlayCircle, Lock, Search } from "lucide-react";
+import { Plus, Edit, Trash2, PlayCircle, Lock, Search, Bell, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -14,6 +14,43 @@ export default function AdminMatchesPage() {
     const [filter, setFilter] = useState<"all" | "live" | "upcoming" | "finished" | "premium">("all");
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [pushingId, setPushingId] = useState<string | null>(null);
+
+    const handleSendPush = async (match: any) => {
+        if (!confirm(`Send push notification for "${match.teamA} vs ${match.teamB}"?`)) return;
+        setPushingId(match._id);
+        try {
+            const kickoff = new Date(match.kickoffAt);
+            const timeStr = kickoff.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+            const league = match.leagueName || match.league || "";
+            const isLive = match.status === "live";
+            const res = await fetch("/api/push", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: isLive
+                        ? `🔴 LIVE: ${match.teamA} vs ${match.teamB}`
+                        : `⚽ ${match.teamA} vs ${match.teamB}`,
+                    body: isLive
+                        ? `${league} — Hadda ku daawo LIVE Fanbroj! 📺`
+                        : `${league} — ${timeStr} | Ku daawo Fanbroj 📺`,
+                    broadcast: true,
+                    url: `https://fanbroj.net/match/${match.slug}`,
+                    image: match.thumbnailUrl || "https://fanbroj.net/img/lm-bg.jpg",
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Push sent! ${data.sent || 0} delivered, ${data.failed || 0} failed`);
+            } else {
+                alert("Push failed: " + (data.error || "Unknown error"));
+            }
+        } catch (err) {
+            console.error("Push error:", err);
+            alert("Failed to send push notification");
+        }
+        setPushingId(null);
+    };
 
     const handleDelete = async (id: string) => {
         if (!confirm("Delete this match?")) return;
@@ -80,7 +117,7 @@ export default function AdminMatchesPage() {
                                 <td className="px-4 py-3 text-sm font-mono text-accent-green">{m.views || 0}</td>
                                 <td className="px-4 py-3 text-sm text-text-muted">{new Date(m.kickoffAt).toLocaleString()}</td>
                                 <td className="px-4 py-3"><span className={`text-xs font-bold px-2 py-1 rounded ${m.status === "live" ? "bg-accent-red/20 text-accent-red" : m.status === "upcoming" ? "bg-accent-green/20 text-accent-green" : "bg-text-muted/20 text-text-muted"}`}>{m.status.toUpperCase()}</span></td>
-                                <td className="px-4 py-3"><div className="flex items-center justify-end gap-2"><Link href={`/kism/matches/${m._id}`} className="p-2 hover:bg-stadium-hover rounded-lg"><Edit size={16} /></Link><button onClick={() => handleDelete(m._id)} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red"><Trash2 size={16} /></button></div></td>
+                                <td className="px-4 py-3"><div className="flex items-center justify-end gap-2"><button onClick={() => handleSendPush(m)} disabled={pushingId === m._id} className="p-2 hover:bg-blue-500/20 rounded-lg text-blue-400" title="Send Push Notification">{pushingId === m._id ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}</button><Link href={`/kism/matches/${m._id}`} className="p-2 hover:bg-stadium-hover rounded-lg"><Edit size={16} /></Link><button onClick={() => handleDelete(m._id)} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red"><Trash2 size={16} /></button></div></td>
                             </tr>
                         ))}
                     </tbody>

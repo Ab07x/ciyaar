@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -16,25 +15,22 @@ export async function POST(request: NextRequest) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Define upload path
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        // Save to project root uploads/ (NOT public/ — Next.js won't serve dynamic files from public/ in production)
+        const uploadDir = path.join(process.cwd(), "uploads");
 
-        // Ensure directory exists
         try {
             await mkdir(uploadDir, { recursive: true });
-        } catch (err) {
+        } catch {
             // Directory might already exist
         }
 
-        // Generate unique filename
         const ext = path.extname(file.name);
         const filename = `${crypto.randomUUID()}${ext}`;
         const filePath = path.join(uploadDir, filename);
 
-        // Write file to disk
         await writeFile(filePath, buffer);
 
-        // Return the public URL
+        // Served via /uploads/[filename] route handler
         const publicUrl = `/uploads/${filename}`;
 
         return NextResponse.json({ url: publicUrl, name: file.name, type: file.type, size: file.size });
