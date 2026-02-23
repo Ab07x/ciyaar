@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Tv, Crown, Eye, Search, Check, X } from "lucide-react";
+import { Plus, Edit, Trash2, Tv, Crown, Search, Check, X, Bell, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -12,6 +12,7 @@ export default function AdminSeriesPage() {
 
     const [filter, setFilter] = useState<"all" | "published" | "draft" | "premium" | "dubbed">("all");
     const [search, setSearch] = useState("");
+    const [pushingId, setPushingId] = useState<string | null>(null);
 
     const filtered = seriesList?.filter((s: any) => {
         if (filter === "published" && !s.isPublished) return false;
@@ -21,6 +22,39 @@ export default function AdminSeriesPage() {
         if (search && !s.title.toLowerCase().includes(search.toLowerCase())) return false;
         return true;
     });
+
+    const handleSendPush = async (s: any) => {
+        if (!confirm(`Send push notification for "${s.titleSomali || s.title}"?`)) return;
+        setPushingId(s._id);
+        try {
+            const name = s.titleSomali || s.title;
+            const year = s.firstAirDate?.split("-")[0] || "";
+            const genreText = (s.genres || []).slice(0, 2).join(" & ");
+            const res = await fetch("/api/push", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: `🔥 CUSUB: ${name} ${year ? `(${year})` : ""} AF SOMALI`,
+                    body: genreText
+                        ? `${genreText} — Hadda ku daawo Fanbroj! Bilaash 🍿`
+                        : `Musalsal cusub — Hadda ku daawo Fanbroj! Bilaash 🍿`,
+                    broadcast: true,
+                    url: `https://fanbroj.net/series/${s.slug}`,
+                    image: s.posterUrl || "https://fanbroj.net/img/lm-bg.jpg",
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Push sent! ${data.sent || 0} delivered, ${data.failed || 0} failed`);
+            } else {
+                alert("Push failed: " + (data.error || "Unknown error"));
+            }
+        } catch (err) {
+            console.error("Push error:", err);
+            alert("Push failed");
+        }
+        setPushingId(null);
+    };
 
     const handleDelete = async (id: string) => {
         if (!confirm("Delete this series and all its episodes?")) return;
@@ -113,6 +147,14 @@ export default function AdminSeriesPage() {
                                     >
                                         <Edit size={16} />
                                     </Link>
+                                    <button
+                                        onClick={() => handleSendPush(s)}
+                                        disabled={pushingId === s._id}
+                                        className="p-2 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30"
+                                        title="Send Push Notification"
+                                    >
+                                        {pushingId === s._id ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
+                                    </button>
                                     <button
                                         onClick={() => handleDelete(s._id)}
                                         className="p-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30"
