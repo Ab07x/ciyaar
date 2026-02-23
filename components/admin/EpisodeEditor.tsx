@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Save, Plus, Trash2 } from "lucide-react";
+import { X, Save, Plus, Trash2, Upload, Loader2 } from "lucide-react";
 
 interface Props {
     episode: any;
@@ -22,9 +22,30 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
         embeds: episode.embeds || [],
         isPublished: episode.isPublished ?? true,
         episodeNumber: episode.episodeNumber || 1,
+        stillUrl: episode.stillUrl || "",
     });
 
     const [saving, setSaving] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
+
+    const handleImageUpload = async (file: File) => {
+        setUploadingImage(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            const data = await res.json();
+            if (data.url) {
+                setFormData((prev) => ({ ...prev, stillUrl: data.url }));
+            } else {
+                alert("Upload failed");
+            }
+        } catch {
+            alert("Upload failed");
+        } finally {
+            setUploadingImage(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!formData.title.trim()) {
@@ -120,6 +141,37 @@ export default function EpisodeEditor({ episode, onClose, onSave }: Props) {
                             />
                         </div>
                     </div>
+                    {/* Episode Image */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-text-secondary uppercase">Episode Image</label>
+                        <div className="bg-stadium-dark border border-border-subtle rounded-xl p-4">
+                            {formData.stillUrl ? (
+                                <div className="relative w-fit">
+                                    <img src={formData.stillUrl} alt="Episode" className="max-w-[280px] rounded-lg" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, stillUrl: "" })}
+                                        className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="flex flex-col items-center justify-center py-6 cursor-pointer hover:bg-stadium-hover rounded-lg transition-colors">
+                                    {uploadingImage ? <Loader2 size={24} className="animate-spin text-blue-400 mb-2" /> : <Upload size={24} className="text-text-muted mb-2" />}
+                                    <span className="text-sm text-text-muted">{uploadingImage ? "Uploading..." : "Click to upload image"}</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+                                </label>
+                            )}
+                            <input
+                                value={formData.stillUrl}
+                                onChange={(e) => setFormData({ ...formData, stillUrl: e.target.value })}
+                                placeholder="Or paste image URL..."
+                                className="w-full bg-stadium-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm mt-3"
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-text-secondary uppercase">Overview</label>
                         <textarea

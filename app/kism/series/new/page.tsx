@@ -741,6 +741,24 @@ export default function SeriesFormPage({ params }: Props) {
             {/* TAB: EPISODES */}
             {activeTab === "episodes" && id && (
                 <div className="space-y-6">
+                    {/* Add Season Button */}
+                    <div className="flex justify-end">
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                const newCount = (existingSeries?.numberOfSeasons || existingSeries?.totalSeasons || 1) + 1;
+                                await fetch("/api/series", {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ id, numberOfSeasons: newCount }),
+                                });
+                                mutateSeries();
+                            }}
+                            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors"
+                        >
+                            <Plus size={16} /> Add Season
+                        </button>
+                    </div>
                     {Array.from({ length: existingSeries?.numberOfSeasons || existingSeries?.totalSeasons || 1 }).map((_, i) => {
                         const seasonNum = i + 1;
                         const episodes = episodesData?.[seasonNum] || [];
