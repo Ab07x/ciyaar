@@ -47,3 +47,8 @@ config/
 # uploaded files (served via /uploads/[filename] route)
 /uploads/*
 !/uploads/.gitkeep
+
+# capacitor native build artifacts
+/android/app/build/
+/ios/App/build/
+/ios/DerivedData/
