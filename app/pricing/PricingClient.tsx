@@ -4,7 +4,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import {
     Check, X, Shield, Users, ChevronDown, ChevronUp,
-    Star, Zap, Clock, Download, Tv,
+    Star, Zap, Clock, Download, Tv, Youtube,
 } from "lucide-react";
 import { PLAN_OPTIONS, getPlanPrice } from "@/lib/plans";
 import QuickCheckout from "@/components/QuickCheckout";
@@ -365,6 +365,26 @@ export default function PricingClient() {
                 <div className="flex items-center justify-center gap-2 mt-5 text-xs text-gray-600">
                     <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
                     <span>PCI-compliant · SSL encrypted · Bank-level security</span>
+                </div>
+            </section>
+
+            {/* ── Video Tutorial ── */}
+            <section className="px-4 pb-16 max-w-3xl mx-auto">
+                <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-[#0a1a2b] to-[#0f1e30] p-4 md:p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Youtube size={20} className="text-red-500" />
+                        <h3 className="text-sm md:text-base font-bold text-white uppercase">Sida Loo Iibsado & Daawado VIP</h3>
+                    </div>
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+                        <iframe
+                            src="https://www.youtube.com/embed/5h1a8fQJ0JA"
+                            title="Sida loo iibsado Premium - Fanbroj Tutorial"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            loading="lazy"
+                            className="absolute inset-0 w-full h-full"
+                        />
+                    </div>
                 </div>
             </section>
 
