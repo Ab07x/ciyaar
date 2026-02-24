@@ -98,7 +98,7 @@ function MyListContent() {
                 <p className="text-text-secondary max-w-md mb-8">
                     Fadlan soo gal (login) si aad u isticmaasho {currentConfig.label}.
                 </p>
-                <Link href="/pay?auth=login">
+                <Link href="/login">
                     <Button variant="primary" leftIcon={<Plus size={18} />}>
                         Login / Sign Up
                     </Button>

@@ -192,7 +192,7 @@ export function Navbar() {
                                 Sign Up
                             </Link>
                             <Link
-                                href="/pay?auth=login"
+                                href="/login"
                                 className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-black uppercase tracking-wide hover:bg-gray-100 transition-colors flex items-center gap-1.5"
                             >
                                 <LogIn size={14} />
@@ -369,7 +369,7 @@ export function Navbar() {
                                                 Sign Up
                                             </Link>
                                             <Link
-                                                href="/pay?auth=login"
+                                                href="/login"
                                                 className="p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
                                                 onClick={() => setMobileMenuOpen(false)}
                                             >

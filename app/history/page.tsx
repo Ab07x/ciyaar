@@ -111,7 +111,7 @@ export default function WatchHistoryPage() {
                     Fadlan soo gal (login) si aad u aragto taariikhda daawashadaada.
                 </p>
                 <Link
-                    href="/pay?auth=login"
+                    href="/login"
                     className="inline-flex items-center gap-2 rounded-xl bg-accent-green text-black font-bold px-5 py-3 hover:brightness-110 transition-all"
                 >
                     <PlayCircle size={18} />
