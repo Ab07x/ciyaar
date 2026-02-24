@@ -11,7 +11,6 @@ import { Play, Star, ChevronRight, ChevronLeft, Crown, Tv, TrendingUp } from "lu
 import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
-import { RamadanBanner } from "@/components/RamadanBanner";
 import { TelegramBanner, TelegramFloatingButton } from "@/components/TelegramBanner";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -120,9 +119,6 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
 
   return (
     <div className="min-h-screen bg-[#020D18]">
-      {/* Ramadan Banner */}
-      <RamadanBanner variant="full" />
-
       {/* TV Quick Access */}
       <section className="max-w-7xl mx-auto px-4 pt-4">
         <Link
