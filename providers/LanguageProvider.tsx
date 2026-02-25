@@ -13,7 +13,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [locale, setLocaleState] = useState<Locale>("so");
+    const [locale, setLocaleState] = useState<Locale>("en");
 
     useEffect(() => {
         // Load preference
