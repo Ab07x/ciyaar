@@ -214,6 +214,17 @@ function CheckoutHub({
 
     const startStripeCheckout = async () => {
         setStatusError(""); setStatusMessage(""); setIsPaying(true);
+        // match plan: use internal checkout (one-time payment, no subscription)
+        if (selectedPlan.id === "match") {
+            try {
+                const res = await fetch("/api/pay/stripe/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown" }) });
+                const data = await res.json();
+                if (!res.ok || !data?.checkoutUrl) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
+                window.location.href = String(data.checkoutUrl);
+            } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
+            return;
+        }
+        // weekly / monthly / yearly: route through fanproj.shop (subscription)
         try {
             const res = await fetch("https://fanproj.shop/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, email: email || formEmail || undefined, deviceId: deviceId || "unknown" }) });
             const data = await res.json();
