@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SearchBox } from "./SearchBox";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, User, Trophy, Film, Tv, Crown, CreditCard, List, Zap, MessageSquare, UserPlus, LogIn, Ticket } from "lucide-react";
+import { Menu, X, Search, User, Trophy, Film, Tv, Crown, CreditCard, List, Zap, MessageSquare, UserPlus, LogIn, Ticket, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
@@ -40,8 +40,9 @@ export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [accountMenuOpen, setAccountMenuOpen] = useState(false);
     const pathname = usePathname();
-    const { isPremium, isLoading, email } = useUser();
+    const { isPremium, isLoading, email, logout } = useUser();
     const { t } = useLanguage();
     const isRegisteredUser = Boolean(email);
 
@@ -210,26 +211,49 @@ export function Navbar() {
                                 className="h-5 w-5 border-2 border-gray-300 border-t-[#E50914] rounded-full"
                             />
                         </div>
-                    ) : isPremium ? (
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Link
-                                href="/subscription"
-                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#E50914] hover:bg-red-50 rounded-lg transition-colors hidden md:flex border border-red-200 relative group"
-                                aria-label="My Subscription"
+                    ) : (isPremium || isRegisteredUser) ? (
+                        <div className="relative hidden md:block">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setAccountMenuOpen(o => !o)}
+                                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isPremium ? "text-[#E50914] hover:bg-red-50 border border-red-200" : "text-gray-600 hover:bg-gray-100"}`}
+                                aria-label="Account menu"
                             >
-                                <Crown size={22} />
-                            </Link>
-                        </motion.div>
-                    ) : isRegisteredUser ? (
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Link
-                                href="/menu"
-                                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-lg transition-colors hidden md:flex"
-                                aria-label="My Account"
-                            >
-                                <User size={22} />
-                            </Link>
-                        </motion.div>
+                                {isPremium ? <Crown size={22} /> : <User size={22} />}
+                            </motion.button>
+                            <AnimatePresence>
+                                {accountMenuOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setAccountMenuOpen(false)} />
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute right-0 top-full mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden"
+                                        >
+                                            <Link
+                                                href={isPremium ? "/subscription" : "/menu"}
+                                                className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                                                onClick={() => setAccountMenuOpen(false)}
+                                            >
+                                                {isPremium ? <Crown size={16} className="text-[#E50914]" /> : <User size={16} />}
+                                                {isPremium ? "My Plan" : "My Account"}
+                                            </Link>
+                                            <div className="h-px bg-gray-100" />
+                                            <button
+                                                onClick={() => { setAccountMenuOpen(false); logout(); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                                            >
+                                                <LogOut size={16} />
+                                                Logout
+                                            </button>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     ) : (
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Link
@@ -385,6 +409,16 @@ export function Navbar() {
                                                 Have Premium Code?
                                             </Link>
                                         </>
+                                    )}
+                                    {/* Logout — shown whenever user is logged in */}
+                                    {(isPremium || isRegisteredUser) && (
+                                        <button
+                                            onClick={() => { setMobileMenuOpen(false); logout(); }}
+                                            className="w-full p-4 min-h-[48px] rounded-xl text-base font-semibold flex items-center gap-4 text-red-500 hover:bg-red-50 transition-colors border border-red-100"
+                                        >
+                                            <LogOut size={22} />
+                                            Logout
+                                        </button>
                                     )}
                                 </motion.div>
                             </nav>

@@ -37,7 +37,7 @@ interface UserContextType {
     updateAvatar: (file: File) => Promise<{ success: boolean; avatarUrl?: string; error?: string }>;
     signupWithEmail: (email: string, password: string, displayName?: string, phoneNumber?: string) => Promise<{ success: boolean; error?: string }>;
     loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    logout: () => void;
+    logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -286,10 +286,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
         if (typeof window !== "undefined") {
             localStorage.removeItem(LOCAL_SUBSCRIPTION_KEY);
-            fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
+            try {
+                await fetch("/api/auth/logout", { method: "POST" });
+            } catch {
+                // continue even if request fails
+            }
             setUserId(null);
             didRedirect.current = true;
             window.location.href = "/login";
