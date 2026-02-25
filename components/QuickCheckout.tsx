@@ -55,8 +55,8 @@ const MAX_POLL = 30; // 30 × 3 s = 90 s
 const PLAN_META: Record<PlanId, { label: string; duration: string; color: string; bg: string }> = {
     monthly: { label: "Pro",     duration: "30 maalmood",  color: "text-green-400",  bg: "bg-green-500/10 border-green-500/30" },
     yearly:  { label: "Elite",   duration: "365 maalmood", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30" },
-    weekly:  { label: "Plus",    duration: "7 maalmood",   color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/30" },
-    match:   { label: "Starter", duration: "1 ciyaar",     color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/30" },
+    weekly:  { label: "Basic",   duration: "7 maalmood",   color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/30" },
+    match:   { label: "Starter", duration: "3 maalmood",   color: "text-pink-400",   bg: "bg-pink-500/10 border-pink-500/30" },
 };
 
 // ─── Root Component ───────────────────────────────────────────────────────────
@@ -395,8 +395,8 @@ function SelectStep({
     const PLANS: { id: PlanId; name: string; price: string; duration: string; badge?: string }[] = [
         { id: "monthly", name: "Pro",     price: "",  duration: "30 maalmood", badge: "Popular" },
         { id: "yearly",  name: "Elite",   price: "",  duration: "365 maalmood", badge: "Best value" },
-        { id: "weekly",  name: "Plus",    price: "",  duration: "7 maalmood" },
-        { id: "match",   name: "Starter", price: "",  duration: "1 ciyaar" },
+        { id: "weekly",  name: "Basic",   price: "",  duration: "7 maalmood" },
+        { id: "match",   name: "Starter", price: "",  duration: "3 maalmood" },
     ];
 
     const METHODS: { id: PayMethod; label: string; sub: string; icon: string; color: string }[] = [

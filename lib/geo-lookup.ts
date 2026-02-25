@@ -87,6 +87,19 @@ export async function lookupCountry(ip: string): Promise<string | null> {
 
 /** Get the geo multiplier for the request's IP. Returns { country, multiplier }. */
 export async function getRequestGeo(req: NextRequest): Promise<{ country: string | null; multiplier: number }> {
+    // 1. Cloudflare injects cf-ipcountry on every request — most reliable source
+    const cfCountry = req.headers.get("cf-ipcountry")?.toUpperCase();
+    if (cfCountry && cfCountry.length === 2 && cfCountry !== "XX" && cfCountry !== "T1") {
+        return { country: cfCountry, multiplier: getGeoMultiplier(cfCountry) };
+    }
+
+    // 2. Vercel also injects x-vercel-ip-country
+    const vercelCountry = req.headers.get("x-vercel-ip-country")?.toUpperCase();
+    if (vercelCountry && vercelCountry.length === 2) {
+        return { country: vercelCountry, multiplier: getGeoMultiplier(vercelCountry) };
+    }
+
+    // 3. Fallback: resolve IP via external APIs
     const ip = getClientIP(req);
     const country = await lookupCountry(ip);
     const multiplier = getGeoMultiplier(country);

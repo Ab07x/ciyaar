@@ -6,11 +6,11 @@ import PricingClient from "./PricingClient";
 export const metadata: Metadata = {
     title: "Pricing – Fanbroj Premium | Stream Somali Movies & Live Sports",
     description:
-        "Choose your Fanbroj plan. Stream 12,000+ Somali films, live Premier League, Champions League & NBA in HD. From $3.20/month. Pay via EVC Plus, Zaad, Sahal, M-Pesa, PayPal or card.",
+        "Choose your Fanbroj plan. Stream 12,000+ Somali films, live Premier League, Champions League & NBA in HD/4K. Plans from $1.00/month. Pay via EVC Plus, Zaad, Sahal, M-Pesa, PayPal or card. $1 trial available.",
     openGraph: {
-        title: "Fanbroj Premium – From $3.20/month",
+        title: "Fanbroj Premium – Plans from $1.00/month",
         description:
-            "12,000+ Somali films, live sports HD, zero ads. Start today with EVC Plus, Zaad, PayPal or card.",
+            "12,000+ Somali films, live sports HD/4K, zero ads. Basic, Pro & Elite plans. $1 trial for new users.",
         url: "https://fanbroj.net/pricing",
         siteName: "Fanbroj",
         images: [
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "Fanbroj Premium – From $3.20/month",
-        description: "12,000+ Somali films, live sports, zero ads.",
+        title: "Fanbroj Premium – Plans from $1.00/month",
+        description: "12,000+ Somali films, live sports HD/4K, zero ads. $1 trial available.",
         images: ["https://fanbroj.net/img/lm-bg.jpg"],
     },
     alternates: { canonical: "https://fanbroj.net/pricing" },
@@ -29,6 +29,7 @@ export const metadata: Metadata = {
         "fanbroj premium", "somali streaming", "somali movies online", "evc plus subscription",
         "zaad payment streaming", "somali tv online", "premier league somali",
         "champions league live somali", "af somali films", "fanbroj pricing",
+        "somali streaming $1 trial", "fanbroj pro plan", "fanbroj elite plan",
     ],
 };
 
@@ -38,15 +39,15 @@ const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: "Fanbroj Premium",
-    description: "Stream 12,000+ Somali movies, live sports and series in HD. Ad-free. Instant access.",
+    description: "Stream 12,000+ Somali movies, live sports and series in HD/4K. Ad-free. Instant access. $1 trial available.",
     brand: { "@type": "Brand", name: "Fanbroj" },
     url: "https://fanbroj.net/pricing",
     image: "https://fanbroj.net/img/lm-bg.jpg",
     offers: [
         {
             "@type": "Offer",
-            name: "Starter – Single Match",
-            price: "0.20",
+            name: "Starter – 3-Day Plan",
+            price: "0.50",
             priceCurrency: "USD",
             priceValidUntil: "2027-12-31",
             availability: "https://schema.org/InStock",
@@ -54,7 +55,7 @@ const jsonLd = {
         },
         {
             "@type": "Offer",
-            name: "Plus – 7-Day Plan",
+            name: "Basic – 7-Day Plan",
             price: "1.00",
             priceCurrency: "USD",
             priceValidUntil: "2027-12-31",
@@ -64,7 +65,7 @@ const jsonLd = {
         {
             "@type": "Offer",
             name: "Pro – Monthly Plan",
-            price: "3.20",
+            price: "2.50",
             priceCurrency: "USD",
             priceValidUntil: "2027-12-31",
             availability: "https://schema.org/InStock",
@@ -73,7 +74,7 @@ const jsonLd = {
         {
             "@type": "Offer",
             name: "Elite – Yearly Plan",
-            price: "11.99",
+            price: "30.00",
             priceCurrency: "USD",
             priceValidUntil: "2027-12-31",
             availability: "https://schema.org/InStock",

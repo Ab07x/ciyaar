@@ -18,6 +18,7 @@ import { ConnectionIndicator } from "@/components/mobile/OfflineIndicator";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { AggressivePushBanner } from "@/components/AggressivePushBanner";
 import { SitewideOfferBar } from "@/components/SitewideOfferBar";
+import { LayoutChrome } from "@/components/LayoutChrome";
 
 // SEO-optimized metadata targeting top search keywords
 export function generateMetadata(): Metadata {
@@ -201,13 +202,14 @@ export default function RootLayout({
                 <ToastProvider>
                   {/* Header */}
                   <Navbar />
-                  <SitewideOfferBar />
+                  <LayoutChrome><SitewideOfferBar /></LayoutChrome>
 
                   <main className="min-h-[calc(100vh-4rem)] pb-32 md:pb-0">
                     {children}
                   </main>
 
                   {/* Footer with Movie Collage Background */}
+                  <LayoutChrome>
                   <footer className="relative mt-12 mb-32 md:mb-0 overflow-hidden">
                     {/* Background Image */}
                     <div
@@ -286,14 +288,17 @@ export default function RootLayout({
                       </div>
                     </div>
                   </footer>
+                  </LayoutChrome>
 
-                  <BottomNav />
-                  <AggressivePushBanner />
-                  <FreeTrialBanner />
-                  <ConnectionIndicator />
-                  <div className="fixed bottom-24 md:bottom-8 right-4 z-40">
-                    <WhatsAppButton showLabel={false} className="w-14 h-14 p-0 flex items-center justify-center rounded-full" />
-                  </div>
+                  <LayoutChrome>
+                    <BottomNav />
+                    <AggressivePushBanner />
+                    <FreeTrialBanner />
+                    <ConnectionIndicator />
+                    <div className="fixed bottom-24 md:bottom-8 right-4 z-40">
+                      <WhatsAppButton showLabel={false} className="w-14 h-14 p-0 flex items-center justify-center rounded-full" />
+                    </div>
+                  </LayoutChrome>
                 </ToastProvider>
               </PushProvider>
             </UserProvider>

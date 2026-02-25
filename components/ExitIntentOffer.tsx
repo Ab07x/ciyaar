@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Zap, Gift, Flame } from "lucide-react";
 import useSWR from "swr";
-import { PLAN_OPTIONS, getPlanPrice } from "@/lib/plans";
 import { getABVariant, EXIT_OFFER } from "@/lib/offers";
 import QuickCheckout from "@/components/QuickCheckout";
 
@@ -16,7 +15,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
  * Shows max once per session — stored in sessionStorage.
  *
  * A/B test:
- *   Variant A — standard plan picker (existing behaviour)
+ *   Variant A — Pro/Elite plan picker
  *   Variant B — 50% off urgency offer → opens QuickCheckout inline
  */
 export default function ExitIntentOffer({ plan = "monthly", deviceId = "" }: { plan?: "monthly" | "yearly"; deviceId?: string }) {
@@ -26,18 +25,15 @@ export default function ExitIntentOffer({ plan = "monthly", deviceId = "" }: { p
     const [variant, setVariant]           = useState<"A" | "B">("A");
     const shownRef = useRef(false);
 
-    const { data: settings } = useSWR("/api/settings", fetcher);
-    const { data: geo } = useSWR("/api/geo", fetcher);
-    const geoMultiplier: number = (geo as any)?.multiplier ?? 1;
-
-    const monthlyOption = PLAN_OPTIONS.find(p => p.id === "monthly")!;
-    const yearlyOption  = PLAN_OPTIONS.find(p => p.id === "yearly")!;
-    const monthlyPrice  = Math.round(getPlanPrice(settings, monthlyOption) * geoMultiplier * 100) / 100;
-    const yearlyPrice   = Math.round(getPlanPrice(settings, yearlyOption)  * geoMultiplier * 100) / 100;
-    const yearlySavePct = Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100);
+    // Fetch geo-aware pricing from the new /api/pricing endpoint
+    const { data: pricing } = useSWR("/api/pricing", fetcher);
+    const proMonthly: number   = pricing?.plans?.find((p: { id: string }) => p.id === "pro")?.monthly?.price ?? 0;
+    const eliteYearly: number  = pricing?.plans?.find((p: { id: string }) => p.id === "elite")?.yearly?.price ?? 0;
+    const eliteSave: number    = pricing?.plans?.find((p: { id: string }) => p.id === "elite")?.yearly?.savePercent ?? 43;
+    const trialEligible: boolean = pricing?.trialEligible ?? false;
 
     // Discounted price for Variant B (50% off)
-    const discountedMonthly = Math.round(monthlyPrice * 0.5 * 100) / 100;
+    const discountedPro = Math.round(proMonthly * 0.5 * 100) / 100;
 
     const show = () => {
         if (shownRef.current) return;
@@ -135,12 +131,12 @@ export default function ExitIntentOffer({ plan = "monthly", deviceId = "" }: { p
                             <div className="rounded-2xl border-2 border-red-500/60 bg-red-500/10 p-4 mb-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
-                                        <p className="font-black text-white">Monthly Premium</p>
-                                        <p className="text-xs text-gray-400">30 maalmood • Isla markiiba furmaa</p>
+                                        <p className="font-black text-white">Pro — Monthly</p>
+                                        <p className="text-xs text-gray-400">30 maalmood · Isla markiiba furmaa</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs text-gray-500 line-through">${monthlyPrice.toFixed(2)}</p>
-                                        <p className="text-3xl font-black text-red-400">${discountedMonthly.toFixed(2)}</p>
+                                        {proMonthly > 0 && <p className="text-xs text-gray-500 line-through">${proMonthly.toFixed(2)}</p>}
+                                        <p className="text-3xl font-black text-red-400">${discountedPro.toFixed(2)}</p>
                                     </div>
                                 </div>
                                 <button
@@ -161,12 +157,12 @@ export default function ExitIntentOffer({ plan = "monthly", deviceId = "" }: { p
                                     className="w-full py-3.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-black text-base transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Zap size={18} />
-                                    HA LA KHAAYO — KU BILOW ${discountedMonthly.toFixed(2)}
+                                    HA LA KHAAYO — KU BILOW ${discountedPro.toFixed(2)}
                                 </button>
                             </div>
                         </>
                     ) : (
-                        /* ── Variant A: standard plan picker ── */
+                        /* ── Variant A: Pro/Elite picker ── */
                         <>
                             <div className="flex items-center gap-2 mb-3">
                                 <Gift size={16} className="text-yellow-400" />
@@ -177,10 +173,11 @@ export default function ExitIntentOffer({ plan = "monthly", deviceId = "" }: { p
                             </h2>
                             <p className="text-sm text-gray-400 mb-5">
                                 Premium furan maanta — bilaa xayeysiis, 12,000+ filim, ciyaaro live HD.
+                                {trialEligible && " Tijaabi 3 maalmood $1 kaliya."}
                             </p>
 
                             <div className="space-y-3">
-                                {/* Monthly */}
+                                {/* Pro */}
                                 <button
                                     onClick={() => {
                                         fetch("/api/data", {
@@ -200,18 +197,23 @@ export default function ExitIntentOffer({ plan = "monthly", deviceId = "" }: { p
                                 >
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-black text-white">Monthly</span>
+                                            <span className="font-black text-white">Pro</span>
                                             <span className="text-[10px] bg-green-500 text-black font-black px-1.5 py-0.5 rounded-full">POPULAR</span>
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-0.5">30 maalmood • Isla markiiba furmaa</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">
+                                            30 maalmood · 3 devices · Full HD
+                                            {trialEligible && " · $1 trial"}
+                                        </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-2xl font-black text-white">${monthlyPrice.toFixed(2)}</p>
+                                        <p className="text-2xl font-black text-white">
+                                            {proMonthly > 0 ? `$${proMonthly.toFixed(2)}` : "..."}
+                                        </p>
                                         <p className="text-[10px] text-green-400">bishii</p>
                                     </div>
                                 </button>
 
-                                {/* Yearly */}
+                                {/* Elite */}
                                 <button
                                     onClick={() => {
                                         fetch("/api/data", {
@@ -231,13 +233,15 @@ export default function ExitIntentOffer({ plan = "monthly", deviceId = "" }: { p
                                 >
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-black text-white">Yearly</span>
-                                            <span className="text-[10px] bg-yellow-400 text-black font-black px-1.5 py-0.5 rounded-full">SAVE {yearlySavePct}%</span>
+                                            <span className="font-black text-white">Elite</span>
+                                            <span className="text-[10px] bg-yellow-400 text-black font-black px-1.5 py-0.5 rounded-full">SAVE {eliteSave}%</span>
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-0.5">365 + 60 maalmood bonus • 5 devices</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">365 + 60 maalmood bonus · 5 devices · 4K</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-2xl font-black text-white">${yearlyPrice.toFixed(2)}</p>
+                                        <p className="text-2xl font-black text-white">
+                                            {eliteYearly > 0 ? `$${eliteYearly.toFixed(2)}` : "..."}
+                                        </p>
                                         <p className="text-[10px] text-yellow-400">sanad oo dhan</p>
                                     </div>
                                 </button>

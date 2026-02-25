@@ -36,6 +36,9 @@ function TvBrandIcon({ size = 18, className }: { size?: number; className?: stri
     );
 }
 
+// Pages that should NOT show the site navbar
+const CLEAN_PAGES = ["/login", "/pay", "/premium", "/profile", "/pricing"];
+
 export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -44,6 +47,11 @@ export function Navbar() {
     const { isPremium, isLoading, email } = useUser();
     const { t } = useLanguage();
     const isRegisteredUser = Boolean(email);
+
+    // Hide navbar on clean/standalone pages
+    if (CLEAN_PAGES.some(p => pathname === p || pathname.startsWith(p + "/"))) {
+        return null;
+    }
 
     // Handle scroll for glassmorphism effect
     useEffect(() => {
