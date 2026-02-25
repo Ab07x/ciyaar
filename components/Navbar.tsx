@@ -231,16 +231,26 @@ export function Navbar() {
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: -8, scale: 0.95 }}
                                             transition={{ duration: 0.15 }}
-                                            className="absolute right-0 top-full mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden"
+                                            className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden"
                                         >
                                             <Link
-                                                href={isPremium ? "/subscription" : "/menu"}
+                                                href="/account"
                                                 className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
                                                 onClick={() => setAccountMenuOpen(false)}
                                             >
-                                                {isPremium ? <Crown size={16} className="text-[#E50914]" /> : <User size={16} />}
-                                                {isPremium ? "My Plan" : "My Account"}
+                                                <User size={16} />
+                                                My Account
                                             </Link>
+                                            {isPremium && (
+                                                <Link
+                                                    href="/subscription"
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
+                                                    onClick={() => setAccountMenuOpen(false)}
+                                                >
+                                                    <Crown size={16} className="text-yellow-500" />
+                                                    My Plan
+                                                </Link>
+                                            )}
                                             <div className="h-px bg-gray-100" />
                                             <button
                                                 onClick={() => { setAccountMenuOpen(false); logout(); }}
