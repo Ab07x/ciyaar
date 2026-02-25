@@ -1,8 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import connectDB from "@/lib/mongodb";
-import { Settings, Payment, ConversionEvent } from "@/lib/models";
-import { getRequestGeo } from "@/lib/geo-lookup";
+import { Payment, ConversionEvent } from "@/lib/models";
+
+// Fixed prices — must match Stripe price IDs on fanproj.shop
+const FIXED_PRICES: Record<string, number> = {
+    match:   1.50,
+    starter: 1.50,
+    weekly:  3.00,
+    basic:   3.00,
+    monthly: 6.00,
+    pro:     6.00,
+    yearly:  80.00,
+    elite:   80.00,
+};
+
+// Canonical legacy plan ID used for DB / downstream
+const CANONICAL_PLAN: Record<string, string> = {
+    match:   "match",
+    starter: "match",
+    weekly:  "weekly",
+    basic:   "weekly",
+    monthly: "monthly",
+    pro:     "monthly",
+    yearly:  "yearly",
+    elite:   "yearly",
+};
 
 export async function POST(request: NextRequest) {
     try {
@@ -17,30 +40,19 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!["match", "weekly", "monthly", "yearly"].includes(plan)) {
+        if (!FIXED_PRICES[plan]) {
             return NextResponse.json(
                 { error: "Invalid plan" },
                 { status: 400 }
             );
         }
 
-        // Get price from settings
-        const settings = await Settings.findOne().lean<Record<string, unknown> | null>();
-        const priceKey = `price${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
-        const baseAmount = Number(settings?.[priceKey] || 0);
-        const bonusDays = plan === "monthly" ? Math.min(7, Math.max(0, Number(offerBonusDays) || 0)) : 0;
+        const canonicalPlan = CANONICAL_PLAN[plan];
+        const baseAmount = FIXED_PRICES[plan];
+        const bonusDays = canonicalPlan === "monthly" ? Math.min(7, Math.max(0, Number(offerBonusDays) || 0)) : 0;
         const normalizedOfferCode = bonusDays > 0 ? String(offerCode || "MONTHLY_EXIT_7D") : "";
 
-        if (!baseAmount || baseAmount <= 0) {
-            return NextResponse.json(
-                { error: "Price not configured for this plan" },
-                { status: 400 }
-            );
-        }
-
-        // Apply geo-based pricing multiplier
-        const { country, multiplier } = await getRequestGeo(request);
-        const geoAdjustedAmount = Math.round(baseAmount * multiplier * 100) / 100;
+        const geoAdjustedAmount = baseAmount;
 
         // Add Sifalo Pay processing fee (1% for mobile money) so merchant gets full price
         const FEE_PERCENT = 0.01; // 1%
@@ -116,8 +128,8 @@ export async function POST(request: NextRequest) {
         // Save pending payment in MongoDB
         await Payment.create({
             deviceId,
-            plan,
-            amount: geoAdjustedAmount,
+            plan: canonicalPlan,
+            amount: baseAmount,
             currency: "USD",
             orderId,
             gateway: "checkout",
@@ -128,8 +140,6 @@ export async function POST(request: NextRequest) {
             offerCode: normalizedOfferCode || undefined,
             verifyAttempts: 0,
             lastCheckedAt: 0,
-            geoCountry: country || undefined,
-            geoMultiplier: multiplier,
             baseAmount,
             createdAt: Date.now(),
         });
@@ -139,14 +149,11 @@ export async function POST(request: NextRequest) {
                 eventName: "purchase_started",
                 deviceId,
                 pageType: "pricing",
-                plan,
+                plan: canonicalPlan,
                 source: "checkout_api",
                 metadata: {
                     baseAmount,
-                    geoAdjustedAmount,
                     totalAmount,
-                    geoCountry: country || undefined,
-                    geoMultiplier: multiplier,
                     bonusDays,
                     offerCode: normalizedOfferCode || undefined,
                     orderId,
