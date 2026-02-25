@@ -7,19 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Home, Trophy, Tv, Heart, Menu, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Pages that should NOT show the bottom nav
-const CLEAN_PAGES = ["/login", "/pay", "/premium", "/profile", "/pricing"];
-
 export function BottomNav() {
     const pathname = usePathname();
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     const scrollThreshold = 10;
-
-    // Hide on clean/standalone pages
-    if (CLEAN_PAGES.some(p => pathname === p || pathname.startsWith(p + "/"))) {
-        return null;
-    }
 
     // Hide on scroll down, show on scroll up
     useEffect(() => {

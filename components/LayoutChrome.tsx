@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 /** Pages that render as standalone (no footer, banners, WhatsApp, etc.) */
-const CLEAN_PAGES = ["/login", "/pay", "/premium", "/profile", "/pricing"];
+const CLEAN_PAGES = ["/pay", "/profile"];
 
 export function LayoutChrome({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();

@@ -95,26 +95,6 @@ export default function PremiumPlanPage() {
             </div>
 
             <div style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto", padding: "28px 16px 60px" }}>
-                {/* Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <Link href="/" style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.05em", color: "#fff", textDecoration: "none" }}>
-                        FAN<span style={{ color: "#ff003e" }}>BROJ</span>
-                    </Link>
-                    <div style={{ display: "flex", gap: 10 }}>
-                        <Link
-                            href="/login"
-                            style={{ fontSize: 13, fontWeight: 700, color: "#d1d5db", border: "1px solid rgba(255,255,255,0.2)", padding: "7px 18px", borderRadius: 6, textDecoration: "none" }}
-                        >
-                            LOGIN
-                        </Link>
-                        <Link
-                            href="/pay?auth=signup"
-                            style={{ fontSize: 13, fontWeight: 700, color: "#fff", background: "#0d6efd", padding: "7px 18px", borderRadius: 6, textDecoration: "none" }}
-                        >
-                            SIGNUP
-                        </Link>
-                    </div>
-                </div>
 
                 <div className="premium-layout">
                     {/* ── Left: Plan Cards ── */}
