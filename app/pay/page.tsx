@@ -1,21 +1,30 @@
 "use client";
 
+import React from "react";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import {
     ArrowRight,
+    Ban,
     Camera,
     Check,
     CheckCircle2,
+    Clock,
     Copy,
     CreditCard,
     Crown,
+    Film,
+    Flame,
     Loader2,
     Lock,
+    MessageCircle,
     RefreshCw,
     Shield,
+    Smartphone,
+    Tv,
     XCircle,
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
@@ -295,16 +304,19 @@ function CheckoutHub({
     return (
         <>
         <ExitIntentOffer plan={initialPlanId === "yearly" ? "yearly" : "monthly"} />
-        <div className="min-h-screen bg-[#060b13] text-[#e1e2e6] selection:bg-[#FF1A4E] selection:text-white font-sans relative overflow-hidden pb-32">
-            {/* Background Lines */}
-            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-                <div className="absolute w-[200%] h-[200%] -top-[50%] -left-[50%] bg-[linear-gradient(45deg,rgba(59,130,246,0.1)0%,transparent_40%,transparent_60%,rgba(255,26,78,0.1)100%)]" />
+        <div className="min-h-screen text-[#e1e2e6] selection:bg-[#FF1A4E] selection:text-white font-sans relative overflow-hidden pb-32">
+            {/* Background - Movie poster collage */}
+            <div className="fixed inset-0 z-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/background2.jpg" alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/82" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
             </div>
 
             {/* Urgency + guarantee strip */}
             <div className="relative z-10 bg-gradient-to-r from-yellow-500/10 via-orange-400/10 to-yellow-500/10 border-b border-yellow-400/10 px-4 py-2.5 text-center">
                 <p className="text-yellow-300 text-xs sm:text-sm font-semibold">
-                    ⏰ 7-maalmood money-back guarantee &nbsp;·&nbsp; Premium isla markiiba furmaa &nbsp;·&nbsp; <span className="text-white font-black">39,246</span> users this month
+                    <Clock size={13} className="inline-block mr-1 -mt-0.5" /> 7-maalmood money-back guarantee &nbsp;·&nbsp; Premium isla markiiba furmaa &nbsp;·&nbsp; <span className="text-white font-black">39,246</span> users this month
                 </p>
             </div>
 
@@ -369,7 +381,7 @@ function CheckoutHub({
                                 </div>
                             </div>
                         ) : (
-                            <div className="border border-[#2a303c] rounded-lg p-6 flex flex-col sm:flex-row items-center gap-5 relative bg-[#0b101a] backdrop-blur-sm">
+                            <div className="border border-[#2a303c] rounded-lg p-6 flex flex-col sm:flex-row items-center gap-5 relative bg-black/50 backdrop-blur-sm">
                                 <div className="absolute top-4 right-4 text-green-500 flex items-center gap-1.5 text-xs font-bold bg-green-500/10 px-2.5 py-1 rounded-full"><CheckCircle2 size={12} /> Ready</div>
                                 <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
                                     <div className="w-16 h-16 rounded-full border border-[#2a303c] bg-[#1a202c] overflow-hidden flex items-center justify-center">
@@ -404,7 +416,7 @@ function CheckoutHub({
                                         <Check size={11} className="text-white" strokeWidth={3} />
                                     </div>
                                 )}
-                                <div className="text-2xl mb-2">💳</div>
+                                <CreditCard size={28} className="mb-2 text-blue-300" />
                                 <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">Credit Card</h3>
                                 <p className="text-[10px] text-gray-500 text-center">Visa / MC / Amex</p>
                             </div>
@@ -420,7 +432,7 @@ function CheckoutHub({
                                         <Check size={11} className="text-white" strokeWidth={3} />
                                     </div>
                                 )}
-                                <div className="text-2xl mb-2">📱</div>
+                                <Smartphone size={28} className="mb-2 text-orange-300" />
                                 <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">Mobile Money</h3>
                                 <p className="text-[10px] text-gray-500 text-center">EVC · Zaad · Sahal</p>
                             </div>
@@ -436,7 +448,7 @@ function CheckoutHub({
                                         <Check size={11} className="text-white" strokeWidth={3} />
                                     </div>
                                 )}
-                                <div className="text-2xl mb-2">🅿️</div>
+                                <span className="text-2xl font-black text-[#009cde] mb-2 block leading-none">P</span>
                                 <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">PayPal</h3>
                                 <p className="text-[10px] text-gray-500 text-center">Send & submit TX</p>
                             </div>
@@ -452,7 +464,7 @@ function CheckoutHub({
                                         <Check size={11} className="text-white" strokeWidth={3} />
                                     </div>
                                 )}
-                                <div className="text-2xl mb-2">🌿</div>
+                                <span className="text-2xl font-black text-[#4CAF50] mb-2 block leading-none">M</span>
                                 <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">M-Pesa</h3>
                                 <p className="text-[10px] text-gray-500 text-center">Kenya Mobile Money</p>
                             </div>
@@ -463,16 +475,16 @@ function CheckoutHub({
                         <div className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-5">
                             <p className="text-[11px] text-gray-500 uppercase tracking-widest font-bold mb-4">Waxaad Helaysaa</p>
                             <div className="space-y-3">
-                                {[
-                                    { icon: "🎬", label: "12,000+ Aflaan Af Somali" },
-                                    { icon: "⚽", label: "Ciyaaro Live — HD & 4K" },
-                                    { icon: "📺", label: "Smart TV + Mobile + PC" },
-                                    { icon: "🚫", label: "Bilaa Xayeysiis (No Ads)" },
-                                    { icon: "⚡", label: "Premium isla markiiba furmaa" },
-                                    { icon: "💬", label: "WhatsApp Support 24/7" },
-                                ].map((feat) => (
+                                {([
+                                    { icon: <Film size={15} className="text-red-400" />, label: "12,000+ Aflaan Af Somali" },
+                                    { icon: <Tv size={15} className="text-blue-400" />, label: "Ciyaaro Live — HD & 4K" },
+                                    { icon: <Tv size={15} className="text-purple-400" />, label: "Smart TV + Mobile + PC" },
+                                    { icon: <Ban size={15} className="text-orange-400" />, label: "Bilaa Xayeysiis (No Ads)" },
+                                    { icon: <Zap size={15} className="text-yellow-400" />, label: "Premium isla markiiba furmaa" },
+                                    { icon: <MessageCircle size={15} className="text-green-400" />, label: "WhatsApp Support 24/7" },
+                                ] as { icon: React.ReactNode; label: string }[]).map((feat) => (
                                     <div key={feat.label} className="flex items-center gap-3">
-                                        <span className="text-base w-6 flex-shrink-0">{feat.icon}</span>
+                                        <span className="w-5 flex-shrink-0 flex items-center justify-center">{feat.icon}</span>
                                         <span className="text-sm text-gray-300">{feat.label}</span>
                                         <Check size={13} className="text-green-400 ml-auto flex-shrink-0" />
                                     </div>
@@ -493,7 +505,7 @@ function CheckoutHub({
                         <h2 className="text-3xl font-black mb-6 flex items-end gap-3 tracking-wide">
                             <span className="text-4xl text-[#ff003e] font-light leading-none">03</span> Pay
                         </h2>
-                        <div className="border border-[#2a303c] rounded-xl p-6 sm:p-8 bg-[#0b101a]/50 backdrop-blur-md space-y-6">
+                        <div className="border border-[#2a303c] rounded-xl p-6 sm:p-8 bg-black/40 backdrop-blur-md space-y-6">
 
                             {/* Plan Switcher */}
                             <div>
@@ -597,7 +609,7 @@ function CheckoutHub({
                                         value={mpesaTxId}
                                         onChange={e => setMpesaTxId(e.target.value.toUpperCase())}
                                         placeholder="Paste M-Pesa code e.g. QJK2ABCDE5"
-                                        className="w-full bg-[#060b13] border-2 border-[#4CAF50]/40 focus:border-[#4CAF50] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono uppercase"
+                                        className="w-full bg-black/60 border-2 border-[#4CAF50]/40 focus:border-[#4CAF50] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono uppercase"
                                     />
                                 </div>
                             )}
@@ -632,7 +644,7 @@ function CheckoutHub({
                                         value={paypalTxId}
                                         onChange={e => setPaypalTxId(e.target.value)}
                                         placeholder="Paste Transaction ID here..."
-                                        className="w-full bg-[#060b13] border-2 border-[#009cde]/40 focus:border-[#009cde] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono"
+                                        className="w-full bg-black/60 border-2 border-[#009cde]/40 focus:border-[#009cde] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono"
                                     />
                                 </div>
                             )}
@@ -640,7 +652,7 @@ function CheckoutHub({
                             {/* Live activity badge */}
                             <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-white/[0.03] border border-white/5">
                                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-                                <span className="text-[11px] text-gray-400">🔥 <strong className="text-white">128</strong> ruux ayaa Premium siday saacaddan</span>
+                                <span className="text-[11px] text-gray-400"><Flame size={11} className="inline-block text-orange-400 mr-1 -mt-0.5" /><strong className="text-white">128</strong> ruux ayaa Premium siday saacaddan</span>
                             </div>
 
                             {/* Pay Button */}
@@ -704,7 +716,7 @@ function PayPageContent() {
 
 export default function PayPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0a0a12]"><Loader2 className="w-8 h-8 text-[#3B82F6] animate-spin" /></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black"><Loader2 className="w-8 h-8 text-[#3B82F6] animate-spin" /></div>}>
             <PayPageContent />
         </Suspense>
     );

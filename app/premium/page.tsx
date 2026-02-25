@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function SignupPage() {
+export default function PremiumPage() {
     redirect("/pay?auth=signup");
 }
-

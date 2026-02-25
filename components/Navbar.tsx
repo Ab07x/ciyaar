@@ -185,7 +185,7 @@ export function Navbar() {
                     {!isLoading && !isRegisteredUser && (
                         <div className="hidden md:flex items-center gap-2">
                             <Link
-                                href="/pay?auth=signup"
+                                href="/premium"
                                 className="px-3 py-2 rounded-lg bg-[#1d4ed8] text-white text-xs font-black uppercase tracking-wide hover:bg-[#1e40af] transition-colors flex items-center gap-1.5"
                             >
                                 <UserPlus size={14} />
@@ -361,7 +361,7 @@ export function Navbar() {
                                     ) : (
                                         <>
                                             <Link
-                                                href="/pay?auth=signup"
+                                                href="/premium"
                                                 className="p-4 min-h-[48px] rounded-xl text-base font-black flex items-center gap-4 text-white bg-[#1d4ed8] hover:bg-[#1e40af] transition-colors"
                                                 onClick={() => setMobileMenuOpen(false)}
                                             >

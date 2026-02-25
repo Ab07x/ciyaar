@@ -77,7 +77,7 @@ export default function MenuPage() {
     ];
 
     const authNav = [
-        { label: "Sign Up (Email)", icon: UserPlus, href: "/pay?auth=signup", color: "text-blue-300", subLabel: "Samee account cusub oo degdeg ah" },
+        { label: "Sign Up (Email)", icon: UserPlus, href: "/premium", color: "text-blue-300", subLabel: "Samee account cusub oo degdeg ah" },
         { label: "Login (Email)", icon: LogIn, href: "/login", color: "text-emerald-300", subLabel: "Gal account-kaaga email/password" },
         { label: "Have Premium Code?", icon: Ticket, href: "/login", color: "text-yellow-300", subLabel: "Geli code haddii aad hore u iibsatay" },
     ];

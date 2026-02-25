@@ -146,7 +146,13 @@ export default function PricingClient() {
     };
 
     return (
-        <div className="min-h-screen bg-[#080d14] text-white">
+        <div className="min-h-screen text-white" style={{background: 'transparent'}}>
+            {/* Background */}
+            <div className="fixed inset-0 -z-10 pointer-events-none">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/background2.jpg" alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/85" />
+            </div>
             <QuickCheckout
                 isOpen={showCheckout}
                 onClose={() => setShowCheckout(false)}
