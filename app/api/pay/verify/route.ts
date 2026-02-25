@@ -95,13 +95,60 @@ export async function POST(request: NextRequest) {
     try {
         await connectDB();
         const body = await request.json();
-        const { sid, orderId, deviceId } = body;
+        const { sid, orderId, stripeSession, deviceId } = body;
 
         if (!deviceId) {
             return NextResponse.json(
                 { error: "deviceId is required" },
                 { status: 400 }
             );
+        }
+
+        // Direct Stripe session from external payment domain (fanproj.shop)
+        if (stripeSession && !sid && !orderId) {
+            if (!process.env.STRIPE_SECRET_KEY) {
+                return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
+            }
+            const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+            const session = await stripeClient.checkout.sessions.retrieve(stripeSession);
+
+            if (session.status === "complete" || session.payment_status === "paid") {
+                const planFromMeta = (session.metadata?.plan || "monthly") as "match" | "weekly" | "monthly" | "yearly";
+                const deviceIdFromMeta = session.metadata?.deviceId || deviceId;
+                const extOrderId = `STRIPE-EXT-${stripeSession}`;
+
+                // Idempotent: check if already activated
+                const existing = await Payment.findOne({ orderId: extOrderId }).lean<PaymentRecord | null>();
+                if (existing?.status === "success") {
+                    return NextResponse.json({ success: true, message: "Payment already verified", plan: existing.plan, code: existing.accessCode || null });
+                }
+
+                const device = await Device.findOne({ deviceId: deviceIdFromMeta }).lean<DeviceRecord | null>();
+                if (!device) {
+                    return NextResponse.json({ error: "Device not found, please contact support" }, { status: 404 });
+                }
+
+                const userId = device.userId || device._id;
+                const plan = planFromMeta;
+                const durationDays = PLAN_DURATIONS[plan] || 30;
+                const maxDevices = PLAN_DEVICES[plan] || 1;
+
+                const access = await getOrCreateAutoPaymentRedemption({ paymentOrderId: extOrderId, userId: String(userId), plan, durationDays, maxDevices });
+
+                const subscription = await Subscription.create({ userId, plan, durationDays, maxDevices, status: "active", activatedAt: Date.now(), expiresAt: Date.now() + durationDays * 24 * 60 * 60 * 1000, codeId: access.redemptionId, createdAt: Date.now() });
+
+                await Payment.findOneAndUpdate(
+                    { orderId: extOrderId },
+                    { $setOnInsert: { deviceId: deviceIdFromMeta, plan, amount: 0, currency: "USD", orderId: extOrderId, gateway: "stripe_ext", stripeSessionId: stripeSession, status: "success", bonusDays: 0, accessCode: access.code, accessCodeId: access.redemptionId, subscriptionId: subscription._id, userId, completedAt: Date.now(), createdAt: Date.now() } },
+                    { upsert: true }
+                );
+
+                return NextResponse.json({ success: true, message: "Payment verified and subscription activated!", plan, expiresIn: `${durationDays} days`, code: access.code });
+            } else if (session.status === "open" || session.payment_status === "unpaid") {
+                return NextResponse.json({ success: false, message: "Payment is still pending", status: "pending" });
+            } else {
+                return NextResponse.json({ success: false, message: "Payment session expired or failed", status: "failed" });
+            }
         }
 
         if (!sid && !orderId) {

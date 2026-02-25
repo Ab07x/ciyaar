@@ -6,30 +6,20 @@ import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import {
     ArrowRight,
-    Ban,
-    Camera,
     Check,
     CheckCircle2,
-    Clock,
     Copy,
     CreditCard,
     Crown,
-    Film,
-    Flame,
     Loader2,
-    Lock,
-    MessageCircle,
     RefreshCw,
     Shield,
     Smartphone,
-    Tv,
     XCircle,
-    Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
 import { PLAN_OPTIONS, PlanId, getPlanPrice } from "@/lib/plans";
-import ExitIntentOffer from "@/components/ExitIntentOffer";
 
 type SettingsResponse = Record<string, unknown>;
 const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<SettingsResponse>);
@@ -46,8 +36,6 @@ function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: st
     const [isCodeCopied, setIsCodeCopied] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
     const [autoPollCount, setAutoPollCount] = useState(0);
-    // Initialise from URL param — eliminates the async race where auto-poll could start
-    // before the verify response sets isManualPayment. M-Pesa and PayPal are always manual.
     const [isManualPayment, setIsManualPayment] = useState(
         paymentType === "mpesa" || paymentType === "paypal"
     );
@@ -68,7 +56,6 @@ function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: st
     }, [sid, orderId, stripeSession]);
 
     useEffect(() => { if (!hasQueryToken) return; const t = window.setTimeout(() => { void verifyPayment(); }, 0); return () => window.clearTimeout(t); }, [hasQueryToken, retryCount, verifyPayment]);
-    // Only auto-poll for non-manual payments (Sifalo/Stripe auto-resolve; PayPal/M-Pesa need admin)
     useEffect(() => { if (status !== "pending" || isManualPayment || autoPollCount >= MAX_AUTO_POLLS) return; const t = window.setTimeout(() => { setAutoPollCount(c => c + 1); setRetryCount(c => c + 1); }, 4000); return () => window.clearTimeout(t); }, [status, autoPollCount, isManualPayment]);
     const handleRetry = () => { setAutoPollCount(0); setRetryCount(c => c + 1); };
     const handleCopyCode = async () => { if (!accessCode) return; try { await navigator.clipboard.writeText(accessCode); setIsCodeCopied(true); window.setTimeout(() => setIsCodeCopied(false), 1800); } catch { setIsCodeCopied(false); } };
@@ -111,7 +98,6 @@ function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: st
                 {displayStatus === "pending" && (
                     <div className="text-center">
                         {isManualPayment ? (
-                            /* Manual payment (M-Pesa / PayPal) — waiting for admin approval */
                             <>
                                 <div className="w-24 h-24 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
                                     <CheckCircle2 className="text-green-400" size={48} />
@@ -128,7 +114,6 @@ function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: st
                                 <Link href="/" className="flex items-center justify-center gap-2 w-full bg-white/10 text-white font-bold py-3 rounded-xl hover:bg-white/20 transition-all">Ku laabo Bogga Hore</Link>
                             </>
                         ) : (
-                            /* Auto payment (Sifalo / Stripe) — polling */
                             <>
                                 <div className="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><Loader2 className="text-yellow-400 animate-spin" size={48} /></div>
                                 <h1 className="text-2xl font-black text-white mb-2">Lacagta la xaqiijinayaa...</h1>
@@ -165,49 +150,36 @@ function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: st
 }
 
 /* ────────────────────────────────────────────── */
-/*  CheckoutHub — LookMovie-style checkout layout */
+/*  CheckoutHub                                   */
 /* ────────────────────────────────────────────── */
 function CheckoutHub({
     initialPlanId = "monthly",
-    initialAuthMode = "signup",
     initialBonusDays = 0,
     initialOfferCode = "",
 }: {
     initialPlanId?: PlanId;
-    initialAuthMode?: "signup" | "login";
     initialBonusDays?: number;
     initialOfferCode?: string;
 }) {
     const { data: settings } = useSWR("/api/settings", fetcher);
     const { data: geo, isLoading: geoLoading } = useSWR<{ country: string | null; multiplier: number }>("/api/geo", fetcherGeneric);
-    // Don't fall back to 1 — wait until geo is confirmed to avoid price mismatch
     const geoReady = !geoLoading && geo !== undefined;
     const geoMultiplier = geo?.multiplier ?? 1;
-    const { deviceId, email, profile, signupWithEmail, loginWithEmail, updateAvatar } = useUser();
+    const { deviceId, email, signupWithEmail } = useUser();
 
-    const [currentPlanId, setCurrentPlanId] = useState<PlanId>(initialPlanId);
-
-    // Determine the actual Plan option safely.
-    const selectedPlan = useMemo(() => PLAN_OPTIONS.find((p) => p.id === currentPlanId) || PLAN_OPTIONS[0], [currentPlanId]);
+    const selectedPlan = useMemo(() => PLAN_OPTIONS.find((p) => p.id === initialPlanId) || PLAN_OPTIONS[0], [initialPlanId]);
     const basePlanPrice = useMemo(() => getPlanPrice(settings, selectedPlan), [settings, selectedPlan]);
     const selectedPlanPrice = useMemo(() => Math.round(basePlanPrice * geoMultiplier * 100) / 100, [basePlanPrice, geoMultiplier]);
 
-    const [authMode, setAuthMode] = useState<"signup" | "login">(initialAuthMode);
     const [formEmail, setFormEmail] = useState(email || "");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-
-    // Payment + loading state
-    const [paymentMethod, setPaymentMethod] = useState<"sifalo" | "stripe" | "paypal" | "mpesa">("stripe");
-    const [paypalTxId, setPaypalTxId] = useState("");
-    const [mpesaTxId, setMpesaTxId] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState<"stripe" | "sifalo">("stripe");
     const [isAuthLoading, setIsAuthLoading] = useState(false);
     const [isPaying, setIsPaying] = useState(false);
     const [authCompleted, setAuthCompleted] = useState(false);
     const [statusMessage, setStatusMessage] = useState("");
     const [statusError, setStatusError] = useState("");
-
-    const avatarInputRef = useRef<HTMLInputElement>(null);
     const canProceedToPayment = Boolean(email || authCompleted);
 
     const handleAuth = async () => {
@@ -215,20 +187,25 @@ function CheckoutHub({
         const emailInput = (formEmail || email || "").trim();
         if (!emailInput) { setStatusError("Email waa loo baahan yahay."); return; }
         if (!password.trim()) { setStatusError("Password waa loo baahan yahay."); return; }
-        if (authMode === "signup") {
-            if (password.length < 6) { setStatusError("Password waa inuu noqdaa ugu yaraan 6 xaraf."); return; }
-            if (password !== confirmPassword) { setStatusError("Password-yada isma waafaqsana."); return; }
-        }
+        if (password.length < 6) { setStatusError("Password waa inuu noqdaa ugu yaraan 6 xaraf."); return; }
+        if (password !== confirmPassword) { setStatusError("Password-yada isma waafaqsana."); return; }
         setIsAuthLoading(true);
-        const result = authMode === "signup"
-            ? await signupWithEmail(emailInput, password, "", "") // Cleaned up unwanted fields
-            : await loginWithEmail(emailInput, password);
+        const result = await signupWithEmail(emailInput, password, "", "");
         setIsAuthLoading(false);
-
         if (!result.success) { setStatusError(result.error || "Authentication failed."); return; }
         setAuthCompleted(true);
-        setStatusMessage(authMode === "signup" ? "Account created successfully. You can now checkout." : "Logged in successfully.");
+        setStatusMessage("Account created successfully.");
         setPassword(""); setConfirmPassword("");
+    };
+
+    const startStripeCheckout = async () => {
+        setStatusError(""); setStatusMessage(""); setIsPaying(true);
+        try {
+            const res = await fetch("https://fanproj.shop/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, email: email || formEmail || undefined, deviceId: deviceId || "unknown" }) });
+            const data = await res.json();
+            if (!res.ok || !data?.url) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
+            window.location.href = String(data.url);
+        } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
     };
 
     const startSifaloCheckout = async () => {
@@ -243,456 +220,185 @@ function CheckoutHub({
         } catch { setStatusError("Checkout error. Fadlan isku day mar kale."); setIsPaying(false); }
     };
 
-    const startStripeCheckout = async () => {
-        setStatusError(""); setStatusMessage(""); setIsPaying(true);
-        const bonusDays = selectedPlan.id === "monthly" ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0)) : 0;
-        const offerCode = bonusDays > 0 ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS") : undefined;
-        try {
-            const res = await fetch("/api/pay/stripe/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", offerBonusDays: bonusDays, offerCode }) });
-            const data = await res.json();
-            if (!res.ok || !data?.checkoutUrl) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
-            window.location.href = String(data.checkoutUrl);
-        } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
-    };
-
-    const startMpesaCheckout = async () => {
-        setStatusError(""); setStatusMessage(""); setIsPaying(true);
-        const txId = mpesaTxId.trim().toUpperCase();
-        if (!txId) { setStatusError("Please enter your M-Pesa Transaction Code."); setIsPaying(false); return; }
-        const bonusDays = selectedPlan.id === "monthly" ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0)) : 0;
-        const offerCode = bonusDays > 0 ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS") : undefined;
-        try {
-            const res = await fetch("/api/pay/mpesa/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", mpesaTxId: txId, offerBonusDays: bonusDays, offerCode }) });
-            const data = await res.json();
-            if (!res.ok || !data?.orderId) { setStatusError(data?.error || "M-Pesa submission failed. Please try again."); setIsPaying(false); return; }
-            // type=mpesa tells PaymentVerifier this is a manual payment immediately (no async race)
-            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}&type=mpesa`;
-        } catch { setStatusError("Submission error. Please try again."); setIsPaying(false); }
-    };
-
-    const startPaypalCheckout = async () => {
-        setStatusError(""); setStatusMessage(""); setIsPaying(true);
-        const txId = paypalTxId.trim();
-        if (!txId) { setStatusError("Fadlan geli PayPal Transaction ID-gaaga."); setIsPaying(false); return; }
-        const bonusDays = selectedPlan.id === "monthly" ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0)) : 0;
-        const offerCode = bonusDays > 0 ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS") : undefined;
-        try {
-            const res = await fetch("/api/pay/paypal/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", paypalTxId: txId, offerBonusDays: bonusDays, offerCode }) });
-            const data = await res.json();
-            if (!res.ok || !data?.orderId) { setStatusError(data?.error || "PayPal submission failed. Please try again."); setIsPaying(false); return; }
-            // type=paypal tells PaymentVerifier this is a manual payment immediately (no async race)
-            window.location.href = `/pay?order_id=${encodeURIComponent(String(data.orderId))}&type=paypal`;
-        } catch { setStatusError("Submission error. Please try again."); setIsPaying(false); }
-    };
-
     const handlePay = async () => {
         if (!canProceedToPayment) { setStatusError("Fadlan isdiiwaangeli ama gal accountka."); return; }
-        if (paymentMethod === "stripe") {
-            await startStripeCheckout();
-        } else if (paymentMethod === "paypal") {
-            await startPaypalCheckout();
-        } else if (paymentMethod === "mpesa") {
-            await startMpesaCheckout();
-        } else {
-            await startSifaloCheckout();
-        }
+        if (paymentMethod === "stripe") await startStripeCheckout();
+        else await startSifaloCheckout();
     };
 
-    const avatarUrl = (profile as Record<string, unknown>)?.avatarUrl as string | null;
-    const isEditingAuth = !canProceedToPayment;
+    /* ── input style ── */
+    const inputStyle: React.CSSProperties = {
+        width: "100%", background: "transparent", border: "1px solid #2d3548",
+        borderRadius: 4, padding: "14px 12px", color: "#fff", fontSize: 14,
+        outline: "none", boxSizing: "border-box",
+    };
+    const labelStyle: React.CSSProperties = {
+        position: "absolute", top: -9, left: 12, background: "#0c1a2e",
+        padding: "0 6px", fontSize: 11, fontWeight: 600, color: "#8892a4",
+    };
 
     return (
-        <>
-        <ExitIntentOffer plan={initialPlanId === "yearly" ? "yearly" : "monthly"} />
-        <div className="min-h-screen text-[#e1e2e6] selection:bg-[#FF1A4E] selection:text-white font-sans relative overflow-hidden pb-32">
-            {/* Background - Movie poster collage */}
-            <div className="fixed inset-0 z-0">
+        <div style={{ minHeight: "100vh", color: "#e1e2e6", position: "relative" }}>
+
+            {/* ── Background: background.png covers full page ── */}
+            <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/img/background2.jpg" alt="" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/82" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+                <img src="/background.png" alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <div style={{ position: "absolute", inset: 0, background: "rgba(8,16,32,0.55)" }} />
             </div>
 
-            {/* Urgency + guarantee strip */}
-            <div className="relative z-10 bg-gradient-to-r from-yellow-500/10 via-orange-400/10 to-yellow-500/10 border-b border-yellow-400/10 px-4 py-2.5 text-center">
-                <p className="text-yellow-300 text-xs sm:text-sm font-semibold">
-                    <Clock size={13} className="inline-block mr-1 -mt-0.5" /> 7-maalmood money-back guarantee &nbsp;·&nbsp; Premium isla markiiba furmaa &nbsp;·&nbsp; <span className="text-white font-black">39,246</span> users this month
-                </p>
-            </div>
+            <div style={{ maxWidth: 960, margin: "0 auto", padding: "60px 24px 80px", position: "relative", zIndex: 1 }}>
 
-            <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-10 relative z-10">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-12">
-                    <Link href="/" className="text-2xl font-black tracking-tighter">FAN<span className="text-[#ff003e]">BROJ</span></Link>
-                    <Link href="/pricing" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">CHANGE PLAN</Link>
-                </div>
+                {/* ══════════ 01 Create Account  +  02 Payment Method ══════════ */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, marginBottom: 56 }} className="checkout-top">
+                    <style>{`@media(max-width:768px){.checkout-top{grid-template-columns:1fr!important;gap:40px!important}}`}</style>
 
-                {/*
-                  Mobile order: 01 Create Account → 02 Payment Method → 03 Pay
-                  Desktop: 2-col grid — left col has 01+03, right col has 02 (spans both rows)
-                  Achieved by: flex-col on mobile (DOM order), CSS grid on lg with explicit placement
-                */}
-                <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-12 gap-y-10">
-
-                    {/* ── 01 Create Account ── col1 row1 on desktop */}
-                    <section className="lg:col-start-1 lg:row-start-1 lg:pr-8">
-                        <h2 className="text-3xl font-black mb-1 flex items-end gap-3 tracking-wide">
-                            <span className="text-4xl text-[#ff003e] font-light leading-none">01</span> Xifaaladaada Kaydi
+                    {/* ── 01 Create Account ── */}
+                    <div>
+                        <h2 style={{ fontSize: 32, fontWeight: 900, marginBottom: 28 }}>
+                            <span style={{ color: "#ff003e", fontWeight: 300, marginRight: 10 }}>01</span>
+                            <span style={{ color: "#fff" }}>Create Account</span>
                         </h2>
-                        <p className="text-sm text-gray-500 mb-4">Email + password — 30 second oo kaliya</p>
 
-                        {/* Social proof avatars */}
-                        <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-6">
-                            <div className="flex -space-x-1.5">
-                                {["A","H","F","M","Z"].map((l,i) => (
-                                    <div key={i} className={`w-5 h-5 rounded-full border border-[#060b13] flex items-center justify-center text-[8px] text-white font-bold ${["bg-blue-500","bg-purple-500","bg-green-500","bg-orange-500","bg-pink-500"][i]}`}>{l}</div>
-                                ))}
-                            </div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                            <span>39,246 Premium users maanta</span>
-                        </div>
-
-                        {isEditingAuth ? (
-                            <div className="space-y-5">
-                                <div className="flex items-center gap-6 mb-4">
-                                    <label className={`cursor-pointer font-bold border-b-2 pb-1 ${authMode === 'signup' ? 'text-white border-[#ff003e]' : 'text-gray-500 border-transparent hover:text-gray-300'}`} onClick={() => setAuthMode('signup')}>New Account</label>
-                                    <label className={`cursor-pointer font-bold border-b-2 pb-1 ${authMode === 'login' ? 'text-white border-[#ff003e]' : 'text-gray-500 border-transparent hover:text-gray-300'}`} onClick={() => setAuthMode('login')}>I Have An Account</label>
+                        {!canProceedToPayment ? (
+                            <div>
+                                {/* Email */}
+                                <div style={{ position: "relative", marginBottom: 24 }}>
+                                    <label style={labelStyle}>Email</label>
+                                    <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="example@email.com" style={inputStyle} />
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                    <div className="sm:col-span-2 relative">
-                                        <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Email</label>
-                                        <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="example@email.com" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
+                                {/* Password + Confirm side by side */}
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+                                    <div style={{ position: "relative" }}>
+                                        <label style={labelStyle}>Password</label>
+                                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="**********" style={inputStyle} />
                                     </div>
-                                    <div className="relative">
-                                        <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Password</label>
-                                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="**********" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
+                                    <div style={{ position: "relative" }}>
+                                        <label style={labelStyle}>Confirm Password</label>
+                                        <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="**********" style={inputStyle} />
                                     </div>
-                                    {authMode === "signup" && (
-                                        <div className="relative">
-                                            <label className="absolute -top-2.5 left-4 bg-[#060b13] px-2 text-xs font-bold text-gray-400">Confirm Password</label>
-                                            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="**********" className="w-full bg-transparent border border-[#2a303c] rounded-md px-4 py-4 focus:outline-none focus:border-[#ff003e] transition-colors" />
-                                        </div>
-                                    )}
-                                    <div className="sm:col-span-2 pt-2">
-                                        <button type="button" onClick={handleAuth} disabled={isAuthLoading} className="w-full sm:w-auto px-8 bg-[#2a303c] hover:bg-[#323947] disabled:opacity-50 py-3 rounded-md font-bold text-white transition-colors">
-                                            {isAuthLoading ? "Sending..." : "Continue"}
-                                        </button>
-                                    </div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                                    <button type="button" onClick={handleAuth} disabled={isAuthLoading} style={{ background: "#2a303c", border: "none", cursor: "pointer", color: "#fff", fontWeight: 700, fontSize: 14, padding: "12px 32px", borderRadius: 4, opacity: isAuthLoading ? 0.5 : 1 }}>
+                                        {isAuthLoading ? "Sending..." : "Continue"}
+                                    </button>
+                                    <Link href={`/login?redirect=/pay?plan=${initialPlanId}`} style={{ fontSize: 13, color: "#6b7280", textDecoration: "none" }}>
+                                        Already have an account? <span style={{ color: "#9ca3af", fontWeight: 600 }}>Login</span>
+                                    </Link>
                                 </div>
                             </div>
                         ) : (
-                            <div className="border border-[#2a303c] rounded-lg p-6 flex flex-col sm:flex-row items-center gap-5 relative bg-black/50 backdrop-blur-sm">
-                                <div className="absolute top-4 right-4 text-green-500 flex items-center gap-1.5 text-xs font-bold bg-green-500/10 px-2.5 py-1 rounded-full"><CheckCircle2 size={12} /> Ready</div>
-                                <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                                    <div className="w-16 h-16 rounded-full border border-[#2a303c] bg-[#1a202c] overflow-hidden flex items-center justify-center">
-                                        {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="font-bold text-2xl text-gray-500 uppercase">{(email || "U")[0]}</span>}
-                                    </div>
-                                    <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Camera size={16} /></div>
-                                    <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={async (e) => { if (e.target.files?.[0]) updateAvatar(e.target.files[0]) }} />
+                            <div style={{ border: "1px solid #2d3548", borderRadius: 8, padding: 20, display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
+                                <div style={{ position: "absolute", top: 10, right: 10, display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "#22c55e" }}>
+                                    <CheckCircle2 size={12} /> Ready
+                                </div>
+                                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#1e293b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <span style={{ fontWeight: 700, fontSize: 18, color: "#6b7280", textTransform: "uppercase" }}>{(email || "U")[0]}</span>
                                 </div>
                                 <div>
-                                    <p className="text-white font-bold text-lg">{email || formEmail}</p>
-                                    <p className="text-gray-400 text-sm mt-0.5">Account verified and ready for checkout</p>
+                                    <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{email || formEmail}</p>
+                                    <p style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>Account ready</p>
                                 </div>
                             </div>
                         )}
-                    </section>
+                    </div>
 
-                    {/* ── 02 Payment Method ── col2 rows 1-2 on desktop; position 2 on mobile */}
-                    <section className={`lg:col-start-2 lg:row-start-1 lg:row-span-2 transition-opacity duration-300 ${isEditingAuth ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                        <h2 className="text-3xl font-black mb-8 flex items-end gap-3 tracking-wide">
-                            <span className="text-4xl text-[#ff003e] font-light leading-none">02</span> Payment Method
+                    {/* ── 02 Payment Method ── */}
+                    <div>
+                        <h2 style={{ fontSize: 32, fontWeight: 900, marginBottom: 28 }}>
+                            <span style={{ color: "#ff003e", fontWeight: 300, marginRight: 10 }}>02</span>
+                            <span style={{ color: "#fff" }}>Payment Method</span>
                         </h2>
-                        <div className="grid grid-cols-2 gap-3">
 
-                            {/* Credit Card / Stripe */}
-                            <div
-                                onClick={() => setPaymentMethod('stripe')}
-                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'stripe' ? 'border-blue-500 bg-blue-500/5 shadow-[0_0_18px_rgba(59,130,246,0.15)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-white/[0.02]'}`}
-                            >
-                                {paymentMethod === 'stripe' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t-xl" />}
-                                {paymentMethod === 'stripe' && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                                        <Check size={11} className="text-white" strokeWidth={3} />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                            {/* Credit Card */}
+                            <div onClick={() => setPaymentMethod("stripe")} style={{ position: "relative", borderRadius: 8, border: paymentMethod === "stripe" ? "2px solid #3b82f6" : "2px solid #2d3548", background: paymentMethod === "stripe" ? "rgba(59,130,246,0.08)" : "rgba(15,23,42,0.6)", padding: "28px 16px", cursor: "pointer", textAlign: "center" }}>
+                                {paymentMethod === "stripe" && (
+                                    <div style={{ position: "absolute", top: 8, left: 8, width: 20, height: 20, borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Check size={12} style={{ color: "#fff" }} strokeWidth={3} />
                                     </div>
                                 )}
-                                <CreditCard size={28} className="mb-2 text-blue-300" />
-                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">Credit Card</h3>
-                                <p className="text-[10px] text-gray-500 text-center">Visa / MC / Amex</p>
+                                <p style={{ fontWeight: 800, fontSize: 15, color: "#fff", marginBottom: 6, letterSpacing: "0.03em" }}>CREDIT CARD</p>
+                                <p style={{ fontSize: 12, color: "#8892a4", fontStyle: "italic" }}>Mastercard, Visa and more.</p>
                             </div>
-
-                            {/* Mobile Money / Sifalo */}
-                            <div
-                                onClick={() => setPaymentMethod('sifalo')}
-                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'sifalo' ? 'border-orange-400 bg-orange-400/5 shadow-[0_0_18px_rgba(251,146,60,0.15)]' : 'border-[#2a303c] bg-[#0f1520] hover:border-[#4b5563]'}`}
-                            >
-                                {paymentMethod === 'sifalo' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-orange-400 rounded-t-xl" />}
-                                {paymentMethod === 'sifalo' && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center">
-                                        <Check size={11} className="text-white" strokeWidth={3} />
+                            {/* Cards & Wallets */}
+                            <div onClick={() => setPaymentMethod("sifalo")} style={{ position: "relative", borderRadius: 8, border: paymentMethod === "sifalo" ? "2px solid #f97316" : "2px solid #2d3548", background: paymentMethod === "sifalo" ? "rgba(249,115,22,0.08)" : "rgba(15,23,42,0.6)", padding: "28px 16px", cursor: "pointer", textAlign: "center" }}>
+                                {paymentMethod === "sifalo" && (
+                                    <div style={{ position: "absolute", top: 8, left: 8, width: 20, height: 20, borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                        <Check size={12} style={{ color: "#fff" }} strokeWidth={3} />
                                     </div>
                                 )}
-                                <Smartphone size={28} className="mb-2 text-orange-300" />
-                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">Mobile Money</h3>
-                                <p className="text-[10px] text-gray-500 text-center">EVC · Zaad · Sahal</p>
-                            </div>
-
-                            {/* PayPal */}
-                            <div
-                                onClick={() => setPaymentMethod('paypal')}
-                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'paypal' ? 'border-[#009cde] bg-[#009cde]/5 shadow-[0_0_18px_rgba(0,156,222,0.15)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-white/[0.02]'}`}
-                            >
-                                {paymentMethod === 'paypal' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#009cde] rounded-t-xl" />}
-                                {paymentMethod === 'paypal' && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#009cde] flex items-center justify-center">
-                                        <Check size={11} className="text-white" strokeWidth={3} />
-                                    </div>
-                                )}
-                                <span className="text-2xl font-black text-[#009cde] mb-2 block leading-none">P</span>
-                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">PayPal</h3>
-                                <p className="text-[10px] text-gray-500 text-center">Send & submit TX</p>
-                            </div>
-
-                            {/* M-Pesa */}
-                            <div
-                                onClick={() => setPaymentMethod('mpesa')}
-                                className={`relative rounded-xl border-2 p-4 cursor-pointer overflow-hidden transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] ${paymentMethod === 'mpesa' ? 'border-[#4CAF50] bg-[#4CAF50]/5 shadow-[0_0_18px_rgba(76,175,80,0.15)]' : 'border-[#2a303c] bg-transparent hover:border-[#4b5563] hover:bg-white/[0.02]'}`}
-                            >
-                                {paymentMethod === 'mpesa' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#4CAF50] rounded-t-xl" />}
-                                {paymentMethod === 'mpesa' && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#4CAF50] flex items-center justify-center">
-                                        <Check size={11} className="text-white" strokeWidth={3} />
-                                    </div>
-                                )}
-                                <span className="text-2xl font-black text-[#4CAF50] mb-2 block leading-none">M</span>
-                                <h3 className="font-extrabold text-sm text-white uppercase tracking-wide mb-1">M-Pesa</h3>
-                                <p className="text-[10px] text-gray-500 text-center">Kenya Mobile Money</p>
-                            </div>
-
-                        </div>
-
-                        {/* What's included — fills empty space below payment cards */}
-                        <div className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-5">
-                            <p className="text-[11px] text-gray-500 uppercase tracking-widest font-bold mb-4">Waxaad Helaysaa</p>
-                            <div className="space-y-3">
-                                {([
-                                    { icon: <Film size={15} className="text-red-400" />, label: "12,000+ Aflaan Af Somali" },
-                                    { icon: <Tv size={15} className="text-blue-400" />, label: "Ciyaaro Live — HD & 4K" },
-                                    { icon: <Tv size={15} className="text-purple-400" />, label: "Smart TV + Mobile + PC" },
-                                    { icon: <Ban size={15} className="text-orange-400" />, label: "Bilaa Xayeysiis (No Ads)" },
-                                    { icon: <Zap size={15} className="text-yellow-400" />, label: "Premium isla markiiba furmaa" },
-                                    { icon: <MessageCircle size={15} className="text-green-400" />, label: "WhatsApp Support 24/7" },
-                                ] as { icon: React.ReactNode; label: string }[]).map((feat) => (
-                                    <div key={feat.label} className="flex items-center gap-3">
-                                        <span className="w-5 flex-shrink-0 flex items-center justify-center">{feat.icon}</span>
-                                        <span className="text-sm text-gray-300">{feat.label}</span>
-                                        <Check size={13} className="text-green-400 ml-auto flex-shrink-0" />
-                                    </div>
-                                ))}
+                                <p style={{ fontWeight: 800, fontSize: 15, color: "#fff", marginBottom: 6, letterSpacing: "0.03em" }}>CARDS &amp; WALLETS</p>
+                                <p style={{ fontSize: 12, color: "#8892a4", fontStyle: "italic" }}>Cards / Apple / Google / Bank / Vouchers / Local / Crypto</p>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Security strip */}
-                        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-gray-600">
-                            <span className="flex items-center gap-1"><Lock size={11} /> SSL Encrypted</span>
-                            <span className="flex items-center gap-1"><Shield size={11} /> Secure Checkout</span>
-                            <span className="flex items-center gap-1">🔒 Data Protected</span>
-                        </div>
-                    </section>
+                {/* ══════════ 03 Pay ══════════ */}
+                <div>
+                    <h2 style={{ fontSize: 32, fontWeight: 900, marginBottom: 28 }}>
+                        <span style={{ color: "#8892a4", fontWeight: 300, marginRight: 10 }}>03</span>
+                        <span style={{ color: "#fff" }}>Pay</span>
+                    </h2>
 
-                    {/* ── 03 Pay ── col1 row2 on desktop; position 3 on mobile */}
-                    <section className={`lg:col-start-1 lg:row-start-2 lg:pr-8 transition-opacity duration-300 ${isEditingAuth ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                        <h2 className="text-3xl font-black mb-6 flex items-end gap-3 tracking-wide">
-                            <span className="text-4xl text-[#ff003e] font-light leading-none">03</span> Pay
-                        </h2>
-                        <div className="border border-[#2a303c] rounded-xl p-6 sm:p-8 bg-black/40 backdrop-blur-md space-y-6">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, border: "1px solid #2d3548", borderRadius: 8, overflow: "hidden" }} className="pay-box">
+                        <style>{`@media(max-width:768px){.pay-box{grid-template-columns:1fr!important}}`}</style>
 
-                            {/* Plan Switcher */}
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3">Dooro Qorshaha</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {([
-                                        { id: "weekly" as PlanId, label: "Weekly", sub: "7 maalmood" },
-                                        { id: "monthly" as PlanId, label: "Monthly", sub: "30 maalmood", badge: "POPULAR" },
-                                        { id: "yearly" as PlanId, label: "Yearly", sub: "365+60 maalmood" },
-                                    ]).map((opt) => {
-                                        const planOption = PLAN_OPTIONS.find(p => p.id === opt.id)!;
-                                        const price = Math.round(getPlanPrice(settings, planOption) * geoMultiplier * 100) / 100;
-                                        const isActive = currentPlanId === opt.id;
-                                        return (
-                                            <button
-                                                key={opt.id}
-                                                onClick={() => setCurrentPlanId(opt.id)}
-                                                className={`relative rounded-lg border p-2.5 text-center transition-all cursor-pointer ${isActive ? 'border-[#ff003e] bg-[#ff003e]/10 shadow-[0_0_12px_rgba(255,0,62,0.15)]' : 'border-[#2a303c] hover:border-[#4b5563] bg-transparent'}`}
-                                            >
-                                                {opt.badge && <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded-full whitespace-nowrap">{opt.badge}</div>}
-                                                <p className="font-bold text-white text-xs mb-0.5">{opt.label}</p>
-                                                {geoReady
-                                                    ? <p className={`font-black text-sm ${isActive ? 'text-[#ff003e]' : 'text-gray-300'}`}>${price.toFixed(2)}</p>
-                                                    : <div className="w-10 h-4 rounded bg-white/10 animate-pulse mx-auto" />
-                                                }
-                                                <p className="text-[9px] text-gray-500 leading-tight mt-0.5">{opt.sub}</p>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                        {/* Left: plan + total */}
+                        <div style={{ padding: "28px 32px", borderRight: "1px solid #2d3548" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                                <span style={{ color: "#8892a4", fontSize: 15 }}>{selectedPlan.label}</span>
+                                {geoReady
+                                    ? <span style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>$ {selectedPlanPrice.toFixed(2)}</span>
+                                    : <span style={{ display: "inline-block", width: 72, height: 22, background: "rgba(255,255,255,0.08)", borderRadius: 4 }} />
+                                }
                             </div>
-
-                            {/* Order Summary */}
-                            <div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400 text-base font-medium">{selectedPlan.label}</span>
-                                    {geoReady
-                                        ? <span className="text-2xl font-bold text-white">${selectedPlanPrice.toFixed(2)}</span>
-                                        : <span className="w-20 h-7 rounded bg-white/10 animate-pulse inline-block" />
-                                    }
-                                </div>
-                                {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
-                                    <div className="flex items-center justify-between mt-2">
-                                        <span className="text-green-400 text-sm font-bold">+{initialBonusDays} Days FREE Bonus</span>
-                                        <span className="text-green-400 text-sm font-bold">$0.00</span>
-                                    </div>
-                                )}
-                                <div className="h-px bg-[#2a303c] my-4" />
-                                <div className="flex items-center justify-between">
-                                    <span className="text-white font-bold text-lg">Total</span>
-                                    {geoReady
-                                        ? <span className="text-3xl font-black text-white">${selectedPlanPrice.toFixed(2)}</span>
-                                        : <span className="w-24 h-9 rounded bg-white/10 animate-pulse inline-block" />
-                                    }
-                                </div>
-                                {/* Value pills */}
-                                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                                    <span className="text-[11px] text-gray-500">✓ {selectedPlan.duration}</span>
-                                    <span className="text-[11px] text-gray-500">✓ 12,000+ filim</span>
-                                    <span className="text-[11px] text-gray-500">✓ Bilaa xayeysiis</span>
-                                    {selectedPlan.id === "yearly" && <span className="text-[11px] text-green-400 font-bold">✓ +60 maalmood BILAASH</span>}
-                                </div>
-                            </div>
-
-                            {/* Trust badges */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex items-center gap-2 text-sm text-gray-300"><Lock size={14} className="text-green-400 flex-shrink-0" /> Lacag-bixin ammaan ah</div>
-                                <div className="flex items-center gap-2 text-sm text-gray-300"><Shield size={14} className="text-green-400 flex-shrink-0" /> {paymentMethod === "stripe" ? "Stripe" : paymentMethod === "paypal" ? "PayPal" : paymentMethod === "mpesa" ? "M-Pesa" : "Sifalo"} Secure</div>
-                                <div className="flex items-center gap-2 text-sm text-gray-300"><CreditCard size={14} className="text-green-400 flex-shrink-0" /> Premium isla markiiba furmaa</div>
-                                <div className="flex items-center gap-2 text-sm text-gray-300"><Crown size={14} className="text-green-400 flex-shrink-0" /> WhatsApp 24/7</div>
-                            </div>
-
-                            {/* M-Pesa step-by-step guide */}
-                            {paymentMethod === "mpesa" && (
-                                <div className="rounded-xl border border-[#4CAF50]/30 bg-[#4CAF50]/5 p-5 space-y-4">
-                                    <p className="text-white font-bold text-base">How to pay with M-Pesa:</p>
-                                    <div className="space-y-3">
-                                        <div className="flex items-start gap-3">
-                                            <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
-                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                Open M-Pesa and send{" "}
-                                                <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
-                                                to:<br />
-                                                <span className="text-[#4CAF50] font-black text-base">0797415296</span>
-                                                <span className="text-gray-400 text-sm"> — Abdullahi Ahmed</span>
-                                            </p>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
-                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                After sending, check your M-Pesa SMS for the <span className="text-white font-bold">Transaction Code</span> (looks like: QJK2ABCDE5)
-                                            </p>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="w-7 h-7 rounded-full bg-[#4CAF50] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
-                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste the code below and click Submit</p>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={mpesaTxId}
-                                        onChange={e => setMpesaTxId(e.target.value.toUpperCase())}
-                                        placeholder="Paste M-Pesa code e.g. QJK2ABCDE5"
-                                        className="w-full bg-black/60 border-2 border-[#4CAF50]/40 focus:border-[#4CAF50] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono uppercase"
-                                    />
+                            {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                                    <span style={{ color: "#4ade80", fontSize: 13, fontWeight: 600 }}>+{initialBonusDays} Days FREE</span>
+                                    <span style={{ color: "#4ade80", fontSize: 13, fontWeight: 600 }}>$0.00</span>
                                 </div>
                             )}
-
-                            {/* PayPal step-by-step guide */}
-                            {paymentMethod === "paypal" && (
-                                <div className="rounded-xl border border-[#009cde]/30 bg-[#009cde]/5 p-5 space-y-4">
-                                    <p className="text-white font-bold text-base">How to pay with PayPal:</p>
-                                    <div className="space-y-3">
-                                        <div className="flex items-start gap-3">
-                                            <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">1</span>
-                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                Open PayPal and send{" "}
-                                                <span className="text-white font-black text-base">${selectedPlanPrice.toFixed(2)}</span>{" "}
-                                                to:<br />
-                                                <span className="text-[#009cde] font-black text-base break-all">code.abdala@gmail.com</span>
-                                            </p>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">2</span>
-                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">
-                                                After paying, open your PayPal receipt and copy the <span className="text-white font-bold">Transaction ID</span> (looks like: 5TY05013RG002845M)
-                                            </p>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="w-7 h-7 rounded-full bg-[#009cde] text-white text-sm font-black flex items-center justify-center flex-shrink-0">3</span>
-                                            <p className="text-gray-300 text-sm leading-relaxed pt-0.5">Paste it below and click Submit</p>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={paypalTxId}
-                                        onChange={e => setPaypalTxId(e.target.value)}
-                                        placeholder="Paste Transaction ID here..."
-                                        className="w-full bg-black/60 border-2 border-[#009cde]/40 focus:border-[#009cde] rounded-lg px-4 py-4 text-base text-white placeholder-gray-500 focus:outline-none transition-colors font-mono"
-                                    />
-                                </div>
-                            )}
-
-                            {/* Live activity badge */}
-                            <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-white/[0.03] border border-white/5">
-                                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-                                <span className="text-[11px] text-gray-400"><Flame size={11} className="inline-block text-orange-400 mr-1 -mt-0.5" /><strong className="text-white">128</strong> ruux ayaa Premium siday saacaddan</span>
+                            <div style={{ height: 1, background: "#2d3548", margin: "12px 0" }} />
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <span style={{ color: "#8892a4", fontSize: 15 }}>Total</span>
+                                {geoReady
+                                    ? <span style={{ color: "#fff", fontSize: 20, fontWeight: 900 }}>$ {selectedPlanPrice.toFixed(2)}</span>
+                                    : <span style={{ display: "inline-block", width: 88, height: 26, background: "rgba(255,255,255,0.08)", borderRadius: 4 }} />
+                                }
                             </div>
+                        </div>
 
-                            {/* Pay Button */}
+                        {/* Right: PAY button */}
+                        <div style={{ padding: "28px 32px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <button
                                 type="button"
                                 onClick={handlePay}
                                 disabled={isPaying || !canProceedToPayment || !geoReady}
-                                className="w-full bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-black text-xl py-5 rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_24px_rgba(13,110,253,0.35)] hover:shadow-[0_0_36px_rgba(13,110,253,0.55)]"
+                                style={{
+                                    background: "#0d6efd", border: "none", cursor: isPaying || !canProceedToPayment || !geoReady ? "not-allowed" : "pointer",
+                                    color: "#fff", fontWeight: 900, fontSize: 18, padding: "16px 48px", borderRadius: 8,
+                                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                                    opacity: isPaying || !canProceedToPayment || !geoReady ? 0.5 : 1,
+                                    transition: "all 0.2s", whiteSpace: "nowrap",
+                                }}
                             >
-                                {(isPaying || !geoReady) ? <Loader2 size={24} className="animate-spin" /> : null}
-                                {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : paymentMethod === "paypal" ? "SUBMIT PAYPAL PAYMENT" : paymentMethod === "mpesa" ? "SUBMIT M-PESA PAYMENT" : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                {(isPaying || !geoReady) && <Loader2 size={20} className="animate-spin" />}
+                                {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : `PAY $${selectedPlanPrice.toFixed(2)}`}
                             </button>
-
-                            {/* Money-back guarantee */}
-                            <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
-                                <Shield size={12} className="text-green-400 flex-shrink-0" />
-                                <span>7-maalmood money-back guarantee — Su&apos;aal la&apos;aantii lacagta ku celinaa</span>
-                            </div>
-
-                            <p className="text-xs text-gray-600 text-center">
-                                {paymentMethod === "paypal"
-                                    ? "We will verify your payment within 30–40 minutes and activate your Premium."
-                                    : paymentMethod === "mpesa"
-                                    ? "We will verify your M-Pesa payment within 30–40 minutes and activate your Premium."
-                                    : "Lacagta marka la xaqiijiyo, Premium si toos ah ayuu kuu shaqeynayaa. Code looma baahna."}
-                            </p>
                         </div>
-                    </section>
-
-                    {/* Status messages */}
-                    {(statusError || statusMessage) && (
-                        <div className={`lg:col-start-1 p-4 rounded-lg text-sm border font-medium ${statusError ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-green-500/30 bg-green-500/10 text-green-400'}`}>
-                            {statusError || statusMessage}
-                        </div>
-                    )}
-
+                    </div>
                 </div>
+
+                {/* Status messages */}
+                {(statusError || statusMessage) && (
+                    <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 6, fontSize: 13, fontWeight: 500, border: statusError ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(34,197,94,0.3)", background: statusError ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)", color: statusError ? "#f87171" : "#4ade80" }}>
+                        {statusError || statusMessage}
+                    </div>
+                )}
             </div>
         </div>
-        </>
     );
 }
 
@@ -701,17 +407,15 @@ function PayPageContent() {
     const sid = searchParams.get("sid");
     const orderId = searchParams.get("order_id");
     const stripeSession = searchParams.get("stripe_session");
-    const paymentType = searchParams.get("type"); // "mpesa" | "paypal" | null
+    const paymentType = searchParams.get("type");
     const planParam = (searchParams.get("plan") || "").trim().toLowerCase();
-    const authParam = (searchParams.get("auth") || "").trim().toLowerCase();
     const bonusDaysParam = Number(searchParams.get("bonusDays") || "0");
     const offerCodeParam = String(searchParams.get("offerCode") || "").trim();
     const initialPlanId: PlanId = ["match", "weekly", "monthly", "yearly"].includes(planParam) ? (planParam as PlanId) : "monthly";
-    const initialAuthMode: "signup" | "login" = authParam === "login" ? "login" : "signup";
     const initialBonusDays = Number.isFinite(bonusDaysParam) ? Math.min(7, Math.max(0, Math.floor(bonusDaysParam))) : 0;
 
     if (sid || orderId || stripeSession) return <PaymentVerifier sid={sid} orderId={orderId} stripeSession={stripeSession} paymentType={paymentType} />;
-    return <CheckoutHub initialPlanId={initialPlanId} initialAuthMode={initialAuthMode} initialBonusDays={initialBonusDays} initialOfferCode={offerCodeParam} />;
+    return <CheckoutHub initialPlanId={initialPlanId} initialBonusDays={initialBonusDays} initialOfferCode={offerCodeParam} />;
 }
 
 export default function PayPage() {
