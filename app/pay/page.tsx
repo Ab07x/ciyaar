@@ -9,21 +9,16 @@ import {
     Check,
     CheckCircle2,
     Copy,
-    CreditCard,
     Crown,
     Loader2,
     RefreshCw,
-    Shield,
-    Smartphone,
     XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
 import { PLAN_OPTIONS, PlanId } from "@/lib/plans";
 
-type SettingsResponse = Record<string, unknown>;
-const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<SettingsResponse>);
-const fetcherGeneric = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 /* ────────────────────────────────────────────── */
 /*  PaymentVerifier                               */
@@ -152,12 +147,12 @@ function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: st
 /* ────────────────────────────────────────────── */
 /*  CheckoutHub                                   */
 /* ────────────────────────────────────────────── */
-/** Map legacy plan IDs to new plan IDs for /api/pricing lookup */
-const LEGACY_TO_NEW: Record<PlanId, string> = {
-    match: "starter",
-    weekly: "basic",
-    monthly: "pro",
-    yearly: "elite",
+/** Display names for new plan IDs */
+const PLAN_DISPLAY: Record<PlanId, { name: string; duration: string; price: number }> = {
+    match:   { name: "Starter",  duration: "3 Days",    price: 1.50 },
+    weekly:  { name: "Basic",    duration: "7 Days",    price: 3.00 },
+    monthly: { name: "Pro",      duration: "30 Days",   price: 6.00 },
+    yearly:  { name: "Elite",    duration: "365 Days",  price: 80.00 },
 };
 
 function CheckoutHub({
@@ -169,21 +164,11 @@ function CheckoutHub({
     initialBonusDays?: number;
     initialOfferCode?: string;
 }) {
-    const { data: pricing, isLoading: pricingLoading } = useSWR("/api/pricing", fetcherGeneric);
-    const geoReady = !pricingLoading && pricing !== undefined;
     const { deviceId, email, signupWithEmail } = useUser();
 
     const selectedPlan = useMemo(() => PLAN_OPTIONS.find((p) => p.id === initialPlanId) || PLAN_OPTIONS[0], [initialPlanId]);
-
-    // Get price from the new tier-based /api/pricing endpoint (matches /pricing page exactly)
-    const selectedPlanPrice = useMemo(() => {
-        if (!pricing?.plans) return 0;
-        const newId = LEGACY_TO_NEW[selectedPlan.id];
-        const planData = pricing.plans.find((p: { id: string }) => p.id === newId);
-        if (!planData) return 0;
-        // yearly plan shows yearly price, others show monthly price
-        return selectedPlan.id === "yearly" ? planData.yearly.price : planData.monthly.price;
-    }, [pricing, selectedPlan]);
+    const planDisplay = PLAN_DISPLAY[selectedPlan.id] ?? PLAN_DISPLAY.monthly;
+    const selectedPlanPrice = planDisplay.price;
 
     const [formEmail, setFormEmail] = useState(email || "");
     const [password, setPassword] = useState("");
@@ -342,8 +327,8 @@ function CheckoutHub({
                                         <Check size={12} style={{ color: "#fff" }} strokeWidth={3} />
                                     </div>
                                 )}
-                                <p style={{ fontWeight: 800, fontSize: 15, color: "#fff", marginBottom: 6, letterSpacing: "0.03em" }}>CARDS &amp; WALLETS</p>
-                                <p style={{ fontSize: 12, color: "#8892a4", fontStyle: "italic" }}>Cards / Apple / Google / Bank / Vouchers / Local / Crypto</p>
+                                <p style={{ fontWeight: 800, fontSize: 15, color: "#fff", marginBottom: 6, letterSpacing: "0.03em" }}>LOCAL PAYMENT</p>
+                                <p style={{ fontSize: 12, color: "#8892a4", fontStyle: "italic" }}>EVC Plus / Zaad / Sahal / M-Pesa</p>
                             </div>
                         </div>
                     </div>
@@ -361,12 +346,12 @@ function CheckoutHub({
 
                         {/* Left: plan + total */}
                         <div style={{ padding: "28px 32px", borderRight: "1px solid #2d3548" }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                                <span style={{ color: "#8892a4", fontSize: 15 }}>{selectedPlan.label}</span>
-                                {geoReady
-                                    ? <span style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>$ {selectedPlanPrice.toFixed(2)}</span>
-                                    : <span style={{ display: "inline-block", width: 72, height: 22, background: "rgba(255,255,255,0.08)", borderRadius: 4 }} />
-                                }
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                                <span style={{ color: "#fff", fontSize: 16, fontWeight: 700 }}>{planDisplay.name}</span>
+                                <span style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>$ {selectedPlanPrice.toFixed(2)}</span>
+                            </div>
+                            <div style={{ marginBottom: 16 }}>
+                                <span style={{ color: "#6b7280", fontSize: 12 }}>{planDisplay.duration} access</span>
                             </div>
                             {initialBonusDays > 0 && selectedPlan.id === "monthly" && (
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -377,10 +362,7 @@ function CheckoutHub({
                             <div style={{ height: 1, background: "#2d3548", margin: "12px 0" }} />
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <span style={{ color: "#8892a4", fontSize: 15 }}>Total</span>
-                                {geoReady
-                                    ? <span style={{ color: "#fff", fontSize: 20, fontWeight: 900 }}>$ {selectedPlanPrice.toFixed(2)}</span>
-                                    : <span style={{ display: "inline-block", width: 88, height: 26, background: "rgba(255,255,255,0.08)", borderRadius: 4 }} />
-                                }
+                                <span style={{ color: "#fff", fontSize: 20, fontWeight: 900 }}>$ {selectedPlanPrice.toFixed(2)}</span>
                             </div>
                         </div>
 
@@ -389,17 +371,17 @@ function CheckoutHub({
                             <button
                                 type="button"
                                 onClick={handlePay}
-                                disabled={isPaying || !canProceedToPayment || !geoReady}
+                                disabled={isPaying || !canProceedToPayment}
                                 style={{
-                                    background: "#0d6efd", border: "none", cursor: isPaying || !canProceedToPayment || !geoReady ? "not-allowed" : "pointer",
+                                    background: "#0d6efd", border: "none", cursor: isPaying || !canProceedToPayment ? "not-allowed" : "pointer",
                                     color: "#fff", fontWeight: 900, fontSize: 18, padding: "16px 48px", borderRadius: 8,
                                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                                    opacity: isPaying || !canProceedToPayment || !geoReady ? 0.5 : 1,
+                                    opacity: isPaying || !canProceedToPayment ? 0.5 : 1,
                                     transition: "all 0.2s", whiteSpace: "nowrap",
                                 }}
                             >
-                                {(isPaying || !geoReady) && <Loader2 size={20} className="animate-spin" />}
-                                {isPaying ? "PROCESSING..." : !geoReady ? "Loading..." : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                {isPaying && <Loader2 size={20} className="animate-spin" />}
+                                {isPaying ? "PROCESSING..." : `PAY $${selectedPlanPrice.toFixed(2)}`}
                             </button>
                         </div>
                     </div>
