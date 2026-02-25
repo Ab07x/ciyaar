@@ -135,14 +135,20 @@ export default function PricingClient() {
     const { data: pricing } = useSWR<PricingData>("/api/pricing", fetcher);
     const trialEligible = pricing?.trialEligible ?? false;
 
-    const getPlanData = (planId: string): PlanPricing | undefined =>
-        pricing?.plans.find(p => p.id === planId);
+    /** Fixed prices — match Stripe plan prices */
+    const FIXED_CARD_PRICES: Record<NewPlanId, number> = {
+        starter: 1.50,
+        basic:   3.00,
+        pro:     6.00,
+        elite:   80.00,
+    };
 
-    /** Each plan shows its natural price: starter/basic/pro → monthly, elite → yearly */
-    const getCardPrice = (planId: NewPlanId): number => {
-        const p = getPlanData(planId);
-        if (!p) return 0;
-        return planId === "elite" ? p.yearly.price : p.monthly.price;
+    const getCardPrice = (planId: NewPlanId): number => FIXED_CARD_PRICES[planId];
+
+    /** For the final CTA which uses string plan IDs */
+    const getFixedPrice = (planId: string): number => {
+        const map: Record<string, number> = { starter: 1.50, basic: 3.00, pro: 6.00, elite: 80.00 };
+        return map[planId] ?? 0;
     };
 
     /** Build signup URL for a plan */
@@ -615,8 +621,8 @@ export default function PricingClient() {
                             className="flex-1 py-4 rounded-xl bg-green-500 hover:bg-green-400 text-black font-black text-sm transition-all active:scale-95 text-center no-underline"
                         >
                             {trialEligible
-                                ? <>Pro &mdash; <span className="line-through opacity-60">${fmt(getPlanData("pro")?.monthly.price ?? 0)}</span> $1 trial</>
-                                : <>Pro &mdash; ${fmt(getPlanData("pro")?.monthly.price ?? 0)}/mo</>
+                                ? <>Pro &mdash; <span className="line-through opacity-60">${fmt(getFixedPrice("pro"))}</span> $1 trial</>
+                                : <>Pro &mdash; ${fmt(getFixedPrice("pro"))}/mo</>
                             }
                         </Link>
                         {/* Elite CTA */}
@@ -624,7 +630,7 @@ export default function PricingClient() {
                             href="/pay?plan=yearly&auth=signup"
                             className="flex-1 py-4 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-black text-sm transition-all active:scale-95 text-center no-underline"
                         >
-                            Elite &mdash; ${fmt(getCardPrice("elite"))}/yr
+                            Elite &mdash; ${fmt(getFixedPrice("elite"))}/yr
                         </Link>
                     </div>
 

@@ -7,13 +7,6 @@ import type { NewPlanId } from "@/lib/plans";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-type PlanPricing = {
-    id: string;
-    monthly: { price: number };
-    yearly: { price: number; perMonth: number; savePercent: number };
-    trialEligible: boolean;
-};
-
 /* ── plan card images (desktop + mobile) ── */
 const PLAN_IMAGES: Record<NewPlanId, { desktop: string; mobile: string }> = {
     starter: { desktop: "/img/plan-starter.png", mobile: "/img/plan-starter.png" },
@@ -54,13 +47,17 @@ const WHAT_YOU_GET = [
 
 export default function PremiumPlanPage() {
     const { data: pricing } = useSWR("/api/pricing", fetcher);
-    const geoReady = pricing !== undefined;
     const trialEligible = pricing?.trialEligible ?? false;
 
-    const getPrice = (planId: string): number => {
-        const p = pricing?.plans?.find((pl: PlanPricing) => pl.id === planId);
-        return p?.monthly?.price ?? 0;
+    /** Fixed prices — match Stripe plan prices */
+    const FIXED_PRICES: Record<string, number> = {
+        starter: 1.50,
+        basic:   3.00,
+        pro:     6.00,
+        elite:   80.00,
     };
+
+    const getPrice = (planId: string): number => FIXED_PRICES[planId] ?? 0;
 
     return (
         <div style={{ minHeight: "100vh", color: "#fff", background: "#0b1120", fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -172,7 +169,7 @@ export default function PremiumPlanPage() {
                                             {/* Price — bottom left */}
                                             <div style={{ position: "absolute", bottom: 16, left: 16, display: "flex", alignItems: "baseline", gap: 2 }}>
                                                 <span style={{ fontSize: 14, fontWeight: 500, color: "#9ca3af" }}>$</span>
-                                                {geoReady && price > 0
+                                                {price > 0
                                                     ? <span style={{ fontSize: 30, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{price.toFixed(2)}</span>
                                                     : <span style={{ display: "inline-block", width: 60, height: 30, background: "rgba(255,255,255,0.1)", borderRadius: 6 }} />
                                                 }
