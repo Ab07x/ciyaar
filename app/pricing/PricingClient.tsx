@@ -6,7 +6,7 @@ import useSWR from "swr";
 import {
     Check, X, Shield, Users, ChevronDown, ChevronUp,
     Star, Clock, Download, Tv, Zap, Play, Lock,
-    CreditCard, Smartphone, AlertCircle,
+    CreditCard, AlertCircle,
 } from "lucide-react";
 import { NEW_PLAN_CARDS } from "@/lib/plans";
 import type { NewPlanId } from "@/lib/plans";
@@ -75,16 +75,6 @@ const TESTIMONIALS = [
     { name: "Hodan M.",   city: "Toronto, Canada",    text: "Tried the $1 trial, was hooked instantly. Now on monthly Pro. Worth every cent.", rating: 5, plan: "Pro",   since: "2 months" },
 ];
 
-const COMPARE_FEATURES = [
-    { label: "Access Duration",        starter: "3 days",    basic: "7 days",     pro: "30 days",     elite: "365 + 60 days" },
-    { label: "Video Quality",          starter: "HD",        basic: "HD",         pro: "Full HD",     elite: "4K Ultra HD"   },
-    { label: "Simultaneous Screens",   starter: "1",         basic: "1",          pro: "3",           elite: "5"             },
-    { label: "Live Sports",            starter: true,        basic: true,         pro: true,          elite: true            },
-    { label: "Offline Downloads",      starter: false,       basic: false,        pro: true,          elite: true            },
-    { label: "+2 Months Free",         starter: false,       basic: false,        pro: false,         elite: true            },
-    { label: "Priority Support",       starter: false,       basic: false,        pro: false,         elite: true            },
-    { label: "Ads",                    starter: false,       basic: false,        pro: false,         elite: false           },
-];
 
 const FAQ_DATA: { so: { q: string; a: string }; en: { q: string; a: string } }[] = [
     {
@@ -145,11 +135,6 @@ export default function PricingClient() {
 
     const getCardPrice = (planId: NewPlanId): number => FIXED_CARD_PRICES[planId];
 
-    /** For the final CTA which uses string plan IDs */
-    const getFixedPrice = (planId: string): number => {
-        const map: Record<string, number> = { starter: 1.50, basic: 3.00, pro: 6.00, elite: 80.00 };
-        return map[planId] ?? 0;
-    };
 
     /** Build signup URL for a plan */
     const planUrl = (legacyId: string) => `/pay?plan=${legacyId}&auth=signup`;
@@ -298,133 +283,6 @@ export default function PricingClient() {
                     7-day money-back guarantee &middot; Cancel anytime &middot; No hidden fees
                     {trialEligible && " \u00b7 $1 trial for new users"}
                 </p>
-            </section>
-
-            {/* ── HOW IT WORKS (3-step tutorial) ───────────────────────────── */}
-            <section className="px-4 pb-16 max-w-4xl mx-auto">
-                <h2 className="text-2xl font-black text-white text-center mb-2">Sida Loo Bilaabo</h2>
-                <p className="text-gray-500 text-sm text-center mb-8">How to get started in 3 steps</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {[
-                        {
-                            step: "1",
-                            icon: <Play className="w-6 h-6 text-green-400" />,
-                            title: "Dooro Qorshahaaga",
-                            titleEn: "Choose Your Plan",
-                            desc: "Starter, Basic, Pro, ama Elite — dooro kan ku haboon. Haddaad ka timaado galbeedka, tijaabi $1 3 maalmood.",
-                            descEn: "Pick Starter, Basic, Pro, or Elite. Western users can try 3 days for $1.",
-                            color: "border-green-500/30 bg-green-500/5",
-                        },
-                        {
-                            step: "2",
-                            icon: <CreditCard className="w-6 h-6 text-blue-400" />,
-                            title: "Bixi Lacagta",
-                            titleEn: "Pay Your Way",
-                            desc: "EVC Plus / Zaad / Sahal (Somalia) \u00b7 M-Pesa (Kenya) \u00b7 Kaardhka / PayPal (caalamka). Lacagtu waa ammaan.",
-                            descEn: "EVC/Zaad/Sahal in Somalia, M-Pesa in Kenya, card or PayPal worldwide. Secured by Stripe.",
-                            color: "border-blue-500/30 bg-blue-500/5",
-                        },
-                        {
-                            step: "3",
-                            icon: <Smartphone className="w-6 h-6 text-yellow-400" />,
-                            title: "Bilaaw Isla Markiiba",
-                            titleEn: "Watch Instantly",
-                            desc: "Code xisaabtaada ku geliso. Waxaad daawan kartaa TV, mobile, ama PC — isla markiiba. Wax download ah ma jiro.",
-                            descEn: "Enter your code. Watch on TV, mobile, or PC \u2014 instantly. No app download needed.",
-                            color: "border-yellow-500/30 bg-yellow-500/5",
-                        },
-                    ].map(({ step, icon, title, titleEn, desc, descEn, color }) => (
-                        <div key={step} className={`rounded-2xl border p-5 ${color}`}>
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
-                                    {step}
-                                </div>
-                                {icon}
-                            </div>
-                            <h3 className="font-black text-white text-sm mb-0.5">{title}</h3>
-                            <p className="text-gray-500 text-[10px] mb-2 italic">{titleEn}</p>
-                            <p className="text-gray-400 text-xs leading-relaxed mb-1">{desc}</p>
-                            <p className="text-gray-600 text-[10px] leading-relaxed italic">{descEn}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* ── COMPARISON TABLE ─────────────────────────────────────────── */}
-            <section className="px-4 pb-16 max-w-4xl mx-auto">
-                <h2 className="text-2xl font-black text-white text-center mb-8">Compare Plans</h2>
-                <div className="overflow-x-auto rounded-2xl border border-white/10">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-white/5 border-b border-white/10">
-                                <th className="text-left py-4 px-4 text-gray-500 font-semibold text-xs uppercase tracking-wider w-1/5">Feature</th>
-                                <th className="text-center py-4 px-3 text-pink-400 font-black text-xs">Starter</th>
-                                <th className="text-center py-4 px-3 text-blue-400 font-black text-xs">Basic</th>
-                                <th className="text-center py-4 px-3 bg-green-500/5">
-                                    <span className="text-green-400 font-black text-xs">Pro</span>
-                                    <span className="ml-1 text-[9px] text-green-500">\u2b50</span>
-                                </th>
-                                <th className="text-center py-4 px-3 text-yellow-400 font-black text-xs">Elite</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {COMPARE_FEATURES.map((row, i) => (
-                                <tr key={i} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
-                                    <td className="py-3 px-4 text-gray-300 text-xs font-medium">{row.label}</td>
-                                    {(["starter", "basic", "pro", "elite"] as const).map(planKey => {
-                                        const val = row[planKey];
-                                        return (
-                                            <td key={planKey} className={`py-3 px-3 text-center ${planKey === "pro" ? "bg-green-500/5" : ""}`}>
-                                                {typeof val === "boolean" ? (
-                                                    val
-                                                        ? <Check className="w-4 h-4 text-green-400 mx-auto" />
-                                                        : <X className="w-4 h-4 text-gray-700 mx-auto" />
-                                                ) : (
-                                                    <span className={`text-xs font-semibold ${
-                                                        planKey === "starter" ? "text-pink-400"   :
-                                                        planKey === "pro"     ? "text-green-400"  :
-                                                        planKey === "elite"   ? "text-yellow-400" :
-                                                        "text-gray-400"
-                                                    }`}>
-                                                        {val}
-                                                    </span>
-                                                )}
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            ))}
-                            {/* Price row */}
-                            <tr className="bg-white/5">
-                                <td className="py-4 px-4 text-white font-bold text-xs">Price</td>
-                                {NEW_PLAN_CARDS.map(plan => {
-                                    const price = getCardPrice(plan.id);
-                                    return (
-                                        <td key={plan.id} className={`py-4 px-3 text-center ${plan.id === "pro" ? "bg-green-500/5" : ""}`}>
-                                            <span className={`font-black text-sm ${plan.nameColor}`}>
-                                                {price > 0 ? `$${fmt(price)}` : "..."}
-                                            </span>
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                            {/* CTA row */}
-                            <tr>
-                                <td className="py-4 px-4" />
-                                {NEW_PLAN_CARDS.map(plan => (
-                                    <td key={plan.id} className={`py-4 px-3 text-center ${plan.id === "pro" ? "bg-green-500/5" : ""}`}>
-                                        <Link
-                                            href={planUrl(plan.legacyId)}
-                                            className={`inline-block px-3 py-2 rounded-xl text-xs font-black transition-all no-underline ${plan.btnClass}`}
-                                        >
-                                            {trialEligible && plan.trialLabel ? "Try $1" : "Select"}
-                                        </Link>
-                                    </td>
-                                ))}
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </section>
 
             {/* ── PAYMENT METHODS ──────────────────────────────────────────── */}
@@ -583,66 +441,6 @@ export default function PricingClient() {
                 </div>
             </section>
 
-            {/* ── FEATURE HIGHLIGHTS ───────────────────────────────────────── */}
-            <section className="px-4 pb-16 max-w-4xl mx-auto">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[
-                        { icon: <Tv className="w-6 h-6 text-green-400" />,       title: "12,000+ Films",    sub: "Somali & International"    },
-                        { icon: <Clock className="w-6 h-6 text-blue-400" />,     title: "Live Sports",      sub: "PL, UCL, NBA in HD/4K"    },
-                        { icon: <Download className="w-6 h-6 text-yellow-400" />,title: "Offline Mode",     sub: "Download & watch anywhere" },
-                        { icon: <Users className="w-6 h-6 text-purple-400" />,   title: "Multi-Screen",     sub: "Share with your family"    },
-                    ].map((f, i) => (
-                        <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center hover:bg-white/10 transition-colors">
-                            <div className="flex justify-center mb-3">{f.icon}</div>
-                            <p className="text-white font-bold text-sm">{f.title}</p>
-                            <p className="text-gray-500 text-xs mt-1">{f.sub}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* ── FINAL CTA ────────────────────────────────────────────────── */}
-            <section className="px-4 pb-24 max-w-2xl mx-auto text-center">
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-3xl p-8">
-                    <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-full px-4 py-1.5 mb-5">
-                        <Shield className="w-3.5 h-3.5 text-green-400" />
-                        <span className="text-green-400 text-xs font-bold">7-Day Money-Back Guarantee</span>
-                    </div>
-                    <h2 className="text-3xl font-black text-white mb-3">Bilaaw Maanta</h2>
-                    <p className="text-gray-400 mb-6 text-sm leading-relaxed">
-                        Premium furan &mdash; bilaa xayeysiis, 12,000+ filim, ciyaaro live HD/4K.<br />
-                        <span className="text-green-400 font-semibold">Isla markiiba furmaa. Wax risk ah kuma jiro.</span>
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                        {/* Pro CTA */}
-                        <Link
-                            href="/pay?plan=monthly&auth=signup"
-                            className="flex-1 py-4 rounded-xl bg-green-500 hover:bg-green-400 text-black font-black text-sm transition-all active:scale-95 text-center no-underline"
-                        >
-                            {trialEligible
-                                ? <>Pro &mdash; <span className="line-through opacity-60">${fmt(getFixedPrice("pro"))}</span> $1 trial</>
-                                : <>Pro &mdash; ${fmt(getFixedPrice("pro"))}/mo</>
-                            }
-                        </Link>
-                        {/* Elite CTA */}
-                        <Link
-                            href="/pay?plan=yearly&auth=signup"
-                            className="flex-1 py-4 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-black text-sm transition-all active:scale-95 text-center no-underline"
-                        >
-                            Elite &mdash; ${fmt(getFixedPrice("elite"))}/yr
-                        </Link>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-gray-500">
-                        <span>{"↩"} 7-day refund</span>
-                        <span>{"🔒"} SSL Secure</span>
-                        <span>{"⚡"} Instant access</span>
-                        <span>Cancel anytime</span>
-                        {trialEligible && <span>{"🎯"} $1 trial available</span>}
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }
