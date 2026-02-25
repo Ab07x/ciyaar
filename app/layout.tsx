@@ -19,6 +19,7 @@ import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { AggressivePushBanner } from "@/components/AggressivePushBanner";
 import { SitewideOfferBar } from "@/components/SitewideOfferBar";
 import { LayoutChrome } from "@/components/LayoutChrome";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 // SEO-optimized metadata targeting top search keywords
 export function generateMetadata(): Metadata {
@@ -304,6 +305,9 @@ export default function RootLayout({
             </UserProvider>
           </LanguageProvider>
         </SWRProvider>
+
+        {/* Google Analytics 4 */}
+        <GoogleAnalytics />
 
         {/* Meta Pixel Code */}
         <Script id="facebook-pixel" strategy="afterInteractive">

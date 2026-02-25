@@ -4,10 +4,21 @@ import connectDB from "@/lib/mongodb";
 import { Redemption, Subscription, User, Device, UserMovieTrial } from "@/lib/models";
 import { generateUniqueReferralCode } from "@/lib/referral-code";
 import { buildTrialAliasSet, resolveTrialMovie } from "@/lib/trial-movie";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // POST /api/redemptions/redeem — redeem a code
 export async function POST(req: NextRequest) {
     try {
+        // ── Rate limiting: max 10 attempts per IP per hour ──────────────
+        const ip = getClientIp(req);
+        const rl = checkRateLimit(`redeem:${ip}`, 10, 60 * 60 * 1000);
+        if (!rl.allowed) {
+            return NextResponse.json(
+                { error: "Too many attempts. Please try again later." },
+                { status: 429 }
+            );
+        }
+
         await connectDB();
         const { code, deviceId } = await req.json();
 
@@ -29,6 +40,24 @@ export async function POST(req: NextRequest) {
         // Check if expired
         if (redemption.expiresAt && redemption.expiresAt < Date.now()) {
             return NextResponse.json({ error: "Code expired" }, { status: 400 });
+        }
+
+        // ── Trial abuse prevention: one trial per device ─────────────────
+        const trialHoursCheck = Number((redemption as { trialHours?: number }).trialHours || 0);
+        if (trialHoursCheck > 0) {
+            // Check if this device already used a trial
+            const existingDevice = await Device.findOne({ deviceId });
+            if (existingDevice?.userId) {
+                const alreadyUsedTrial = await UserMovieTrial.exists({
+                    userId: existingDevice.userId,
+                });
+                if (alreadyUsedTrial) {
+                    return NextResponse.json(
+                        { error: "Trial already used on this device." },
+                        { status: 400 }
+                    );
+                }
+            }
         }
 
         // Find or create user

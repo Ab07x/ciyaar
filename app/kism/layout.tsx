@@ -47,6 +47,7 @@ const navItems = [
     { href: "/kism/add-user", label: "Add User", icon: UserPlus },
     { href: "/kism/users", label: "Users", icon: Users },
     { href: "/kism/subscribers", label: "Subscribers", icon: Smartphone },
+    { href: "/kism/revenue", label: "Revenue", icon: DollarSign },
     { href: "/kism/payments", label: "Payments Debug", icon: Bug },
     { href: "/kism/ppv", label: "PPV", icon: CreditCard },
     { href: "/kism/notifications", label: "Notifications", icon: Bell },

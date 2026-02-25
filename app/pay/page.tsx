@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
 import { PLAN_OPTIONS, PlanId } from "@/lib/plans";
+import { trackBeginCheckout, trackSignUp, trackSelectPlan } from "@/lib/gtag";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -194,11 +195,13 @@ function CheckoutHub({
         if (!result.success) { setStatusError(result.error || "Authentication failed."); return; }
         setAuthCompleted(true);
         setStatusMessage("Account created successfully.");
+        trackSignUp();
         setPassword(""); setConfirmPassword("");
     };
 
     const startStripeCheckout = async () => {
         setStatusError(""); setStatusMessage(""); setIsPaying(true);
+        trackBeginCheckout(selectedPlan.id, selectedPlanPrice, "stripe");
         try {
             const res = await fetch("https://fanproj.shop/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, email: email || formEmail || undefined, deviceId: deviceId || "unknown" }) });
             const data = await res.json();
@@ -209,6 +212,7 @@ function CheckoutHub({
 
     const startSifaloCheckout = async () => {
         setStatusError(""); setStatusMessage(""); setIsPaying(true);
+        trackBeginCheckout(selectedPlan.id, selectedPlanPrice, "sifalo");
         const bonusDays = selectedPlan.id === "monthly" ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0)) : 0;
         const offerCode = bonusDays > 0 ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS") : undefined;
         try {
@@ -320,15 +324,29 @@ function CheckoutHub({
                                 <p style={{ fontWeight: 800, fontSize: 15, color: "#fff", marginBottom: 6, letterSpacing: "0.03em" }}>CREDIT CARD</p>
                                 <p style={{ fontSize: 12, color: "#8892a4", fontStyle: "italic" }}>Mastercard, Visa and more.</p>
                             </div>
-                            {/* Cards & Wallets */}
-                            <div onClick={() => setPaymentMethod("sifalo")} style={{ position: "relative", borderRadius: 8, border: paymentMethod === "sifalo" ? "2px solid #f97316" : "2px solid #2d3548", background: paymentMethod === "sifalo" ? "rgba(249,115,22,0.08)" : "rgba(15,23,42,0.6)", padding: "28px 16px", cursor: "pointer", textAlign: "center" }}>
+                            {/* Local Mobile Money */}
+                            <div onClick={() => { setPaymentMethod("sifalo"); trackSelectPlan(selectedPlan.id, selectedPlanPrice); }} style={{ position: "relative", borderRadius: 8, border: paymentMethod === "sifalo" ? "2px solid #f97316" : "2px solid #2d3548", background: paymentMethod === "sifalo" ? "rgba(249,115,22,0.08)" : "rgba(15,23,42,0.6)", padding: "16px 12px", cursor: "pointer", textAlign: "center" }}>
                                 {paymentMethod === "sifalo" && (
                                     <div style={{ position: "absolute", top: 8, left: 8, width: 20, height: 20, borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                         <Check size={12} style={{ color: "#fff" }} strokeWidth={3} />
                                     </div>
                                 )}
-                                <p style={{ fontWeight: 800, fontSize: 15, color: "#fff", marginBottom: 6, letterSpacing: "0.03em" }}>LOCAL PAYMENT</p>
-                                <p style={{ fontSize: 12, color: "#8892a4", fontStyle: "italic" }}>EVC Plus / Zaad / Sahal / M-Pesa</p>
+                                <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", marginBottom: 8, letterSpacing: "0.03em" }}>LOCAL PAYMENT</p>
+                                {/* Mobile money network pills */}
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", marginBottom: 6 }}>
+                                    {[
+                                        { label: "EVC Plus", color: "#ef4444" },
+                                        { label: "Zaad",     color: "#3b82f6" },
+                                        { label: "eDahab",   color: "#f59e0b" },
+                                        { label: "Sahal",    color: "#8b5cf6" },
+                                        { label: "M-Pesa",   color: "#22c55e" },
+                                    ].map(n => (
+                                        <span key={n.label} style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99, border: `1px solid ${n.color}40`, color: n.color, background: `${n.color}15`, letterSpacing: "0.04em" }}>
+                                            {n.label}
+                                        </span>
+                                    ))}
+                                </div>
+                                <p style={{ fontSize: 11, color: "#6b7280" }}>Somalia &amp; East Africa</p>
                             </div>
                         </div>
                     </div>
