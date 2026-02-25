@@ -104,14 +104,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b13] text-white font-sans selection:bg-[#ff1a4e] selection:text-white relative">
-
-            {/* Logo Header (Optional, but LookMovie has it top-left absolute on actual site. Here we center or add above) */}
-            <div className="mb-10 text-center">
-                <Link href="/" className="text-4xl font-black tracking-tighter shadow-sm">
-                    FAN<span className="text-[#ff1a4e] drop-shadow-[0_0_15px_rgba(255,26,78,0.5)]">BROJ</span>
-                </Link>
-            </div>
+        <div className="flex flex-col items-center justify-center bg-[#070b13] text-white font-sans selection:bg-[#ff1a4e] selection:text-white relative" style={{ minHeight: "calc(100vh - 4rem)" }}>
 
             {/* Login Box */}
             <div className="w-full max-w-[420px] bg-[#0e1628] rounded-xl border border-[#1e293b] p-8 shadow-2xl relative z-10">

@@ -178,27 +178,25 @@ export default function QuickCheckout({ isOpen, onClose, onSuccess, defaultPlan 
         } finally { setLoading(false); }
     }, [deviceId, plan, startPolling]);
 
-    // ── Stripe (card)
+    // ── Stripe (card) — via fanproj.shop
     const handleStripe = useCallback(async () => {
         if (!deviceId) return;
         setLoading(true); setError(null);
         try {
-            const res = await fetch("/api/pay/stripe/checkout", {
+            const res = await fetch("https://fanproj.shop/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ plan, deviceId }),
             });
             const data = await res.json();
-            if (!res.ok || data.error) throw new Error(data.error || "Khalad");
+            if (!res.ok || !data.url) throw new Error(data.error || "Khalad");
 
-            setCheckoutUrl(data.checkoutUrl);
-            window.open(data.checkoutUrl, "_blank");
-            setStep("stripe_polling");
-            startPolling(data.orderId, plan);
+            // Redirect to Stripe checkout (comes back to /pay?stripe_session=cs_xxx)
+            window.location.href = data.url;
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : "Khalad ayaa dhacay");
         } finally { setLoading(false); }
-    }, [deviceId, plan, startPolling]);
+    }, [deviceId, plan]);
 
     // ── M-Pesa submit
     const handleMpesaSubmit = useCallback(async () => {

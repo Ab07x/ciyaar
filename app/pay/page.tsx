@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
-import { PLAN_OPTIONS, PlanId, getPlanPrice } from "@/lib/plans";
+import { PLAN_OPTIONS, PlanId } from "@/lib/plans";
 
 type SettingsResponse = Record<string, unknown>;
 const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<SettingsResponse>);
@@ -152,6 +152,14 @@ function PaymentVerifier({ sid, orderId, stripeSession, paymentType }: { sid: st
 /* ────────────────────────────────────────────── */
 /*  CheckoutHub                                   */
 /* ────────────────────────────────────────────── */
+/** Map legacy plan IDs to new plan IDs for /api/pricing lookup */
+const LEGACY_TO_NEW: Record<PlanId, string> = {
+    match: "starter",
+    weekly: "basic",
+    monthly: "pro",
+    yearly: "elite",
+};
+
 function CheckoutHub({
     initialPlanId = "monthly",
     initialBonusDays = 0,
@@ -161,15 +169,21 @@ function CheckoutHub({
     initialBonusDays?: number;
     initialOfferCode?: string;
 }) {
-    const { data: settings } = useSWR("/api/settings", fetcher);
-    const { data: geo, isLoading: geoLoading } = useSWR<{ country: string | null; multiplier: number }>("/api/geo", fetcherGeneric);
-    const geoReady = !geoLoading && geo !== undefined;
-    const geoMultiplier = geo?.multiplier ?? 1;
+    const { data: pricing, isLoading: pricingLoading } = useSWR("/api/pricing", fetcherGeneric);
+    const geoReady = !pricingLoading && pricing !== undefined;
     const { deviceId, email, signupWithEmail } = useUser();
 
     const selectedPlan = useMemo(() => PLAN_OPTIONS.find((p) => p.id === initialPlanId) || PLAN_OPTIONS[0], [initialPlanId]);
-    const basePlanPrice = useMemo(() => getPlanPrice(settings, selectedPlan), [settings, selectedPlan]);
-    const selectedPlanPrice = useMemo(() => Math.round(basePlanPrice * geoMultiplier * 100) / 100, [basePlanPrice, geoMultiplier]);
+
+    // Get price from the new tier-based /api/pricing endpoint (matches /pricing page exactly)
+    const selectedPlanPrice = useMemo(() => {
+        if (!pricing?.plans) return 0;
+        const newId = LEGACY_TO_NEW[selectedPlan.id];
+        const planData = pricing.plans.find((p: { id: string }) => p.id === newId);
+        if (!planData) return 0;
+        // yearly plan shows yearly price, others show monthly price
+        return selectedPlan.id === "yearly" ? planData.yearly.price : planData.monthly.price;
+    }, [pricing, selectedPlan]);
 
     const [formEmail, setFormEmail] = useState(email || "");
     const [password, setPassword] = useState("");
@@ -241,7 +255,7 @@ function CheckoutHub({
         <div style={{ minHeight: "100vh", color: "#e1e2e6", position: "relative" }}>
 
             {/* ── Background: background.png covers full page ── */}
-            <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
+            <div style={{ position: "fixed", inset: 0, zIndex: -1 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/background.png" alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(8,16,32,0.55)" }} />
