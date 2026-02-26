@@ -71,7 +71,16 @@ export default function MoviePlayClient({
     );
 
     const [activeEmbedIndex, setActiveEmbedIndex] = useState(0);
-    const [showInterstitial, setShowInterstitial] = useState(true);
+    const [showInterstitial, setShowInterstitial] = useState(() => {
+        // Show promo every 3rd video play for free/guest users
+        if (typeof window === "undefined") return false;
+        try {
+            const key = "fanbroj:play_count";
+            const count = Number(localStorage.getItem(key) || 0) + 1;
+            localStorage.setItem(key, String(count));
+            return count % 3 === 0; // every 3rd play
+        } catch { return false; }
+    });
     const [adCompleted, setAdCompleted] = useState(false);
     const hasMarkedSessionRef = useRef(false);
 
@@ -160,8 +169,8 @@ export default function MoviePlayClient({
         );
     }
 
-    // Show interstitial ad for non-premium users
-    if (!isPremium && !isPreviewMode && showInterstitial && !adCompleted) {
+    // Show promo interstitial every 3rd video for non-premium users
+    if (!isPremium && showInterstitial && !adCompleted) {
         return (
             <PremiumAdInterstitial
                 movieTitle={movie.title}
