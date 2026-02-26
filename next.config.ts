@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Serve static assets (/_next/static/) from BunnyCDN
+  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || "",
+
   images: {
     remotePatterns: [
       {
