@@ -1336,14 +1336,34 @@ export function StreamPlayer({
     const whatsappSupportHref = `https://wa.me/${whatsappSupportNumber}?text=${encodeURIComponent(
         whatsappSupportMessage
     )}`;
-    const paywallOverlayClass = "absolute inset-0 bg-black/92 z-50 p-2 sm:p-6 overflow-y-auto";
-    const paywallCardWrapClass = "min-h-full flex items-start sm:items-center justify-center";
-    const paywallCardClass = "w-full max-w-[22rem] sm:max-w-md rounded-xl sm:rounded-2xl border border-white/15 bg-black/65 backdrop-blur-md p-3 sm:p-5 animate-in fade-in zoom-in duration-300 text-center";
-    const paywallTitleClass = "text-lg sm:text-2xl leading-tight font-black text-white mb-2";
-    const paywallMessageClass = "text-gray-300 text-sm sm:text-base leading-snug mb-3 sm:mb-5";
-    const paywallButtonsClass = "flex flex-col gap-2.5 sm:gap-3";
-    const paywallPrimaryButtonClass = "w-full py-2.5 sm:py-3 bg-accent-gold text-black font-bold rounded-xl hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
-    const paywallWhatsappButtonClass = "w-full py-2.5 sm:py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#1fb855] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base";
+    const paywallOverlayClass = "absolute inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-6"
+        + " [background:radial-gradient(ellipse_80%_70%_at_50%_40%,rgba(18,12,4,0.97)_0%,rgba(0,0,0,0.99)_100%)]";
+    const paywallCardWrapClass = "w-full flex items-center justify-center";
+    const paywallCardClass = [
+        "w-full max-w-[20rem] sm:max-w-[22rem] rounded-2xl text-center",
+        "border border-amber-500/20 p-4 sm:p-6",
+        "[background:linear-gradient(160deg,rgba(30,18,4,0.95)_0%,rgba(10,7,2,0.98)_100%)]",
+        "[box-shadow:0_0_0_1px_rgba(251,191,36,0.08),0_20px_60px_rgba(0,0,0,0.8),0_0_40px_rgba(251,191,36,0.04)_inset]",
+        "animate-in fade-in zoom-in-95 duration-300",
+    ].join(" ");
+    const paywallTitleClass = "text-base sm:text-xl leading-tight font-black text-white mb-1.5 tracking-tight";
+    const paywallMessageClass = "text-gray-400 text-xs sm:text-sm leading-snug mb-4";
+    const paywallButtonsClass = "flex flex-col gap-2 sm:gap-2.5";
+    const paywallPrimaryButtonClass = [
+        "relative w-full py-3 font-black rounded-xl overflow-hidden",
+        "text-black text-sm sm:text-base tracking-wide",
+        "flex items-center justify-center gap-2",
+        "transition-transform active:scale-[0.98]",
+        "[background:linear-gradient(135deg,#ffd54f_0%,#ffa000_50%,#e65100_100%)]",
+        "[box-shadow:0_4px_20px_rgba(255,160,0,0.4),0_1px_0_rgba(255,255,255,0.15)_inset]",
+        "hover:[box-shadow:0_6px_28px_rgba(255,160,0,0.55),0_1px_0_rgba(255,255,255,0.15)_inset]",
+    ].join(" ");
+    const paywallWhatsappButtonClass = [
+        "w-full py-2.5 rounded-xl font-bold text-white text-sm",
+        "flex items-center justify-center gap-2",
+        "border border-[#25D366]/30 bg-[#25D366]/10",
+        "hover:bg-[#25D366]/20 transition-colors",
+    ].join(" ");
     const monthlyOption = PLAN_OPTIONS.find(p => p.id === "monthly")!;
     const yearlyOption  = PLAN_OPTIONS.find(p => p.id === "yearly")!;
     const monthlyPrice  = Math.round(getPlanPrice(settings, monthlyOption) * geoMultiplier * 100) / 100;
@@ -1398,37 +1418,32 @@ export function StreamPlayer({
                     <div className={paywallOverlayClass}>
                         <div className={paywallCardWrapClass}>
                             <div className={paywallCardClass}>
-                                <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
+                                <PaywallLockIcon />
                                 <h3 className={paywallTitleClass}>{paywallTitle}</h3>
                                 <p className={paywallMessageClass}>{paywallMessage}</p>
                                 {highIntentReason && (
-                                    <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
-                                        Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
+                                    <p className="mb-3 rounded-lg border border-amber-400/25 bg-amber-500/8 px-3 py-2 text-[11px] font-bold text-amber-200/80">
+                                        ⚡ Offer gaar ah adiga — Fur VIP hadda
                                     </p>
                                 )}
                                 <div className={paywallButtonsClass}>
-                                    <button
-                                        onClick={handlePrimaryPaywallClick}
-                                        className={paywallPrimaryButtonClass}
-                                    >
-                                        <Zap size={20} />
-                                        {primaryPaywallCta}
+                                    <button onClick={handlePrimaryPaywallClick} className={paywallPrimaryButtonClass}>
+                                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite]" />
+                                        <Zap size={16} className="relative" />
+                                        <span className="relative uppercase tracking-widest text-[13px]">{primaryPaywallCta}</span>
                                     </button>
-                                    <a
-                                        href={whatsappSupportHref}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={handleWhatsappPaywallClick}
-                                        className={paywallWhatsappButtonClass}
-                                    >
-                                        <MessageCircle size={20} />
+                                    <a href={whatsappSupportHref} target="_blank" rel="noopener noreferrer"
+                                        onClick={handleWhatsappPaywallClick} className={paywallWhatsappButtonClass}>
+                                        <MessageCircle size={15} />
                                         WhatsApp Support
                                     </a>
                                 </div>
-                                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-3 text-[10px] text-gray-500">
-                                    <span className="flex items-center gap-1"><Shield size={10} /> SSL Ammaan</span>
-                                    <span className="flex items-center gap-1"><Zap size={10} /> Isla markiiba</span>
-                                    <span className="flex items-center gap-1">👥 39,246 users this month</span>
+                                <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-600">
+                                    <span className="flex items-center gap-1"><Shield size={9} /> SSL</span>
+                                    <span className="text-gray-700">·</span>
+                                    <span className="flex items-center gap-1"><Zap size={9} /> Degdeg</span>
+                                    <span className="text-gray-700">·</span>
+                                    <span>39k+ users</span>
                                 </div>
                             </div>
                         </div>
@@ -1622,37 +1637,32 @@ export function StreamPlayer({
                 <div className={paywallOverlayClass}>
                     <div className={paywallCardWrapClass}>
                         <div className={paywallCardClass}>
-                            <Lock className="w-10 h-10 sm:w-16 sm:h-16 text-accent-gold mx-auto mb-2 sm:mb-4" />
+                            <PaywallLockIcon />
                             <h3 className={paywallTitleClass}>{paywallTitle}</h3>
                             <p className={paywallMessageClass}>{paywallMessage}</p>
                             {highIntentReason && (
-                                <p className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-500/10 px-3 py-2 text-[11px] sm:text-xs font-bold text-yellow-200">
-                                    Offer gaar ah adiga ayaa firfircoon maanta. Fur VIP hadda si lock-ku u joogsado.
+                                <p className="mb-3 rounded-lg border border-amber-400/25 bg-amber-500/8 px-3 py-2 text-[11px] font-bold text-amber-200/80">
+                                    ⚡ Offer gaar ah adiga — Fur VIP hadda
                                 </p>
                             )}
                             <div className={paywallButtonsClass}>
-                                <button
-                                    onClick={handlePrimaryPaywallClick}
-                                    className={paywallPrimaryButtonClass}
-                                >
-                                    <Zap size={20} />
-                                    {primaryPaywallCta}
+                                <button onClick={handlePrimaryPaywallClick} className={paywallPrimaryButtonClass}>
+                                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite]" />
+                                    <Zap size={16} className="relative" />
+                                    <span className="relative uppercase tracking-widest text-[13px]">{primaryPaywallCta}</span>
                                 </button>
-                                <a
-                                    href={whatsappSupportHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={handleWhatsappPaywallClick}
-                                    className={paywallWhatsappButtonClass}
-                                >
-                                    <MessageCircle size={20} />
+                                <a href={whatsappSupportHref} target="_blank" rel="noopener noreferrer"
+                                    onClick={handleWhatsappPaywallClick} className={paywallWhatsappButtonClass}>
+                                    <MessageCircle size={15} />
                                     WhatsApp Support
                                 </a>
                             </div>
-                            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-3 text-[10px] text-gray-500">
-                                <span className="flex items-center gap-1"><Shield size={10} /> SSL Ammaan</span>
-                                <span className="flex items-center gap-1"><Zap size={10} /> Isla markiiba</span>
-                                <span className="flex items-center gap-1">👥 39,246 users this month</span>
+                            <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-600">
+                                <span className="flex items-center gap-1"><Shield size={9} /> SSL</span>
+                                <span className="text-gray-700">·</span>
+                                <span className="flex items-center gap-1"><Zap size={9} /> Degdeg</span>
+                                <span className="text-gray-700">·</span>
+                                <span>39k+ users</span>
                             </div>
                         </div>
                     </div>
@@ -1976,6 +1986,27 @@ export function StreamPlayer({
                 )}
             </AnimatePresence>
 
+        </div>
+    );
+}
+
+/* ── Radar-pulse lock icon ───────────────────────────────────────────────── */
+function PaywallLockIcon() {
+    return (
+        <div className="relative flex items-center justify-center mx-auto mb-4 w-16 h-16 sm:w-20 sm:h-20">
+            {/* pulse ring 1 */}
+            <span className="absolute inset-0 rounded-full border border-amber-400/40 animate-ping"
+                style={{ animationDuration: "2s" }} />
+            {/* pulse ring 2 */}
+            <span className="absolute inset-[-8px] rounded-full border border-amber-400/20 animate-ping"
+                style={{ animationDuration: "2s", animationDelay: "0.5s" }} />
+            {/* solid disc */}
+            <span className="absolute inset-0 rounded-full"
+                style={{ background: "radial-gradient(circle,rgba(255,160,0,0.18) 0%,rgba(255,160,0,0.06) 70%,transparent 100%)" }} />
+            <Lock
+                className="relative z-10 w-7 h-7 sm:w-9 sm:h-9"
+                style={{ color: "#fbbf24", filter: "drop-shadow(0 0 8px rgba(251,191,36,0.7))" }}
+            />
         </div>
     );
 }
