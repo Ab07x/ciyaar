@@ -1,19 +1,28 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Daawo Ciyaar Live Maanta | Football & Sports Streaming | Fanproj TV",
-    description: "Daawo ciyaaraha kubadda cagta oo live tooska ah. Premier League, La Liga, Champions League, Koobka Adduunka - dhammaantood Af Somali. Fanproj TV, Fanbroj ciyaar live.",
+    title: "Ciyaaraha Live Af Somali | Kubadda Cagta | Fanbroj",
+    description: "Daawo ciyaaraha kubadda cagta oo live tooska ah Af Somali. Premier League, La Liga, Champions League, Koobka Adduunka – Fanbroj (Fanproj TV). Ciyaar live bilaash.",
     keywords: [
-        "ciyaar live", "daawo ciyaar live", "ciyaar maanta",
-        "fanproj tv", "fanproj ciyaar", "fanbroj live",
-        "kubadda cagta live", "football live somali",
-        "premier league live", "champions league live af somali",
+        "ciyaar live", "ciyaaraha live af somali", "daawo ciyaar live",
+        "ciyaar maanta", "kubadda cagta live", "kubadda cagta af somali",
+        "fanbroj tv", "fanproj tv", "fanbroj ciyaar", "fanbroj",
+        "football live somali", "premier league live af somali",
+        "champions league live af somali", "la liga live",
+        "fanproj nxt", "fanprojnet", "streamnxt fanproj", "fanbaroj",
     ],
     openGraph: {
-        title: "Ciyaar Live Maanta – Football & Sports | Fanproj TV",
-        description: "Daawo ciyaaraha kubadda cagta oo live ah tooska. Premier League, La Liga, Champions League - Fanproj TV.",
+        title: "Ciyaaraha Live Af Somali | Kubadda Cagta | Fanbroj",
+        description: "Daawo ciyaaraha kubadda cagta live Af Somali. Premier League, La Liga, Champions League – Fanbroj.",
         url: "https://fanbroj.net/ciyaar",
-        images: ["/og-image.jpg"],
+        siteName: "Fanbroj",
+        images: ["/og-preview.png"],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Ciyaaraha Live Af Somali | Fanbroj",
+        description: "Daawo ciyaaraha kubadda cagta live Af Somali – Premier League, Champions League – Fanbroj.",
+        images: ["/og-preview.png"],
     },
     alternates: {
         canonical: "https://fanbroj.net/ciyaar",
@@ -22,21 +31,35 @@ export const metadata: Metadata = {
 
 const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": "Daawo Ciyaar Live Maanta – Fanproj TV",
-    "description": "Daawo ciyaaraha kubadda cagta oo live tooska ah. Premier League, La Liga, Champions League.",
-    "url": "https://fanbroj.net/ciyaar",
-    "isPartOf": { "@id": "https://fanbroj.net/#website" },
-    "mainEntity": {
-        "@type": "ItemList",
-        "name": "Live & Upcoming Sports Matches",
-        "itemListElement": [],
-    },
-    "provider": {
-        "@type": "Organization",
-        "name": "Fanproj TV",
-        "url": "https://fanbroj.net",
-    },
+    "@graph": [
+        {
+            "@type": "CollectionPage",
+            "@id": "https://fanbroj.net/ciyaar#collectionpage",
+            "name": "Ciyaaraha Live Af Somali – Kubadda Cagta | Fanbroj",
+            "description": "Daawo ciyaaraha kubadda cagta oo live tooska ah Af Somali. Premier League, La Liga, Champions League – Fanbroj.",
+            "url": "https://fanbroj.net/ciyaar",
+            "isPartOf": { "@id": "https://fanbroj.net/#website" },
+            "breadcrumb": { "@id": "https://fanbroj.net/ciyaar#breadcrumb" },
+            "mainEntity": {
+                "@type": "ItemList",
+                "name": "Live & Upcoming Sports Matches",
+                "itemListElement": [],
+            },
+            "provider": {
+                "@type": "Organization",
+                "name": "Fanproj TV",
+                "url": "https://fanbroj.net",
+            },
+        },
+        {
+            "@type": "BreadcrumbList",
+            "@id": "https://fanbroj.net/ciyaar#breadcrumb",
+            "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": "Fanproj", "item": "https://fanbroj.net" },
+                { "@type": "ListItem", "position": 2, "name": "Ciyaaraha Live", "item": "https://fanbroj.net/ciyaar" },
+            ],
+        },
+    ],
 };
 
 export default function CiyaarLayout({ children }: { children: React.ReactNode }) {

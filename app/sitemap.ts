@@ -6,7 +6,7 @@ import { Movie, Series, Match, Post, Channel } from "@/lib/models";
 export const dynamic = "force-dynamic";
 export const revalidate = 3600; // Revalidate every hour
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net";
+const BASE_URL = "https://fanbroj.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     await connectDB();
@@ -17,12 +17,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // Content hub pages targeting high-impression keyword clusters (GSC data)
         { url: `${BASE_URL}/hindi-af-somali`, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
         { url: `${BASE_URL}/hindi-af-somali/2025`, lastModified: new Date(), changeFrequency: "daily", priority: 0.95 },
+        { url: `${BASE_URL}/hindi-af-somali/2026`, lastModified: new Date(), changeFrequency: "daily", priority: 0.95 },
         { url: `${BASE_URL}/movies`, lastModified: new Date(), changeFrequency: "daily", priority: 0.95 },
         { url: `${BASE_URL}/series`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
         { url: `${BASE_URL}/ciyaar`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
         { url: `${BASE_URL}/live`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.85 },
         { url: `${BASE_URL}/tags`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
-        { url: `${BASE_URL}/search`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
         { url: `${BASE_URL}/pricing`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
         { url: `${BASE_URL}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 },
         { url: `${BASE_URL}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 2. Dynamic Routes - fetch all from MongoDB
     const [movies, series, matches, posts, channels, tagAgg] = await Promise.all([
         Movie.find({ isPublished: true }, "slug updatedAt views").lean().catch(() => []),
-        Series.find({ isPublished: true }, "slug updatedAt views").lean().catch(() => []),
+        Series.find({ isPublished: true }, "slug updatedAt views numberOfSeasons").lean().catch(() => []),
         Match.find({ status: { $in: ["live", "upcoming"] } }, "slug updatedAt").lean().catch(() => []),
         Post.find({ isPublished: true }, "slug updatedAt").lean().catch(() => []),
         Channel.find({ isLive: true }, "slug updatedAt").lean().catch(() => []),
@@ -55,12 +55,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: (movie.views || 0) > 100 ? 0.85 : 0.7,
     }));
 
-    // Series
+    // Series - boost popular series
     const seriesRoutes: MetadataRoute.Sitemap = (series as any[]).map((s) => ({
         url: `${BASE_URL}/series/${s.slug}`,
         lastModified: new Date(s.updatedAt || Date.now()),
         changeFrequency: "weekly" as const,
-        priority: 0.7,
+        priority: (s.views || 0) > 100 ? 0.85 : 0.7,
     }));
 
     // Matches / Live

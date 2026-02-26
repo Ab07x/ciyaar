@@ -23,22 +23,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const tagName = tagFromSlug(tagSlug);
     const displayTag = tagName.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
-    const title = `${displayTag} – Daawo Filimaan Af Somali | Fanproj`;
-    const description = `Daawo dhammaan filimaha ${displayTag} oo Af Somali ah bilaash HD. ${displayTag} cusub 2025 & 2026 – Fanproj (Fanbroj). Hindi Af Somali, Fanproj NXT, Fanproj Play.`;
+    const title = `${displayTag} | Hindi Af Somali | Fanbroj`;
+    const description = `Daawo dhammaan filimaha ${displayTag} oo Af Somali ah cusub 2026 bilaash HD. ${displayTag} Hindi Af Somali, filim hindi afsomali cusub – Fanbroj (Fanproj). Daawo online bilaash.`;
 
     return {
         title,
         description,
         keywords: [
             tagName, `${tagName} af somali`, `${tagName} 2025`, `${tagName} 2026`,
-            "fanproj", "fanbroj", "hindi af somali", "daawo online",
+            `${tagName} hindi af somali`, `daawo ${tagName} af somali`,
+            "fanproj", "fanbroj", "hindi af somali", "filim hindi afsomali",
+            "film hindi af somali", "hindi af somali cusub", "daawo online",
+            "hindi af somali cusub 2026", "musalsal af somali",
         ],
         openGraph: {
             title,
             description,
             url: `https://fanbroj.net/tags/${tagSlug}`,
-            siteName: "Fanproj – Fanbroj.net",
-            images: ["/og-image.jpg"],
+            siteName: "Fanbroj",
+            images: ["/og-preview.png"],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: ["/og-preview.png"],
         },
         alternates: {
             canonical: `https://fanbroj.net/tags/${tagSlug}`,
@@ -104,15 +113,47 @@ export default async function TagPage({ params }: PageProps) {
             count,
         }));
 
-    // JSON-LD for tag page
+    // JSON-LD for tag page: CollectionPage + BreadcrumbList + ItemList
+    const canonicalUrl = `https://fanbroj.net/tags/${tagSlug}`;
     const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        name: `${displayTag} - Filimaan Af Somali`,
-        description: `Dhammaan filimaha ${displayTag} oo Af Somali ah`,
-        url: `https://fanbroj.net/tags/${tagSlug}`,
-        numberOfItems: movies.length,
-        isPartOf: { "@id": "https://fanbroj.net/#website" },
+        "@graph": [
+            {
+                "@type": "CollectionPage",
+                "@id": `${canonicalUrl}#collectionpage`,
+                url: canonicalUrl,
+                name: `${displayTag} – Filimaan Af Somali`,
+                description: `Dhammaan filimaha ${displayTag} oo Af Somali ah – daawo bilaash HD Fanproj.`,
+                numberOfItems: movies.length,
+                isPartOf: { "@id": "https://fanbroj.net/#website" },
+                breadcrumb: { "@id": `${canonicalUrl}#breadcrumb` },
+            },
+            {
+                "@type": "BreadcrumbList",
+                "@id": `${canonicalUrl}#breadcrumb`,
+                itemListElement: [
+                    { "@type": "ListItem", position: 1, name: "Fanproj", item: "https://fanbroj.net" },
+                    { "@type": "ListItem", position: 2, name: "Tags", item: "https://fanbroj.net/tags" },
+                    { "@type": "ListItem", position: 3, name: displayTag, item: canonicalUrl },
+                ],
+            },
+            ...(movies.length > 0 ? [{
+                "@type": "ItemList",
+                name: `${displayTag} – Filimaha Af Somali`,
+                numberOfItems: Math.min(movies.length, 20),
+                itemListElement: (movies as any[]).slice(0, 20).map((movie, i) => ({
+                    "@type": "ListItem",
+                    position: i + 1,
+                    item: {
+                        "@type": "Movie",
+                        name: movie.titleSomali || movie.title,
+                        url: `https://fanbroj.net/movies/${movie.slug}-af-somali`,
+                        image: movie.posterUrl || undefined,
+                        datePublished: movie.releaseDate || undefined,
+                    },
+                })),
+            }] : []),
+        ],
     };
 
     return (
@@ -222,9 +263,10 @@ export default async function TagPage({ params }: PageProps) {
             <div className="container mx-auto px-4 pb-12">
                 <div className="border-t border-[#1a3a5c] pt-8">
                     <p className="text-white/30 text-xs leading-relaxed max-w-3xl">
-                        Daawo dhammaan filimaha {displayTag} oo Af Somali ah bilaash. {displayTag} cusub 2025 iyo 2026
-                        oo lagu daawo karo Fanproj (Fanbroj). Hindi Af Somali, Fanproj NXT, Fanproj Play, Astaan Films,
-                        Saafi Films – dhammaantood halkan ku daawo HD quality.
+                        Daawo dhammaan filimaha {displayTag} oo Af Somali ah bilaash. {displayTag} cusub 2026
+                        oo lagu daawo karo Fanbroj (Fanproj). Hindi Af Somali, filim hindi afsomali cusub,
+                        film hindi af somali, musalsal af somali – dhammaantood halkan ku daawo HD quality.
+                        Fanbroj waa goobta ugu weyn ee hindi af somali cusub 2026.
                     </p>
                 </div>
             </div>

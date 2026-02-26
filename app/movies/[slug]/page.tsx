@@ -33,12 +33,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const movieName = movie.titleSomali || movie.title;
 
     const seoTitle = isDubbed
-        ? `${movieName} (${movie.title}) Hindi Af Somali ${year} - Daawo Online FREE | Fanproj`
-        : `${movie.title} Af Somali ${year} - Daawo Online | Fanproj`;
+        ? `${movieName} Af Somali | Daawo ${movie.title} Hindi Af Somali ${year} | Fanbroj`
+        : `${movie.title} Af Somali | Daawo ${year} | Fanbroj`;
 
     const seoDescription = isDubbed
-        ? `Daawo ${movieName} (${movie.title}) oo Hindi Af Somali ah ${year} bilaash ah HD. ${(movie.genres || []).slice(0, 3).join(", ")} - Fanproj (Fanbroj). ${(movie.overviewSomali || movie.overview || "").slice(0, 120)}`
-        : `Daawo ${movie.title} Af Somali ${year} online HD. ${(movie.overviewSomali || movie.overview || "").slice(0, 140)}`;
+        ? `Daawo ${movieName} (${movie.title}) oo Hindi Af Somali ah ${year} bilaash HD. ${(movie.genres || []).slice(0, 3).join(", ")} – Fanbroj (Fanproj). ${(movie.overviewSomali || movie.overview || "").slice(0, 120)}`
+        : `Daawo ${movie.title} Af Somali ${year} bilaash online HD. Fanbroj – ${(movie.overviewSomali || movie.overview || "").slice(0, 140)}`;
 
     const keywords = [
         movie.title,
@@ -48,11 +48,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         `daawo ${movie.title} af somali`,
         `${movie.title} ${year}`,
         `${movie.title} af somali ${year}`,
+        `${movie.title} filim hindi afsomali`,
         ...(movie.tags || []),
         ...(movie.genres || []),
         "af somali", "hindi af somali", "hindi af somali cusub",
-        "fanproj", "fanbroj", "fanproj aflaam", "fanproj play",
-        "daawo online", "filim hindi af somali",
+        "hindi af somali cusub 2026", "filim hindi afsomali",
+        "film hindi af somali", "filin hindi af somali",
+        "fanbroj", "fanproj", "fanproj nxt",
+        "daawo online", "daawo bilaash",
         year,
     ].filter(Boolean).join(", ");
 
@@ -72,20 +75,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             title: seoTitle,
             description: seoDescription,
             url: `https://fanbroj.net/movies/${dbSlug}-af-somali`,
-            siteName: "Fanproj – Fanbroj.net",
+            siteName: "Fanbroj",
             images: [
                 {
                     url: posterUrl,
                     width: 500,
                     height: 750,
-                    alt: `${movieName} - Hindi Af Somali ${year} | Fanproj`,
+                    alt: `${movieName} - Hindi Af Somali ${year} | Fanbroj`,
                 },
             ],
             releaseDate: movie.releaseDate,
         },
         twitter: {
             card: "summary_large_image",
-            title: isDubbed ? `${movieName} - Hindi Af Somali ${year} | Fanproj` : `${movie.title} - Af Somali | Fanproj`,
+            title: isDubbed ? `${movieName} - Hindi Af Somali ${year} | Fanbroj` : `${movie.title} - Af Somali | Fanbroj`,
             description: seoDescription,
             images: [posterUrl],
         },

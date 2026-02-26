@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Qiimaha & Plans | Fanproj Premium – Bilaash & VIP | Fanbroj",
-    description: "Daawo filimaha Af Somali bilaash ama Premium. Fanproj Premium: xayeysiis la'aan, 800+ filim, HD quality, offline download. Qiimaha bilaash ah.",
+    title: "Qiimaha & Plans | Fanbroj Premium – Bilaash & VIP",
+    description: "Daawo filimaha Hindi Af Somali bilaash ama Premium. Fanbroj Premium: xayeysiis la'aan, 900+ filim, HD quality, offline download. Qiimaha bilaash ah. Fanbroj, Fanproj.",
     keywords: [
-        "fanproj premium", "fanproj pricing", "fanbroj vip",
-        "filim af somali bilaash", "fanproj subscription", "fanproj free",
+        "fanbroj premium", "fanproj premium", "fanbroj pricing", "fanbroj vip",
+        "filim af somali bilaash", "fanbroj subscription", "fanproj free",
+        "hindi af somali", "fanbroj", "fanproj", "fanprojnet",
     ],
     openGraph: {
-        title: "Fanproj Premium – Plans & Pricing",
-        description: "Daawo 800+ filim Af Somali bilaash ama VIP. Xayeysiis la'aan, HD quality.",
+        title: "Fanbroj Premium – Plans & Pricing",
+        description: "Daawo 900+ filim Hindi Af Somali bilaash ama VIP. Xayeysiis la'aan, HD quality – Fanbroj.",
         url: "https://fanbroj.net/pricing",
+        siteName: "Fanbroj",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Fanbroj Premium – Plans & Pricing",
+        description: "Daawo 900+ filim Hindi Af Somali bilaash ama VIP – Fanbroj.",
     },
     alternates: {
         canonical: "https://fanbroj.net/pricing",

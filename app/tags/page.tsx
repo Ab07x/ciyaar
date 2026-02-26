@@ -7,17 +7,29 @@ import { Tag, Film } from "lucide-react";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-    title: "Dhammaan Tags – Hindi Af Somali, Fanproj, Saafi Films | Fanproj",
-    description: "Browse dhammaan categories iyo tags ee filimaha Af Somali. Hindi Af Somali cusub, Fanproj NXT, Fanproj Play, Astaan Films, Saafi Films, Bollywood Af Somali iyo wax badan.",
+    title: "Filimada Af Somali - Tags & Categories | Fanbroj",
+    description: "Browse dhammaan categories iyo tags ee filimaha Hindi Af Somali cusub 2026. Filim hindi afsomali, musalsal af somali, film hindi af somali, Saafi Films, Mysomali – Fanbroj (Fanproj). Daawo bilaash.",
     keywords: [
-        "fanproj tags", "hindi af somali tags", "filim categories",
-        "fanproj nxt", "fanproj play", "saafi films", "astaan films",
-        "streamnxt", "fanbroj categories",
+        "hindi af somali", "filim hindi afsomali", "film hindi af somali",
+        "hindi af somali cusub", "hindi af somali cusub 2026",
+        "musalsal af somali", "fanproj nxt", "fanbroj",
+        "fanproj", "fanprojnet", "streamnxt fanproj", "fanbaroj",
+        "filimada af somali", "daawo bilaash",
+        "filin hindi af somali", "saafi films", "astaan films",
+        "mysomali", "zee films",
     ],
     openGraph: {
-        title: "Browse Tags – Hindi Af Somali, Fanproj NXT, Saafi Films",
-        description: "Dhammaan tags iyo categories ee filimaha Af Somali – Fanproj",
+        title: "Filimada Af Somali - Tags & Categories | Fanbroj",
+        description: "Browse dhammaan filimaha Hindi Af Somali cusub 2026 oo loo kala qaybiyay tags – Fanbroj",
         url: "https://fanbroj.net/tags",
+        siteName: "Fanbroj",
+        images: ["/og-preview.png"],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Filimada Af Somali - Tags & Categories | Fanbroj",
+        description: "Browse dhammaan filimaha Hindi Af Somali cusub 2026 – Fanbroj",
+        images: ["/og-preview.png"],
     },
     alternates: {
         canonical: "https://fanbroj.net/tags",
@@ -45,8 +57,52 @@ export default async function TagsIndexPage() {
 
     const totalMovies = tags.reduce((sum: number, t: any) => sum + t.count, 0);
 
+    // JSON-LD: CollectionPage + BreadcrumbList + ItemList for tags index
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CollectionPage",
+                "@id": "https://fanbroj.net/tags#collectionpage",
+                url: "https://fanbroj.net/tags",
+                name: "Dhammaan Tags – Filimaha Af Somali",
+                description: `Browse ${tags.length} tags across ${totalMovies}+ filim Af Somali – Hindi Af Somali, Fanproj NXT, Saafi Films iyo wax badan.`,
+                numberOfItems: tags.length,
+                isPartOf: { "@id": "https://fanbroj.net/#website" },
+                breadcrumb: { "@id": "https://fanbroj.net/tags#breadcrumb" },
+            },
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://fanbroj.net/tags#breadcrumb",
+                itemListElement: [
+                    { "@type": "ListItem", position: 1, name: "Fanproj", item: "https://fanbroj.net" },
+                    { "@type": "ListItem", position: 2, name: "Tags", item: "https://fanbroj.net/tags" },
+                ],
+            },
+            ...(tags.length > 0 ? [{
+                "@type": "ItemList",
+                name: "Filim Tags – Af Somali",
+                numberOfItems: Math.min(tags.length, 30),
+                itemListElement: tags.slice(0, 30).map((tag, i) => ({
+                    "@type": "ListItem",
+                    position: i + 1,
+                    item: {
+                        "@type": "Thing",
+                        name: tag.name,
+                        url: `https://fanbroj.net/tags/${tag.slug}`,
+                    },
+                })),
+            }] : []),
+        ],
+    };
+
     return (
         <div className="min-h-screen bg-[#0d1b2a]">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+
             {/* Header */}
             <section className="relative py-12 border-b border-[#1a3a5c]">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#E50914]/5 via-transparent to-transparent" />
@@ -95,9 +151,9 @@ export default async function TagsIndexPage() {
             <div className="container mx-auto px-4 pb-12">
                 <div className="border-t border-[#1a3a5c] pt-8">
                     <p className="text-white/30 text-xs leading-relaxed max-w-3xl">
-                        Browse dhammaan filimaha Af Somali ee Fanproj (Fanbroj) oo loo kala qaybiyay tags. Hindi Af Somali cusub,
-                        Fanproj NXT, Fanproj Play, Astaan Films Hindi Af Somali, Saafi Films, StreamNXT, Bollywood Af Somali,
-                        Zee Films Af Somali, Fanproj Aflaam – dhammaantood bilaash ah HD.
+                        Browse dhammaan filimaha Hindi Af Somali cusub 2026 ee Fanbroj (Fanproj) oo loo kala qaybiyay tags.
+                        Filim hindi afsomali, film hindi af somali, filin hindi af somali, hindi af somali cusub 2026,
+                        musalsal af somali, Astaan Films, Saafi Films – dhammaantood bilaash ah HD. Fanbroj waa goobta ugu weyn.
                     </p>
                 </div>
             </div>

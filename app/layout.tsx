@@ -21,49 +21,54 @@ import { SitewideOfferBar } from "@/components/SitewideOfferBar";
 import { LayoutChrome } from "@/components/LayoutChrome";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
-// SEO-optimized metadata targeting top search keywords
+// SEO-optimized metadata targeting top Google Search Console keywords
 export function generateMetadata(): Metadata {
-  const siteName = "Fanproj";
-  // Title includes "FanprojNXT" explicitly to capture "fanprojnxt" (13K impressions, 12% CTR → target 40%+)
-  // Also targets "fanproj nxt" (41K impressions, 20% CTR → target 50%+)
-  const title = "Fanproj NXT – Daawo Hindi Af Somali Cusub 2026 | FanprojNXT | Filimaan & Ciyaar Live";
-  const description = "FanprojNXT (fanbroj.net) – Goobta rasmiga ah ee Fanproj. Daawo filimaha Hindi Af Somali cusub 2025 & 2026, Astaan Films, Saafi Films iyo ciyaaraha live HD bilaash. Fanproj NXT · Fanproj Play · Fanproj TV.";
+  const siteName = "Fanbroj";
+  const title = "Fanbroj - Daawo Filimada Hindi Af Somali Cusub 2026 | Aflaam & Musalsal Bilaash Ah";
+  const description = "Fanbroj.net - Daawo filimada Hindi Af Somali cusub 2026 oo dhamaystiran. Streamnxt Fanproj, Saafi Films, Mysomali, Musalsal Turkish Af Somali. Ku daawo bilaash ah!";
 
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net"),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fanbroj.net"),
     title: {
       default: title,
-      template: `%s | Fanproj - Hindi Af Somali`,
+      template: `%s | Fanbroj - Hindi Af Somali`,
     },
     description,
     keywords: [
-      "fanproj", "fanbroj", "fanproj nxt", "fanprojnxt", "fanproj net",
-      "hindi af somali", "hindi af somali cusub", "hindi afsomali",
-      "filim hindi af somali", "filim hindi afsomali 2025", "filim hindi afsomali 2026",
-      "fanproj afsomali", "fanproj hindi af somali", "fanproj afsomali 2025",
+      // Brand keywords (highest volume from GSC)
+      "fanbroj", "fanproj", "fanprojnet", "fanproj nxt", "streamnxt fanproj", "fanbaroj",
+      "fanproj net", "fanprojnxt", "fanbroj net",
+      // Content keywords (top search volume)
+      "hindi af somali", "film hindi af somali", "filim hindi afsomali",
+      "musalsal af somali", "saafi films", "mysomali",
+      "astaan films hindi af somali", "hindi af somali cusub", "zee films",
+      // Year-specific keywords (trending)
+      "hindi af somali cusub 2026", "fanproj afsomali 2026", "filim hindi afsomali 2026",
+      "hindi af somali cusub 2025", "fanproj afsomali 2025", "filim hindi afsomali 2025",
+      // Long-tail content keywords
+      "daawo filim af somali", "daawo online", "filimada hindi af somali",
+      "musalsal turkish af somali", "musalsal hindi af somali cusub",
+      "bollywood af somali", "somali movies", "hindi dubbed somali",
+      // Platform keywords
       "fanproj play", "fanproj tv", "fanproj films", "fanproj aflaam",
-      "streamnxt", "streamnxt fanproj", "fanproj nxt af somali",
-      "astaan films hindi af somali", "saafi films",
-      "mysomali", "fanbaroj", "fanbroj",
-      "daawo filim af somali", "daawo online", "ciyaar live",
-      "somali movies", "hindi dubbed somali", "bollywood af somali",
+      "streamnxt", "fanproj nxt af somali", "ciyaar live",
     ],
-    authors: [{ name: "Fanproj Team" }],
+    authors: [{ name: "Fanbroj Team" }],
     creator: siteName,
-    publisher: "Fanproj (Fanbroj.net)",
+    publisher: "Fanbroj (Fanbroj.net)",
     openGraph: {
       type: "website",
       locale: "so_SO",
       url: "https://fanbroj.net",
       title: title,
       description,
-      siteName: "Fanproj",
+      siteName: "Fanbroj",
       images: [
         {
           url: "/og-preview.png",
           width: 1200,
           height: 630,
-          alt: "Fanproj - Daawo Hindi Af Somali Cusub | Filimaan & Ciyaar Live",
+          alt: "Fanbroj - Daawo Filimada Hindi Af Somali Cusub 2026 | Aflaam & Musalsal",
         },
       ],
     },
@@ -108,7 +113,7 @@ export function generateMetadata(): Metadata {
       },
     },
     verification: {
-      google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+      google: "5Sr4jg6B9yKRWgCpSaAUTSJyMFgcPkIo1aoERkJO9Xc",
     },
   };
 }
@@ -119,7 +124,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="so" suppressHydrationWarning>
       <head>
         {/* Mobile Viewport - Optimized for iOS and Android */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, viewport-fit=cover, user-scalable=yes" />
@@ -134,26 +139,26 @@ export default function RootLayout({
                 {
                   "@type": "Organization",
                   "@id": "https://fanbroj.net/#organization",
-                  name: "Fanproj",
+                  name: "Fanbroj",
                   // All brand variants people search — helps Google match all misspellings to this entity
                   alternateName: [
-                    "Fanbroj", "Fanproj NXT", "FanprojNXT", "Fanprojnxt",
+                    "Fanproj", "Fanproj NXT", "FanprojNXT", "Fanprojnxt",
                     "Fanproj TV", "Fanproj Play", "Fanproj Net", "Fanprojnet",
                     "Fanbaroj", "Fanparoj", "Faanproj", "Fanbroj TV",
                     "Fanproj Af Somali", "Fanbroj Af Somali",
-                    "Stream NXT", "StreamNXT",
+                    "Stream NXT", "StreamNXT", "Mysomali", "Saafi Films",
                   ],
                   url: "https://fanbroj.net",
                   logo: "https://fanbroj.net/icon-512.png",
-                  description: "Fanproj - Goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub, Astaan Films, Saafi Films iyo ciyaaraha live.",
-                  sameAs: [],
+                  description: "Fanbroj - Goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub 2026, Astaan Films, Saafi Films, Mysomali iyo ciyaaraha live.",
+                  sameAs: ["https://www.facebook.com/fanprojneet/"],
                 },
                 {
                   "@type": "WebSite",
                   "@id": "https://fanbroj.net/#website",
                   url: "https://fanbroj.net",
-                  name: "Fanproj - Hindi Af Somali Cusub",
-                  alternateName: "Fanbroj",
+                  name: "Fanbroj - Filimada Hindi Af Somali Cusub 2026",
+                  alternateName: ["Fanproj", "Fanprojnet", "Streamnxt Fanproj"],
                   publisher: { "@id": "https://fanbroj.net/#organization" },
                   potentialAction: {
                     "@type": "SearchAction",
@@ -168,10 +173,10 @@ export default function RootLayout({
                   "@type": "WebPage",
                   "@id": "https://fanbroj.net/#webpage",
                   url: "https://fanbroj.net",
-                  name: "Fanproj – Daawo Hindi Af Somali Cusub 2026 | Filimaan & Ciyaar Live",
+                  name: "Fanbroj - Daawo Filimada Hindi Af Somali Cusub 2026 | Aflaam & Musalsal Bilaash Ah",
                   isPartOf: { "@id": "https://fanbroj.net/#website" },
                   about: { "@id": "https://fanbroj.net/#organization" },
-                  description: "Daawo filimaha Hindi Af Somali cusub 2026 oo bilaash ah. Fanproj NXT, Astaan Films, Saafi Films, Fanproj Play & ciyaaraha live.",
+                  description: "Fanbroj.net - Daawo filimada Hindi Af Somali cusub 2026 oo dhamaystiran. Streamnxt Fanproj, Saafi Films, Mysomali, Musalsal Turkish Af Somali. Ku daawo bilaash ah!",
                 },
               ],
             }),
@@ -274,17 +279,40 @@ export default function RootLayout({
                           </div>
                         </div>
 
+                        {/* Popular Categories - Internal Linking for SEO */}
+                        <div className="mb-8">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Popular Categories</h3>
+                          <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+                            <Link href="/tags/hindi-af-somali" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Hindi Af Somali</Link>
+                            <Link href="/tags/bollywood" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Bollywood</Link>
+                            <Link href="/tags/turkish" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Turkish</Link>
+                            <Link href="/tags/action" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Action</Link>
+                            <Link href="/tags/drama" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Drama</Link>
+                            <Link href="/tags/romance" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Romance</Link>
+                            <Link href="/tags/comedy" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Comedy</Link>
+                            <Link href="/tags/thriller" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Thriller</Link>
+                            <Link href="/tags/korean" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Korean</Link>
+                            <Link href="/tags/astaan-films" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Astaan Films</Link>
+                            <Link href="/tags/saafi-films" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Saafi Films</Link>
+                            <Link href="/movies" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Filimada Cusub</Link>
+                            <Link href="/series" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Musalsal Cusub</Link>
+                            <Link href="/ciyaar" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Ciyaar Live</Link>
+                            <Link href="/live" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">Live TV</Link>
+                            <Link href="/tags" className="text-[11px] text-gray-500 hover:text-white bg-white/5 px-2.5 py-1 rounded-full transition-colors">All Tags</Link>
+                          </div>
+                        </div>
+
                         {/* SEO-rich Tagline */}
                         <p className="text-gray-400 text-sm max-w-2xl mx-auto mb-4">
-                          Fanproj (Fanbroj) waa goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub, Astaan Films, Saafi Films iyo ciyaaraha live. Fanproj NXT, Fanproj Play, Fanproj TV – dhammaantood hal goobtaa ku daawo bilaash.
+                          Fanbroj (Fanproj) waa goobta ugu weyn ee lagu daawo filimaha Hindi Af Somali cusub 2026, filim hindi afsomali, musalsal af somali, Saafi Films, Mysomali, Astaan Films iyo ciyaaraha live. Streamnxt Fanproj – dhammaantood hal goobtaa ku daawo bilaash.
                         </p>
                         <p className="text-gray-500 text-xs max-w-xl mx-auto mb-6">
-                          Hindi Af Somali 2025 &amp; 2026 | Filim Hindi Afsomali | Fanproj Aflaam | Bollywood Af Somali | Musalsal Cusub | Ciyaar Live | StreamNXT
+                          Hindi Af Somali Cusub 2026 | Filim Hindi Afsomali | Film Hindi Af Somali | Musalsal Af Somali | Saafi Films | Mysomali | Zee Films | Streamnxt Fanproj | Fanbroj
                         </p>
 
                         {/* Copyright */}
                         <p className="text-gray-500 text-xs">
-                          © {new Date().getFullYear()} Fanproj (Fanbroj.net). Dhamaan xuquuqda waa dhowran tahay.
+                          &copy; {new Date().getFullYear()} Fanbroj.net (Fanproj). Dhamaan xuquuqda waa dhowran tahay.
                         </p>
                       </div>
                     </div>

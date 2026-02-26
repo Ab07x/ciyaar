@@ -3,6 +3,9 @@ const nextConfig = {
   // Serve static assets (/_next/static/) from BunnyCDN
   assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || "",
 
+  // SEO: Consistent URLs without trailing slashes
+  trailingSlash: false,
+
   images: {
     remotePatterns: [
       {
@@ -72,6 +75,14 @@ const nextConfig = {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
           },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
         ],
       },
       {
@@ -121,6 +132,15 @@ const nextConfig = {
       },
       {
         source: "/series/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=900, stale-while-revalidate=3600",
+          },
+        ],
+      },
+      {
+        source: "/tags/:path*",
         headers: [
           {
             key: "Cache-Control",
