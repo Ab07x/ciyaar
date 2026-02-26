@@ -1377,7 +1377,7 @@ export function StreamPlayer({
             lockType: isDailyCapPaywall ? "daily_limit" : "preview_time",
             intent: highIntentReason || "normal",
         });
-        window.location.href = userId ? "/pay?plan=monthly" : "/pricing";
+        window.location.href = "/pricing";
     }, [highIntentReason, isDailyCapPaywall, trackConversionEvent, userId]);
     const handleWhatsappPaywallClick = useCallback(() => {
         trackConversionEvent("cta_clicked", {

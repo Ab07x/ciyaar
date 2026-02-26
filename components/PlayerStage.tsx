@@ -109,7 +109,7 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
                             previewSeconds: freePreviewMinutes * 60,
                             reachedDailyLimit: false,
                             timerSpeedMultiplier: freeTimerSpeedMultiplier,
-                            ctaHref: pricingHref,
+                            ctaHref: "/pricing",
                             forceRedirectOnLock: false,
                             contentLabel: "ciyaartan live",
                             paywallTitle: "Waqtiga free-ga ee ciyaartan wuu dhammaaday",
@@ -173,7 +173,7 @@ export function PlayerStage({ match, settings, className }: PlayerStageProps) {
                     </div>
                     <div className="flex gap-2 sm:gap-3">
                         <Link
-                            href={pricingHref}
+                            href="/pricing"
                             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors"
                         >
                             <Crown size={16} />

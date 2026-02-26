@@ -25,7 +25,7 @@ export default function RamadanPaywall({
     if (isPremium && children) return <>{children}</>;
 
     const handleCTA = () => {
-        router.push(userId ? `/pay?plan=${plan}` : "/pricing");
+        router.push("/pricing");
     };
 
     return (

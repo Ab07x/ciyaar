@@ -257,7 +257,7 @@ export default function MoviePlayClient({
                                 dailyLimit: freeLimitDailyLimit,
                                 usedToday: freeLimitUsed,
                                 timerSpeedMultiplier: freeTimerSpeedMultiplier,
-                                ctaHref: pricingHref,
+                                ctaHref: "/pricing",
                                 forceRedirectOnLock: false,
                                 contentLabel: movie.titleSomali || movie.title,
                             }}
@@ -312,6 +312,13 @@ export default function MoviePlayClient({
 
                 {/* Direct Link Ad — highest dwell-time placement */}
                 <AdSlot slotKey="direct_link_player" className="mt-3" />
+
+                {/* Ramadan Paywall below player */}
+                {isPreviewMode && (
+                    <div className="mt-4">
+                        <RamadanPaywall plan="monthly" />
+                    </div>
+                )}
             </div>
 
             <>
@@ -426,14 +433,6 @@ export default function MoviePlayClient({
                 </div>
             </>
 
-            {isPreviewMode && (
-                <>
-                    <div className="h-2" aria-hidden />
-                    <div className="max-w-3xl mx-auto px-4 pb-6">
-                        <RamadanPaywall plan="monthly" />
-                    </div>
-                </>
-            )}
         </div>
     );
 }
