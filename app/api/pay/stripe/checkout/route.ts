@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         // Get site URL
         const siteUrl = process.env.NODE_ENV === "development"
             ? "http://localhost:3000"
-            : "https://fanbroj.net";
+            : (process.env.NEXT_PUBLIC_APP_URL || "https://fanproj.shop");
 
         const planLabels: Record<string, string> = {
             match: "Single Match",

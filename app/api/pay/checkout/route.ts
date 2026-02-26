@@ -63,10 +63,9 @@ export async function POST(request: NextRequest) {
         const orderNonce = crypto.randomBytes(4).toString("hex").toUpperCase();
         const orderId = `FBJ-${plan.toUpperCase()}-${Date.now()}-${orderNonce}`;
 
-        // Get site URL for return_url (hardcoded to production domain)
-        const siteUrl = process.env.NODE_ENV === "development"
-            ? "http://localhost:3000"
-            : "https://fanbroj.net";
+        // Get site URL for return_url
+        const prodUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fanproj.shop";
+        const siteUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : prodUrl;
         const returnUrl = `${siteUrl}/pay?order_id=${encodeURIComponent(orderId)}`;
 
         // Call Sifalo Pay API
@@ -86,7 +85,7 @@ export async function POST(request: NextRequest) {
         // Webhook URL for Sifalo Pay to notify us when payment is completed
         const baseWebhookUrl = process.env.NODE_ENV === "development"
             ? "http://localhost:3000/api/pay/webhook"
-            : "https://fanbroj.net/api/pay/webhook";
+            : `${prodUrl}/api/pay/webhook`;
         const webhookUrl = `${baseWebhookUrl}?order_id=${encodeURIComponent(orderId)}&device_id=${encodeURIComponent(deviceId)}`;
 
         const sifaloRes = await fetch("https://api.sifalopay.com/gateway/", {
