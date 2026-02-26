@@ -3,7 +3,7 @@
  * Transforms image URLs to use BunnyCDN for faster delivery
  */
 
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || "https://fanbroj.b-cdn.net";
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || "https://cdn.fanbroj.net";
 
 /**
  * Transform an image URL to use BunnyCDN
@@ -13,7 +13,7 @@ export function getCdnImageUrl(originalUrl: string): string {
     if (!originalUrl) return "";
 
     // If already using CDN, return as-is
-    if (originalUrl.includes("b-cdn.net")) {
+    if (originalUrl.includes("b-cdn.net") || originalUrl.includes("cdn.fanbroj.net")) {
         return originalUrl;
     }
 
@@ -51,7 +51,7 @@ export function getOptimizedImageUrl(
     const cdnUrl = getCdnImageUrl(url);
 
     // If not using our CDN, return original
-    if (!cdnUrl.includes("b-cdn.net")) {
+    if (!cdnUrl.includes("b-cdn.net") && !cdnUrl.includes("cdn.fanbroj.net")) {
         return cdnUrl;
     }
 

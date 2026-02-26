@@ -16,7 +16,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "fanbroj.b-cdn.net", // BunnyCDN
+        hostname: "cdn.fanbroj.net", // BunnyCDN custom domain
+      },
+      {
+        protocol: "https",
+        hostname: "fanbroj.b-cdn.net", // BunnyCDN fallback
       },
       {
         protocol: "https",

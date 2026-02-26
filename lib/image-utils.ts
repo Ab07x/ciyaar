@@ -23,7 +23,7 @@ export function optimizeImageUrl(url: string | null | undefined, size: "poster" 
   }
 
   // BunnyCDN → add width optimization
-  if (url.includes("b-cdn.net") && !url.includes("?width=")) {
+  if ((url.includes("b-cdn.net") || url.includes("cdn.fanbroj.net")) && !url.includes("?width=")) {
     const width = size === "backdrop" ? 1280 : size === "thumb" ? 342 : 500;
     return `${url}?width=${width}&quality=80`;
   }
