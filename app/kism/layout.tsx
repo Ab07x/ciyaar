@@ -30,32 +30,57 @@ import {
     UserPlus,
 } from "lucide-react";
 
-const navItems = [
-    { href: "/kism", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/kism/matches", label: "Matches", icon: PlayCircle },
-    { href: "/kism/movies", label: "Movies", icon: Film },
-    { href: "/kism/series", label: "Series", icon: Tv },
-    { href: "/kism/import", label: "Import", icon: Download },
-    { href: "/kism/leagues", label: "Leagues", icon: Trophy },
-    { href: "/kism/shorts", label: "Shorts", icon: Smartphone },
-    { href: "/kism/blog", label: "Blog", icon: FileText },
-    { href: "/kism/ads", label: "Ads", icon: Megaphone },
-    { href: "/kism/banners", label: "Banners", icon: Sparkles },
-    { href: "/kism/hero", label: "Hero Slider", icon: Image },
-    { href: "/kism/categories", label: "Categories", icon: Palette },
-    { href: "/kism/codes", label: "Codes", icon: Ticket },
-    { href: "/kism/add-user", label: "Add User", icon: UserPlus },
-    { href: "/kism/users", label: "Users", icon: Users },
-    { href: "/kism/subscribers", label: "Subscribers", icon: Smartphone },
-    { href: "/kism/revenue", label: "Revenue", icon: DollarSign },
-    { href: "/kism/payments", label: "Payments Debug", icon: Bug },
-    { href: "/kism/ppv", label: "PPV", icon: CreditCard },
-    { href: "/kism/notifications", label: "Notifications", icon: Bell },
-    { href: "/kism/pricing", label: "Pricing", icon: DollarSign },
-    { href: "/kism/seo", label: "SEO", icon: Search },
-    { href: "/kism/search-analytics", label: "Search Analytics", icon: BarChart3 },
-    { href: "/kism/media", label: "Media", icon: Image },
-    { href: "/kism/settings", label: "Settings", icon: Settings },
+const navSections = [
+    {
+        label: "Overview",
+        items: [
+            { href: "/kism", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/kism/revenue", label: "Revenue", icon: DollarSign },
+            { href: "/kism/subscribers", label: "Subscribers", icon: Users },
+            { href: "/kism/users", label: "Users", icon: Users },
+        ],
+    },
+    {
+        label: "Content",
+        items: [
+            { href: "/kism/matches", label: "Matches", icon: PlayCircle },
+            { href: "/kism/movies", label: "Movies", icon: Film },
+            { href: "/kism/series", label: "Series", icon: Tv },
+            { href: "/kism/shorts", label: "Shorts", icon: Smartphone },
+            { href: "/kism/leagues", label: "Leagues", icon: Trophy },
+            { href: "/kism/blog", label: "Blog", icon: FileText },
+            { href: "/kism/import", label: "Import", icon: Download },
+        ],
+    },
+    {
+        label: "Monetisation",
+        items: [
+            { href: "/kism/codes", label: "Codes", icon: Ticket },
+            { href: "/kism/ppv", label: "PPV", icon: CreditCard },
+            { href: "/kism/pricing", label: "Pricing", icon: DollarSign },
+            { href: "/kism/payments", label: "Payments", icon: Bug },
+            { href: "/kism/add-user", label: "Add User", icon: UserPlus },
+        ],
+    },
+    {
+        label: "Marketing",
+        items: [
+            { href: "/kism/ads", label: "Ads", icon: Megaphone },
+            { href: "/kism/notifications", label: "Notifications", icon: Bell },
+            { href: "/kism/banners", label: "Banners", icon: Sparkles },
+        ],
+    },
+    {
+        label: "Site",
+        items: [
+            { href: "/kism/hero", label: "Hero Slider", icon: Image },
+            { href: "/kism/categories", label: "Categories", icon: Palette },
+            { href: "/kism/media", label: "Media", icon: Image },
+            { href: "/kism/seo", label: "SEO", icon: Search },
+            { href: "/kism/search-analytics", label: "Search Analytics", icon: BarChart3 },
+            { href: "/kism/settings", label: "Settings", icon: Settings },
+        ],
+    },
 ];
 
 export default function AdminLayout({
@@ -140,26 +165,34 @@ export default function AdminLayout({
                     </Link>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = pathname === item.href ||
-                            (item.href !== "/kism" && pathname.startsWith(item.href));
-
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive
-                                    ? "bg-accent-green text-black"
-                                    : "text-text-secondary hover:bg-stadium-hover hover:text-white"
-                                    }`}
-                            >
-                                <Icon size={18} />
-                                {item.label}
-                            </Link>
-                        );
-                    })}
+                <nav className="flex-1 p-4 overflow-y-auto space-y-5">
+                    {navSections.map((section) => (
+                        <div key={section.label}>
+                            <p className="px-4 mb-1 text-[10px] font-black uppercase tracking-widest text-text-muted/60">
+                                {section.label}
+                            </p>
+                            <div className="space-y-0.5">
+                                {section.items.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = pathname === item.href ||
+                                        (item.href !== "/kism" && pathname.startsWith(item.href));
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive
+                                                ? "bg-accent-green text-black"
+                                                : "text-text-secondary hover:bg-stadium-hover hover:text-white"
+                                                }`}
+                                        >
+                                            <Icon size={18} />
+                                            {item.label}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </nav>
 
                 <div className="p-4 border-t border-border-strong">
