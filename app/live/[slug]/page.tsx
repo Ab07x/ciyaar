@@ -13,6 +13,7 @@ import {
     Tv, ChevronRight, Play
 } from "lucide-react";
 import { StreamPlayer } from "@/components/StreamPlayer";
+import RamadanPaywall from "@/components/RamadanPaywall";
 
 export default function ChannelWatchPage() {
     const params = useParams();
@@ -113,52 +114,9 @@ export default function ChannelWatchPage() {
                         {/* Player Stage */}
                         <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-4">
                             {channel.isPremium && !isUnlocked ? (
-                                /* Premium Lock UI */
-                                <div className="absolute inset-0 flex items-center justify-center p-4 bg-gradient-to-b from-stadium-dark/90 to-stadium-elevated">
-                                    <div className="bg-stadium-dark border-2 border-accent-gold rounded-2xl p-8 max-w-md text-center">
-                                        <div className="w-16 h-16 bg-accent-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <Crown size={32} className="text-accent-gold" />
-                                        </div>
-                                        <h3 className="text-2xl font-bold text-accent-gold mb-2">PREMIUM CHANNEL</h3>
-                                        <p className="text-text-secondary mb-6">Channel-kan waxaa u baahan subscription</p>
-
-                                        <div className="space-y-4">
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={code}
-                                                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                                    placeholder="CODE"
-                                                    className="flex-1 bg-stadium-elevated border border-border-subtle rounded-lg px-4 py-3 uppercase text-center tracking-wider"
-                                                />
-                                                <button
-                                                    onClick={handleRedeem}
-                                                    disabled={loading}
-                                                    className="px-6 py-3 bg-accent-green text-black font-bold rounded-lg"
-                                                >
-                                                    {loading ? "..." : "Fur"}
-                                                </button>
-                                            </div>
-                                            {error && <p className="text-accent-red text-sm">{error}</p>}
-                                            <div className="flex gap-3">
-                                                <Link
-                                                    href="/pricing"
-                                                    className="flex-1 px-4 py-3 bg-accent-gold text-black font-bold rounded-lg text-center"
-                                                >
-                                                    Iibso
-                                                </Link>
-                                                <a
-                                                    href={whatsappLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-2"
-                                                >
-                                                    <MessageSquare size={18} />
-                                                    WhatsApp
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
+                                /* Ramadan VIP Paywall */
+                                <div className="absolute inset-0">
+                                    <RamadanPaywall plan="monthly" />
                                 </div>
                             ) : channel.isLive && activeEmbed?.url ? (
                                 /* Live StreamPlayer */

@@ -21,6 +21,7 @@ import { PPVUnlockGate } from "@/components/PPVUnlockGate";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { RamadanBanner } from "@/components/RamadanBanner";
 import { optimizeImageUrl } from "@/components/MoviePosterImage";
+import RamadanPaywall from "@/components/RamadanPaywall";
 
 interface MoviePlayClientProps {
     slug: string;
@@ -423,34 +424,9 @@ export default function MoviePlayClient({
 
             {isPreviewMode && (
                 <>
-                    <div className="hidden sm:block h-24" aria-hidden />
-                    <div className="hidden sm:block fixed inset-x-0 bottom-3 z-[60] px-3 sm:px-4">
-                        <div className="max-w-3xl mx-auto bg-[#061a2d]/95 border border-[#1b4d86] rounded-2xl shadow-2xl backdrop-blur-md p-3 sm:p-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white font-black text-sm sm:text-base">Need help buying VIP?</p>
-                                    <p className="text-gray-300 text-xs sm:text-sm">Support-ka WhatsApp ayaa ku caawinaya sida loo iibsado premium.</p>
-                                </div>
-                                <div className="flex gap-2 sm:gap-3">
-                                    <Link
-                                        href={pricingHref}
-                                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-sm flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        <Crown size={16} />
-                                        IIBSO VIP
-                                    </Link>
-                                    <a
-                                        href={whatsappSupportHref}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1fb855] text-white font-black text-sm flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        <MessageCircle size={16} />
-                                        WhatsApp
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="h-2" aria-hidden />
+                    <div className="max-w-3xl mx-auto px-4 pb-6">
+                        <RamadanPaywall plan="monthly" />
                     </div>
                 </>
             )}
