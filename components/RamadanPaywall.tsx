@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/providers/UserProvider";
-import QuickCheckout from "@/components/QuickCheckout";
 import { cn } from "@/lib/utils";
 
 interface RamadanPaywallProps {
@@ -22,7 +20,6 @@ export default function RamadanPaywall({
 }: RamadanPaywallProps) {
     const { userId, isPremium, isLoading } = useUser();
     const router = useRouter();
-    const [checkoutOpen, setCheckoutOpen] = useState(false);
 
     // If still loading auth, show skeleton
     if (isLoading) {
@@ -38,8 +35,8 @@ export default function RamadanPaywall({
 
     const handleCTA = () => {
         if (userId) {
-            // Logged-in → open inline checkout
-            setCheckoutOpen(true);
+            // Logged-in → go straight to checkout
+            router.push(`/pay?plan=${plan}`);
         } else {
             // Guest → pricing page
             router.push("/pricing");
@@ -47,13 +44,12 @@ export default function RamadanPaywall({
     };
 
     return (
-        <>
-            <div
-                className={cn(
-                    "relative rounded-2xl overflow-hidden select-none",
-                    className,
-                )}
-            >
+        <div
+            className={cn(
+                "relative rounded-2xl overflow-hidden select-none",
+                className,
+            )}
+        >
                 {/* ── Blurred content preview (optional) ── */}
                 {children && (
                     <div className="absolute inset-0 blur-sm scale-105 pointer-events-none opacity-30">
@@ -133,15 +129,7 @@ export default function RamadanPaywall({
                             : "Aad ma diiwaan-gasanid? Abuur akoon bilaash ah oo hel VIP."}
                     </p>
                 </div>
-            </div>
-
-            {/* Checkout modal — only for logged-in users */}
-            <QuickCheckout
-                isOpen={checkoutOpen}
-                onClose={() => setCheckoutOpen(false)}
-                defaultPlan={plan}
-            />
-        </>
+        </div>
     );
 }
 
