@@ -626,17 +626,35 @@ export function StreamPlayer({
     }, [resumePoint, resolvedUrl]);
 
     // Progress saving
+    // For native video (m3u8/video): use actual media position, only when playing.
+    // For iframe: use wall-clock elapsed time (we can't read currentTime from iframe).
+    const iframeStartRef = useRef<number | null>(null);
+    const iframeElapsedRef = useRef<number>(0);
+
+    // Track iframe watch start/stop
     useEffect(() => {
-        if (!isPlaying || !trackParams || !userId) return;
+        if (streamType !== "iframe" || !trackParams || !userId) return;
+        iframeStartRef.current = Date.now();
+        return () => {
+            if (iframeStartRef.current !== null) {
+                iframeElapsedRef.current += Math.floor((Date.now() - iframeStartRef.current) / 1000);
+                iframeStartRef.current = null;
+            }
+        };
+    }, [streamType, trackParams, userId]);
+
+    useEffect(() => {
+        if (!trackParams || !userId) return;
+        // Native video: only save when actually playing
+        if (streamType !== "iframe" && !isPlaying) return;
 
         const interval = setInterval(() => {
-            const video = videoRef.current;
-            if (!video) return;
-
-            const current = video.currentTime;
-            const dur = video.duration || trackParams.duration || 0;
-
-            if (current > 5 && dur > 0) {
+            if (streamType === "iframe") {
+                // Wall-clock elapsed time for iframes
+                if (iframeStartRef.current === null) return;
+                const elapsed = iframeElapsedRef.current + Math.floor((Date.now() - iframeStartRef.current) / 1000);
+                if (elapsed < 5) return;
+                const dur = trackParams.duration || 0;
                 fetch("/api/watch/progress", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -645,15 +663,35 @@ export function StreamPlayer({
                         contentType: trackParams.contentType,
                         contentId: trackParams.contentId,
                         seriesId: trackParams.seriesId,
-                        progressSeconds: Math.floor(current),
-                        durationSeconds: Math.floor(dur),
+                        progressSeconds: elapsed,
+                        durationSeconds: dur,
                     }),
                 }).catch(err => console.error("Failed to save progress", err));
+            } else {
+                // Native video: use actual media position
+                const video = videoRef.current;
+                if (!video) return;
+                const current = video.currentTime;
+                const dur = video.duration || trackParams.duration || 0;
+                if (current > 5 && dur > 0) {
+                    fetch("/api/watch/progress", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            userId,
+                            contentType: trackParams.contentType,
+                            contentId: trackParams.contentId,
+                            seriesId: trackParams.seriesId,
+                            progressSeconds: Math.floor(current),
+                            durationSeconds: Math.floor(dur),
+                        }),
+                    }).catch(err => console.error("Failed to save progress", err));
+                }
             }
         }, 15000);
 
         return () => clearInterval(interval);
-    }, [isPlaying, trackParams, userId]);
+    }, [isPlaying, streamType, trackParams, userId]);
 
     // Keyboard shortcuts
     useEffect(() => {

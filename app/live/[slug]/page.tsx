@@ -170,6 +170,10 @@ export default function ChannelWatchPage() {
                                     }}
                                     poster={channel.thumbnailUrl}
                                     className="absolute inset-0"
+                                    trackParams={{
+                                        contentType: "match",
+                                        contentId: slug,
+                                    }}
                                 />
                             ) : (
                                 /* Offline state */
