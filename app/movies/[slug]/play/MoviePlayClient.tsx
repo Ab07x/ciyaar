@@ -253,9 +253,7 @@ export default function MoviePlayClient({
                             conversionGate={{
                                 enabled: isPreviewMode,
                                 previewSeconds: freePreviewMinutes * 60,
-                                reachedDailyLimit: isDailyLimitLocked,
-                                dailyLimit: freeLimitDailyLimit,
-                                usedToday: freeLimitUsed,
+                                reachedDailyLimit: false,
                                 timerSpeedMultiplier: freeTimerSpeedMultiplier,
                                 ctaHref: "/pricing",
                                 forceRedirectOnLock: false,

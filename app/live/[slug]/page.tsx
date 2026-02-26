@@ -113,13 +113,8 @@ export default function ChannelWatchPage() {
 
                         {/* Player Stage */}
                         <div className="player-stage bg-stadium-elevated rounded-2xl overflow-hidden border border-border-strong mb-4">
-                            {channel.isPremium && !isUnlocked ? (
-                                /* Ramadan VIP Paywall */
-                                <div className="absolute inset-0">
-                                    <RamadanPaywall plan="monthly" />
-                                </div>
-                            ) : channel.isLive && activeEmbed?.url ? (
-                                /* Live StreamPlayer */
+                            {channel.isLive && activeEmbed?.url ? (
+                                /* Live StreamPlayer with preview timer for non-premium */
                                 <StreamPlayer
                                     source={{
                                         url: activeEmbed.url,
@@ -132,6 +127,15 @@ export default function ChannelWatchPage() {
                                         contentType: "match",
                                         contentId: slug,
                                     }}
+                                    conversionGate={channel.isPremium && !isUnlocked ? {
+                                        enabled: true,
+                                        previewSeconds: 26 * 60,
+                                        reachedDailyLimit: false,
+                                        timerSpeedMultiplier: 12,
+                                        ctaHref: "/pricing",
+                                        forceRedirectOnLock: false,
+                                        contentLabel: channel.name,
+                                    } : undefined}
                                 />
                             ) : (
                                 /* Offline state */

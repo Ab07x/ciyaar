@@ -1301,33 +1301,10 @@ export function StreamPlayer({
 
     const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
     const paywallHref = conversionGate?.ctaHref || "/pricing";
-    const isDailyCapPaywall = conversionGateEnabled && !!conversionGate?.reachedDailyLimit;
-    const isMoviePreviewPaywall = conversionGateEnabled && !isDailyCapPaywall;
-    const basePaywallTitle = conversionGate?.paywallTitle || (isDailyCapPaywall
-        ? "Ramadan dhan daawo bilaa xayeysiis"
-        : isMoviePreviewPaywall
-            ? "Si aad u sii wadato, qaado Premium Ramadan"
-            : "Free Preview Ended");
-    const basePaywallMessage = conversionGate?.paywallMessage || (isDailyCapPaywall
-        ? `Waxaad isticmaashay ${conversionGate?.usedToday || 0}/${conversionGate?.dailyLimit || 3} free maanta. Fur VIP hadda — bilaa xayeysiis, HD, Sports Live.`
-        : isMoviePreviewPaywall
-            ? `Si aad u sii wadato "${conversionGate?.contentLabel || "filimkan"}" — bilaa xayeysiis, HD quality. Iibso VIP hadda.`
-            : `You've watched the free ${Math.floor(freePreviewLimit / 60)} minutes of this match. Upgrade to Premium to continue watching live!`);
-    const highIntentNudge = highIntentReason === "watch_streak"
-        ? "Waxaad daawatay 2+ content 24 saac gudahood. VIP ayaa kuu fiican si daawashadu u socoto."
-        : highIntentReason === "pricing_repeat"
-            ? "Waxaad booqatay pricing dhowr jeer. Hadda fur VIP oo si toos ah u daawo."
-            : highIntentReason === "lock_repeat"
-                ? "Waxaad gaartay lock dhowr jeer maanta. Fur VIP si aan laguu joojin mar kale."
-                : "";
-    const paywallTitle = highIntentReason ? "Ramadan offer — Fur VIP hadda" : basePaywallTitle;
-    const paywallMessage = highIntentNudge
-        ? `${basePaywallMessage} ${highIntentNudge}`
-        : basePaywallMessage;
-    const primaryPaywallCta = conversionGate?.primaryCtaLabel
-        || (highIntentReason
-            ? "FUR VIP — RAMADAN SPECIAL"
-            : (isMoviePreviewPaywall || isDailyCapPaywall) ? "IIBSO HADDA — UNLOCK" : "Unlock for $0.25");
+    const paywallTitle = conversionGate?.paywallTitle || "Free preview wuu dhammaaday";
+    const paywallMessage = conversionGate?.paywallMessage
+        || `Si aad u sii wadato "${conversionGate?.contentLabel || "filimkan"}" — dooro qorsho kuu habboon.`;
+    const primaryPaywallCta = conversionGate?.primaryCtaLabel || "DOORO QORSHO — PRICING";
     const previewQualityLabel = conversionGate?.qualityCap ? `${conversionGate.qualityCap}p` : "Free";
     const previewCountdownSeconds = Math.max(0, previewRemainingSeconds ?? Math.ceil(moviePreviewLimit));
     const whatsappSupportNumber = String((settings as any)?.whatsappNumber || "+252618274188").replace(/\D/g, "");
@@ -1373,20 +1350,18 @@ export function StreamPlayer({
     const handlePrimaryPaywallClick = useCallback(() => {
         trackConversionEvent("cta_clicked", {
             ctaType: "primary_upgrade",
-            destination: userId ? "checkout" : "pricing",
-            lockType: isDailyCapPaywall ? "daily_limit" : "preview_time",
-            intent: highIntentReason || "normal",
+            destination: "pricing",
+            lockType: "preview_time",
         });
         window.location.href = "/pricing";
-    }, [highIntentReason, isDailyCapPaywall, trackConversionEvent, userId]);
+    }, [trackConversionEvent]);
     const handleWhatsappPaywallClick = useCallback(() => {
         trackConversionEvent("cta_clicked", {
             ctaType: "whatsapp_support",
             destination: whatsappSupportHref,
-            lockType: isDailyCapPaywall ? "daily_limit" : "preview_time",
-            intent: highIntentReason || "normal",
+            lockType: "preview_time",
         });
-    }, [highIntentReason, isDailyCapPaywall, trackConversionEvent, whatsappSupportHref]);
+    }, [trackConversionEvent, whatsappSupportHref]);
 
     // Render iframe for external embeds
     if (streamType === "iframe") {
@@ -1421,11 +1396,6 @@ export function StreamPlayer({
                                 <PaywallLockIcon />
                                 <h3 className={paywallTitleClass}>{paywallTitle}</h3>
                                 <p className={paywallMessageClass}>{paywallMessage}</p>
-                                {highIntentReason && (
-                                    <p className="mb-3 rounded-lg border border-amber-400/25 bg-amber-500/8 px-3 py-2 text-[11px] font-bold text-amber-200/80">
-                                        ⚡ Offer gaar ah adiga — Fur VIP hadda
-                                    </p>
-                                )}
                                 <div className={paywallButtonsClass}>
                                     <button onClick={handlePrimaryPaywallClick} className={paywallPrimaryButtonClass}>
                                         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite]" />
@@ -1437,13 +1407,6 @@ export function StreamPlayer({
                                         <MessageCircle size={15} />
                                         WhatsApp Support
                                     </a>
-                                </div>
-                                <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-600">
-                                    <span className="flex items-center gap-1"><Shield size={9} /> SSL</span>
-                                    <span className="text-gray-700">·</span>
-                                    <span className="flex items-center gap-1"><Zap size={9} /> Degdeg</span>
-                                    <span className="text-gray-700">·</span>
-                                    <span>39k+ users</span>
                                 </div>
                             </div>
                         </div>
@@ -1640,11 +1603,6 @@ export function StreamPlayer({
                             <PaywallLockIcon />
                             <h3 className={paywallTitleClass}>{paywallTitle}</h3>
                             <p className={paywallMessageClass}>{paywallMessage}</p>
-                            {highIntentReason && (
-                                <p className="mb-3 rounded-lg border border-amber-400/25 bg-amber-500/8 px-3 py-2 text-[11px] font-bold text-amber-200/80">
-                                    ⚡ Offer gaar ah adiga — Fur VIP hadda
-                                </p>
-                            )}
                             <div className={paywallButtonsClass}>
                                 <button onClick={handlePrimaryPaywallClick} className={paywallPrimaryButtonClass}>
                                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite]" />
@@ -1656,13 +1614,6 @@ export function StreamPlayer({
                                     <MessageCircle size={15} />
                                     WhatsApp Support
                                 </a>
-                            </div>
-                            <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-600">
-                                <span className="flex items-center gap-1"><Shield size={9} /> SSL</span>
-                                <span className="text-gray-700">·</span>
-                                <span className="flex items-center gap-1"><Zap size={9} /> Degdeg</span>
-                                <span className="text-gray-700">·</span>
-                                <span>39k+ users</span>
                             </div>
                         </div>
                     </div>
