@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Film } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { optimizeImageUrl } from "@/lib/image-utils";
@@ -78,8 +78,14 @@ export function MoviePosterImage({
     );
   }
 
-  // Use plain <img> for local images (already optimized, no need for Next.js processing)
-  // This fixes the "received null" errors and makes images load instantly
+  // Ref callback: if the image already loaded (e.g. cached or loaded before
+  // React hydration), mark it as loaded immediately so it's not stuck invisible.
+  const imgRef = useCallback((el: HTMLImageElement | null) => {
+    if (el?.complete && el.naturalWidth > 0) {
+      setIsLoading(false);
+    }
+  }, []);
+
   return (
     <>
       {isLoading && (
@@ -95,6 +101,7 @@ export function MoviePosterImage({
       )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        ref={imgRef}
         src={optimizedSrc}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
