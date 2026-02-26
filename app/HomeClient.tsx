@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/providers/UserProvider";
 import { TelegramBanner, TelegramFloatingButton } from "@/components/TelegramBanner";
+import { ContinueWatching } from "@/components/ContinueWatching";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -252,6 +253,9 @@ export default function HomeClient({ initialMovies, initialMatches, initialTrend
           </div>
         </section>
       )}
+
+      {/* CONTINUE WATCHING — personalized row for logged-in users */}
+      <ContinueWatching />
 
       {/* PREMIUM BANNER AD */}
       <PremiumBannerNew />

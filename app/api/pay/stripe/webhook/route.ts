@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import connectDB from "@/lib/mongodb";
-import { Payment, Device, Subscription, ConversionEvent } from "@/lib/models";
+import { Payment, Device, Subscription, ConversionEvent, User } from "@/lib/models";
 import { getOrCreateAutoPaymentRedemption } from "@/lib/auto-redemption";
+import { sendEmail, buildWelcomeEmail } from "@/lib/email";
 
 const PLAN_DURATIONS: Record<string, number> = {
     match: 1,
@@ -157,6 +158,17 @@ export async function POST(request: NextRequest) {
                     });
                 } catch (eventError) {
                     console.error("Stripe webhook conversion event write failed:", eventError);
+                }
+
+                // Send welcome email (fire-and-forget)
+                try {
+                    const userDoc = await User.findById(userId).select("email").lean<{ email?: string }>();
+                    if (userDoc?.email) {
+                        const { subject, html } = buildWelcomeEmail(validPlan, access.code);
+                        void sendEmail({ to: userDoc.email, subject, html });
+                    }
+                } catch (emailErr) {
+                    console.error("Welcome email error (Stripe webhook):", emailErr);
                 }
 
                 console.log(`Stripe webhook: Payment ${orderId} verified, subscription created for user ${userId}`);

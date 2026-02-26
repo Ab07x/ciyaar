@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Payment, Device, Subscription, ConversionEvent } from "@/lib/models";
+import { Payment, Device, Subscription, ConversionEvent, User } from "@/lib/models";
 import { getOrCreateAutoPaymentRedemption } from "@/lib/auto-redemption";
+import { sendEmail, buildWelcomeEmail } from "@/lib/email";
 
 // Plan duration mapping (days)
 const PLAN_DURATIONS: Record<string, number> = {
@@ -240,6 +241,17 @@ async function processWebhook(request: NextRequest, payload: Record<string, unkn
                 });
             } catch (eventError) {
                 console.error("Webhook conversion event write failed:", eventError);
+            }
+
+            // Send welcome email (fire-and-forget)
+            try {
+                const userDoc = await User.findById(userId).select("email").lean<{ email?: string }>();
+                if (userDoc?.email) {
+                    const { subject, html } = buildWelcomeEmail(plan, access.code);
+                    void sendEmail({ to: userDoc.email, subject, html });
+                }
+            } catch (emailErr) {
+                console.error("Welcome email error (Sifalo webhook):", emailErr);
             }
 
             console.log(`Webhook: Payment ${payment.orderId} verified, subscription created for user ${userId}`);

@@ -125,6 +125,65 @@ export function buildWelcomeEmail(plan: string, accessCode?: string) {
     };
 }
 
+export function buildOnboardingDay3Email() {
+    return {
+        subject: "3 days in — Did you know Fanbroj can do this? 🎬",
+        html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0b1120;font-family:system-ui,-apple-system,sans-serif;color:#e1e2e6;">
+<div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+  <h1 style="color:#fff;font-size:26px;font-weight:900;margin:0 0 24px;">FANBROJ</h1>
+  <h2 style="color:#fff;font-size:20px;font-weight:800;margin:0 0 12px;">You've been watching for 3 days!</h2>
+  <p style="color:#9ca3af;font-size:15px;line-height:1.7;margin:0 0 24px;">
+    Here are features you might have missed:
+  </p>
+  <div style="background:#111827;border-radius:12px;padding:20px;margin:0 0 24px;">
+    <p style="color:#4ade80;font-size:14px;font-weight:700;margin:0 0 12px;">📱 Download the Android App</p>
+    <p style="color:#9ca3af;font-size:13px;margin:0 0 16px;">Watch offline, get push notifications for new episodes and live matches.</p>
+    <a href="${SITE_URL}/apps/android" style="display:inline-block;background:#4ade80;color:#000;font-weight:700;font-size:13px;padding:10px 24px;border-radius:6px;text-decoration:none;">Download APK →</a>
+  </div>
+  <div style="background:#111827;border-radius:12px;padding:20px;margin:0 0 24px;">
+    <p style="color:#3b82f6;font-size:14px;font-weight:700;margin:0 0 12px;">⚽ Live Sports Alerts</p>
+    <p style="color:#9ca3af;font-size:13px;margin:0 0 16px;">Enable notifications and we'll alert you 30 minutes before every big match.</p>
+    <a href="${SITE_URL}/ciyaar" style="display:inline-block;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;padding:10px 24px;border-radius:6px;text-decoration:none;">See Live Matches →</a>
+  </div>
+  <div style="background:#111827;border-radius:12px;padding:20px;margin:0 0 24px;">
+    <p style="color:#f59e0b;font-size:14px;font-weight:700;margin:0 0 12px;">🎬 Trending This Week</p>
+    <p style="color:#9ca3af;font-size:13px;margin:0 0 16px;">Don't miss the most-watched Hindi Af Somali movies right now.</p>
+    <a href="${SITE_URL}/movies" style="display:inline-block;background:#f59e0b;color:#000;font-weight:700;font-size:13px;padding:10px 24px;border-radius:6px;text-decoration:none;">Browse Movies →</a>
+  </div>
+  <p style="color:#374151;font-size:11px;text-align:center;margin:0;">© ${new Date().getFullYear()} Fanbroj · <a href="${SITE_URL}" style="color:#4b5563;">Visit site</a></p>
+</div>
+</body></html>`,
+    };
+}
+
+export function buildOnboardingDay7Email() {
+    return {
+        subject: "One week on Fanbroj — here's what's new 🌟",
+        html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0b1120;font-family:system-ui,-apple-system,sans-serif;color:#e1e2e6;">
+<div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+  <h1 style="color:#fff;font-size:26px;font-weight:900;margin:0 0 24px;">FANBROJ</h1>
+  <h2 style="color:#fff;font-size:20px;font-weight:800;margin:0 0 12px;">You've been with us for a week! 🎉</h2>
+  <p style="color:#9ca3af;font-size:15px;line-height:1.7;margin:0 0 24px;">
+    We add new movies and series every week. Here's what arrived this week — check it out before everyone else.
+  </p>
+  <div style="text-align:center;margin:0 0 28px;">
+    <a href="${SITE_URL}/movies?sort=newest"
+       style="display:inline-block;background:#3b82f6;color:#fff;font-weight:900;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none;">
+      SEE NEW ARRIVALS →
+    </a>
+  </div>
+  <div style="background:#111827;border-radius:12px;padding:16px;margin:0 0 24px;">
+    <p style="color:#9ca3af;font-size:13px;margin:0 0 8px;">💬 Love Fanbroj? Tell your family and friends!</p>
+    <p style="color:#9ca3af;font-size:13px;margin:0;">Share this link: <a href="${SITE_URL}" style="color:#4ade80;">${SITE_URL}</a></p>
+  </div>
+  <p style="color:#374151;font-size:11px;text-align:center;margin:0;">© ${new Date().getFullYear()} Fanbroj · <a href="${SITE_URL}" style="color:#4b5563;">Visit site</a></p>
+</div>
+</body></html>`,
+    };
+}
+
 export function buildRenewalReminderEmail(plan: string, daysLeft: number) {
     const name = plan.charAt(0).toUpperCase() + plan.slice(1);
     const price = PLAN_PRICES[plan] ?? 6;
