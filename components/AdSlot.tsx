@@ -76,6 +76,29 @@ export function AdSlot({ slotKey, className = "" }: AdSlotProps) {
         );
     }
 
+    // ─── Monetag OnClick (Popunder) ───
+    if (ad.network === "monetag_onclick" && ad.monetagId) {
+        return <MonetagOnClickSlot monetagId={ad.monetagId} />;
+    }
+
+    // ─── Monetag Direct Link ───
+    if (ad.network === "monetag_direct" && ad.monetagDirectUrl) {
+        return (
+            <MonetagDirectSlot
+                url={ad.monetagDirectUrl}
+                text={ad.monetagDirectText}
+                className={className}
+            />
+        );
+    }
+
+    // ─── Monetag In-Page Push ───
+    if (ad.network === "monetag_inpage" && ad.monetagId) {
+        return (
+            <MonetagInPageSlot monetagId={ad.monetagId} className={className} />
+        );
+    }
+
     // ─── VAST Video Ad ───
     if (ad.network === "vast" && ad.vastUrl) {
         return (
@@ -162,6 +185,106 @@ function MonetagSlot({ monetagId, className }: { monetagId: string; className: s
         if (!containerRef.current || !monetagId) return;
         const script = document.createElement("script");
         script.src = `https://alwingulla.com/88/tag.min.js`;
+        script.dataset.zone = monetagId;
+        script.async = true;
+        containerRef.current.appendChild(script);
+
+        return () => {
+            if (containerRef.current) {
+                const scripts = containerRef.current.querySelectorAll("script");
+                scripts.forEach((s) => s.remove());
+            }
+        };
+    }, [monetagId]);
+
+    return <div className={`ad-slot ${className}`} ref={containerRef} />;
+}
+
+// ─── Monetag OnClick (Popunder) Sub-Component ───
+function MonetagOnClickSlot({ monetagId }: { monetagId: string }) {
+    useEffect(() => {
+        if (!monetagId) return;
+        const script = document.createElement("script");
+        script.src = "https://alwingulla.com/88/tag.min.js";
+        script.dataset.zone = monetagId;
+        script.async = true;
+        document.body.appendChild(script);
+
+        return () => {
+            script.remove();
+        };
+    }, [monetagId]);
+
+    return null;
+}
+
+// ─── Monetag Direct Link Sub-Component ───
+function MonetagDirectSlot({ url, text, className }: { url: string; text?: string; className: string }) {
+    return (
+        <div className={`ad-slot ${className}`}>
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                    display: "block",
+                    position: "relative",
+                    background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)",
+                    border: "1px solid #E50914",
+                    borderRadius: "12px",
+                    padding: "16px 20px",
+                    textDecoration: "none",
+                    boxShadow: "0 4px 24px rgba(229, 9, 20, 0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    overflow: "hidden",
+                }}
+            >
+                {/* Ad badge */}
+                <span
+                    style={{
+                        position: "absolute",
+                        top: "8px",
+                        right: "10px",
+                        fontSize: "9px",
+                        fontWeight: 700,
+                        letterSpacing: "0.1em",
+                        color: "#888",
+                        textTransform: "uppercase",
+                        background: "rgba(255,255,255,0.08)",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                    }}
+                >
+                    Ad
+                </span>
+                {/* CTA text */}
+                <span
+                    style={{
+                        display: "block",
+                        textAlign: "center",
+                        fontSize: "16px",
+                        fontWeight: 800,
+                        letterSpacing: "0.02em",
+                        background: "linear-gradient(90deg, #FFD700, #E50914, #FFD700)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                    }}
+                >
+                    {text || "Watch Now"}
+                </span>
+            </a>
+        </div>
+    );
+}
+
+// ─── Monetag In-Page Push Sub-Component ───
+function MonetagInPageSlot({ monetagId, className }: { monetagId: string; className: string }) {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!containerRef.current || !monetagId) return;
+        const script = document.createElement("script");
+        script.src = "https://alwingulla.com/88/tag.min.js";
         script.dataset.zone = monetagId;
         script.async = true;
         containerRef.current.appendChild(script);

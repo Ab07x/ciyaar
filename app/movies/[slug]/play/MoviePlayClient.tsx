@@ -20,6 +20,7 @@ import { PremiumAdInterstitial } from "@/components/PremiumAdInterstitial";
 import { PPVUnlockGate } from "@/components/PPVUnlockGate";
 import PremiumBannerNew from "@/components/PremiumBannerNew";
 import { RamadanBanner } from "@/components/RamadanBanner";
+import { AdSlot } from "@/components/AdSlot";
 import { optimizeImageUrl } from "@/components/MoviePosterImage";
 import RamadanPaywall from "@/components/RamadanPaywall";
 
@@ -308,6 +309,9 @@ export default function MoviePlayClient({
 
                 {/* Ramadan Banner below player */}
                 <RamadanBanner variant="player" className="mt-3" />
+
+                {/* Direct Link Ad — highest dwell-time placement */}
+                <AdSlot slotKey="direct_link_player" className="mt-3" />
             </div>
 
             <>

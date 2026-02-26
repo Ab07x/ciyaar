@@ -2,23 +2,40 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Video, Globe, Code, Tv } from "lucide-react";
+import { Plus, Edit, Trash2, Video, Globe, Code, Tv, MousePointerClick, Link2, Bell } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-const networks = ["adsense", "adsterra", "monetag", "custom", "vast", "video", "popup", "ppv"] as const;
-const formats = ["responsive", "banner", "native", "interstitial", "video_preroll", "video_midroll", "popunder", "social_bar"] as const;
+const networks = ["adsense", "adsterra", "monetag", "monetag_onclick", "monetag_direct", "monetag_inpage", "custom", "vast", "video", "popup", "ppv"] as const;
+const formats = ["responsive", "banner", "native", "interstitial", "video_preroll", "video_midroll", "popunder", "social_bar", "onclick", "direct_link", "inpage_push"] as const;
 const pages = ["home", "match", "movies", "series", "blog", "live", "pricing", "archive", "ppv"] as const;
 
 const networkLabels: Record<string, string> = {
     adsense: "Google AdSense",
     adsterra: "Adsterra",
-    monetag: "Monetag",
+    monetag: "Monetag (Banner/Zone)",
+    monetag_onclick: "Monetag — OnClick Popunder",
+    monetag_direct: "Monetag — Direct Link",
+    monetag_inpage: "Monetag — In-Page Push",
     custom: "Custom HTML",
     vast: "VAST/VPAID",
     video: "Video Ad",
     popup: "Popup/Popunder",
     ppv: "PPV Unlock",
+};
+
+const networkColors: Record<string, string> = {
+    adsense: "bg-blue-500/20 text-blue-400",
+    adsterra: "bg-orange-500/20 text-orange-400",
+    monetag: "bg-green-500/20 text-green-400",
+    monetag_onclick: "bg-emerald-500/20 text-emerald-400",
+    monetag_direct: "bg-teal-500/20 text-teal-400",
+    monetag_inpage: "bg-cyan-500/20 text-cyan-400",
+    custom: "bg-gray-500/20 text-gray-400",
+    vast: "bg-purple-500/20 text-purple-400",
+    video: "bg-pink-500/20 text-pink-400",
+    popup: "bg-red-500/20 text-red-400",
+    ppv: "bg-yellow-500/20 text-yellow-400",
 };
 
 const formatLabels: Record<string, string> = {
@@ -30,6 +47,9 @@ const formatLabels: Record<string, string> = {
     video_midroll: "Video Mid-roll",
     popunder: "Popunder",
     social_bar: "Social Bar",
+    onclick: "OnClick",
+    direct_link: "Direct Link",
+    inpage_push: "In-Page Push",
 };
 
 export default function AdminAdsPage() {
@@ -56,6 +76,8 @@ export default function AdminAdsPage() {
         popupWidth: 800,
         popupHeight: 600,
         monetagId: "",
+        monetagDirectUrl: "",
+        monetagDirectText: "Watch Now",
         showOn: [] as string[],
         enabled: true,
     });
@@ -79,6 +101,8 @@ export default function AdminAdsPage() {
             popupWidth: formData.popupWidth || undefined,
             popupHeight: formData.popupHeight || undefined,
             monetagId: formData.monetagId || undefined,
+            monetagDirectUrl: formData.monetagDirectUrl || undefined,
+            monetagDirectText: formData.monetagDirectText || undefined,
             showOn: formData.showOn,
             enabled: formData.enabled,
         };
@@ -121,6 +145,8 @@ export default function AdminAdsPage() {
             popupWidth: 800,
             popupHeight: 600,
             monetagId: "",
+            monetagDirectUrl: "",
+            monetagDirectText: "Watch Now",
             showOn: [],
             enabled: true,
         });
@@ -146,6 +172,8 @@ export default function AdminAdsPage() {
             popupWidth: ad.popupWidth || 800,
             popupHeight: ad.popupHeight || 600,
             monetagId: ad.monetagId || "",
+            monetagDirectUrl: ad.monetagDirectUrl || "",
+            monetagDirectText: ad.monetagDirectText || "Watch Now",
             showOn: ad.showOn,
             enabled: ad.enabled,
         });
@@ -186,15 +214,13 @@ export default function AdminAdsPage() {
 
     const getNetworkIcon = (network: string) => {
         switch (network) {
-            case "video":
-            case "vast":
-                return <Video size={14} className="inline mr-1" />;
-            case "popup":
-                return <Globe size={14} className="inline mr-1" />;
-            case "ppv":
-                return <Tv size={14} className="inline mr-1" />;
-            default:
-                return <Code size={14} className="inline mr-1" />;
+            case "video": case "vast": return <Video size={13} className="inline mr-1" />;
+            case "popup": return <Globe size={13} className="inline mr-1" />;
+            case "ppv": return <Tv size={13} className="inline mr-1" />;
+            case "monetag_onclick": return <MousePointerClick size={13} className="inline mr-1" />;
+            case "monetag_direct": return <Link2 size={13} className="inline mr-1" />;
+            case "monetag_inpage": return <Bell size={13} className="inline mr-1" />;
+            default: return <Code size={13} className="inline mr-1" />;
         }
     };
 
@@ -255,34 +281,36 @@ export default function AdminAdsPage() {
                     </thead>
                     <tbody>
                         {ads?.map((ad: any) => (
-                            <tr key={ad._id} className="border-b border-border-subtle last:border-0">
-                                <td className="px-4 py-3 font-mono font-bold">{ad.slotKey}</td>
+                            <tr key={ad._id} className={`border-b border-border-subtle last:border-0 transition-opacity ${ad.enabled ? "" : "opacity-40"}`}>
                                 <td className="px-4 py-3">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${ad.network === "ppv" ? "bg-accent-gold/20 text-accent-gold" :
-                                            ad.network === "video" || ad.network === "vast" ? "bg-purple-500/20 text-purple-400" :
-                                                "bg-blue-500/20 text-blue-400"
-                                        }`}>
+                                    <span className="font-mono font-bold text-sm">{ad.slotKey}</span>
+                                    {!ad.enabled && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold uppercase">OFF</span>}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${networkColors[ad.network] || "bg-blue-500/20 text-blue-400"}`}>
                                         {getNetworkIcon(ad.network)}
                                         {networkLabels[ad.network] || ad.network}
                                     </span>
                                 </td>
-                                <td className="px-4 py-3 text-sm capitalize">{formatLabels[ad.format] || ad.format}</td>
-                                <td className="px-4 py-3 text-sm text-text-secondary">{ad.showOn?.join(", ")}</td>
+                                <td className="px-4 py-3 text-sm capitalize text-text-secondary">{formatLabels[ad.format] || ad.format}</td>
+                                <td className="px-4 py-3 text-xs text-text-muted">{ad.showOn?.join(", ") || "all"}</td>
                                 <td className="px-4 py-3">
+                                    {/* Visual toggle switch */}
                                     <button
                                         onClick={() => handleToggleAd(ad._id, ad.enabled)}
-                                        className={`text-sm font-bold ${ad.enabled ? "text-accent-green" : "text-text-muted"}`}
+                                        title={ad.enabled ? "Click to disable" : "Click to enable"}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${ad.enabled ? "bg-accent-green" : "bg-stadium-hover border border-border-strong"}`}
                                     >
-                                        {ad.enabled ? "Active" : "Disabled"}
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${ad.enabled ? "translate-x-6" : "translate-x-1"}`} />
                                     </button>
                                 </td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => openEdit(ad)} className="p-2 hover:bg-stadium-hover rounded-lg">
-                                            <Edit size={16} />
+                                        <button onClick={() => openEdit(ad)} className="p-2 hover:bg-stadium-hover rounded-lg" title="Edit">
+                                            <Edit size={15} />
                                         </button>
-                                        <button onClick={() => handleDeleteAd(ad._id)} className="p-2 hover:bg-stadium-hover rounded-lg text-accent-red">
-                                            <Trash2 size={16} />
+                                        <button onClick={() => handleDeleteAd(ad._id)} className="p-2 hover:bg-red-500/10 rounded-lg text-accent-red" title="Delete">
+                                            <Trash2 size={15} />
                                         </button>
                                     </div>
                                 </td>
@@ -438,6 +466,108 @@ export default function AdminAdsPage() {
                                             placeholder="<script>...</script>"
                                             className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono text-sm resize-none"
                                         />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Monetag — OnClick Popunder */}
+                            {formData.network === "monetag_onclick" && (
+                                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <MousePointerClick size={16} className="text-emerald-400" />
+                                        <h4 className="font-bold text-emerald-400">OnClick Popunder</h4>
+                                    </div>
+                                    <p className="text-xs text-text-muted">Fires a popunder tab on the user&apos;s first click on the page. Highest CPM format. Paste the script from your Monetag dashboard.</p>
+                                    <div>
+                                        <label className="block text-sm text-text-secondary mb-2">Monetag Zone ID</label>
+                                        <input
+                                            type="text"
+                                            value={formData.monetagId}
+                                            onChange={(e) => setFormData({ ...formData, monetagId: e.target.value })}
+                                            placeholder="e.g. 9876543"
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-text-secondary mb-2">Or paste full Monetag OnClick script</label>
+                                        <textarea
+                                            value={formData.codeHtml}
+                                            onChange={(e) => setFormData({ ...formData, codeHtml: e.target.value })}
+                                            rows={4}
+                                            placeholder={"<script>(function(d,z,s){...})()</script>"}
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono text-xs resize-none"
+                                        />
+                                    </div>
+                                    <div className="bg-emerald-500/10 rounded-lg p-3 text-xs text-emerald-300">
+                                        💡 <strong>Placement:</strong> This fires globally — set &quot;Show On Pages&quot; to the pages where you want it active. Recommended: movies, series, live.
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Monetag — Direct Link */}
+                            {formData.network === "monetag_direct" && (
+                                <div className="bg-teal-500/10 border border-teal-500/30 rounded-lg p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <Link2 size={16} className="text-teal-400" />
+                                        <h4 className="font-bold text-teal-400">Direct Link Ad</h4>
+                                    </div>
+                                    <p className="text-xs text-text-muted">A styled CTA button/banner that links directly to your Monetag direct link. Placed in high-engagement spots (below the video player). Best for users who are actively watching.</p>
+                                    <div>
+                                        <label className="block text-sm text-text-secondary mb-2">Monetag Direct Link URL *</label>
+                                        <input
+                                            type="url"
+                                            value={formData.monetagDirectUrl}
+                                            onChange={(e) => setFormData({ ...formData, monetagDirectUrl: e.target.value })}
+                                            placeholder="https://link.monetag.com/..."
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-text-secondary mb-2">Button / Banner Text</label>
+                                        <input
+                                            type="text"
+                                            value={formData.monetagDirectText}
+                                            onChange={(e) => setFormData({ ...formData, monetagDirectText: e.target.value })}
+                                            placeholder="e.g. Watch Now, Get VPN, Claim Offer"
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                        />
+                                    </div>
+                                    <div className="bg-teal-500/10 rounded-lg p-3 text-xs text-teal-300">
+                                        💡 <strong>Best placement:</strong> Slot key <code className="bg-black/30 px-1 rounded">direct_link_player</code> — auto-placed below the video player on movie &amp; series watch pages (highest dwell time).
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Monetag — In-Page Push */}
+                            {formData.network === "monetag_inpage" && (
+                                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <Bell size={16} className="text-cyan-400" />
+                                        <h4 className="font-bold text-cyan-400">In-Page Push Banner</h4>
+                                    </div>
+                                    <p className="text-xs text-text-muted">Displays a push-notification style ad inside the page (not a real browser push). Works on iOS. Paste the script from your Monetag dashboard.</p>
+                                    <div>
+                                        <label className="block text-sm text-text-secondary mb-2">Monetag Zone ID</label>
+                                        <input
+                                            type="text"
+                                            value={formData.monetagId}
+                                            onChange={(e) => setFormData({ ...formData, monetagId: e.target.value })}
+                                            placeholder="e.g. 9876543"
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-text-secondary mb-2">Or paste full Monetag In-Page Push script</label>
+                                        <textarea
+                                            value={formData.codeHtml}
+                                            onChange={(e) => setFormData({ ...formData, codeHtml: e.target.value })}
+                                            rows={4}
+                                            placeholder={"<script async src='...' data-zone='...'></script>"}
+                                            className="w-full bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono text-xs resize-none"
+                                        />
+                                    </div>
+                                    <div className="bg-cyan-500/10 rounded-lg p-3 text-xs text-cyan-300">
+                                        💡 <strong>Placement:</strong> Appears as a floating notification on the page. Set pages to movies, live, series for maximum visibility.
                                     </div>
                                 </div>
                             )}
