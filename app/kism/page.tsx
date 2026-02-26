@@ -502,7 +502,6 @@ export default function AdminDashboard() {
                             { href: "/kism/matches/new", icon: PlayCircle, label: "Add Match", iconClass: "text-accent-green", hoverClass: "hover:bg-green-500/20" },
                             { href: "/kism/movies/new", icon: Film, label: "Add Movie", iconClass: "text-accent-blue", hoverClass: "hover:bg-blue-500/20" },
                             { href: "/kism/series/new", icon: Tv, label: "Add Series", iconClass: "text-purple-400", hoverClass: "hover:bg-purple-500/20" },
-                            { href: "/kism/shorts", icon: PlayCircle, label: "Shorts", iconClass: "text-accent-red", hoverClass: "hover:bg-red-500/20" },
                             { href: "/kism/codes", icon: Ticket, label: "Codes", iconClass: "text-blue-400", hoverClass: "hover:bg-blue-400/20" },
                         ].map((action) => (
                             <motion.div

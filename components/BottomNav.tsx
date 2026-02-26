@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Trophy, Tv, Heart, Menu, Play } from "lucide-react";
+import { Home, Trophy, Tv, Heart, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -50,12 +50,6 @@ export function BottomNav() {
             icon: Tv,
         },
         {
-            label: "Shorts",
-            href: "/shorts",
-            icon: Play,
-            isSpecial: true,
-        },
-        {
             label: "My List",
             href: "/mylist",
             icon: Heart,
@@ -85,31 +79,6 @@ export function BottomNav() {
                         {navItems.map((item) => {
                             const active = isActive(item.href);
                             const Icon = item.icon;
-
-                            // Special center button (Shorts)
-                            if (item.isSpecial) {
-                                return (
-                                    <Link
-                                        key={item.label}
-                                        href={item.href}
-                                        className="relative -mt-6"
-                                    >
-                                        <motion.div
-                                            whileTap={{ scale: 0.9 }}
-                                            className={cn(
-                                                "w-14 h-14 rounded-full flex items-center justify-center shadow-lg",
-                                                active
-                                                    ? "bg-accent-green text-black"
-                                                    : "bg-gradient-to-br from-accent-green to-accent-blue text-white"
-                                            )}
-                                        >
-                                            <Icon size={24} fill={active ? "currentColor" : "none"} />
-                                        </motion.div>
-                                        {/* Glow effect */}
-                                        <div className="absolute inset-0 rounded-full bg-accent-green/30 blur-xl -z-10" />
-                                    </Link>
-                                );
-                            }
 
                             return (
                                 <Link

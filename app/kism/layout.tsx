@@ -46,7 +46,6 @@ const navSections = [
             { href: "/kism/matches", label: "Matches", icon: PlayCircle },
             { href: "/kism/movies", label: "Movies", icon: Film },
             { href: "/kism/series", label: "Series", icon: Tv },
-            { href: "/kism/shorts", label: "Shorts", icon: Smartphone },
             { href: "/kism/leagues", label: "Leagues", icon: Trophy },
             { href: "/kism/blog", label: "Blog", icon: FileText },
             { href: "/kism/import", label: "Import", icon: Download },

@@ -52,3 +52,12 @@ config/
 /android/app/build/
 /ios/App/build/
 /ios/DerivedData/
+
+# local MCP config (may contain API keys)
+.mcp.json
+
+# local screenshots / design assets
+/screenshouts/
+
+# Android IDE config
+/android/.idea/

@@ -17,7 +17,6 @@ export type { ISettings, IAd, IPost, IChannel, ICategory, ILeague, IFixture, IPa
 export {
     PushSubscription,
     PromoBanner,
-    Short,
     HeroSlide,
     Message,
     PageView,

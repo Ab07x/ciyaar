@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Short, HeroSlide, PromoBanner, PageView, SearchAnalytics, Message } from "@/lib/models/Misc";
+import { HeroSlide, PromoBanner, PageView, SearchAnalytics, Message } from "@/lib/models/Misc";
 import { Category, League, Fixture } from "@/lib/models/Settings";
 import { Match, Movie } from "@/lib/models";
 
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     try {
         await connectDB();
         const { searchParams } = new URL(req.url);
-        const type = searchParams.get("type"); // categories, leagues, shorts, hero, banners, analytics, fixtures, messages
+        const type = searchParams.get("type"); // categories, leagues, hero, banners, analytics, fixtures, messages
 
         switch (type) {
             case "categories": {
@@ -19,10 +19,6 @@ export async function GET(req: NextRequest) {
             case "leagues": {
                 const leagues = await League.find().sort({ name: 1 }).lean();
                 return NextResponse.json(leagues);
-            }
-            case "shorts": {
-                const shorts = await Short.find({ isPublished: true }).sort({ createdAt: -1 }).lean();
-                return NextResponse.json(shorts);
             }
             case "hero": {
                 const slides = await HeroSlide.find({ isActive: true }).sort({ order: 1 }).lean();
@@ -128,10 +124,6 @@ export async function POST(req: NextRequest) {
             case "category": {
                 const cat = await Category.create({ ...data, createdAt: Date.now() });
                 return NextResponse.json(cat, { status: 201 });
-            }
-            case "short": {
-                const short = await Short.create({ ...data, createdAt: Date.now() });
-                return NextResponse.json(short, { status: 201 });
             }
             case "hero": {
                 const slide = await HeroSlide.create({ ...data, createdAt: Date.now(), updatedAt: Date.now() });

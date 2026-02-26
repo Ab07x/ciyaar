@@ -76,34 +76,6 @@ const PromoBannerSchema = new Schema<IPromoBanner>(
 
 export const PromoBanner = mongoose.models.PromoBanner || mongoose.model<IPromoBanner>("PromoBanner", PromoBannerSchema, "promo_banners");
 
-// SHORTS
-export interface IShort extends Document {
-    title: string;
-    embedUrl: string;
-    thumbnailUrl: string;
-    views: number;
-    isLive: boolean;
-    channelName?: string;
-    createdAt: number;
-    isPublished: boolean;
-}
-
-const ShortSchema = new Schema<IShort>(
-    {
-        title: String,
-        embedUrl: String,
-        thumbnailUrl: String,
-        views: { type: Number, default: 0 },
-        isLive: Boolean,
-        channelName: String,
-        createdAt: Number,
-        isPublished: { type: Boolean, index: true },
-    },
-    { timestamps: false }
-);
-
-export const Short = mongoose.models.Short || mongoose.model<IShort>("Short", ShortSchema, "shorts");
-
 // HERO SLIDES
 export interface IHeroSlide extends Document {
     contentType: string;
