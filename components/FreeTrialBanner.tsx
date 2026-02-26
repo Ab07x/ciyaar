@@ -75,8 +75,8 @@ export function FreeTrialBanner() {
                     "fixed z-[9990] transition-all duration-400",
                     /* mobile: full-width slim strip above bottom nav */
                     "bottom-[72px] left-3 right-3",
-                    /* desktop: compact card bottom-right */
-                    "md:bottom-6 md:left-auto md:right-5 md:w-[340px]",
+                    /* desktop: compact card bottom-LEFT */
+                    "md:bottom-6 md:left-5 md:right-auto md:w-[340px]",
                     visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none translate-y-4",
                 )}
                 style={visible ? { animation: "ftSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both" } : {}}
