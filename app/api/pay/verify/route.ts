@@ -22,6 +22,14 @@ const PLAN_DEVICES: Record<string, number> = {
 const SUCCESS_STATUSES = new Set(["success", "successful", "completed", "complete", "paid", "approved"]);
 const PENDING_STATUSES = new Set(["pending", "processing", "in_progress", "awaiting", "waiting"]);
 
+// Map new canonical plan names to legacy names used in DB schema
+const PLAN_TO_LEGACY: Record<string, string> = {
+    starter: "match",   match: "match",
+    basic: "weekly",    weekly: "weekly",
+    pro: "monthly",     monthly: "monthly",
+    elite: "yearly",    yearly: "yearly",
+};
+
 type PaymentRecord = {
     orderId: string;
     status: string;
@@ -113,7 +121,8 @@ export async function POST(request: NextRequest) {
             const session = await stripeClient.checkout.sessions.retrieve(stripeSession);
 
             if (session.status === "complete" || session.payment_status === "paid") {
-                const planFromMeta = (session.metadata?.plan || "monthly") as "match" | "weekly" | "monthly" | "yearly";
+                const rawPlan = session.metadata?.plan || "monthly";
+                const planFromMeta = (PLAN_TO_LEGACY[rawPlan] || rawPlan) as "match" | "weekly" | "monthly" | "yearly";
                 const deviceIdFromMeta = session.metadata?.deviceId || deviceId;
                 const extOrderId = `STRIPE-EXT-${stripeSession}`;
 
