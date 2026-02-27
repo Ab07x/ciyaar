@@ -4,12 +4,15 @@ import connectDB from "@/lib/mongodb";
 import { User, Subscription } from "@/lib/models/User";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 
-function toObjectId(id: string) {
-    try {
-        return new mongoose.Types.ObjectId(id);
-    } catch {
-        return id;
-    }
+// Only convert valid 24-char hex strings to ObjectId — skip Convex legacy IDs
+function isValidObjectId(id: string): boolean {
+    return /^[0-9a-fA-F]{24}$/.test(id);
+}
+
+function toObjectIds(ids: string[]): mongoose.Types.ObjectId[] {
+    return ids
+        .filter(isValidObjectId)
+        .map(id => new mongoose.Types.ObjectId(id));
 }
 
 export async function GET(request: NextRequest) {
@@ -47,13 +50,22 @@ export async function GET(request: NextRequest) {
 
         const paidUserIds = new Set(activeSubscriptions.map((s) => String(s.userId)));
 
-        // For expired filter: get all users who ever had a subscription
+        // For expired/all/free: get all users who ever had a subscription
         const allSubUserIds = (filter === "expired" || filter === "all" || filter === "free")
             ? new Set((await Subscription.distinct("userId")).map(String))
             : null;
 
         // Build user query based on filter
         const userQuery: Record<string, unknown> = {};
+
+        // Exclude old Convex ghost users (have convexId but no email) from all views
+        // These are migrated leftovers with no real user data
+        if (!search) {
+            userQuery.$or = [
+                { email: { $exists: true, $ne: null, $ne: "" } },
+                { convexId: { $exists: false } },
+            ];
+        }
 
         if (search) {
             userQuery.$or = [
@@ -68,30 +80,30 @@ export async function GET(request: NextRequest) {
 
         // Pre-filter by status at the DB level for correct pagination
         if (filter === "paid") {
-            userQuery._id = { $in: Array.from(paidUserIds).map(toObjectId) };
+            // Only include valid ObjectIds — skip Convex legacy IDs to prevent CastError
+            const validPaidIds = toObjectIds(Array.from(paidUserIds));
+            userQuery._id = { $in: validPaidIds };
+            // Remove the convex filter for paid — the $in already restricts
+            delete userQuery.$or;
         } else if (filter === "trial") {
             userQuery.trialExpiresAt = { $gt: now };
         } else if (filter === "expired") {
-            // Users who had a subscription but it's now expired (not currently active)
-            // OR users whose trial expired
             const expiredSubUserIds = allSubUserIds
                 ? Array.from(allSubUserIds).filter(id => !paidUserIds.has(id))
                 : [];
-            const expiredIds = expiredSubUserIds.map(toObjectId);
-            // Combine: expired subscription users OR expired trial users
+            const expiredIds = toObjectIds(expiredSubUserIds);
+            const baseOr = userQuery.$or ? (userQuery.$or as any[]) : [];
             userQuery.$or = [
-                ...(userQuery.$or ? (userQuery.$or as any[]) : []),
+                ...baseOr,
                 { _id: { $in: expiredIds } },
                 { trialExpiresAt: { $gt: 0, $lte: now } },
             ];
         } else if (filter === "free") {
-            // Users who are NOT paid, NOT trial, NOT expired-subscription
-            const nonFreeIds = new Set<string>();
-            for (const id of paidUserIds) nonFreeIds.add(id);
-            if (allSubUserIds) {
-                for (const id of allSubUserIds) nonFreeIds.add(id);
-            }
-            userQuery._id = { $nin: Array.from(nonFreeIds).map(toObjectId) };
+            const nonFreeIds = toObjectIds([
+                ...Array.from(paidUserIds),
+                ...(allSubUserIds ? Array.from(allSubUserIds) : []),
+            ]);
+            userQuery._id = { $nin: nonFreeIds };
             userQuery.trialExpiresAt = { $not: { $gt: 0 } };
         }
 
@@ -114,7 +126,6 @@ export async function GET(request: NextRequest) {
             } else if (user.trialExpiresAt && user.trialExpiresAt > now) {
                 status = "trial";
             } else if (allSubUserIds?.has(uid)) {
-                // Had a subscription before but it's now expired
                 status = "expired";
             } else if (user.trialExpiresAt && user.trialExpiresAt <= now) {
                 status = "expired";
@@ -135,9 +146,15 @@ export async function GET(request: NextRequest) {
             };
         });
 
-        // Stats
-        const totalAll = await User.countDocuments({});
-        const trialCount = await User.countDocuments({ trialExpiresAt: { $gt: now } });
+        // Stats — exclude Convex ghosts (have convexId + no email)
+        const realUserQuery = {
+            $or: [
+                { email: { $exists: true, $ne: null, $ne: "" } },
+                { convexId: { $exists: false } },
+            ],
+        };
+        const totalAll = await User.countDocuments(realUserQuery);
+        const trialCount = await User.countDocuments({ ...realUserQuery, trialExpiresAt: { $gt: now } });
 
         return NextResponse.json({
             users: enrichedUsers,
@@ -151,7 +168,7 @@ export async function GET(request: NextRequest) {
                 total: totalAll,
                 paid: paidUserIds.size,
                 trial: trialCount,
-                free: totalAll - paidUserIds.size - trialCount,
+                free: Math.max(0, totalAll - paidUserIds.size - trialCount),
             },
         });
     } catch (error) {
