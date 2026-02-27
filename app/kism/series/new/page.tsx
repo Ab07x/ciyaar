@@ -156,19 +156,48 @@ export default function SeriesFormPage({ params }: Props) {
         }
     };
 
-    const handleSearch = async () => {
-        if (!tmdbInput.trim()) return;
-        setSearching(true);
-        try {
-            const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(tmdbInput)}&type=tv`);
-            const data = await res.json();
-            setSearchResults(data.results || []);
-            setShowSearch(true);
-        } catch (err) {
-            console.error(err);
-            setSearchResults([]);
-        } finally {
-            setSearching(false);
+    // Extract TMDB ID from URL or raw number
+    const extractTmdbId = (input: string): number | null => {
+        const trimmed = input.trim();
+        if (/^\d+$/.test(trimmed)) return parseInt(trimmed);
+        const urlMatch = trimmed.match(/themoviedb\.org\/(?:movie|tv)\/(\d+)/i);
+        if (urlMatch) return parseInt(urlMatch[1]);
+        const pathMatch = trimmed.match(/\/(?:movie|tv)\/(\d+)/);
+        if (pathMatch) return parseInt(pathMatch[1]);
+        return null;
+    };
+
+    // Smart input: auto-detect URL/ID or search by name
+    const handleSmartInput = async () => {
+        const input = tmdbInput.trim();
+        if (!input) return;
+        const tmdbId = extractTmdbId(input);
+        if (tmdbId) {
+            await handleFetchTMDB(tmdbId);
+        } else {
+            setSearching(true);
+            try {
+                const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(input)}&type=tv`);
+                const data = await res.json();
+                setSearchResults(data.results || []);
+                setShowSearch(true);
+            } catch (err) {
+                console.error(err);
+                setSearchResults([]);
+            } finally {
+                setSearching(false);
+            }
+        }
+    };
+
+    // Auto-fetch on paste if it's a URL or ID
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        const pasted = e.clipboardData.getData("text").trim();
+        const tmdbId = extractTmdbId(pasted);
+        if (tmdbId) {
+            e.preventDefault();
+            setTmdbInput(pasted);
+            setTimeout(() => handleFetchTMDB(tmdbId), 0);
         }
     };
 
@@ -178,6 +207,11 @@ export default function SeriesFormPage({ params }: Props) {
         try {
             const res = await fetch(`/api/tmdb/fetch?tmdbId=${tmdbId}&type=tv`);
             const data = await res.json();
+            if (data.error) {
+                alert(data.error || "Failed to fetch from TMDB");
+                setFetching(false);
+                return;
+            }
             setFormData({
                 ...formData,
                 slug: data.slug,
@@ -195,6 +229,7 @@ export default function SeriesFormPage({ params }: Props) {
                 numberOfSeasons: data.numberOfSeasons || data.totalSeasons || 0,
                 numberOfEpisodes: data.numberOfEpisodes || data.totalEpisodes || 0,
             });
+            setTmdbInput("");
         } catch (err) {
             console.error(err);
             alert("Failed to fetch from TMDB");
@@ -367,26 +402,28 @@ export default function SeriesFormPage({ params }: Props) {
                             {/* TMDB Search */}
                             {sourceMode === "tmdb" && (
                                 <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-6">
-                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
                                         <Tv className="text-purple-400" />
-                                        Step 1: Search TMDB
+                                        Step 1: Paste TMDB Link or Search
                                     </h3>
+                                    <p className="text-xs text-text-muted mb-4">Paste a TMDB URL, TMDB ID, or series name — auto-detects and fetches everything</p>
                                     <div className="flex gap-3">
                                         <input
                                             type="text"
                                             value={tmdbInput}
                                             onChange={(e) => setTmdbInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                                            placeholder="Search series name..."
+                                            onKeyDown={(e) => e.key === "Enter" && handleSmartInput()}
+                                            onPaste={handlePaste}
+                                            placeholder="Paste TMDB URL, ID, or search series name..."
                                             className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
                                         />
                                         <button
-                                            onClick={handleSearch}
-                                            disabled={searching}
+                                            onClick={handleSmartInput}
+                                            disabled={searching || fetching}
                                             className="px-6 py-3 bg-purple-500 text-white rounded-lg font-bold flex items-center gap-2"
                                         >
-                                            {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-                                            Search
+                                            {(searching || fetching) ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                                            {fetching ? "Fetching..." : "Search"}
                                         </button>
                                     </div>
 
