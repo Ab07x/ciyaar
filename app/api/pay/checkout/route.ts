@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         const orderId = `FBJ-${plan.toUpperCase()}-${Date.now()}-${orderNonce}`;
 
         // Get site URL for return_url
-        const prodUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fanproj.shop";
+        const prodUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net";
         const siteUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : prodUrl;
         const returnUrl = `${siteUrl}/pay?order_id=${encodeURIComponent(orderId)}`;
 

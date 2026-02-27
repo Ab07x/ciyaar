@@ -3,8 +3,16 @@ import connectDB from "@/lib/mongodb";
 import { Device, Subscription, Payment } from "@/lib/models";
 import { getOrCreateAutoPaymentRedemption } from "@/lib/auto-redemption";
 
-const PLAN_DURATIONS: Record<string, number> = { weekly: 7, monthly: 30, yearly: 365 };
-const PLAN_DEVICES:   Record<string, number> = { weekly: 2, monthly: 3,  yearly: 5  };
+const PLAN_DURATIONS: Record<string, number> = { match: 3, weekly: 7, monthly: 30, yearly: 365 };
+const PLAN_DEVICES:   Record<string, number> = { match: 1, weekly: 2, monthly: 3,  yearly: 5  };
+
+// Accept both new canonical names and legacy names
+const PLAN_TO_LEGACY: Record<string, string> = {
+    starter: "match",   match: "match",
+    basic: "weekly",    weekly: "weekly",
+    pro: "monthly",     monthly: "monthly",
+    elite: "yearly",    yearly: "yearly",
+};
 
 export async function POST(req: NextRequest) {
     const key = req.headers.get("x-internal-key");
@@ -14,7 +22,9 @@ export async function POST(req: NextRequest) {
 
     try {
         await connectDB();
-        const { customerId, plan, deviceId, event } = await req.json();
+        const body = await req.json();
+        const { customerId, deviceId, event } = body;
+        const plan = PLAN_TO_LEGACY[body.plan] || body.plan;
 
         // Cancellation
         if (event === "customer.subscription.deleted") {
@@ -71,8 +81,9 @@ export async function POST(req: NextRequest) {
 
         console.log("[internal/activate] activated", plan, "for device", deviceId, "event:", event);
         return NextResponse.json({ ok: true, code: access.code });
-    } catch (err) {
-        console.error("[internal/activate] error:", err);
-        return NextResponse.json({ error: "Failed" }, { status: 500 });
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error("[internal/activate] error:", msg, err);
+        return NextResponse.json({ error: "Failed", detail: msg }, { status: 500 });
     }
 }
