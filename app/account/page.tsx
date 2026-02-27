@@ -33,7 +33,7 @@ const QUICK_LINKS = [
 ];
 
 export default function AccountPage() {
-    const { userId, deviceId, email, username, isPremium, subscription, isLoading, logout, updateUsername } = useUser();
+    const { userId, deviceId, email, username, isPremium, subscription, isLoading, logout, updateUsername, profile, updateAvatar } = useUser();
     const [activeTab, setActiveTab] = useState("overview");
     const [usernameInput, setUsernameInput] = useState("");
     const [editingUsername, setEditingUsername] = useState(false);
@@ -41,6 +41,7 @@ export default function AccountPage() {
     const [usernameFeedback, setUsernameFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
     const [copiedCode, setCopiedCode] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
     const { data: subData } = useSWR(
         deviceId ? `/api/subscriptions?deviceId=${encodeURIComponent(deviceId)}` : null,
@@ -51,6 +52,16 @@ export default function AccountPage() {
     const sub = subscription as { plan?: string; expiresAt?: number; activatedAt?: number } | null;
     const expiresAt = Number(sub?.expiresAt || 0);
     const avatarLetter = (username?.[0] || email?.[0] || "U").toUpperCase();
+    const avatarUrl = (profile as Record<string, unknown>)?.avatarUrl as string | undefined;
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingAvatar(true);
+        await updateAvatar(file);
+        setUploadingAvatar(false);
+        e.target.value = "";
+    };
 
     const handleCopyCode = async () => {
         if (!accessCode) return;
@@ -124,8 +135,19 @@ export default function AccountPage() {
                     <aside className="w-56 flex-shrink-0 sticky top-24">
                         {/* Avatar card */}
                         <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4 text-center shadow-sm">
-                            <div className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center text-xl font-black text-white ${isPremium ? "bg-gradient-to-br from-yellow-400 to-orange-500" : "bg-gradient-to-br from-[#E50914] to-red-700"}`}>
-                                {avatarLetter}
+                            <div className="relative inline-block">
+                                {avatarUrl ? (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img src={avatarUrl} alt="" className={`w-14 h-14 rounded-full mx-auto mb-3 object-cover border-2 ${isPremium ? "border-yellow-400" : "border-gray-200"} ${uploadingAvatar ? "opacity-50" : ""}`} />
+                                ) : (
+                                    <div className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center text-xl font-black text-white ${isPremium ? "bg-gradient-to-br from-yellow-400 to-orange-500" : "bg-gradient-to-br from-[#E50914] to-red-700"} ${uploadingAvatar ? "opacity-50" : ""}`}>
+                                        {avatarLetter}
+                                    </div>
+                                )}
+                                <label className="absolute inset-0 rounded-full cursor-pointer hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                                    <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                                    <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
+                                </label>
                             </div>
                             <p className="font-bold text-gray-900 text-sm truncate">{username ? `@${username}` : email || "User"}</p>
                             {isPremium ? (
@@ -285,6 +307,25 @@ export default function AccountPage() {
                         {activeTab === "settings" && (
                             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-6">
                                 <h3 className="font-black text-base text-gray-900">Account Settings</h3>
+
+                                {/* Profile Photo */}
+                                <div>
+                                    <label className="text-sm font-bold text-gray-700 mb-2 block">Profile Photo</label>
+                                    <div className="flex items-center gap-4">
+                                        {avatarUrl ? (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img src={avatarUrl} alt="" className={`w-16 h-16 rounded-full object-cover border-2 border-gray-200 ${uploadingAvatar ? "opacity-50" : ""}`} />
+                                        ) : (
+                                            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-white ${isPremium ? "bg-gradient-to-br from-yellow-400 to-orange-500" : "bg-gradient-to-br from-[#E50914] to-red-700"}`}>
+                                                {avatarLetter}
+                                            </div>
+                                        )}
+                                        <label className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm cursor-pointer transition-colors">
+                                            {uploadingAvatar ? "Uploading…" : "Change Photo"}
+                                            <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
+                                        </label>
+                                    </div>
+                                </div>
 
                                 {/* Username */}
                                 <div>
