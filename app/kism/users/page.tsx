@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Users, Search, ChevronLeft, ChevronRight, Crown, Clock, User as UserIcon, Shield } from "lucide-react";
 
 interface UserRow {
@@ -138,31 +139,34 @@ export default function AdminUsersPage() {
                             ) : users.length === 0 ? (
                                 <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-500">No users found</td></tr>
                             ) : users.map((user) => (
-                                <tr key={user._id} className="border-b border-border-strong/50 hover:bg-white/[0.02]">
+                                <tr key={user._id} className="border-b border-border-strong/50 hover:bg-white/[0.04] cursor-pointer transition-colors"
+                                    onClick={() => window.location.href = `/kism/users/${user._id}`}
+                                >
                                     <td className="px-4 py-3">
-                                        <div className="flex items-center gap-3">
+                                        <Link href={`/kism/users/${user._id}`} className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                                                 {user.avatarUrl ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
                                                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                                                 ) : (
                                                     <UserIcon size={14} className="text-gray-400" />
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="text-white font-medium">{user.displayName || user.username || "Anonymous"}</p>
+                                                <p className="text-white font-medium">{user.displayName || user.username || (user.email ? user.email.split("@")[0] : "Anonymous")}</p>
                                                 {user.username && <p className="text-xs text-gray-500">@{user.username}</p>}
                                             </div>
-                                        </div>
+                                        </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-gray-300">{user.email || <span className="text-gray-600">—</span>}</td>
-                                    <td className="px-4 py-3 text-gray-300">{user.phoneNumber || user.phoneOrId || <span className="text-gray-600">—</span>}</td>
+                                    <td className="px-4 py-3 text-gray-300 text-sm">{user.email || <span className="text-gray-600">—</span>}</td>
+                                    <td className="px-4 py-3 text-gray-300 text-sm">{user.phoneNumber || user.phoneOrId || <span className="text-gray-600">—</span>}</td>
                                     <td className="px-4 py-3">
                                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold uppercase ${STATUS_COLORS[user.status]}`}>
                                             {user.status === "paid" && <Shield size={10} />}
                                             {user.status}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-gray-300 capitalize">{user.plan || "—"}</td>
+                                    <td className="px-4 py-3 text-gray-300 capitalize text-sm">{user.plan || "—"}</td>
                                     <td className="px-4 py-3 text-gray-400 text-xs">
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}
                                     </td>

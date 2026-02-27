@@ -18,17 +18,6 @@ export async function GET(request: NextRequest) {
         const filter = (searchParams.get("filter") || "all").toLowerCase();
         const skip = (page - 1) * limit;
 
-        // Build user query
-        const userQuery: Record<string, unknown> = {};
-        if (search) {
-            userQuery.$or = [
-                { email: { $regex: search, $options: "i" } },
-                { emailLower: { $regex: search.toLowerCase(), $options: "i" } },
-                { username: { $regex: search, $options: "i" } },
-                { displayName: { $regex: search, $options: "i" } },
-            ];
-        }
-
         const now = Date.now();
 
         // Get all active subscriptions for status lookup
@@ -45,12 +34,48 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        // Get total count
-        const totalUsers = await User.countDocuments(userQuery);
+        // Get all expired subscriptions (for users who had subs but expired)
+        const paidUserIds = new Set(activeSubscriptions.map((s) => s.userId));
+        const allSubUserIds = filter === "expired"
+            ? new Set((await Subscription.distinct("userId")).map(String))
+            : null;
 
-        // Get users
-        let users = await User.find(userQuery)
-            .sort({ createdAt: -1 })
+        // Build user query based on filter
+        const userQuery: Record<string, unknown> = {};
+
+        if (search) {
+            userQuery.$or = [
+                { email: { $regex: search, $options: "i" } },
+                { emailLower: { $regex: search.toLowerCase(), $options: "i" } },
+                { username: { $regex: search, $options: "i" } },
+                { displayName: { $regex: search, $options: "i" } },
+                { phoneNumber: { $regex: search, $options: "i" } },
+                { phoneOrId: { $regex: search, $options: "i" } },
+            ];
+        }
+
+        // Pre-filter by status in the DB query for better pagination
+        if (filter === "paid") {
+            userQuery._id = { $in: Array.from(paidUserIds).map(id => {
+                try { return new (require("mongoose").Types.ObjectId)(id); } catch { return id; }
+            }) };
+        } else if (filter === "trial") {
+            userQuery.trialExpiresAt = { $gt: now };
+        } else if (filter === "expired") {
+            // Users who had a subscription but it's now expired (not currently active)
+            const expiredOnly = allSubUserIds
+                ? Array.from(allSubUserIds).filter(id => !paidUserIds.has(id))
+                : [];
+            userQuery._id = { $in: expiredOnly.map(id => {
+                try { return new (require("mongoose").Types.ObjectId)(id); } catch { return id; }
+            }) };
+        }
+
+        // Sort: registered users (with email) first, then by creation date
+        const totalFiltered = await User.countDocuments(userQuery);
+
+        const users = await User.find(userQuery)
+            .sort({ email: -1, createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .lean();
@@ -65,13 +90,14 @@ export async function GET(request: NextRequest) {
             } else if (user.trialExpiresAt && user.trialExpiresAt > now) {
                 status = "trial";
             } else if (user.trialExpiresAt && user.trialExpiresAt <= now) {
-                // Had trial but expired, check if they ever had a paid sub
                 status = "expired";
             }
 
             return {
                 _id: user._id,
                 email: user.email || null,
+                phoneNumber: user.phoneNumber || null,
+                phoneOrId: user.phoneOrId || null,
                 username: user.username || null,
                 displayName: user.displayName || null,
                 avatarUrl: user.avatarUrl || null,
@@ -82,24 +108,23 @@ export async function GET(request: NextRequest) {
             };
         });
 
-        // Apply status filter after enrichment
-        let filtered = enrichedUsers;
-        if (filter !== "all") {
-            filtered = enrichedUsers.filter((u) => u.status === filter);
+        // For "free" filter, exclude paid/trial users from results
+        let finalUsers = enrichedUsers;
+        if (filter === "free") {
+            finalUsers = enrichedUsers.filter((u) => u.status === "free");
         }
 
         // Stats
         const totalAll = await User.countDocuments({});
-        const paidUserIds = new Set(activeSubscriptions.map((s) => s.userId));
         const trialCount = await User.countDocuments({ trialExpiresAt: { $gt: now } });
 
         return NextResponse.json({
-            users: filtered,
+            users: finalUsers,
             pagination: {
                 page,
                 limit,
-                total: filter === "all" ? totalUsers : filtered.length,
-                totalPages: Math.ceil((filter === "all" ? totalUsers : filtered.length) / limit),
+                total: totalFiltered,
+                totalPages: Math.ceil(totalFiltered / limit),
             },
             stats: {
                 total: totalAll,
