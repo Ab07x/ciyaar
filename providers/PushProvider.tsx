@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useUser } from "./UserProvider";
 
 interface PushContextType {
@@ -23,14 +23,28 @@ const PushContext = createContext<PushContextType>({
 
 export const usePush = () => useContext(PushContext);
 
+/** Race a promise against a timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+    return Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+        ),
+    ]);
+}
+
 export function PushProvider({ children }: { children: React.ReactNode }) {
     const [isSupported, setIsSupported] = useState(false);
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [fcmToken, setFcmToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { userId } = useUser();
+    const initRef = useRef(false);
 
     useEffect(() => {
+        if (initRef.current) return;
+        initRef.current = true;
+
         const checkSupport = async () => {
             if (typeof window === "undefined") return;
 
@@ -42,7 +56,6 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
             setIsSupported(supported);
 
             if (supported) {
-                // Check localStorage first for instant UI state
                 const wasSubscribed = localStorage.getItem("fanbroj_push_subscribed") === "true";
                 const wasUnsubscribed = localStorage.getItem("fanbroj_push_unsubscribed");
                 if (wasSubscribed && !wasUnsubscribed) {
@@ -50,48 +63,50 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
                 }
 
                 if (Notification.permission === "granted") {
-                    const token = await initializeFirebase();
-                    if (!token && wasSubscribed && !wasUnsubscribed) {
-                        // Token failed but user was previously subscribed - keep subscribed state
-                        // Will retry on next page load
+                    try {
+                        const token = await withTimeout(initializeFirebase(), 15000, "Firebase init");
+                        if (token) {
+                            setFcmToken(token);
+                            setIsSubscribed(true);
+                        }
+                    } catch (err) {
+                        console.warn("[Push] Background init failed:", err);
                     }
                 }
             }
             setIsLoading(false);
         };
 
-        const timer = setTimeout(() => {
-            checkSupport();
-        }, 1500);
-
+        const timer = setTimeout(checkSupport, 1500);
         return () => clearTimeout(timer);
     }, []);
 
     const initializeFirebase = async (): Promise<string | null> => {
         try {
+            // Register or get existing service worker
             let registration: ServiceWorkerRegistration;
             try {
-                const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
-                if (existing) {
+                // Look up by scope "/" (where the SW lives)
+                const existing = await navigator.serviceWorker.getRegistration("/");
+                if (existing?.active?.scriptURL?.includes("firebase-messaging-sw.js")) {
                     registration = existing;
                     existing.update().catch(() => { });
                 } else {
-                    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    registration = await withTimeout(
+                        navigator.serviceWorker.register("/firebase-messaging-sw.js"),
+                        10000,
+                        "SW register"
+                    );
                 }
             } catch (swError) {
                 console.error("[Push] Service worker registration failed:", swError);
                 return null;
             }
 
-            const swReady = await Promise.race([
-                navigator.serviceWorker.ready,
-                new Promise<null>((_, reject) =>
-                    setTimeout(() => reject(new Error("Service worker ready timeout")), 10000)
-                )
-            ]);
+            // Wait for SW to be ready
+            await withTimeout(navigator.serviceWorker.ready, 10000, "SW ready");
 
-            if (!swReady) return null;
-
+            // Dynamic import Firebase SDK
             const { initializeApp, getApps } = await import("firebase/app");
             const { getMessaging, getToken } = await import("firebase/messaging");
 
@@ -108,32 +123,23 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
             const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
             const messaging = getMessaging(app);
 
-            let token: string | null = null;
-            const maxAttempts = 3;
-
-            for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                try {
-                    token = await getToken(messaging, {
-                        vapidKey: "BJD2T_koPJSUI8rUgD12066OE1KRmVjcBUcIKeHR3N2deAiVCeHe-_0q5qwY3V6BQOFCxJk-6phhjEA1Lex8ss4",
-                        serviceWorkerRegistration: registration,
-                    });
-                    if (token) break;
-                } catch (tokenErr: any) {
-                    if (attempt < maxAttempts - 1) {
-                        await new Promise(r => setTimeout(r, (attempt + 1) * 1500));
-                    }
-                }
-            }
+            // Get FCM token with timeout (this is where it usually hangs)
+            const token = await withTimeout(
+                getToken(messaging, {
+                    vapidKey: "BJD2T_koPJSUI8rUgD12066OE1KRmVjcBUcIKeHR3N2deAiVCeHe-_0q5qwY3V6BQOFCxJk-6phhjEA1Lex8ss4",
+                    serviceWorkerRegistration: registration,
+                }),
+                15000,
+                "FCM getToken"
+            );
 
             if (token) {
                 setFcmToken(token);
                 setIsSubscribed(true);
+                localStorage.setItem("fanbroj_push_subscribed", "true");
+                localStorage.removeItem("fanbroj_push_unsubscribed");
 
-                if (typeof window !== "undefined") {
-                    localStorage.setItem("fanbroj_push_subscribed", "true");
-                    localStorage.removeItem("fanbroj_push_unsubscribed");
-                }
-
+                // Listen for foreground messages
                 const { onMessage } = await import("firebase/messaging");
                 onMessage(messaging, (payload) => {
                     if (payload.notification) {
@@ -148,8 +154,9 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
             }
 
             return null;
-        } catch (error: any) {
-            console.error("[Push] Firebase initialization error:", error?.message || error);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : String(error);
+            console.error("[Push] Firebase initialization error:", msg);
             return null;
         }
     };
@@ -158,19 +165,22 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
         if (!isSupported) return false;
 
         try {
+            // Step 1: Request permission — this shows the browser Allow/Block bar
+            // No timeout here — user needs time to decide
             const permission = await Notification.requestPermission();
             if (permission !== "granted") {
                 return false;
             }
 
-            const token = await initializeFirebase();
+            // Step 2: Initialize Firebase and get token (with overall timeout)
+            const token = await withTimeout(initializeFirebase(), 20000, "Subscribe Firebase");
             if (!token) {
                 return false;
             }
 
-            // Save token via API
+            // Step 3: Save token to backend
             const deviceId = getDeviceId();
-            await fetch("/api/push", {
+            fetch("/api/push", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -179,9 +189,8 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
                     userId: userId || undefined,
                     userAgent: navigator.userAgent,
                 }),
-            }).catch(() => {}); // Don't fail subscribe if API save fails
+            }).catch(() => { });
 
-            // Ensure subscribed state is set (initializeFirebase sets it too, but be safe)
             setIsSubscribed(true);
             setFcmToken(token);
             localStorage.setItem("fanbroj_push_subscribed", "true");
@@ -189,7 +198,7 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
 
             return true;
         } catch (error) {
-            console.error("Subscribe error:", error);
+            console.error("[Push] Subscribe error:", error);
             return false;
         }
     }, [isSupported, userId]);
@@ -198,7 +207,6 @@ export function PushProvider({ children }: { children: React.ReactNode }) {
         try {
             const deviceId = getDeviceId();
 
-            // Remove token via API
             if (fcmToken || deviceId) {
                 await fetch("/api/push", {
                     method: "DELETE",

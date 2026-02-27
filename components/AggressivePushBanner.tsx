@@ -28,8 +28,14 @@ export function AggressivePushBanner() {
     }, [isSubscribed, isSupported]);
 
     const handleSubscribe = async () => {
-        setIsSubscribing(true);
+        // Don't show spinner yet — let the browser permission bar appear first
         try {
+            // This triggers the browser's native Allow/Block bar
+            const permission = await Notification.requestPermission();
+            if (permission !== "granted") return;
+
+            // NOW show spinner — user already clicked Allow
+            setIsSubscribing(true);
             const ok = await subscribe();
             if (ok) { setShowSuccess(true); setTimeout(() => setIsVisible(false), 2200); }
         } catch { /* ignore */ } finally { setIsSubscribing(false); }
