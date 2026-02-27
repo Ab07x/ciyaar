@@ -110,8 +110,11 @@ export interface ISubscription extends Document {
     matchId?: string;
     expiresAt: number;
     maxDevices: number;
-    status: "active" | "expired" | "revoked";
+    status: "active" | "expired" | "revoked" | "cancelled";
     codeId?: string;
+    stripeCustomerId?: string;
+    activatedAt?: number;
+    cancelledAt?: number;
     createdAt: number;
 }
 
@@ -122,8 +125,11 @@ const SubscriptionSchema = new Schema<ISubscription>(
         matchId: String,
         expiresAt: { type: Number, required: true },
         maxDevices: { type: Number, required: true },
-        status: { type: String, enum: ["active", "expired", "revoked"], required: true, index: true },
+        status: { type: String, enum: ["active", "expired", "revoked", "cancelled"], required: true, index: true },
         codeId: String,
+        stripeCustomerId: { type: String, index: true },
+        activatedAt: Number,
+        cancelledAt: Number,
         createdAt: { type: Number, required: true },
     },
     { timestamps: false }

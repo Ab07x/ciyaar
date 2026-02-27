@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Device, Subscription, Payment } from "@/lib/models";
+import { Device, Subscription, Payment, User } from "@/lib/models";
 import { getOrCreateAutoPaymentRedemption } from "@/lib/auto-redemption";
 
 const PLAN_DURATIONS: Record<string, number> = { match: 3, weekly: 7, monthly: 30, yearly: 365 };
@@ -26,12 +26,15 @@ export async function POST(req: NextRequest) {
         const { customerId, deviceId, event } = body;
         const plan = PLAN_TO_LEGACY[body.plan] || body.plan;
 
+        console.log("[internal/activate] received:", { event, plan, deviceId, customerId });
+
         // Cancellation
         if (event === "customer.subscription.deleted") {
-            await Subscription.updateMany(
+            const result = await Subscription.updateMany(
                 { stripeCustomerId: customerId, status: "active" },
                 { status: "cancelled", cancelledAt: Date.now() }
             );
+            console.log("[internal/activate] cancelled", result.modifiedCount, "subscriptions for", customerId);
             return NextResponse.json({ ok: true });
         }
 
@@ -39,22 +42,41 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "plan and deviceId required" }, { status: 400 });
         }
 
-        const device = await Device.findOne({ deviceId }).lean() as Record<string, unknown> | null;
-        if (!device) {
-            return NextResponse.json({ error: "Device not found" }, { status: 404 });
+        // Look up device, or create one if missing
+        let device = await Device.findOne({ deviceId }).lean() as Record<string, unknown> | null;
+        let userId: string;
+
+        if (device) {
+            userId = String(device.userId || device._id);
+        } else {
+            // Device not found — look for a user session with this deviceId
+            const { UserSession } = await import("@/lib/models");
+            const session = await UserSession.findOne({ deviceId }).lean() as Record<string, unknown> | null;
+            if (session) {
+                userId = String(session.userId);
+            } else {
+                // Last resort: create a placeholder user + device so the subscription is not lost
+                console.warn("[internal/activate] no device/session found for", deviceId, "— creating placeholder");
+                const placeholderUser = await User.create({
+                    phoneOrId: `stripe_${deviceId}`,
+                    displayName: "Stripe Customer",
+                    createdAt: Date.now(),
+                });
+                userId = placeholderUser._id.toString();
+            }
+            // Create the device record
+            await Device.create({ userId, deviceId, lastSeenAt: Date.now() });
         }
 
-        const userId = (device.userId || device._id) as string;
         const durationDays = PLAN_DURATIONS[plan] || 30;
         const maxDevices = PLAN_DEVICES[plan] || 1;
         const orderId = `STRIPE-WEBHOOK-${customerId}-${Date.now()}`;
 
-        const access = await getOrCreateAutoPaymentRedemption({ paymentOrderId: orderId, userId: String(userId), plan, durationDays, maxDevices });
+        const access = await getOrCreateAutoPaymentRedemption({ paymentOrderId: orderId, userId, plan, durationDays, maxDevices });
 
         await Subscription.create({
             userId,
             plan,
-            durationDays,
             maxDevices,
             status: "active",
             activatedAt: Date.now(),
@@ -79,7 +101,7 @@ export async function POST(req: NextRequest) {
             createdAt: Date.now(),
         });
 
-        console.log("[internal/activate] activated", plan, "for device", deviceId, "event:", event);
+        console.log("[internal/activate] activated", plan, "for device", deviceId, "userId", userId, "code:", access.code);
         return NextResponse.json({ ok: true, code: access.code });
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);

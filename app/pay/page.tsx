@@ -244,10 +244,12 @@ function CheckoutHub({
                     discountCode: discountResult?.valid ? discountCode.trim().toUpperCase() : undefined,
                 }),
             });
-            const data = await res.json();
-            if (!res.ok || !data?.url) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
+            const text = await res.text();
+            let data: Record<string, string> | null = null;
+            try { data = JSON.parse(text); } catch { /* not json */ }
+            if (!res.ok || !data?.url) { setStatusError(data?.error || `Checkout failed (${res.status}). Please try again.`); setIsPaying(false); return; }
             window.location.href = String(data.url);
-        } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
+        } catch (err) { setStatusError(`Checkout error: ${err instanceof Error ? err.message : "Please try again."}`); setIsPaying(false); }
     };
 
     const startSifaloCheckout = async () => {

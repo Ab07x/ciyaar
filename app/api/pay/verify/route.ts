@@ -1,12 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import connectDB from "@/lib/mongodb";
-import { Payment, Device, Subscription, ConversionEvent, Redemption } from "@/lib/models";
+import { Payment, Device, Subscription, ConversionEvent, Redemption, User, UserSession } from "@/lib/models";
 import { getOrCreateAutoPaymentRedemption } from "@/lib/auto-redemption";
+
+/** Find userId for a deviceId — tries Device, then UserSession, then creates a placeholder */
+async function resolveUserId(deviceId: string): Promise<{ userId: string; created: boolean }> {
+    const device = await Device.findOne({ deviceId }).lean<{ _id?: string; userId?: string } | null>();
+    if (device) return { userId: String(device.userId || device._id), created: false };
+
+    const session = await UserSession.findOne({ deviceId }).lean<{ userId?: string } | null>();
+    if (session?.userId) {
+        await Device.create({ userId: session.userId, deviceId, lastSeenAt: Date.now() });
+        return { userId: session.userId, created: true };
+    }
+
+    // Last resort: create placeholder
+    console.warn("[verify] no device/session for", deviceId, "— creating placeholder");
+    const user = await User.create({ phoneOrId: `verify_${deviceId}`, displayName: "Stripe Customer", createdAt: Date.now() });
+    const userId = user._id.toString();
+    await Device.create({ userId, deviceId, lastSeenAt: Date.now() });
+    return { userId, created: true };
+}
 
 // Plan duration mapping (days)
 const PLAN_DURATIONS: Record<string, number> = {
-    match: 1,
+    match: 3,
     weekly: 7,
     monthly: 30,
     yearly: 365,
@@ -132,12 +151,7 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({ success: true, message: "Payment already verified", plan: existing.plan, code: existing.accessCode || null });
                 }
 
-                const device = await Device.findOne({ deviceId: deviceIdFromMeta }).lean<DeviceRecord | null>();
-                if (!device) {
-                    return NextResponse.json({ error: "Device not found, please contact support" }, { status: 404 });
-                }
-
-                const userId = device.userId || device._id;
+                const { userId } = await resolveUserId(deviceIdFromMeta);
                 const plan = planFromMeta;
                 const durationDays = PLAN_DURATIONS[plan] || 30;
                 const maxDevices = PLAN_DEVICES[plan] || 1;
@@ -272,16 +286,7 @@ export async function POST(request: NextRequest) {
 
             if (session.payment_status === "paid") {
                 // Payment successful — activate subscription
-                const device = await Device.findOne({ deviceId }).lean<DeviceRecord | null>();
-
-                if (!device) {
-                    return NextResponse.json(
-                        { error: "Device not found, please contact support" },
-                        { status: 404 }
-                    );
-                }
-
-                const userId = device.userId || device._id;
+                const { userId } = await resolveUserId(deviceId);
                 const plan = payment.plan as "match" | "weekly" | "monthly" | "yearly";
                 const baseDurationDays = PLAN_DURATIONS[plan] || 30;
                 const bonusDays = Math.max(0, Number(payment.bonusDays) || 0);
@@ -430,16 +435,7 @@ export async function POST(request: NextRequest) {
             // Payment successful! Activate subscription.
 
             // 1. Resolve user from deviceId
-            const device = await Device.findOne({ deviceId }).lean<DeviceRecord | null>();
-
-            if (!device) {
-                return NextResponse.json(
-                    { error: "Device not found, please contact support" },
-                    { status: 404 }
-                );
-            }
-
-            const userId = device.userId || device._id;
+            const { userId } = await resolveUserId(deviceId);
             const plan = payment.plan as "match" | "weekly" | "monthly" | "yearly";
             const baseDurationDays = PLAN_DURATIONS[plan] || 30;
             const bonusDays = Math.max(0, Number(payment.bonusDays) || 0);
