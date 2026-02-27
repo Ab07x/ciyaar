@@ -440,91 +440,132 @@ export default function MovieFormPage({ params }: Props) {
                         </button>
                     </div>
 
-                    {/* TMDB Search */}
+                    {/* TMDB Search + Fetch by ID */}
                     {sourceMode === "tmdb" && (
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
-                            <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                                <Film className="text-blue-400" />
-                                Step 1: Paste TMDB Link or Search
-                            </h3>
-                            <p className="text-xs text-text-muted mb-4">Paste a TMDB URL, TMDB ID, or movie name — auto-detects and fetches everything</p>
-                            <div className="flex gap-3">
-                                <input
-                                    type="text"
-                                    value={tmdbInput}
-                                    onChange={(e) => setTmdbInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handleSmartInput()}
-                                    onPaste={handlePaste}
-                                    placeholder="Paste TMDB URL, ID, or search movie name..."
-                                    className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
-                                />
-                                <button
-                                    onClick={() => handleSmartInput()}
-                                    disabled={searching || fetching}
-                                    className="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2"
-                                >
-                                    {(searching || fetching) ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-                                    {fetching ? "Fetching..." : "Search"}
-                                </button>
+                        <div className="space-y-4">
+                            {/* Fetch by TMDB ID */}
+                            <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-5">
+                                <h3 className="text-base font-bold mb-2 flex items-center gap-2">
+                                    <Film className="text-green-400" />
+                                    Fetch by TMDB ID
+                                </h3>
+                                <p className="text-xs text-text-muted mb-3">Enter a TMDB ID number or paste a TMDB URL to fetch movie details instantly</p>
+                                <div className="flex gap-3">
+                                    <input
+                                        type="text"
+                                        value={tmdbInput}
+                                        onChange={(e) => setTmdbInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                const id = extractTmdbId(tmdbInput.trim());
+                                                if (id) handleFetchTMDB(id);
+                                                else handleSmartInput();
+                                            }
+                                        }}
+                                        onPaste={handlePaste}
+                                        placeholder="e.g. 550 or https://themoviedb.org/movie/550"
+                                        className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3 font-mono"
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            const id = extractTmdbId(tmdbInput.trim());
+                                            if (id) handleFetchTMDB(id);
+                                            else alert("Enter a valid TMDB ID number or URL");
+                                        }}
+                                        disabled={fetching || !tmdbInput.trim()}
+                                        className="px-6 py-3 bg-green-500 text-black rounded-lg font-bold flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {fetching ? <Loader2 size={18} className="animate-spin" /> : <Film size={18} />}
+                                        {fetching ? "Fetching..." : "Fetch"}
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Search Results */}
-                            {showSearch && searchResults.length > 0 && (
-                                <div className="mt-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <p className="text-sm text-text-muted">{tmdbTotalResults} results found</p>
-                                        {tmdbTotalPages > 1 && (
-                                            <div className="flex items-center gap-2">
+                            {/* Search by Name */}
+                            <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-5">
+                                <h3 className="text-base font-bold mb-2 flex items-center gap-2">
+                                    <Search className="text-blue-400" />
+                                    Search by Name
+                                </h3>
+                                <p className="text-xs text-text-muted mb-3">Search TMDB by movie name — click a result to fetch its full details</p>
+                                <div className="flex gap-3">
+                                    <input
+                                        type="text"
+                                        value={tmdbInput}
+                                        onChange={(e) => setTmdbInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && handleSmartInput()}
+                                        placeholder="Search movie name..."
+                                        className="flex-1 bg-stadium-dark border border-border-subtle rounded-lg px-4 py-3"
+                                    />
+                                    <button
+                                        onClick={() => handleSmartInput()}
+                                        disabled={searching || !tmdbInput.trim()}
+                                        className="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                                        {searching ? "Searching..." : "Search"}
+                                    </button>
+                                </div>
+
+                                {/* Search Results */}
+                                {showSearch && searchResults.length > 0 && (
+                                    <div className="mt-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <p className="text-sm text-text-muted">{tmdbTotalResults} results found</p>
+                                            {tmdbTotalPages > 1 && (
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleSmartInput(tmdbPage - 1)}
+                                                        disabled={tmdbPage <= 1 || searching}
+                                                        className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
+                                                    >
+                                                        Prev
+                                                    </button>
+                                                    <span className="text-sm text-text-muted">
+                                                        {tmdbPage} / {tmdbTotalPages}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleSmartInput(tmdbPage + 1)}
+                                                        disabled={tmdbPage >= tmdbTotalPages || searching}
+                                                        className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                                            {searchResults.map((r) => (
                                                 <button
-                                                    onClick={() => handleSmartInput(tmdbPage - 1)}
-                                                    disabled={tmdbPage <= 1 || searching}
-                                                    className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
+                                                    key={r.id}
+                                                    onClick={() => handleFetchTMDB(r.id)}
+                                                    className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-accent-green transition-all group"
                                                 >
-                                                    Prev
-                                                </button>
-                                                <span className="text-sm text-text-muted">
-                                                    {tmdbPage} / {tmdbTotalPages}
-                                                </span>
-                                                <button
-                                                    onClick={() => handleSmartInput(tmdbPage + 1)}
-                                                    disabled={tmdbPage >= tmdbTotalPages || searching}
-                                                    className="px-3 py-1 bg-stadium-dark rounded text-sm disabled:opacity-30"
-                                                >
-                                                    Next
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                                        {searchResults.map((r) => (
-                                            <button
-                                                key={r.id}
-                                                onClick={() => handleFetchTMDB(r.id)}
-                                                className="bg-stadium-elevated rounded-lg overflow-hidden text-left hover:ring-2 ring-accent-green transition-all group"
-                                            >
-                                                {r.posterUrl ? (
-                                                    <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover group-hover:brightness-110" />
-                                                ) : (
-                                                    <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
-                                                        <Film size={24} className="text-text-muted" />
-                                                    </div>
-                                                )}
-                                                <div className="p-2">
-                                                    <p className="text-xs font-bold truncate">{r.title}</p>
-                                                    <div className="flex items-center justify-between mt-1">
-                                                        <span className="text-xs text-text-muted">{r.year}</span>
+                                                    {r.posterUrl ? (
+                                                        <img src={r.posterUrl} alt={r.title} className="w-full aspect-[2/3] object-cover group-hover:brightness-110" />
+                                                    ) : (
+                                                        <div className="w-full aspect-[2/3] bg-stadium-dark flex items-center justify-center">
+                                                            <Film size={24} className="text-text-muted" />
+                                                        </div>
+                                                    )}
+                                                    <div className="p-2">
+                                                        <p className="text-xs font-bold truncate">{r.title}</p>
+                                                        <div className="flex items-center justify-between mt-1">
+                                                            <span className="text-[10px] text-blue-400 font-mono">#{r.id}</span>
+                                                            <span className="text-xs text-text-muted">{r.year}</span>
+                                                        </div>
                                                         {r.rating && (
-                                                            <span className="text-xs text-accent-gold flex items-center gap-0.5">
+                                                            <span className="text-xs text-accent-gold flex items-center gap-0.5 mt-0.5">
                                                                 <Star size={10} className="fill-accent-gold" /> {r.rating}
                                                             </span>
                                                         )}
                                                     </div>
-                                                </div>
-                                            </button>
-                                        ))}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     )}
 

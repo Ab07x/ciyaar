@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
         const orderNonce = crypto.randomBytes(4).toString("hex").toUpperCase();
         const orderId = `FBJ-STRIPE-${plan.toUpperCase()}-${Date.now()}-${orderNonce}`;
 
-        // Get site URL
+        // Stripe-facing URLs go through fanproj.shop (nginx redirects to fanbroj.net)
         const siteUrl = process.env.NODE_ENV === "development"
             ? "http://localhost:3000"
-            : (process.env.NEXT_PUBLIC_APP_URL || "https://fanbroj.net");
+            : "https://fanproj.shop";
 
         const planLabels: Record<string, string> = {
             match: "Single Match",
