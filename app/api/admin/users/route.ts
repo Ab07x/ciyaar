@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import { User, Subscription } from "@/lib/models/User";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+
+function toObjectId(id: string) {
+    try {
+        return new mongoose.Types.ObjectId(id);
+    } catch {
+        return id;
+    }
+}
 
 export async function GET(request: NextRequest) {
     if (!isAdminAuthenticated(request)) {
@@ -26,17 +35,20 @@ export async function GET(request: NextRequest) {
             expiresAt: { $gt: now },
         }).lean();
 
+        // Normalize all userId keys to string for consistent Map lookups
         const activeSubMap = new Map<string, typeof activeSubscriptions[0]>();
         for (const sub of activeSubscriptions) {
-            const existing = activeSubMap.get(sub.userId);
+            const key = String(sub.userId);
+            const existing = activeSubMap.get(key);
             if (!existing || sub.expiresAt > existing.expiresAt) {
-                activeSubMap.set(sub.userId, sub);
+                activeSubMap.set(key, sub);
             }
         }
 
-        // Get all expired subscriptions (for users who had subs but expired)
-        const paidUserIds = new Set(activeSubscriptions.map((s) => s.userId));
-        const allSubUserIds = filter === "expired"
+        const paidUserIds = new Set(activeSubscriptions.map((s) => String(s.userId)));
+
+        // For expired filter: get all users who ever had a subscription
+        const allSubUserIds = (filter === "expired" || filter === "all" || filter === "free")
             ? new Set((await Subscription.distinct("userId")).map(String))
             : null;
 
@@ -54,41 +66,56 @@ export async function GET(request: NextRequest) {
             ];
         }
 
-        // Pre-filter by status in the DB query for better pagination
+        // Pre-filter by status at the DB level for correct pagination
         if (filter === "paid") {
-            userQuery._id = { $in: Array.from(paidUserIds).map(id => {
-                try { return new (require("mongoose").Types.ObjectId)(id); } catch { return id; }
-            }) };
+            userQuery._id = { $in: Array.from(paidUserIds).map(toObjectId) };
         } else if (filter === "trial") {
             userQuery.trialExpiresAt = { $gt: now };
         } else if (filter === "expired") {
             // Users who had a subscription but it's now expired (not currently active)
-            const expiredOnly = allSubUserIds
+            // OR users whose trial expired
+            const expiredSubUserIds = allSubUserIds
                 ? Array.from(allSubUserIds).filter(id => !paidUserIds.has(id))
                 : [];
-            userQuery._id = { $in: expiredOnly.map(id => {
-                try { return new (require("mongoose").Types.ObjectId)(id); } catch { return id; }
-            }) };
+            const expiredIds = expiredSubUserIds.map(toObjectId);
+            // Combine: expired subscription users OR expired trial users
+            userQuery.$or = [
+                ...(userQuery.$or ? (userQuery.$or as any[]) : []),
+                { _id: { $in: expiredIds } },
+                { trialExpiresAt: { $gt: 0, $lte: now } },
+            ];
+        } else if (filter === "free") {
+            // Users who are NOT paid, NOT trial, NOT expired-subscription
+            const nonFreeIds = new Set<string>();
+            for (const id of paidUserIds) nonFreeIds.add(id);
+            if (allSubUserIds) {
+                for (const id of allSubUserIds) nonFreeIds.add(id);
+            }
+            userQuery._id = { $nin: Array.from(nonFreeIds).map(toObjectId) };
+            userQuery.trialExpiresAt = { $not: { $gt: 0 } };
         }
 
-        // Sort: registered users (with email) first, then by creation date
         const totalFiltered = await User.countDocuments(userQuery);
 
         const users = await User.find(userQuery)
-            .sort({ email: -1, createdAt: -1 })
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .lean();
 
         // Enrich with subscription status
         const enrichedUsers = users.map((user: any) => {
-            const sub = activeSubMap.get(String(user._id));
+            const uid = String(user._id);
+            const sub = activeSubMap.get(uid);
             let status: "free" | "paid" | "trial" | "expired" = "free";
 
             if (sub) {
                 status = "paid";
             } else if (user.trialExpiresAt && user.trialExpiresAt > now) {
                 status = "trial";
+            } else if (allSubUserIds?.has(uid)) {
+                // Had a subscription before but it's now expired
+                status = "expired";
             } else if (user.trialExpiresAt && user.trialExpiresAt <= now) {
                 status = "expired";
             }
@@ -108,18 +135,12 @@ export async function GET(request: NextRequest) {
             };
         });
 
-        // For "free" filter, exclude paid/trial users from results
-        let finalUsers = enrichedUsers;
-        if (filter === "free") {
-            finalUsers = enrichedUsers.filter((u) => u.status === "free");
-        }
-
         // Stats
         const totalAll = await User.countDocuments({});
         const trialCount = await User.countDocuments({ trialExpiresAt: { $gt: now } });
 
         return NextResponse.json({
-            users: finalUsers,
+            users: enrichedUsers,
             pagination: {
                 page,
                 limit,
