@@ -42,7 +42,7 @@ export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [accountMenuOpen, setAccountMenuOpen] = useState(false);
     const pathname = usePathname();
-    const { isPremium, isLoading, email, logout } = useUser();
+    const { isPremium, isLoading, email, logout, profile } = useUser();
     const { t } = useLanguage();
     const isRegisteredUser = Boolean(email);
 
@@ -217,10 +217,15 @@ export function Navbar() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setAccountMenuOpen(o => !o)}
-                                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isPremium ? "text-[#E50914] hover:bg-red-50 border border-red-200" : "text-gray-600 hover:bg-gray-100"}`}
+                                className={`p-1 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isPremium ? "hover:bg-red-50" : "hover:bg-gray-100"}`}
                                 aria-label="Account menu"
                             >
-                                {isPremium ? <Crown size={22} /> : <User size={22} />}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={(profile as Record<string, unknown>)?.avatarUrl as string || "/img/default-avatar.png"}
+                                    alt=""
+                                    className={`w-8 h-8 rounded-full object-cover ${isPremium ? "ring-2 ring-[#E50914]" : "ring-1 ring-gray-300"}`}
+                                />
                             </motion.button>
                             <AnimatePresence>
                                 {accountMenuOpen && (

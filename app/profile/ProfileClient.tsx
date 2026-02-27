@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { useUser } from "@/providers/UserProvider";
 import { NEW_PLAN_CARDS } from "@/lib/plans";
+
+const DEFAULT_AVATAR = "/img/default-avatar.png";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -48,7 +50,19 @@ export default function ProfileClient() {
     };
 
     const avatarUrl = (profile as Record<string, unknown>)?.avatarUrl as string | undefined;
-    const displayInitial = (username?.[0] || email?.[0] || "U").toUpperCase();
+    const avatarSrc = avatarUrl || DEFAULT_AVATAR;
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+    const { updateAvatar } = useUser();
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        await updateAvatar(file);
+        setUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
 
     const handleCheckout = () => {
         router.push(`/pay?plan=${selectedPlan}&auth=signup`);
@@ -118,18 +132,43 @@ export default function ProfileClient() {
                         {/* Avatar */}
                         <div style={{ textAlign: "center", marginBottom: 16, padding: "0 20px" }}>
                             <div style={{ position: "relative", display: "inline-block" }}>
-                                {avatarUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                        src={avatarUrl}
-                                        alt=""
-                                        style={{ width: 100, height: 100, borderRadius: "50%", objectFit: "cover", border: "3px solid rgba(255,255,255,0.1)" }}
-                                    />
-                                ) : (
-                                    <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg, #1e3a5f, #0f2035)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, fontWeight: 900, color: "#60a5fa", border: "3px solid rgba(255,255,255,0.1)" }}>
-                                        {displayInitial}
-                                    </div>
-                                )}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={avatarSrc}
+                                    alt=""
+                                    style={{
+                                        width: 100, height: 100, borderRadius: "50%", objectFit: "cover",
+                                        border: "3px solid rgba(255,255,255,0.1)",
+                                        opacity: uploading ? 0.5 : 1,
+                                        transition: "opacity 0.2s",
+                                    }}
+                                />
+                                {/* Upload overlay */}
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploading}
+                                    style={{
+                                        position: "absolute", inset: 0, borderRadius: "50%",
+                                        background: "rgba(0,0,0,0.5)", opacity: 0,
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        cursor: "pointer", border: "none", transition: "opacity 0.2s",
+                                    }}
+                                    onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                                    onMouseLeave={e => (e.currentTarget.style.opacity = "0")}
+                                    aria-label="Change avatar"
+                                >
+                                    <svg width="20" height="20" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                        <circle cx="12" cy="13" r="4" />
+                                    </svg>
+                                </button>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleAvatarUpload}
+                                    style={{ display: "none" }}
+                                />
                                 {/* Badge */}
                                 <div style={{
                                     position: "absolute",

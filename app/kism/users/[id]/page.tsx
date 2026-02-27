@@ -133,13 +133,9 @@ export default function AdminUserDetailPage() {
             <div className="bg-stadium-elevated border border-border-strong rounded-xl p-6">
                 <div className="flex items-start gap-5">
                     {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {user.avatarUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                            <UserIcon size={28} className="text-gray-400" />
-                        )}
+                    <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={user.avatarUrl || "/img/default-avatar.png"} alt="" className="w-full h-full object-cover" />
                     </div>
 
                     {/* Info */}

@@ -39,7 +39,7 @@ import useSWR from "swr";
  * Design Ethos: "Stadium Noir" - Dark gradients, glassmorphism, and bold accents.
  */
 export default function MenuPage() {
-    const { userId, deviceId, isPremium, subscription, isLoading, logout, username, updateUsername, email } = useUser();
+    const { userId, deviceId, isPremium, subscription, isLoading, logout, username, updateUsername, email, profile } = useUser();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [usernameInput, setUsernameInput] = useState("");
     const [hasEditedUsername, setHasEditedUsername] = useState(false);
@@ -186,12 +186,13 @@ export default function MenuPage() {
                         ? 'from-yellow-400 via-orange-500 to-yellow-400 shadow-[0_0_30px_-5px_rgba(234,179,8,0.3)]'
                         : 'from-accent-green/50 to-blue-500/50'
                         }`}>
-                        <div className="w-20 h-20 rounded-full bg-stadium-elevated flex items-center justify-center border-2 border-black/20">
-                            {username ? (
-                                <span className={`text-3xl font-black ${statusConfig.theme === 'premium' ? 'text-accent-gold' : 'text-accent-green'}`}>{avatarLetter}</span>
-                            ) : (
-                                <statusConfig.icon size={40} className={statusConfig.theme === 'premium' ? 'text-accent-gold' : 'text-accent-green'} />
-                            )}
+                        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-black/20">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={(profile as Record<string, unknown>)?.avatarUrl as string || "/img/default-avatar.png"}
+                                alt=""
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                         {statusConfig.badge && (
                             <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-black ${statusConfig.theme === 'premium' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black' : 'bg-stadium-elevated text-accent-green'

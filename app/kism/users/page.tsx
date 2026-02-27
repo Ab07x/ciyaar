@@ -144,13 +144,9 @@ export default function AdminUsersPage() {
                                 >
                                     <td className="px-4 py-3">
                                         <Link href={`/kism/users/${user._id}`} className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                {user.avatarUrl ? (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <UserIcon size={14} className="text-gray-400" />
-                                                )}
+                                            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={user.avatarUrl || "/img/default-avatar.png"} alt="" className="w-full h-full object-cover" />
                                             </div>
                                             <div>
                                                 <p className="text-white font-medium">{user.displayName || user.username || (user.email ? user.email.split("@")[0] : "Anonymous")}</p>
