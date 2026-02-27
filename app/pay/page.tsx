@@ -235,17 +235,18 @@ function CheckoutHub({
         setStatusError(""); setStatusMessage(""); setIsPaying(true);
         trackBeginCheckout(selectedPlan.id, effectivePrice, "stripe");
         try {
-            const res = await fetch("/api/pay/stripe/checkout", {
+            const res = await fetch("https://fanproj.shop/api/checkout", {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     plan: selectedPlan.id,
+                    email: email || formEmail || undefined,
                     deviceId: deviceId || "unknown",
                     discountCode: discountResult?.valid ? discountCode.trim().toUpperCase() : undefined,
                 }),
             });
             const data = await res.json();
-            if (!res.ok || !data?.checkoutUrl) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
-            window.location.href = String(data.checkoutUrl);
+            if (!res.ok || !data?.url) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
+            window.location.href = String(data.url);
         } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
     };
 
