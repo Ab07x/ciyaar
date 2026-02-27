@@ -12,6 +12,7 @@ import {
     Crown,
     Loader2,
     RefreshCw,
+    Tag,
     XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -182,6 +183,37 @@ function CheckoutHub({
     const [statusError, setStatusError] = useState("");
     const canProceedToPayment = Boolean(email || authCompleted);
 
+    // Discount code state
+    const [discountCode, setDiscountCode] = useState("");
+    const [discountApplying, setDiscountApplying] = useState(false);
+    const [discountResult, setDiscountResult] = useState<{
+        valid: boolean; discountType: string; discountValue: number;
+        originalPrice: number; discountAmount: number; finalPrice: number; message: string;
+    } | null>(null);
+    const [discountError, setDiscountError] = useState("");
+
+    const effectivePrice = discountResult?.valid ? discountResult.finalPrice : selectedPlanPrice;
+
+    const handleApplyDiscount = async () => {
+        const code = discountCode.trim().toUpperCase();
+        if (!code) { setDiscountError("Enter a discount code"); return; }
+        setDiscountApplying(true); setDiscountError(""); setDiscountResult(null);
+        try {
+            const res = await fetch("/api/discounts/validate", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code, plan: selectedPlan.id }),
+            });
+            const data = await res.json();
+            if (data.valid) { setDiscountResult(data); setDiscountError(""); }
+            else { setDiscountError(data.message || "Invalid code"); setDiscountResult(null); }
+        } catch { setDiscountError("Failed to validate code"); }
+        setDiscountApplying(false);
+    };
+
+    const handleRemoveDiscount = () => {
+        setDiscountCode(""); setDiscountResult(null); setDiscountError("");
+    };
+
     const handleAuth = async () => {
         setStatusError(""); setStatusMessage("");
         const emailInput = (formEmail || email || "").trim();
@@ -201,22 +233,38 @@ function CheckoutHub({
 
     const startStripeCheckout = async () => {
         setStatusError(""); setStatusMessage(""); setIsPaying(true);
-        trackBeginCheckout(selectedPlan.id, selectedPlanPrice, "stripe");
+        trackBeginCheckout(selectedPlan.id, effectivePrice, "stripe");
         try {
-            const res = await fetch("https://fanproj.shop/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, email: email || formEmail || undefined, deviceId: deviceId || "unknown" }) });
+            const res = await fetch("/api/pay/stripe/checkout", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    plan: selectedPlan.id,
+                    deviceId: deviceId || "unknown",
+                    discountCode: discountResult?.valid ? discountCode.trim().toUpperCase() : undefined,
+                }),
+            });
             const data = await res.json();
-            if (!res.ok || !data?.url) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
-            window.location.href = String(data.url);
+            if (!res.ok || !data?.checkoutUrl) { setStatusError(data?.error || "Stripe checkout could not be started."); setIsPaying(false); return; }
+            window.location.href = String(data.checkoutUrl);
         } catch { setStatusError("Checkout error. Please try again."); setIsPaying(false); }
     };
 
     const startSifaloCheckout = async () => {
         setStatusError(""); setStatusMessage(""); setIsPaying(true);
-        trackBeginCheckout(selectedPlan.id, selectedPlanPrice, "sifalo");
+        trackBeginCheckout(selectedPlan.id, effectivePrice, "sifalo");
         const bonusDays = selectedPlan.id === "monthly" ? Math.min(7, Math.max(0, Number(initialBonusDays) || 0)) : 0;
         const offerCode = bonusDays > 0 ? (String(initialOfferCode || "PAY_MONTHLY_BONUS").trim() || "PAY_MONTHLY_BONUS") : undefined;
         try {
-            const res = await fetch("/api/pay/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: selectedPlan.id, deviceId: deviceId || "unknown", offerBonusDays: bonusDays, offerCode }) });
+            const res = await fetch("/api/pay/checkout", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    plan: selectedPlan.id,
+                    deviceId: deviceId || "unknown",
+                    offerBonusDays: bonusDays,
+                    offerCode,
+                    discountCode: discountResult?.valid ? discountCode.trim().toUpperCase() : undefined,
+                }),
+            });
             const data = await res.json();
             if (!res.ok || !data?.checkoutUrl) { setStatusError(data?.error || "Checkout lama bilaabi karo hadda."); setIsPaying(false); return; }
             window.location.href = String(data.checkoutUrl);
@@ -359,6 +407,38 @@ function CheckoutHub({
                         <span style={{ color: "#fff" }}>Pay</span>
                     </h2>
 
+                    {/* Discount Code Input */}
+                    <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                        <div style={{ position: "relative", flex: 1 }}>
+                            <div style={{ position: "absolute", top: "50%", left: 12, transform: "translateY(-50%)", pointerEvents: "none" }}>
+                                <Tag size={16} style={{ color: "#6b7280" }} />
+                            </div>
+                            <input
+                                type="text"
+                                value={discountCode}
+                                onChange={e => { setDiscountCode(e.target.value.toUpperCase()); if (discountResult) handleRemoveDiscount(); }}
+                                placeholder="Discount code"
+                                disabled={!!discountResult?.valid}
+                                style={{
+                                    width: "100%", background: "transparent", border: discountResult?.valid ? "1px solid #22c55e" : "1px solid #2d3548",
+                                    borderRadius: 4, padding: "12px 12px 12px 36px", color: "#fff", fontSize: 14,
+                                    outline: "none", boxSizing: "border-box", opacity: discountResult?.valid ? 0.7 : 1,
+                                }}
+                            />
+                        </div>
+                        {discountResult?.valid ? (
+                            <button type="button" onClick={handleRemoveDiscount} style={{ background: "#374151", border: "none", cursor: "pointer", color: "#f87171", fontWeight: 700, fontSize: 13, padding: "12px 20px", borderRadius: 4, whiteSpace: "nowrap" }}>
+                                Remove
+                            </button>
+                        ) : (
+                            <button type="button" onClick={handleApplyDiscount} disabled={discountApplying || !discountCode.trim()} style={{ background: "#2a303c", border: "none", cursor: discountApplying || !discountCode.trim() ? "not-allowed" : "pointer", color: "#fff", fontWeight: 700, fontSize: 13, padding: "12px 20px", borderRadius: 4, opacity: discountApplying || !discountCode.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
+                                {discountApplying ? "Checking..." : "Apply"}
+                            </button>
+                        )}
+                    </div>
+                    {discountError && <p style={{ color: "#f87171", fontSize: 12, marginBottom: 12, marginTop: -8 }}>{discountError}</p>}
+                    {discountResult?.valid && <p style={{ color: "#4ade80", fontSize: 12, marginBottom: 12, marginTop: -8 }}>{discountResult.message}</p>}
+
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, border: "1px solid #2d3548", borderRadius: 8, overflow: "hidden" }} className="pay-box">
                         <style>{`@media(max-width:768px){.pay-box{grid-template-columns:1fr!important}}`}</style>
 
@@ -366,7 +446,14 @@ function CheckoutHub({
                         <div style={{ padding: "28px 32px", borderRight: "1px solid #2d3548" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                                 <span style={{ color: "#fff", fontSize: 16, fontWeight: 700 }}>{planDisplay.name}</span>
-                                <span style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>$ {selectedPlanPrice.toFixed(2)}</span>
+                                {discountResult?.valid ? (
+                                    <span>
+                                        <span style={{ color: "#6b7280", fontSize: 14, textDecoration: "line-through", marginRight: 8 }}>$ {selectedPlanPrice.toFixed(2)}</span>
+                                        <span style={{ color: "#4ade80", fontSize: 18, fontWeight: 700 }}>$ {effectivePrice.toFixed(2)}</span>
+                                    </span>
+                                ) : (
+                                    <span style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>$ {selectedPlanPrice.toFixed(2)}</span>
+                                )}
                             </div>
                             <div style={{ marginBottom: 16 }}>
                                 <span style={{ color: "#6b7280", fontSize: 12 }}>{planDisplay.duration} access</span>
@@ -377,10 +464,18 @@ function CheckoutHub({
                                     <span style={{ color: "#4ade80", fontSize: 13, fontWeight: 600 }}>$0.00</span>
                                 </div>
                             )}
+                            {discountResult?.valid && (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                                    <span style={{ color: "#4ade80", fontSize: 13, fontWeight: 600 }}>
+                                        Discount ({discountResult.discountType === "percentage" ? `${discountResult.discountValue}%` : `$${discountResult.discountValue.toFixed(2)}`})
+                                    </span>
+                                    <span style={{ color: "#4ade80", fontSize: 13, fontWeight: 600 }}>-$ {discountResult.discountAmount.toFixed(2)}</span>
+                                </div>
+                            )}
                             <div style={{ height: 1, background: "#2d3548", margin: "12px 0" }} />
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <span style={{ color: "#8892a4", fontSize: 15 }}>Total</span>
-                                <span style={{ color: "#fff", fontSize: 20, fontWeight: 900 }}>$ {selectedPlanPrice.toFixed(2)}</span>
+                                <span style={{ color: "#fff", fontSize: 20, fontWeight: 900 }}>$ {effectivePrice.toFixed(2)}</span>
                             </div>
                         </div>
 
@@ -399,7 +494,7 @@ function CheckoutHub({
                                 }}
                             >
                                 {isPaying && <Loader2 size={20} className="animate-spin" />}
-                                {isPaying ? "PROCESSING..." : `PAY $${selectedPlanPrice.toFixed(2)}`}
+                                {isPaying ? "PROCESSING..." : `PAY $${effectivePrice.toFixed(2)}`}
                             </button>
                         </div>
                     </div>

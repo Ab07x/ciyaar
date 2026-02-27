@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import connectDB from "@/lib/mongodb";
-import { Payment, ConversionEvent } from "@/lib/models";
+import { Payment, ConversionEvent, DiscountCode } from "@/lib/models";
 
 // Fixed prices — must match Stripe price IDs on fanproj.shop
 const FIXED_PRICES: Record<string, number> = {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     try {
         await connectDB();
         const body = await request.json();
-        const { plan, deviceId, offerBonusDays, offerCode } = body;
+        const { plan, deviceId, offerBonusDays, offerCode, discountCode: discountCodeInput } = body;
 
         if (!plan || !deviceId) {
             return NextResponse.json(
@@ -52,7 +52,30 @@ export async function POST(request: NextRequest) {
         const bonusDays = canonicalPlan === "monthly" ? Math.min(7, Math.max(0, Number(offerBonusDays) || 0)) : 0;
         const normalizedOfferCode = bonusDays > 0 ? String(offerCode || "MONTHLY_EXIT_7D") : "";
 
-        const geoAdjustedAmount = baseAmount;
+        // Apply discount code if provided
+        let discountAmount = 0;
+        let appliedDiscountCode: string | undefined;
+        if (discountCodeInput) {
+            const discount = await DiscountCode.findOne({ code: String(discountCodeInput).toUpperCase() });
+            if (discount && discount.isActive
+                && (!discount.expiresAt || discount.expiresAt > Date.now())
+                && (discount.maxUses === 0 || discount.usedCount < discount.maxUses)
+                && (discount.applicablePlans.length === 0 || discount.applicablePlans.includes(canonicalPlan))
+            ) {
+                if (discount.discountType === "percentage") {
+                    discountAmount = Math.round(baseAmount * (discount.discountValue / 100) * 100) / 100;
+                } else {
+                    discountAmount = Math.min(discount.discountValue, baseAmount);
+                }
+                // Floor: never go below $0.50
+                const afterDiscount = baseAmount - discountAmount;
+                if (afterDiscount < 0.50) discountAmount = Math.round((baseAmount - 0.50) * 100) / 100;
+                appliedDiscountCode = discount.code;
+                await DiscountCode.updateOne({ _id: discount._id }, { $inc: { usedCount: 1 } });
+            }
+        }
+
+        const geoAdjustedAmount = Math.round((baseAmount - discountAmount) * 100) / 100;
 
         // Add Sifalo Pay processing fee (1% for mobile money) so merchant gets full price
         const FEE_PERCENT = 0.01; // 1%
@@ -128,7 +151,7 @@ export async function POST(request: NextRequest) {
         await Payment.create({
             deviceId,
             plan: canonicalPlan,
-            amount: baseAmount,
+            amount: geoAdjustedAmount,
             currency: "USD",
             orderId,
             gateway: "checkout",
@@ -140,6 +163,9 @@ export async function POST(request: NextRequest) {
             verifyAttempts: 0,
             lastCheckedAt: 0,
             baseAmount,
+            discountCode: appliedDiscountCode || undefined,
+            discountAmount: discountAmount || undefined,
+            originalAmount: discountAmount > 0 ? baseAmount : undefined,
             createdAt: Date.now(),
         });
 

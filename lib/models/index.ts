@@ -2,6 +2,9 @@
 export { Movie } from "./Movie";
 export type { IMovie } from "./Movie";
 
+export { DiscountCode } from "./DiscountCode";
+export type { IDiscountCode } from "./DiscountCode";
+
 export { Match } from "./Match";
 export type { IMatch } from "./Match";
 

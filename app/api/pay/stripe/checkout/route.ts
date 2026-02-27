@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import crypto from "crypto";
 import connectDB from "@/lib/mongodb";
-import { Settings, Payment, ConversionEvent } from "@/lib/models";
+import { Settings, Payment, ConversionEvent, DiscountCode } from "@/lib/models";
 import { getRequestGeo } from "@/lib/geo-lookup";
 
 export async function POST(request: NextRequest) {
     try {
         await connectDB();
         const body = await request.json();
-        const { plan, deviceId, offerBonusDays, offerCode } = body;
+        const { plan, deviceId, offerBonusDays, offerCode, discountCode: discountCodeInput } = body;
 
         if (!plan || !deviceId) {
             return NextResponse.json(
@@ -50,7 +50,30 @@ export async function POST(request: NextRequest) {
 
         // Apply geo-based pricing multiplier
         const { country, multiplier } = await getRequestGeo(request);
-        const finalAmount = Math.round(baseAmount * multiplier * 100) / 100;
+        let finalAmount = Math.round(baseAmount * multiplier * 100) / 100;
+
+        // Apply discount code if provided
+        let discountAmount = 0;
+        let appliedDiscountCode: string | undefined;
+        if (discountCodeInput) {
+            const discount = await DiscountCode.findOne({ code: String(discountCodeInput).toUpperCase() });
+            if (discount && discount.isActive
+                && (!discount.expiresAt || discount.expiresAt > Date.now())
+                && (discount.maxUses === 0 || discount.usedCount < discount.maxUses)
+                && (discount.applicablePlans.length === 0 || discount.applicablePlans.includes(plan))
+            ) {
+                if (discount.discountType === "percentage") {
+                    discountAmount = Math.round(finalAmount * (discount.discountValue / 100) * 100) / 100;
+                } else {
+                    discountAmount = Math.min(discount.discountValue, finalAmount);
+                }
+                const afterDiscount = finalAmount - discountAmount;
+                if (afterDiscount < 0.50) discountAmount = Math.round((finalAmount - 0.50) * 100) / 100;
+                finalAmount = Math.round((finalAmount - discountAmount) * 100) / 100;
+                appliedDiscountCode = discount.code;
+                await DiscountCode.updateOne({ _id: discount._id }, { $inc: { usedCount: 1 } });
+            }
+        }
 
         // Generate unique order ID
         const orderNonce = crypto.randomBytes(4).toString("hex").toUpperCase();
@@ -95,6 +118,8 @@ export async function POST(request: NextRequest) {
                 deviceId,
                 bonusDays: String(bonusDays),
                 offerCode: normalizedOfferCode,
+                discountCode: appliedDiscountCode || "",
+                discountAmount: String(discountAmount),
             },
         });
 
@@ -122,6 +147,9 @@ export async function POST(request: NextRequest) {
             geoCountry: country || undefined,
             geoMultiplier: multiplier,
             baseAmount,
+            discountCode: appliedDiscountCode || undefined,
+            discountAmount: discountAmount || undefined,
+            originalAmount: discountAmount > 0 ? baseAmount : undefined,
             createdAt: Date.now(),
         });
 

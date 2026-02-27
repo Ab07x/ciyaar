@@ -28,6 +28,7 @@ import {
     Bug,
     Users,
     UserPlus,
+    Percent,
 } from "lucide-react";
 
 const navSections = [
@@ -55,6 +56,7 @@ const navSections = [
         label: "Monetisation",
         items: [
             { href: "/kism/codes", label: "Codes", icon: Ticket },
+            { href: "/kism/discounts", label: "Discounts", icon: Percent },
             { href: "/kism/ppv", label: "PPV", icon: CreditCard },
             { href: "/kism/pricing", label: "Pricing", icon: DollarSign },
             { href: "/kism/payments", label: "Payments", icon: Bug },

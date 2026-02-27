@@ -340,6 +340,9 @@ export interface IPayment extends Document {
     paypalTxId?: string;
     mpesaTxId?: string;
     subscriptionId?: string;
+    discountCode?: string;
+    discountAmount?: number;
+    originalAmount?: number;
     createdAt: number;
     verifiedAt?: number;
     completedAt?: number;
@@ -376,6 +379,9 @@ const PaymentSchema = new Schema<IPayment>(
         paypalTxId: { type: String, index: true },
         mpesaTxId: { type: String, index: true },
         subscriptionId: String,
+        discountCode: String,
+        discountAmount: Number,
+        originalAmount: Number,
         createdAt: { type: Number, required: true },
         verifiedAt: Number,
         completedAt: Number,
