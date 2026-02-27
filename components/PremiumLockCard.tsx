@@ -5,6 +5,7 @@ import { Crown, Lock, Unlock, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import QuickCheckout from "@/components/QuickCheckout";
+import { PromoCodeSticker } from "@/components/PromoCodeSticker";
 
 interface PremiumLockCardProps {
     matchId: string;
@@ -55,9 +56,12 @@ export function PremiumLockCard({
             <p className="text-text-secondary text-sm mb-4">Ciyaaraha Waaweyn</p>
 
             {/* Price Badge */}
-            <div className="inline-block bg-accent-gold/10 border border-accent-gold/30 rounded-lg px-4 py-2 mb-5">
+            <div className="inline-block bg-accent-gold/10 border border-accent-gold/30 rounded-lg px-4 py-2 mb-4">
                 <p className="text-lg font-bold text-accent-gold">{priceText}</p>
             </div>
+
+            {/* Promo Code */}
+            <PromoCodeSticker variant="inline" showCta={false} className="mb-4" />
 
             {/* Unlock Form - Compact */}
             <form onSubmit={handleSubmit} className="space-y-3 mb-4">

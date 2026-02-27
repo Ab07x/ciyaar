@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
 import { PLAN_OPTIONS, PlanId } from "@/lib/plans";
 import { trackBeginCheckout, trackSignUp, trackSelectPlan } from "@/lib/gtag";
+import { PromoCodeSticker } from "@/components/PromoCodeSticker";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -409,6 +410,9 @@ function CheckoutHub({
                         <span style={{ color: "#8892a4", fontWeight: 300, marginRight: 10 }}>03</span>
                         <span style={{ color: "#fff" }}>Pay</span>
                     </h2>
+
+                    {/* Promo Code Sticker */}
+                    <PromoCodeSticker variant="compact" showCta={false} className="mb-4" />
 
                     {/* Discount Code Input */}
                     <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "flex-start" }}>

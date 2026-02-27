@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { NEW_PLAN_CARDS } from "@/lib/plans";
 import type { NewPlanId } from "@/lib/plans";
+import { PromoCodeSticker } from "@/components/PromoCodeSticker";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -176,6 +177,11 @@ export default function PricingClient() {
                         Try 3 days for <span className="text-yellow-400 font-bold">$1</span> &mdash; New users only
                     </p>
                 )}
+            </section>
+
+            {/* ── PROMO CODE ────────────────────────────────────────────── */}
+            <section className="px-4 pb-6 max-w-5xl mx-auto">
+                <PromoCodeSticker variant="banner" />
             </section>
 
             {/* ── PLAN CARDS — 2x2 grid with images ──────────────────────── */}
